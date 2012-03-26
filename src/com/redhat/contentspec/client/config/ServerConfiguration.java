@@ -6,6 +6,21 @@ public class ServerConfiguration {
 	private String url;
 	private String username;
 	
+	public ServerConfiguration() {
+		
+	}
+	
+	public ServerConfiguration(String name, String url) {
+		this.name = name;
+		this.url = url;
+	}
+	
+	public ServerConfiguration(String name, String url, String username) {
+		this.name = name;
+		this.url = url;
+		this.username = username;
+	}
+	
 	public String getName() {
 		return name;
 	}

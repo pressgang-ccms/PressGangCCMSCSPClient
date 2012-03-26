@@ -42,6 +42,7 @@ public class Constants {
 	public static final String PUSH_COMMAND_NAME = "push";
 	public static final String REVISIONS_COMMAND_NAME = "revisions";
 	public static final String SEARCH_COMMAND_NAME = "search";
+	public static final String SETUP_COMMAND_NAME = "setup";
 	public static final String SNAPSHOT_COMMAND_NAME = "snapshot";
 	public static final String STATUS_COMMAND_NAME = "status";
 	public static final String TEMPLATE_COMMAND_NAME = "template";
@@ -97,6 +98,8 @@ public class Constants {
 	public static final String SUCCESSFUL_ASSEMBLE_MSG		= "Content Specification successfully assembled at %s";
 	public static final String SUCCESSFUL_UNZIP_MSG			= "Content Specification build unzipped to %s";
 	public static final String UP_TO_DATE_MSG				= "The local copy of the Content Specification is up to date.";
+	public static final String SETUP_CONFIG_MSG				= "Edit your configuration file to configure your username(s) and default server.";
+	public static final String SUCCESSFUL_SETUP_MSG			= "Configuration settings successfully setup.";
 	
 	// Start Messages
 	public static final String STARTING_ASSEMBLE_MSG		= "Starting to assemble...";

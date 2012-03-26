@@ -64,6 +64,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	private String rootDirectory = "";
 	private String publicanBuildOptions = Constants.DEFAULT_PUBLICAN_OPTIONS;
 	private String publicanPreviewFormat = Constants.DEFAULT_PUBLICAN_FORMAT;
+	private boolean firstRun = false;
 	
 	private HashMap<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 	
@@ -144,6 +145,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		// Process the command
 		if (command.isShowHelp() || isShowHelp() || args.length == 0) {
 			command.printHelp();
+		} else if (command instanceof SetupCommand) {
+			command.process(cspConfig, restManager, elm, null);
 		} else {
 		
 			// Print the version details
@@ -223,6 +226,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		PushCommand push = new PushCommand(parser);
 		RevisionsCommand revisions = new RevisionsCommand(parser);
 		SearchCommand search = new SearchCommand(parser);
+		SetupCommand setup = new SetupCommand(parser);
 		//SnapshotCommand snapshot = new SnapshotCommand(parser);
 		StatusCommand status = new StatusCommand(parser);
 		TemplateCommand template = new TemplateCommand(parser);
@@ -260,6 +264,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		
 		parser.addCommand(Constants.SEARCH_COMMAND_NAME, search);
 		commands.put(Constants.SEARCH_COMMAND_NAME, search);
+		
+		parser.addCommand(Constants.SETUP_COMMAND_NAME, setup);
+		commands.put(Constants.SETUP_COMMAND_NAME, setup);
 		
 		//parser.addCommand(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
 		//commands.put(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
@@ -317,8 +324,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			}
 			
 			// If no URL matched between the csprocessor.ini and csprocessor.cfg then print an error
-			if (url == null) {
+			if (url == null && !firstRun) {
 				printError(Constants.ERROR_NO_SERVER_FOUND_MSG, false);
+				shutdown(Constants.EXIT_CONFIG_ERROR);
+			} else if (url == null) {
+				printError(Constants.SETUP_CONFIG_MSG, false);
 				shutdown(Constants.EXIT_CONFIG_ERROR);
 			}
 		} else {
@@ -405,6 +415,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			JCommander.getConsole().println(String.format(Constants.CONFIG_CREATING_MSG, location));
 			
 			String configFile = "";
+			firstRun = true;
 			
 			// Create the configuration
 			
