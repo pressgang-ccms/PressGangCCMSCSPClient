@@ -105,7 +105,8 @@ public class CheckoutCommand extends BaseCommandImpl {
 		String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl());
 		
 		// Create the directory
-		outputConfig.getParentFile().mkdirs();
+		if (outputConfig.getParentFile() != null)
+			outputConfig.getParentFile().mkdirs();
 		
 		boolean error = false;
 		

@@ -177,7 +177,8 @@ public class PushCommand extends BaseCommandImpl {
 			File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			
 			// Create the directory
-			outputSpec.getParentFile().mkdirs();
+			if (outputSpec.getParentFile() != null)
+				outputSpec.getParentFile().mkdirs();
 			
 			// Save the Post Processed spec
 			try {
