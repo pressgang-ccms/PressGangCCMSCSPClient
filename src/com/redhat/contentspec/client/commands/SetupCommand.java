@@ -16,7 +16,7 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.topicindex.rest.entities.UserV1;
 
-@Parameters(commandDescription = "Setup the content specification processor configuration files")
+@Parameters(commandDescription = "Setup the Content Specification Processor configuration files")
 public class SetupCommand extends BaseCommandImpl {
 
 	public SetupCommand(JCommander parser) {
@@ -52,7 +52,7 @@ public class SetupCommand extends BaseCommandImpl {
 		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
 			
 			// Get which server they want to connect to by default
-			while (!defaultServerName.equalsIgnoreCase("test") || !defaultServerName.equalsIgnoreCase("production")) {
+			while (!defaultServerName.equalsIgnoreCase("test") && !defaultServerName.equalsIgnoreCase("production")) {
 				JCommander.getConsole().println("Which server do you want to connect to by default? (test/production)");
 				defaultServerName = JCommander.getConsole().readLine().toLowerCase();
 				
@@ -105,6 +105,7 @@ public class SetupCommand extends BaseCommandImpl {
 				JCommander.getConsole().println("Please enter the username of server no. " + i + ": ");
 				config.setUsername(JCommander.getConsole().readLine());
 				
+				// Add the server configuration and add the name to the list of displayable strings
 				servers.put(config.getName(), config);
 				serverNames += config.getName() + "/";
 				
