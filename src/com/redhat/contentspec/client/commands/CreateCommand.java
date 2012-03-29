@@ -135,11 +135,11 @@ public class CreateCommand extends BaseCommandImpl {
 		
 		// Check that the output directory doesn't already exist
 		File directory = new File(cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(parser.getContentSpec().getTitle()));
-		if (directory.exists() && !force) {
+		if (directory.exists() && !force && directory.isDirectory()) {
 			printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
 			shutdown(Constants.EXIT_FAILURE);
 		// If it exists and force is enabled delete the directory contents
-		} else if (directory.exists()) {
+		} else if (directory.exists() && directory.isDirectory()) {
 			ClientUtilities.deleteDir(directory);
 		}
 		
