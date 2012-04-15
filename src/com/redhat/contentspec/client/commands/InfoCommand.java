@@ -70,15 +70,17 @@ public class InfoCommand extends BaseCommandImpl {
 			return;
 		}
 		
-		// Print the initial CSP ID message
-		JCommander.getConsole().println(String.format(Constants.CSP_ID_MSG, ids.get(0)));
-		
 		// Get the Content Specification from the server.
 		final TopicV1 contentSpec = restManager.getReader().getContentSpecById(ids.get(0), null);
 		if (contentSpec == null || contentSpec.getXml() == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
+		
+		// Print the initial CSP ID & Title message
+		JCommander.getConsole().println(String.format(Constants.CSP_ID_MSG, ids.get(0)));
+		JCommander.getConsole().println(String.format(Constants.CSP_TITLE_MSG, contentSpec.getTitle()));
+		JCommander.getConsole().println("");
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
