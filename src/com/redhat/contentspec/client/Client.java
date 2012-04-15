@@ -220,6 +220,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		CheckoutCommand checkout = new CheckoutCommand(parser);
 		CreateCommand create = new CreateCommand(parser);
 		ChecksumCommand checksum = new ChecksumCommand(parser);
+		InfoCommand info = new InfoCommand(parser);
 		ListCommand list = new ListCommand(parser);
 		PreviewCommand preview = new PreviewCommand(parser);
 		PullCommand pull = new PullCommand(parser);
@@ -246,6 +247,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		
 		parser.addCommand(Constants.CHECKSUM_COMMAND_NAME, checksum);
 		commands.put(Constants.CHECKSUM_COMMAND_NAME, checksum);
+		
+		parser.addCommand(Constants.INFO_COMMAND_NAME, info);
+		commands.put(Constants.INFO_COMMAND_NAME, info);
 		
 		parser.addCommand(Constants.LIST_COMMAND_NAME, list);
 		commands.put(Constants.LIST_COMMAND_NAME, list);

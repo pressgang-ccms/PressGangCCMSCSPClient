@@ -36,6 +36,7 @@ public class Constants {
 	public static final String CHECKOUT_COMMAND_NAME = "checkout";
 	public static final String CREATE_COMMAND_NAME = "create";
 	public static final String CHECKSUM_COMMAND_NAME = "checksum";
+	public static final String INFO_COMMAND_NAME = "info";
 	public static final String LIST_COMMAND_NAME = "list";
 	public static final String PREVIEW_COMMAND_NAME = "preview";
 	public static final String PULL_COMMAND_NAME = "pull";
@@ -100,6 +101,8 @@ public class Constants {
 	public static final String UP_TO_DATE_MSG				= "The local copy of the Content Specification is up to date.";
 	public static final String SETUP_CONFIG_MSG				= "Edit your configuration file to configure your username(s) and default server.";
 	public static final String SUCCESSFUL_SETUP_MSG			= "Configuration settings successfully setup.";
+	public static final String CSP_ID_MSG					= "Content Specification ID: %d";
+	public static final String CSP_COMPLETION_MSG			= "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %.2f%%";
 	
 	// Start Messages
 	public static final String STARTING_ASSEMBLE_MSG		= "Starting to assemble...";
