@@ -79,6 +79,7 @@ public class InfoCommand extends BaseCommandImpl {
 		
 		// Print the initial CSP ID & Title message
 		JCommander.getConsole().println(String.format(Constants.CSP_ID_MSG, ids.get(0)));
+		JCommander.getConsole().println(String.format(Constants.CSP_REVISION_MSG, contentSpec.getRevision()));
 		JCommander.getConsole().println(String.format(Constants.CSP_TITLE_MSG, contentSpec.getTitle()));
 		JCommander.getConsole().println("");
 		

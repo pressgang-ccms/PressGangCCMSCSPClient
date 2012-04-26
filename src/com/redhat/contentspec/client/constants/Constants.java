@@ -102,6 +102,7 @@ public class Constants {
 	public static final String SETUP_CONFIG_MSG				= "Edit your configuration file to configure your username(s) and default server.";
 	public static final String SUCCESSFUL_SETUP_MSG			= "Configuration settings successfully setup.";
 	public static final String CSP_ID_MSG					= "Content Specification ID: %d";
+	public static final String CSP_REVISION_MSG				= "Content Specification Revision: %d";
 	public static final String CSP_TITLE_MSG				= "Content Specification Title: %s";
 	public static final String CSP_COMPLETION_MSG			= "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %.2f%%";
 	
