@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.processor.ContentSpecParser;
@@ -16,6 +17,7 @@ import com.redhat.topicindex.rest.collections.BaseRestCollectionV1;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
+@Parameters(commandDescription = "Get some basic information and metrics about a project.")
 public class InfoCommand extends BaseCommandImpl {
 
 	@Parameter(metaVar = "[ID]")
