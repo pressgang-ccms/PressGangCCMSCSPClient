@@ -125,15 +125,22 @@ public class StatusCommand extends BaseCommandImpl {
 		// Get the local checksum value
 		NamedPattern pattern = NamedPattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
 		NamedMatcher matcher = pattern.matcher(contentSpecData);
-		String checksum = "";
+		String checksumValue = "";
 		while (matcher.find()) {
 			String temp = matcher.group();
-			checksum = temp.replaceAll("^CHECKSUM[ ]*=[ ]*", "");
+			checksumValue = temp.replaceAll("^CHECKSUM[ ]*=[ ]*", "");
 		}
 		
+		// Calculate the local checksum value
+		contentSpecData = contentSpecData.replaceFirst("CHECKSUM[ ]*=.*\n", "");
+		String checksum = HashUtilities.generateMD5(serverContentSpecData);
+		
 		// Check that the checksums match
-		if (!checksum.equals(serverChecksum)) {
+		if (!checksumValue.equals(serverChecksum)) {
 			printError(Constants.ERROR_OUT_OF_DATE_MSG, false);
+			shutdown(Constants.EXIT_OUT_OF_DATE);
+		} else if (!checksum.equals(serverChecksum)) {
+			printError(Constants.ERROR_LOCAL_COPY_UPDATED_MSG, false);
 			shutdown(Constants.EXIT_OUT_OF_DATE);
 		} else {
 			JCommander.getConsole().println(Constants.UP_TO_DATE_MSG);

@@ -18,7 +18,7 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --format=html-single";
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.23.2";
+	public static final String BUILD = "0.23.3";
 	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
@@ -85,7 +85,8 @@ public class Constants {
 	public static final String ERROR_NO_ID_MSG						= "No ID was specified by the command line or a csprocessor.cfg file.";
 	public static final String ERROR_MULTIPLE_ID_MSG				= "Multiple ID's specified. Please only specify one ID.";
 	public static final String ERROR_FAILED_CREATING_CONFIG_MSG		= "Failed to create the default configuration file.";
-	public static final String ERROR_OUT_OF_DATE_MSG				= "The local copy of the Content Specification is out of date. Please use csprocessor pull to download the latest copy.";
+	public static final String ERROR_OUT_OF_DATE_MSG				= "The local copy of the Content Specification is out of date. Please use \"csprocessor pull\" to download the latest copy.";
+	public static final String ERROR_LOCAL_COPY_UPDATED_MSG			= "The local copy of the Content Specification has been updated and is out of sync with the server. Please use \"csprocessor push\" to update the server copy.";
 	public static final String ERROR_NO_FILE_OUT_OF_DATE_MSG		= "The \"%s\" file couldn't be found. This could mean the title has changed on the server or the ID is wrong.";
 	public static final String ERROR_NO_USERNAME					= "No username was specified for the server. Please check your configuration files and make sure a username exists.";
 	
