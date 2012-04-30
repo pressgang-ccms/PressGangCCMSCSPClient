@@ -19,39 +19,77 @@
       </license>
    </licenses>
 
-   <dependencies>
+  <build>
+  	<plugins>
+  		<!-- build standalone exe jar -->
+       	<plugin>
+			<artifactId>maven-assembly-plugin</artifactId>
+			<configuration>
+	       		<descriptorRefs>
+	          		<descriptorRef>jar-with-dependencies</descriptorRef>
+	       		</descriptorRefs>
+	       		<archive>
+	       			<manifest>
+	       				<mainClass>com.redhat.contentspec.client.Client</mainClass>
+	       			</manifest>
+	       		</archive>
+			</configuration>
+       	</plugin>
+  	</plugins>
+  </build>
+
+  <dependencies>
 
 	<!-- Custom classes from internal repo -->
-      <dependency>
-          <groupId>com.redhat.contentspec</groupId>
-          <artifactId>csbuilder</artifactId>
-          <version>0.1.2-SNAPSHOT</version>
-      </dependency>
+	<dependency>
+		<groupId>com.redhat.contentspec</groupId>
+		<artifactId>csbuilder</artifactId>
+		<version>0.1.2-SNAPSHOT</version>
+	</dependency>
       
-      <dependency>
-          <groupId>com.redhat.contentspec</groupId>
-          <artifactId>cscommons</artifactId>
-          <version>0.0.1-SNAPSHOT</version>
-      </dependency>
+	<dependency>
+		<groupId>com.redhat.contentspec</groupId>
+		<artifactId>cscommons</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+	</dependency>
       
-      <dependency>
-          <groupId>com.redhat.contentspec</groupId>
-          <artifactId>csprocessor</artifactId>
-          <version>0.0.1-SNAPSHOT</version>
-      </dependency>
+	<dependency>
+		<groupId>com.redhat.contentspec</groupId>
+		<artifactId>csprocessor</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
       
-      <dependency>
+	<dependency>
       	<groupId>com.beust</groupId>
       	<artifactId>jcommander-extended</artifactId>
       	<version>1.24-SNAPSHOT</version>
-      </dependency>
+	</dependency>
       <!-- === -->
 
-      <dependency>
+	<!-- Apache Commons Libraries -->
+  	<dependency>
+  		<groupId>commons-codec</groupId>
+  		<artifactId>commons-codec</artifactId>
+  		<version>1.6</version>
+  	</dependency>
+
+    <dependency>
       	<groupId>commons-configuration</groupId>
       	<artifactId>commons-configuration</artifactId>
       	<version>1.7</version>
-      </dependency>
+    </dependency>
+      
+    <dependency>
+      	<groupId>com.ibm.icu</groupId>
+      	<artifactId>icu4j</artifactId>
+      	<version>4.8.1.1</version>
+	</dependency>
+    
+    <dependency>
+   		<groupId>log4j</groupId>
+     	<artifactId>log4j</artifactId>
+     	<version>1.2.16</version>
+   	</dependency>
 
    </dependencies>
 </project>
