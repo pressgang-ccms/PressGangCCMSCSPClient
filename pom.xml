@@ -19,10 +19,6 @@
       </license>
    </licenses>
 
-   <properties>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-   </properties>
-
    <dependencies>
 
 	<!-- Custom classes from internal repo -->
