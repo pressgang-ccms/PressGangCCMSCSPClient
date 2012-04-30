@@ -1,0 +1,112 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+	<artifactId>contentspec</artifactId>
+	<groupId>com.redhat.contentspec</groupId>
+	<version>0.0.1-SNAPSHOT</version>
+	<relativePath>..</relativePath>
+  </parent>
+  <artifactId>csprocessor-client</artifactId>
+  <version>0.23.3-SNAPSHOT</version>
+  <name>Content Specification Processor</name>
+  
+  <url>http://www.github.com/lnewson/csprocessor</url>
+   <licenses>
+      <license>
+         <name>Apache License, Version 2.0</name>
+         <distribution>repo</distribution>
+         <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      </license>
+   </licenses>
+
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   </properties>
+
+   <dependencies>
+
+	<!-- Custom classes from internal repo -->
+      <dependency>
+          <groupId>com.redhat.contentspec</groupId>
+          <artifactId>csbuilder</artifactId>
+          <version>0.1.2-SNAPSHOT</version>
+      </dependency>
+      
+      <dependency>
+          <groupId>com.redhat.contentspec</groupId>
+          <artifactId>cscommons</artifactId>
+          <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+      
+      <dependency>
+          <groupId>com.redhat.contentspec</groupId>
+          <artifactId>csprocessor</artifactId>
+          <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+      
+      <dependency>
+      	<groupId>com.beust</groupId>
+      	<artifactId>jcommander-extended</artifactId>
+      	<version>1.24-SNAPSHOT</version>
+      </dependency>
+      <!-- === -->
+
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-atom-provider</artifactId>
+        <version>2.2.3.GA</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-jaxrs</artifactId>
+        <version>2.2.3.GA</version>
+      </dependency>
+      
+	  <dependency>
+      	<groupId>javax.ws.rs</groupId>
+    	<artifactId>javax.ws.rs-api</artifactId>
+    	<version>2.0-m04</version>
+	  </dependency>
+
+   <!-- required by com.redhat.contentspec.rest.RESTReader -->
+   	  <dependency>
+   		<groupId>log4j</groupId>
+     	<artifactId>log4j</artifactId>
+     	<version>1.2.16</version>
+   	  </dependency>
+   
+   <!-- ==== -->
+   
+      <dependency>
+      	<groupId>commons-collections</groupId>
+      	<artifactId>commons-collections</artifactId>
+      	<version>3.2.1</version>
+      </dependency>
+
+      <dependency>
+      	<groupId>commons-logging</groupId>
+      	<artifactId>commons-logging</artifactId>
+      	<version>1.1.1</version>
+      </dependency>
+
+      <dependency>
+      	<groupId>commons-configuration</groupId>
+      	<artifactId>commons-configuration</artifactId>
+      	<version>1.7</version>
+      </dependency>
+
+      <dependency>
+      	<groupId>com.ibm.icu</groupId>
+      	<artifactId>icu4j</artifactId>
+      	<version>4.8.1.1</version>
+      </dependency>
+
+      <dependency>
+      	<groupId>org.codehaus.jackson</groupId>
+      	<artifactId>jackson-mapper-asl</artifactId>
+      	<version>1.9.6</version>
+      </dependency>
+
+   </dependencies>
+</project>

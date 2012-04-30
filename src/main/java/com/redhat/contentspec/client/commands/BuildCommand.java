@@ -211,9 +211,9 @@ public class BuildCommand extends BaseCommandImpl {
 		JCommander.getConsole().println(Constants.STARTING_BUILD_MSG);
 		
 		// Build the Content Specification
-		builder = new ContentSpecBuilder(restManager, getBuildOptions());
 		byte[] builderOutput = null;
 		try {
+			builder = new ContentSpecBuilder(restManager, getBuildOptions());
 			builderOutput = builder.buildBook(csp.getContentSpec(), user);
 		} catch (Exception e) {
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
