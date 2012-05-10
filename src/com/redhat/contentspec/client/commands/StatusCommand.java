@@ -119,7 +119,7 @@ public class StatusCommand extends BaseCommandImpl {
 		}
 		
 		// Calculate the server checksum value
-		String serverContentSpecData = contentSpec.getXml().replaceFirst("CHECKSUM[ ]*=.*\n", "");
+		String serverContentSpecData = contentSpec.getXml().replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
 		String serverChecksum = HashUtilities.generateMD5(serverContentSpecData);
 		
 		// Get the local checksum value
@@ -132,7 +132,7 @@ public class StatusCommand extends BaseCommandImpl {
 		}
 		
 		// Calculate the local checksum value
-		contentSpecData = contentSpecData.replaceFirst("CHECKSUM[ ]*=.*\n", "");
+		contentSpecData = contentSpecData.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
 		String checksum = HashUtilities.generateMD5(serverContentSpecData);
 		
 		// Check that the checksums match

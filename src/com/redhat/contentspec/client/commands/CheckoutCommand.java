@@ -99,10 +99,9 @@ public class CheckoutCommand extends BaseCommandImpl {
 		
 		// Save the csprocessor.cfg and post spec to file if the create was successful
 		String escapedTitle = StringUtilities.escapeTitle(contentSpec.getTitle());
-		TopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(contentSpec.getId(), null);
 		File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 		File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-		String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl());
+		String config = ClientUtilities.generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());
 		
 		// Create the directory
 		if (outputConfig.getParentFile() != null)
@@ -125,7 +124,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		// Save the Post Processed spec
 		try {
 			FileOutputStream fos = new FileOutputStream(outputSpec);
-			fos.write(contentSpecTopic.getXml().getBytes());
+			fos.write(contentSpec.getXml().getBytes());
 			fos.flush();
 			fos.close();
 			JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
