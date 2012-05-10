@@ -79,14 +79,15 @@ public class StatusCommand extends BaseCommandImpl {
 		}
 		
 		// Get the content specification from the server
-		TopicV1 contentSpec = reader.getContentSpecById(ids.get(0), null);
+		TopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), null);
 		if (contentSpec == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
 		// Create the local file
-		File file = new File(StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION);
+		final String fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+		File file = new File(fileName);
 		
 		// Check that the file exists
 		if (!file.exists()) {
@@ -125,21 +126,24 @@ public class StatusCommand extends BaseCommandImpl {
 		// Get the local checksum value
 		NamedPattern pattern = NamedPattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
 		NamedMatcher matcher = pattern.matcher(contentSpecData);
-		String checksumValue = "";
+		String localStringChecksum = "";
 		while (matcher.find()) {
 			String temp = matcher.group();
-			checksumValue = temp.replaceAll("^CHECKSUM[ ]*=[ ]*", "");
+			localStringChecksum = temp.replaceAll("^CHECKSUM[ ]*=[ ]*", "");
 		}
 		
 		// Calculate the local checksum value
 		contentSpecData = contentSpecData.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
-		String checksum = HashUtilities.generateMD5(serverContentSpecData);
+		String localChecksum = HashUtilities.generateMD5(contentSpecData);
 		
 		// Check that the checksums match
-		if (!checksumValue.equals(serverChecksum)) {
+		if (!localStringChecksum.equals(localChecksum) && !localStringChecksum.equals(serverChecksum)) {
+			printError(String.format(Constants.ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG, fileName), false);
+			shutdown(Constants.EXIT_OUT_OF_DATE);
+		} else if (!localStringChecksum.equals(serverChecksum)) {
 			printError(Constants.ERROR_OUT_OF_DATE_MSG, false);
 			shutdown(Constants.EXIT_OUT_OF_DATE);
-		} else if (!checksum.equals(serverChecksum)) {
+		} else if (!localChecksum.equals(serverChecksum)) {
 			printError(Constants.ERROR_LOCAL_COPY_UPDATED_MSG, false);
 			shutdown(Constants.EXIT_OUT_OF_DATE);
 		} else {
