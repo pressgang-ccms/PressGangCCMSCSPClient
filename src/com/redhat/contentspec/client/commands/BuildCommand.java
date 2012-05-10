@@ -211,10 +211,10 @@ public class BuildCommand extends BaseCommandImpl {
 		JCommander.getConsole().println(Constants.STARTING_BUILD_MSG);
 		
 		// Build the Content Specification
-		builder = new ContentSpecBuilder(restManager, getBuildOptions());
 		byte[] builderOutput = null;
 		try {
-			builderOutput = builder.buildBook(csp.getContentSpec(), user);
+			builder = new ContentSpecBuilder(restManager);
+			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
 		} catch (Exception e) {
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
