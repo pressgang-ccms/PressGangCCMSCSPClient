@@ -213,8 +213,8 @@ public class BuildCommand extends BaseCommandImpl {
 		// Build the Content Specification
 		byte[] builderOutput = null;
 		try {
-			builder = new ContentSpecBuilder(restManager, getBuildOptions());
-			builderOutput = builder.buildBook(csp.getContentSpec(), user);
+			builder = new ContentSpecBuilder(restManager);
+			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
 		} catch (Exception e) {
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);

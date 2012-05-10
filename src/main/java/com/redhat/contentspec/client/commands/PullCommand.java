@@ -184,7 +184,7 @@ public class PullCommand extends BaseCommandImpl{
 		String fileName = "";
 		// Topic
 		if (topic) {
-			TopicV1 topic = reader.getTopicById(ids.get(0), revision);
+			TopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 			if (topic == null) {
 				printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);

@@ -86,7 +86,7 @@ public class ChecksumCommand extends BaseCommandImpl {
 		}
 		
 		// Calculate and print the checksum value
-		String contentSpec = cs.getXml().replaceFirst("CHECKSUM[ ]*=.*\n", "");
+		String contentSpec = cs.getXml().replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
 		String checksum = HashUtilities.generateMD5(contentSpec);
 		JCommander.getConsole().println("CHECKSUM=" + checksum);
 	}
