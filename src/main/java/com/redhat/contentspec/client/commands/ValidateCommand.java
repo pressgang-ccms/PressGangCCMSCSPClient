@@ -12,10 +12,11 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.converter.FileConverter;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
+import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
@@ -84,11 +85,11 @@ public class ValidateCommand extends BaseCommandImpl {
 		// If files is empty then we must be using a csprocessor.cfg file
 		if (files.size() == 0 && cspConfig.getContentSpecId() != null) {
 			TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
-			String fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+			String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 			File file = new File(fileName);
 			if (!file.exists()) {
 				// Backwards compatibility check for files ending with .txt
-				file = new File(StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+				file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
 				if (!file.exists()) {
 					printError(String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
 					shutdown(Constants.EXIT_FAILURE);
@@ -125,8 +126,13 @@ public class ValidateCommand extends BaseCommandImpl {
 			return;
 		}
 		
+		// Setup the processing options
+		final ProcessingOptions processingOptions = new ProcessingOptions();
+		processingOptions.setPermissiveMode(permissive);
+		processingOptions.setValidating(true);
+		
 		// Process the content spec to see if its valid
-		csp = new ContentSpecProcessor(restManager, elm, permissive, true);
+		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
 		try {
 			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
 		} catch (Exception e) {

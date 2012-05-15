@@ -24,8 +24,9 @@ import com.redhat.contentspec.constants.CSConstants;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.DocBookUtilities;
+import com.redhat.ecs.commonutils.StringUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -181,7 +182,7 @@ public class ClientUtilities {
 	 */
 	public static String generateCsprocessorCfg(TopicV1 contentSpec, String serverUrl) {
 		String output = "";
-		output += "# SPEC_TITLE=" + StringUtilities.escapeTitle(contentSpec.getTitle()) + "\n";
+		output += "# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n";
 		output += "SPEC_ID=" + contentSpec.getId() + "\n";
 		output += "SERVER_URL=" + serverUrl + "\n";
 		return output;

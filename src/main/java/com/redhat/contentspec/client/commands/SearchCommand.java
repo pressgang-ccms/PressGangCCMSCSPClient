@@ -13,8 +13,8 @@ import com.redhat.contentspec.constants.CSConstants;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.StringUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -76,7 +76,7 @@ public class SearchCommand extends BaseCommandImpl {
 	@Override
 	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
 		List<TopicV1> csList = new ArrayList<TopicV1>();
-		String searchText = StringUtilities.join(queries.toArray(new String[queries.size()]), " ");
+		String searchText = StringUtilities.buildString(queries.toArray(new String[queries.size()]), " ");
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {

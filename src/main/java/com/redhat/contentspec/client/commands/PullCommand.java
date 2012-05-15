@@ -14,9 +14,9 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -191,10 +191,10 @@ public class PullCommand extends BaseCommandImpl{
 			} else {
 				if (useXml) {
 					data = topic.getXml();
-					fileName = StringUtilities.escapeTitle(topic.getTitle()) + ".xml";
+					fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
 				} else if (useHtml) {
 					data = topic.getHtml();
-					fileName = StringUtilities.escapeTitle(topic.getTitle()) + ".html";
+					fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".html";
 				}
 			}
 		// Content Specification
@@ -206,9 +206,9 @@ public class PullCommand extends BaseCommandImpl{
 					shutdown(Constants.EXIT_FAILURE);
 				} else {
 					data = contentSpec.getXml();
-					fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "-pre." + Constants.FILENAME_EXTENSION;
+					fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-pre." + Constants.FILENAME_EXTENSION;
 					if (pullForConfig) {
-						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
+						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
 					}
 				}
 			} else {
@@ -218,9 +218,9 @@ public class PullCommand extends BaseCommandImpl{
 					shutdown(Constants.EXIT_FAILURE);
 				} else {
 					data = contentSpec.getXml();
-					fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+					fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 					if (pullForConfig) {
-						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
+						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
 					}
 				}
 			}

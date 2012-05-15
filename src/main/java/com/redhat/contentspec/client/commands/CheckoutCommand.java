@@ -14,8 +14,8 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -82,7 +82,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		}
 			
 		// Check that the output directory doesn't already exist
-		File directory = new File(cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(contentSpec.getTitle()));
+		File directory = new File(cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
 		if (directory.exists() && !force) {
 			printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
 			shutdown(Constants.EXIT_FAILURE);
@@ -98,7 +98,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		}
 		
 		// Save the csprocessor.cfg and post spec to file if the create was successful
-		String escapedTitle = StringUtilities.escapeTitle(contentSpec.getTitle());
+		String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 		File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
 		String config = ClientUtilities.generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());

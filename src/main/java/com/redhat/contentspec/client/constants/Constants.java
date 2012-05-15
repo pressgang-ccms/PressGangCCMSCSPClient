@@ -67,7 +67,7 @@ public class Constants {
 	public static final String LIST_SNAPSHOT_ERROR_MSG		= "There are %s Snapshots on this server. You should probably use \"csprocessor search -s\" if you have an idea what you are looking for. Otherwise, rerun the list command, and this time use the --limit<NUMBER>";
 	public static final String NO_FILE_FOUND_FOR_CONFIG		= "The file \"%s\" was not found in the current directory.";
 	
-	public static final String ERROR_UNAUTHORISED			= "Unauthorised request!";
+	public static final String ERROR_UNAUTHORISED			= "Unauthorised Request! Please check your username and the server URL is correct.";
 	public static final String ERROR_INTERNAL_ERROR			= "Internal processing error!";
 	public static final String ERROR_NO_REV_ID_FOUND_MSG	= "No data was found for the specified ID and revision!";
 	public static final String ERROR_NO_ID_FOUND_MSG		= "No data was found for the specified ID!";

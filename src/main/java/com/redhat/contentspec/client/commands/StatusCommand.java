@@ -13,11 +13,11 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.HashUtilities;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
+import com.redhat.ecs.commonutils.HashUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -86,13 +86,13 @@ public class StatusCommand extends BaseCommandImpl {
 		}
 		
 		// Create the local file
-		final String fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+		final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 		File file = new File(fileName);
 		
 		// Check that the file exists
 		if (!file.exists()) {
 			// Backwards compatibility check for files ending with .txt
-			file = new File(StringUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+			file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
 			if (!file.exists()) {
 				printError(String.format(Constants.ERROR_NO_FILE_OUT_OF_DATE_MSG, file.getName()), false);
 				shutdown(Constants.EXIT_FAILURE);

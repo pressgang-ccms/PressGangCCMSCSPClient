@@ -12,8 +12,8 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.ZipUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -78,11 +78,11 @@ public class AssembleCommand extends BuildCommand {
 				shutdown(Constants.EXIT_FAILURE);
 			}
 			
-			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
+			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
 			
 			fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
 			outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
-			fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
+			fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
 		} else if (getIds() != null && getIds().size() == 1) {
 			contentSpec = restManager.getReader().getContentSpecById(getIds().get(0), null);
 			
@@ -92,8 +92,8 @@ public class AssembleCommand extends BuildCommand {
 				shutdown(Constants.EXIT_FAILURE);
 			}
 			
-			outputDirectory = StringUtilities.escapeTitle(contentSpec.getTitle());
-			fileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
+			outputDirectory = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+			fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
 		} else if (getIds().size() == 0){
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);

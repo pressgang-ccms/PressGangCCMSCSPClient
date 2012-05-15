@@ -59,12 +59,6 @@
       
 	<dependency>
 		<groupId>com.redhat.contentspec</groupId>
-		<artifactId>cscommons</artifactId>
-    	<version>0.0.1-SNAPSHOT</version>
-	</dependency>
-      
-	<dependency>
-		<groupId>com.redhat.contentspec</groupId>
 		<artifactId>csprocessor</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</dependency>

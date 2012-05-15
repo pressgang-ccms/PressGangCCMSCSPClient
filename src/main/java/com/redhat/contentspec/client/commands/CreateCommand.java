@@ -15,10 +15,11 @@ import com.redhat.contentspec.client.converter.FileConverter;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
+import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
@@ -134,7 +135,7 @@ public class CreateCommand extends BaseCommandImpl {
 		}
 		
 		// Check that the output directory doesn't already exist
-		File directory = new File(cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(parser.getContentSpec().getTitle()));
+		File directory = new File(cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(parser.getContentSpec().getTitle()));
 		if (directory.exists() && !force && directory.isDirectory()) {
 			printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
 			shutdown(Constants.EXIT_FAILURE);
@@ -149,7 +150,11 @@ public class CreateCommand extends BaseCommandImpl {
 			return;
 		}
 		
-		csp = new ContentSpecProcessor(restManager, elm, permissive);
+		// Setup the processing options
+		final ProcessingOptions processingOptions = new ProcessingOptions();
+		processingOptions.setPermissiveMode(permissive);
+		
+		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
 		Integer revision = null;
 		try {
 			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
@@ -182,7 +187,7 @@ public class CreateCommand extends BaseCommandImpl {
 			boolean error = false;
 			
 			// Save the csprocessor.cfg and post spec to file if the create was successful
-			String escapedTitle = StringUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 			TopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
 			File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");

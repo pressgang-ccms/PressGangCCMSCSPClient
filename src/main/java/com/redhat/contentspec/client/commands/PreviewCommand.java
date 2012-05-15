@@ -11,8 +11,8 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.StringUtilities;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -84,7 +84,7 @@ public class PreviewCommand extends AssembleCommand {
 				shutdown(Constants.EXIT_FAILURE);
 			}
 			
-			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (StringUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
+			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
 			
 			if (previewFormat.equals("pdf")) {				
 				// Parse the content specification to get the product and versions
@@ -97,7 +97,7 @@ public class PreviewCommand extends AssembleCommand {
 				}
 				
 				// Create the file
-				previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/en-US/" + previewFormat + "/" + StringUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + StringUtilities.escapeTitle(contentSpec.getTitle()) + "-en-US.pdf";
+				previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/en-US/" + previewFormat + "/" + DocBookUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-en-US.pdf";
 			} else {
 				previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/en-US/" + previewFormat + "/index.html";
 			}
@@ -119,9 +119,9 @@ public class PreviewCommand extends AssembleCommand {
 					printError(Constants.ERROR_INTERNAL_ERROR, false);
 					shutdown(Constants.EXIT_ARGUMENT_ERROR);
 				}
-				previewFileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "/tmp/en-US/" + previewFormat + "/" + StringUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + StringUtilities.escapeTitle(contentSpec.getTitle()) + "-en-US.pdf";
+				previewFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "/tmp/en-US/" + previewFormat + "/" + DocBookUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-en-US.pdf";
 			} else {
-				previewFileName = StringUtilities.escapeTitle(contentSpec.getTitle()) + "/tmp/en-US/" + previewFormat + "/index.html";
+				previewFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "/tmp/en-US/" + previewFormat + "/index.html";
 			}
 		} else if (getIds().size() == 0) {
 			printError(Constants.ERROR_NO_ID_MSG, false);

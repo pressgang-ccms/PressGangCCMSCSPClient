@@ -14,15 +14,17 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.CommaParameterSplitter;
 import com.beust.jcommander.internal.Maps;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
-import com.redhat.contentspec.builder.utils.BuilderOptions;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
+import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
+import com.redhat.contentspec.structures.BuilderOptions;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -193,8 +195,14 @@ public class BuildCommand extends BaseCommandImpl {
 		
 		JCommander.getConsole().println(Constants.STARTING_VALIDATE_MSG);
 		
+		// Setup the processing options
+		final ProcessingOptions processingOptions = new ProcessingOptions();
+		processingOptions.setPermissiveMode(permissive);
+		processingOptions.setValidating(true);
+		processingOptions.setIgnoreChecksum(true);
+		
 		// Validate and parse the Content Specification
-		csp = new ContentSpecProcessor(restManager, elm, permissive, true, true);
+		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
 		try {
 			csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EDITED);
 		} catch (Exception e) {
@@ -228,10 +236,10 @@ public class BuildCommand extends BaseCommandImpl {
 		}
 		
 		// Create the output file
-		String fileName = builder.getEscapedName();
+		String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		String outputDir = "";
 		if (buildingFromConfig) {
-			outputDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (builder.getEscapedName() + File.separator)) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
+			outputDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (fileName + File.separator)) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
 			fileName += "-publican.zip";
 		} else {
 			fileName += ".zip";
