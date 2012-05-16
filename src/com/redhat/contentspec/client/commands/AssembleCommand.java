@@ -78,7 +78,7 @@ public class AssembleCommand extends BuildCommand {
 				shutdown(Constants.EXIT_FAILURE);
 			}
 			
-			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
+			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + StringUtilities.escapeTitle(contentSpec.getTitle()) + File.separator));
 			
 			fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
 			outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
