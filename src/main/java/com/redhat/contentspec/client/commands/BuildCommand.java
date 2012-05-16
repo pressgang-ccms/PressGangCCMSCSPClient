@@ -21,7 +21,7 @@ import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.structures.BuilderOptions;
+import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
@@ -139,8 +139,8 @@ public class BuildCommand extends BaseCommandImpl {
 		this.outputPath = outputPath;
 	}
 
-	public BuilderOptions getBuildOptions() {
-		BuilderOptions buildOptions = new BuilderOptions();
+	public CSDocbookBuildingOptions getBuildOptions() {
+		CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
 		buildOptions.setInjection(inlineInjection);
 		buildOptions.setInjectionTypes(injectionTypes);
 		buildOptions.setIgnoreErrors(hideErrors);
