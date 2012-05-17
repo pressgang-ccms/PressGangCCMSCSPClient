@@ -18,7 +18,7 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --format=html-single";
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.23.3";
+	public static final String BUILD = "0.24.0";
 	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
@@ -165,6 +165,8 @@ public class Constants {
 	public static final String OVERRIDE_LONG_PARAM = "--override";
 	
 	public static final String HIDE_ERRORS_LONG_PARAM = "--hide-errors";
+	
+	public static final String HIDE_CONTENT_SPEC_LONG_PARAM = "--hide-contentspec";
 	
 	public static final String INLINE_INJECTION_LONG_PARAM = "--hide-injections";
 	

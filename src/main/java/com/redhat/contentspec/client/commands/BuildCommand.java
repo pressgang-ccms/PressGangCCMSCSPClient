@@ -37,6 +37,9 @@ public class BuildCommand extends BaseCommandImpl {
 	@Parameter(names = Constants.HIDE_ERRORS_LONG_PARAM, description = "Hide the errors in the output.")
 	private Boolean hideErrors = false;
 	
+	@Parameter(names = Constants.HIDE_CONTENT_SPEC_LONG_PARAM, description = "Hide the content spec page in the output.")
+	private Boolean hideContentSpec = false;
+	
 	@Parameter(names = Constants.INLINE_INJECTION_LONG_PARAM, description = "Stop injections from being processed when building.")
 	private Boolean inlineInjection = true;
 	
@@ -89,6 +92,14 @@ public class BuildCommand extends BaseCommandImpl {
 
 	public void setHideErrors(Boolean hideErrors) {
 		this.hideErrors = hideErrors;
+	}
+	
+	public Boolean getHideContentSpecPage() {
+		return hideErrors;
+	}
+
+	public void setHideContentSpecPage(Boolean hideContentSpecPage) {
+		this.hideContentSpec = hideContentSpecPage;
 	}
 
 	public List<Integer> getIds() {
@@ -143,10 +154,13 @@ public class BuildCommand extends BaseCommandImpl {
 		CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
 		buildOptions.setInjection(inlineInjection);
 		buildOptions.setInjectionTypes(injectionTypes);
-		buildOptions.setIgnoreErrors(hideErrors);
-		buildOptions.setInjectBugzillaLinks(!hideBugLinks);
+		buildOptions.setIgnoreMissingCustomInjections(hideErrors);
+		buildOptions.setSuppressErrorsPage(hideErrors);
+		buildOptions.setInsertSurveyLink(false);
+		buildOptions.setInsertBugzillaLinks(!hideBugLinks);
 		buildOptions.setPermissive(permissive);
 		buildOptions.setOverrides(overrides);
+		buildOptions.setSuppressContentSpecPage(hideContentSpec);
 		return buildOptions;
 	}
 	

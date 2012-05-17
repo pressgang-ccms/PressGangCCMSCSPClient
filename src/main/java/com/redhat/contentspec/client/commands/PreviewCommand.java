@@ -84,7 +84,7 @@ public class PreviewCommand extends AssembleCommand {
 				shutdown(Constants.EXIT_FAILURE);
 			}
 			
-			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
+			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + File.separator));
 			
 			if (previewFormat.equals("pdf")) {				
 				// Parse the content specification to get the product and versions
