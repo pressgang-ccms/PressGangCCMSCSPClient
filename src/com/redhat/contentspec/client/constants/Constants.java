@@ -18,7 +18,7 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --format=html-single";
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.23.4";
+	public static final String BUILD = "0.23.5";
 	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;

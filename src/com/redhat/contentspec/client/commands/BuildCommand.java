@@ -217,6 +217,7 @@ public class BuildCommand extends BaseCommandImpl {
 			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
 		} catch (Exception e) {
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
+			e.printStackTrace();
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}
 		
