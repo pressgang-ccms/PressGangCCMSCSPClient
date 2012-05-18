@@ -29,7 +29,8 @@ import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
-public class BuildCommand extends BaseCommandImpl {
+public class BuildCommand extends BaseCommandImpl
+{
 
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
@@ -66,91 +67,113 @@ public class BuildCommand extends BaseCommandImpl {
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
 	
-	public BuildCommand(JCommander parser) {
+	public BuildCommand(JCommander parser)
+	{
 		super(parser);
 	}
 	
-	public List<String> getInjectionTypes() {
+	public List<String> getInjectionTypes()
+	{
 		return injectionTypes;
 	}
 
-	public void setInjectionTypes(List<String> injectionTypes) {
+	public void setInjectionTypes(List<String> injectionTypes)
+	{
 		this.injectionTypes = injectionTypes;
 	}
 
-	public Boolean getInlineInjection() {
+	public Boolean getInlineInjection()
+	{
 		return inlineInjection;
 	}
 
-	public void setInlineInjection(Boolean inlineInjection) {
+	public void setInlineInjection(Boolean inlineInjection)
+	{
 		this.inlineInjection = inlineInjection;
 	}
 
-	public Boolean getHideErrors() {
+	public Boolean getHideErrors()
+	{
 		return hideErrors;
 	}
 
-	public void setHideErrors(Boolean hideErrors) {
+	public void setHideErrors(Boolean hideErrors)
+	{
 		this.hideErrors = hideErrors;
 	}
 	
-	public Boolean getHideContentSpecPage() {
+	public Boolean getHideContentSpecPage()
+	{
 		return hideErrors;
 	}
 
-	public void setHideContentSpecPage(Boolean hideContentSpecPage) {
+	public void setHideContentSpecPage(Boolean hideContentSpecPage)
+	{
 		this.hideContentSpec = hideContentSpecPage;
 	}
 
-	public List<Integer> getIds() {
+	public List<Integer> getIds()
+	{
 		return ids;
 	}
 
-	public void setIds(List<Integer> ids) {
+	public void setIds(List<Integer> ids)
+	{
 		this.ids = ids;
 	}
 
-	public Boolean getExecutionTime() {
+	public Boolean getExecutionTime()
+	{
 		return executionTime;
 	}
 
-	public void setExecutionTime(Boolean executionTime) {
+	public void setExecutionTime(Boolean executionTime)
+	{
 		this.executionTime = executionTime;
 	}
 
-	public Map<String, String> getOverrides() {
+	public Map<String, String> getOverrides()
+	{
 		return overrides;
 	}
 
-	public void setOverrides(Map<String, String> overrides) {
+	public void setOverrides(Map<String, String> overrides)
+	{
 		this.overrides = overrides;
 	}
 
-	public Boolean getPermissive() {
+	public Boolean getPermissive()
+	{
 		return permissive;
 	}
 
-	public void setPermissive(Boolean permissive) {
+	public void setPermissive(Boolean permissive)
+	{
 		this.permissive = permissive;
 	}
 	
-	public File getOutputFile() {
+	public File getOutputFile()
+	{
 		return output;
 	}
 	
-	public void setOutputFile(File outputFile) {
+	public void setOutputFile(File outputFile)
+	{
 		this.output = outputFile;
 	}
 	
-	public String getOutputPath() {
+	public String getOutputPath()
+	{
 		return outputPath;
 	}
 
-	public void setOutputPath(String outputPath) {
+	public void setOutputPath(String outputPath)
+	{
 		this.outputPath = outputPath;
 	}
 
-	public CSDocbookBuildingOptions getBuildOptions() {
+	public CSDocbookBuildingOptions getBuildOptions()
+	{
 		CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
 		buildOptions.setInjection(inlineInjection);
 		buildOptions.setInjectionTypes(injectionTypes);
@@ -165,7 +188,8 @@ public class BuildCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user)
+	{
 		long startTime = System.currentTimeMillis();
 		RESTReader reader = restManager.getReader();
 		boolean buildingFromConfig = false;
@@ -180,10 +204,13 @@ public class BuildCommand extends BaseCommandImpl {
 		}
 		
 		// Check that an id was entered
-		if (ids.size() == 0) {
+		if (ids.size() == 0)
+		{
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		} else if (ids.size() > 1) {
+		}
+		else if (ids.size() > 1)
+		{
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
@@ -196,13 +223,15 @@ public class BuildCommand extends BaseCommandImpl {
 		
 		// Get the Content Specification from the server.
 		TopicV1 contentSpec = reader.getContentSpecById(ids.get(0), null);
-		if (contentSpec == null || contentSpec.getXml() == null) {
+		if (contentSpec == null || contentSpec.getXml() == null)
+		{
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -217,15 +246,27 @@ public class BuildCommand extends BaseCommandImpl {
 		
 		// Validate and parse the Content Specification
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
-		try {
-			csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EDITED);
-		} catch (Exception e) {
+		boolean success = false;
+		try
+		{
+			success = csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EDITED);
+		}
+		catch (Exception e)
+		{
 			JCommander.getConsole().println(elm.generateLogs());
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
+		// Check that everything validated fine
+		if (!success)
+		{
+			JCommander.getConsole().println(elm.generateLogs());
+			shutdown(Constants.EXIT_TOPIC_INVALID);
+		}
+		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -234,10 +275,13 @@ public class BuildCommand extends BaseCommandImpl {
 		
 		// Build the Content Specification
 		byte[] builderOutput = null;
-		try {
+		try
+		{
 			builder = new ContentSpecBuilder(restManager);
 			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}
@@ -245,46 +289,63 @@ public class BuildCommand extends BaseCommandImpl {
 		// Print the success messages
 		long elapsedTime = System.currentTimeMillis() - startTime;
 		JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, builder.getNumErrors(), builder.getNumWarnings()) + (builder.getNumErrors() == 0 && builder.getNumWarnings() == 0 ? " - Flawless Victory!" : ""));
-		if (executionTime) {
+		if (executionTime)
+		{
 			JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
 		}
 		
 		// Create the output file
 		String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		String outputDir = "";
-		if (buildingFromConfig) {
+		if (buildingFromConfig)
+		{
 			outputDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (fileName + File.separator)) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
 			fileName += "-publican.zip";
-		} else {
+		} 
+		else
+		{
 			fileName += ".zip";
 		}
-		if (outputPath != null && outputPath.endsWith("/")) {
+		
+		// Create the fully qaulified output path
+		if (outputPath != null && outputPath.endsWith("/"))
+		{
 			output = new File(outputPath + outputDir + fileName);
-		} else if (outputPath == null) {
+		}
+		else if (outputPath == null)
+		{
 			output = new File(outputDir + fileName);
-		} else {
+		}
+		else
+		{
 			output = new File(outputPath);
 		}
 		
 		// Make sure the directories exist
-		if (output.isDirectory()) {
+		if (output.isDirectory())
+		{
 			output.mkdirs();
-		} else {
+		}
+		else
+		{
 			if (output.getParentFile() != null)
 				output.getParentFile().mkdirs();
 		}
 		
 		String answer = "y";
 		// Check if the file exists. If it does then check if the file should be overwritten
-		if (!buildingFromConfig && output.exists()) {
+		if (!buildingFromConfig && output.exists())
+		{
 			JCommander.getConsole().println(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, fileName));
 			answer = JCommander.getConsole().readLine();
-			while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("no"))) {
+			while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("no")))
+			{
 				JCommander.getConsole().print(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, fileName));
 				answer = JCommander.getConsole().readLine();
 				
 				// Need to check if the app is shutting down in this loop
-				if (isAppShuttingDown()) {
+				if (isAppShuttingDown())
+				{
 					shutdown.set(true);
 					return;
 				}
@@ -292,47 +353,60 @@ public class BuildCommand extends BaseCommandImpl {
 		}
 		
 		// Save the book to file
-		try {
-			if (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes")) {
+		try 
+		{
+			if (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes"))
+			{
 				FileOutputStream fos = new FileOutputStream(output);
 				fos.write(builderOutput);
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getAbsolutePath()));
-			} else {
+			}
+			else
+			{
 				shutdown(Constants.EXIT_FAILURE);
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			printError(Constants.ERROR_FAILED_SAVING, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(String errorMsg, boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.BUILD_COMMAND_NAME);
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.BUILD_COMMAND_NAME);
 	}
 
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public UserV1 authenticate(RESTReader reader)
+	{
 		return authenticate(getUsername(), reader);
 	}
 
 	@Override
-	public void shutdown() {
+	public void shutdown()
+	{
 		super.shutdown();
 		
 		// No need to wait as the ShutdownInterceptor is waiting
 		// on the whole program.
-		if (csp != null) {
+		if (csp != null)
+		{
 			csp.shutdown();
 		}
-		if (builder != null) {
+		
+		if (builder != null)
+		{
 			builder.shutdown();
 		}
 	}

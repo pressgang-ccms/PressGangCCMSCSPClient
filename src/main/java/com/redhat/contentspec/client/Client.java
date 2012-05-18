@@ -210,7 +210,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			}
 			
 			// Create the REST Manager
-			restManager = new RESTManager(elm, command.getServerUrl());
+			restManager = new RESTManager(elm, command.getSkynetServerUrl());
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown()) {
@@ -654,6 +654,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	@Override
 	public String getServerUrl() {
 		return serverUrl;
+	}
+	
+	@Override
+	public String getSkynetServerUrl() {
+		return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest");
 	}
 
 	@Override

@@ -52,6 +52,11 @@ public abstract class BaseCommandImpl implements BaseCommand {
 	public String getServerUrl() {
 		return serverUrl;
 	}
+	
+	@Override
+	public String getSkynetServerUrl() {
+		return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest");
+	}
 
 	@Override
 	public void setServerUrl(String serverUrl) {
