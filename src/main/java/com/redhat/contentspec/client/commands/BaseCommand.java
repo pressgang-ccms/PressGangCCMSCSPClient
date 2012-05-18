@@ -17,6 +17,8 @@ public interface BaseCommand extends ShutdownAbleApp {
 	void setShowHelp(Boolean showHelp);
 	String getConfigLocation();
 	void setConfigLocation(String configLocation);
+	Boolean isShowVersion();
+	void setShowVersion(Boolean showVersion);
 	boolean isAppShuttingDown();
 	void setAppShuttingDown(boolean shuttingDown);
 	void setShutdown(boolean shutdown);

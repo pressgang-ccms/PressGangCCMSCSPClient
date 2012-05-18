@@ -76,6 +76,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	@Parameter(names = Constants.HELP_LONG_PARAM)
 	private Boolean showHelp = false;
 	
+	@Parameter(names = Constants.VERSION_LONG_PARAM)
+	private Boolean showVersion = false;
+	
 	@Parameter(names = Constants.CONFIG_LONG_PARAM, metaVar = "<FILE>")
 	private String configLocation = Constants.DEFAULT_CONFIG_LOCATION;
 	
@@ -121,13 +124,20 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	 * 
 	 * @param args The array of arguments from the command line
 	 */
-	public void processArgs(String[] args) {
-		try {
+	public void processArgs(String[] args)
+	{
+		try
+		{
 			parser.parse(args);
-		} catch (ParameterException e) {
-			if (parser.getParsedCommand() != null) {
+		}
+		catch (ParameterException e)
+		{
+			if (parser.getParsedCommand() != null)
+			{
 				commands.get(parser.getParsedCommand()).printError(Constants.INVALID_ARG_MSG, true);
-			} else {
+			}
+			else
+			{
 				printError(Constants.INVALID_ARG_MSG, true);
 			}
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
@@ -135,18 +145,31 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		
 		// Get the command used
 		String commandName = parser.getParsedCommand();
-		if (commandName == null) {
+		if (commandName == null)
+		{
 			command = this;
-		} else {
+		}
+		else
+		{
 			command = commands.get(commandName);
 		}
 		
 		// Process the command
-		if (command.isShowHelp() || isShowHelp() || args.length == 0) {
+		if (command.isShowHelp() || isShowHelp() || args.length == 0)
+		{
 			command.printHelp();
-		} else if (command instanceof SetupCommand) {
+		} 
+		else if (command.isShowVersion() || isShowVersion())
+		{
+			// Print the version details
+			printVersionDetails(Constants.BUILD_MSG, Constants.BUILD, false);
+		}
+		else if (command instanceof SetupCommand)
+		{
 			command.process(cspConfig, restManager, elm, null);
-		} else {
+		}
+		else
+		{
 		
 			// Print the version details
 			printVersionDetails(Constants.BUILD_MSG, Constants.BUILD, false);
@@ -213,7 +236,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	 * 
 	 * @param parser
 	 */
-	protected void setupCommands(JCommander parser) {
+	protected void setupCommands(JCommander parser)
+	{
 		AssembleCommand assemble = new AssembleCommand(parser);
 		BuildCommand build = new BuildCommand(parser);
 		CheckoutCommand checkout = new CheckoutCommand(parser);
@@ -287,86 +311,130 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	/**
 	 * Apply the settings of the from the various configuration files and command line parameters to the used command.
 	 */
-	private void applySettings() {
+	private void applySettings()
+	{
 		// Move the main parameters into the sub command
-		if (getConfigLocation() != null) {
+		if (getConfigLocation() != null)
+		{
 			command.setConfigLocation(getConfigLocation());
 		}
-		if (getServerUrl() != null) {
+		
+		if (getServerUrl() != null)
+		{
 			command.setServerUrl(getServerUrl());
 		}
-		if (getUsername() != null) {
+		
+		if (getUsername() != null)
+		{
 			command.setUsername(getUsername());
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
 		// Set the URL
 		String url = null;
-		if (command.getServerUrl() != null) {
+		if (command.getServerUrl() != null)
+		{
+			// Check if the server url is a name defined in csprocessor.ini
+			for (String serverName: servers.keySet())
+			{
+				// Ignore the default server for csprocessor.cfg configuration files
+				if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
+				{
+					continue;
+				}
+				else if (serverName.equals(command.getServerUrl()))
+				{
+					command.setServerUrl(servers.get(serverName).getUrl());
+					break;
+				}
+			}
+			
 			url = ClientUtilities.validateHost(command.getServerUrl());
-		} else if (cspConfig != null && cspConfig.getServerUrl() != null) {
-			for (String serverName: servers.keySet()) {
+		}
+		else if (cspConfig != null && cspConfig.getServerUrl() != null)
+		{
+			for (String serverName: servers.keySet())
+			{
 				// Ignore the default server for csprocessor.cfg configuration files
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
 				
 				// Compare the urls
-				try {
+				try
+				{
 					URI serverUrl = new URI(ClientUtilities.validateHost(servers.get(serverName).getUrl()));
-					if (serverUrl.equals(new URI(cspConfig.getServerUrl()))) {
+					if (serverUrl.equals(new URI(cspConfig.getServerUrl())))
+					{
 						url = servers.get(serverName).getUrl();
 						break;
 					}
-				} catch (URISyntaxException e) {
+				}
+				catch (URISyntaxException e)
+				{
 					break;
 				}
 			}
 			
 			// If no URL matched between the csprocessor.ini and csprocessor.cfg then print an error
-			if (url == null && !firstRun) {
+			if (url == null && !firstRun)
+			{
 				printError(Constants.ERROR_NO_SERVER_FOUND_MSG, false);
 				shutdown(Constants.EXIT_CONFIG_ERROR);
-			} else if (url == null) {
+			}
+			else if (url == null)
+			{
 				printError(Constants.SETUP_CONFIG_MSG, false);
 				shutdown(Constants.EXIT_CONFIG_ERROR);
 			}
-		} else {
+		}
+		else
+		{
 			url = servers.get(Constants.DEFAULT_SERVER_NAME).getUrl();
 		}
 		command.setServerUrl(url);
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
 		// Set the username
-		if (command.getUsername() == null) {
-			for (String serverName: servers.keySet()) {
+		if (command.getUsername() == null)
+		{
+			for (String serverName: servers.keySet())
+			{
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
-				try {
+				try
+				{
 					URL serverUrl = new URL(servers.get(serverName).getUrl());
-					if (serverUrl.equals(new URL(url))) {
+					if (serverUrl.equals(new URL(url)))
+					{
 						command.setUsername(servers.get(serverName).getUsername());
 					}
-				} catch (MalformedURLException e) {
+				}
+				catch (MalformedURLException e)
+				{
 					command.setUsername(servers.get(Constants.DEFAULT_SERVER_NAME).getUsername());
 				}
 			}
 			
 			// If none were found for the server then use the default
-			if (command.getUsername() == null || command.getUsername().equals("")) {
+			if (command.getUsername() == null || command.getUsername().equals(""))
+			{
 				command.setUsername(servers.get(Constants.DEFAULT_SERVER_NAME).getUsername());
 			}
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -378,9 +446,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		
 		// Set the publican build options for assemble or preview commands
-		if (command instanceof AssembleCommand) {
+		if (command instanceof AssembleCommand)
+		{
 			((AssembleCommand)command).setPublicanBuildOptions(publicanBuildOptions);
-			if (command instanceof PreviewCommand) {
+			if (command instanceof PreviewCommand)
+			{
 				((PreviewCommand)command).setPreviewFormat(publicanPreviewFormat);
 			}
 		}
@@ -571,36 +641,54 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		JCommander.getConsole().println(String.format(msg, version) + (printNL ? "\n" : ""));
 	}
 
+	@Override
 	public String getUsername() {
 		return username;
 	}
 
+	@Override
 	public void setUsername(String username) {
 		this.username = username;
 	}
 
+	@Override
 	public String getServerUrl() {
 		return serverUrl;
 	}
 
+	@Override
 	public void setServerUrl(String serverUrl) {
 		this.serverUrl = serverUrl;
 	}
 
+	@Override
 	public Boolean isShowHelp() {
 		return showHelp;
 	}
-
+	
+	@Override
 	public void setShowHelp(Boolean showHelp) {
 		this.showHelp = showHelp;
 	}
 
+	@Override
 	public String getConfigLocation() {
 		return configLocation;
 	}
 
+	@Override
 	public void setConfigLocation(String configLocation) {
 		this.configLocation = configLocation;
+	}
+	
+	@Override
+	public Boolean isShowVersion() {
+		return showVersion;
+	}
+
+	@Override
+	public void setShowVersion(Boolean showVersion) {
+		this.showVersion = showVersion;
 	}
 
 	@Override

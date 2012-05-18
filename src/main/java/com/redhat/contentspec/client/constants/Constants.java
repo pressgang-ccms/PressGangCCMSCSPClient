@@ -197,4 +197,6 @@ public class Constants {
 	public static final String DEBUG_LONG_PARAM = "--debug";
 	
 	public static final String COMMENTED_LONG_PARAM = "--commented";
+	
+	public static final String VERSION_LONG_PARAM = "--version";
 }

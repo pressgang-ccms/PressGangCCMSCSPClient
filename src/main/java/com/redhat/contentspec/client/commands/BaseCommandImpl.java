@@ -28,6 +28,9 @@ public abstract class BaseCommandImpl implements BaseCommand {
 	@Parameter(names = Constants.DEBUG_LONG_PARAM, hidden = true)
 	private Boolean debug = false;
 	
+	@Parameter(names = Constants.VERSION_LONG_PARAM, hidden = true)
+	private Boolean showVersion = false;
+
 	protected final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 	protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 	
@@ -81,6 +84,16 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
 	public void setDebug(Boolean debug) {
 		this.debug = debug;
+	}
+	
+	@Override
+	public Boolean isShowVersion() {
+		return showVersion;
+	}
+
+	@Override
+	public void setShowVersion(Boolean showVersion) {
+		this.showVersion = showVersion;
 	}
 
 	@Override
