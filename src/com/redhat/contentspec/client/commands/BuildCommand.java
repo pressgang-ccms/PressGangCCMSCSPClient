@@ -195,11 +195,19 @@ public class BuildCommand extends BaseCommandImpl {
 		
 		// Validate and parse the Content Specification
 		csp = new ContentSpecProcessor(restManager, elm, permissive, true, true);
+		boolean success = false;
 		try {
-			csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EDITED);
+			success = csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EDITED);
 		} catch (Exception e) {
 			JCommander.getConsole().println(elm.generateLogs());
 			shutdown(Constants.EXIT_FAILURE);
+		}
+		
+		// Check that everything validated fine
+		if (!success)
+		{
+			JCommander.getConsole().println(elm.generateLogs());
+			shutdown(Constants.EXIT_TOPIC_INVALID);
 		}
 		
 		// Good point to check for a shutdown
