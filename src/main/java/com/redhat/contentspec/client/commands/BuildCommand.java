@@ -16,6 +16,7 @@ import com.beust.jcommander.internal.Maps;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
@@ -25,6 +26,7 @@ import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
+import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
 
@@ -32,8 +34,8 @@ import com.redhat.topicindex.rest.entities.UserV1;
 public class BuildCommand extends BaseCommandImpl
 {
 
-	@Parameter(metaVar = "[ID]")
-	private List<Integer> ids = new ArrayList<Integer>();
+	@Parameter(metaVar = "[ID] or [FILE]")
+	private List<String> ids = new ArrayList<String>();
 	
 	@Parameter(names = Constants.HIDE_ERRORS_LONG_PARAM, description = "Hide the errors in the output.")
 	private Boolean hideErrors = false;
@@ -115,12 +117,12 @@ public class BuildCommand extends BaseCommandImpl
 		this.hideContentSpec = hideContentSpecPage;
 	}
 
-	public List<Integer> getIds()
+	public List<String> getIds()
 	{
 		return ids;
 	}
 
-	public void setIds(List<Integer> ids)
+	public void setIds(List<String> ids)
 	{
 		this.ids = ids;
 	}
@@ -198,6 +200,36 @@ public class BuildCommand extends BaseCommandImpl
 		return buildOptions;
 	}
 	
+	protected String getContentSpecString(final RESTReader reader, final String id)
+	{
+		final String contentSpec;
+		if (id.matches("^\\d+$"))
+		{
+			// Get the Content Specification from the server.
+			TopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			
+			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
+			{
+				printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
+				shutdown(Constants.EXIT_FAILURE);
+			}
+			
+			contentSpec = contentSpecTopic.getXml();
+		}
+		else
+		{
+			// Get the content spec from the file
+			contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.validateFilePath(id)));
+			
+			if (contentSpec == null  || contentSpec.equals("")) {
+				printError(Constants.ERROR_EMPTY_FILE_MSG, false);
+				shutdown(Constants.EXIT_FAILURE);
+			}
+		}
+		
+		return contentSpec;
+	}
+	
 	@Override
 	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user)
 	{
@@ -208,7 +240,7 @@ public class BuildCommand extends BaseCommandImpl
 		// Add the details for the csprocessor.cfg if no ids are specified
 		if (ids.size() == 0 && cspConfig.getContentSpecId() != null) {
 			buildingFromConfig = true;
-			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId().toString()));
 			if (cspConfig.getRootOutputDirectory() != null && !cspConfig.getRootOutputDirectory().equals("")) {
 				setOutputPath(cspConfig.getRootOutputDirectory());
 			}
@@ -232,13 +264,7 @@ public class BuildCommand extends BaseCommandImpl
 			return;
 		}
 		
-		// Get the Content Specification from the server.
-		TopicV1 contentSpec = reader.getContentSpecById(ids.get(0), null);
-		if (contentSpec == null || contentSpec.getXml() == null)
-		{
-			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
-			shutdown(Constants.EXIT_FAILURE);
-		}
+		final String contentSpec = getContentSpecString(reader, ids.get(0));
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
@@ -262,7 +288,7 @@ public class BuildCommand extends BaseCommandImpl
 		boolean success = false;
 		try
 		{
-			success = csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EDITED);
+			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
 		}
 		catch (Exception e)
 		{
@@ -308,7 +334,7 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		
 		// Create the output file
-		String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+		String fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 		String outputDir = "";
 		if (buildingFromConfig)
 		{

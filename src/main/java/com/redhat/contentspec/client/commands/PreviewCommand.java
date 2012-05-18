@@ -53,7 +53,8 @@ public class PreviewCommand extends AssembleCommand {
 
 	@Override
 	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
-		boolean previewFromConfig = getIds() != null && getIds().isEmpty() && cspConfig.getContentSpecId() != null;
+		final RESTReader reader = restManager.getReader();
+		final boolean previewFromConfig = getIds() != null && getIds().isEmpty() && cspConfig.getContentSpecId() != null;
 		
 		// Check that the format can be previewed
 		if (!validateFormat()) {
@@ -76,7 +77,7 @@ public class PreviewCommand extends AssembleCommand {
 		// Create the file object that will be opened
 		String previewFileName = null;
 		if (previewFromConfig) {
-			TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
+			final TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
 			
 			// Check that that content specification was found
 			if (contentSpec == null || contentSpec.getXml() == null) {
@@ -103,25 +104,20 @@ public class PreviewCommand extends AssembleCommand {
 			}
 		} else if (getIds() != null && getIds().size() == 1) {
 			// Create the file based on an ID passed from the command line
-			TopicV1 contentSpec = restManager.getReader().getContentSpecById(getIds().get(0), null);
+			final String contentSpec = this.getContentSpecString(reader, getIds().get(0));
 			
-			// Check that that content specification was found
-			if (contentSpec == null || contentSpec.getXml() == null) {
-				printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
-				shutdown(Constants.EXIT_FAILURE);
+			final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+			try {
+				csp.parse(contentSpec);
+			} catch (Exception e) {
+				printError(Constants.ERROR_INTERNAL_ERROR, false);
+				shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 			}
 			
 			if (previewFormat.equals("pdf")) {
-				ContentSpecParser csp = new ContentSpecParser(elm, restManager);
-				try {
-					csp.parse(contentSpec.getXml());
-				} catch (Exception e) {
-					printError(Constants.ERROR_INTERNAL_ERROR, false);
-					shutdown(Constants.EXIT_ARGUMENT_ERROR);
-				}
-				previewFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "/tmp/en-US/" + previewFormat + "/" + DocBookUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-en-US.pdf";
+				previewFileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "/tmp/en-US/" + previewFormat + "/" + DocBookUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "-en-US.pdf";
 			} else {
-				previewFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "/tmp/en-US/" + previewFormat + "/index.html";
+				previewFileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "/tmp/en-US/" + previewFormat + "/index.html";
 			}
 		} else if (getIds().size() == 0) {
 			printError(Constants.ERROR_NO_ID_MSG, false);

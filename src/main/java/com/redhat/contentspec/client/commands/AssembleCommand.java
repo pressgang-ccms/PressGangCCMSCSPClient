@@ -10,6 +10,7 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.ZipUtilities;
+import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
@@ -49,8 +50,10 @@ public class AssembleCommand extends BuildCommand {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
-		boolean assembleFromConfig = getIds() != null && getIds().isEmpty() && cspConfig.getContentSpecId() != null;
+	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user)
+	{
+		final RESTReader reader = restManager.getReader();
+		final boolean assembleFromConfig = getIds() != null && getIds().isEmpty() && cspConfig.getContentSpecId() != null;
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
@@ -65,12 +68,11 @@ public class AssembleCommand extends BuildCommand {
 		
 		JCommander.getConsole().println(Constants.STARTING_ASSEMBLE_MSG);
 		
-		TopicV1 contentSpec = null;
 		String fileDirectory = "";
 		String outputDirectory = "";
 		String fileName = null;
 		if (assembleFromConfig) {
-			contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
+			final TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
 			
 			// Check that that content specification was found
 			if (contentSpec == null || contentSpec.getXml() == null) {
@@ -84,16 +86,19 @@ public class AssembleCommand extends BuildCommand {
 			outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
 			fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
 		} else if (getIds() != null && getIds().size() == 1) {
-			contentSpec = restManager.getReader().getContentSpecById(getIds().get(0), null);
+			final String contentSpec = getContentSpecString(reader, getIds().get(0));
 			
-			// Check that that content specification was found
-			if (contentSpec == null || contentSpec.getXml() == null) {
-				printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
-				shutdown(Constants.EXIT_FAILURE);
+			/* parse the spec to get the main details */
+			final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+			try {
+				csp.parse(contentSpec);
+			} catch (Exception e) {
+				printError(Constants.ERROR_INTERNAL_ERROR, false);
+				shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 			}
 			
-			outputDirectory = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-			fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
+			outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
 		} else if (getIds().size() == 0){
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);

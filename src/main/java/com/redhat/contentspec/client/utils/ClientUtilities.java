@@ -273,7 +273,7 @@ public class ClientUtilities {
 	 * Builds a Content Specification list for a list of content specifications.
 	 */
 	public static SpecList buildSpecList(List<TopicV1> specList, RESTManager restManager, ErrorLoggerManager elm) throws Exception {
-		List<Spec> specs = new ArrayList<Spec>();
+		final List<Spec> specs = new ArrayList<Spec>();
 		for (TopicV1 cs: specList) {
 			UserV1 creator = null;
 			if (cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
@@ -282,7 +282,7 @@ public class ClientUtilities {
 					creator = users.get(0);
 				}
 			}
-			ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+			final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
 			csp.parse(cs.getXml());
 			ContentSpec contentSpec = csp.getContentSpec();
 			specs.add(new Spec(cs.getId(), cs.getTitle(), contentSpec.getProduct(), contentSpec.getVersion(), creator != null ? creator.getName() : null));
