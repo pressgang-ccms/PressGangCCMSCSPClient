@@ -139,7 +139,7 @@ public class Constants {
 	public static final String TOPIC_SHORT_PARAM = "-t";
 	
 	public static final String USERNAME_LONG_PARAM = "--username";
-	public static final String USERANME_SHORT_PARAM = "-u";
+	public static final String USERNAME_SHORT_PARAM = "-u";
 	
 	public static final String SERVER_LONG_PARAM = "--host";
 	public static final String SERVER_SHORT_PARAM = "-H";
@@ -195,4 +195,6 @@ public class Constants {
 	public static final String DEBUG_LONG_PARAM = "--debug";
 	
 	public static final String COMMENTED_LONG_PARAM = "--commented";
+	
+	public static final String VERSION_LONG_PARAM = "--version";
 }

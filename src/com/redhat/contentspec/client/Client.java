@@ -71,11 +71,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	@Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, metaVar = "<URL>")
 	private String serverUrl;
 	
-	@Parameter(names = {Constants.USERNAME_LONG_PARAM, Constants.USERANME_SHORT_PARAM}, metaVar = "<USERNAME>")
+	@Parameter(names = {Constants.USERNAME_LONG_PARAM, Constants.USERNAME_SHORT_PARAM}, metaVar = "<USERNAME>")
 	private String username;
 	
 	@Parameter(names = Constants.HELP_LONG_PARAM)
 	private Boolean showHelp = false;
+	
+	@Parameter(names = Constants.VERSION_LONG_PARAM)
+	private Boolean showVersion = false;
 	
 	@Parameter(names = Constants.CONFIG_LONG_PARAM, metaVar = "<FILE>")
 	private String configLocation = Constants.DEFAULT_CONFIG_LOCATION;
@@ -145,6 +148,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		// Process the command
 		if (command.isShowHelp() || isShowHelp() || args.length == 0) {
 			command.printHelp();
+		} else if (command.getShowVersion() || getShowVersion()) {
+			// Print the version details
+			printVersionDetails(Constants.BUILD_MSG, Constants.BUILD, false);
 		} else if (command instanceof SetupCommand) {
 			command.process(cspConfig, restManager, elm, null);
 		} else {
@@ -602,6 +608,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
 	public void setConfigLocation(String configLocation) {
 		this.configLocation = configLocation;
+	}
+	
+	public Boolean getShowVersion() {
+		return showVersion;
+	}
+
+	public void setShowVersion(Boolean showVersion) {
+		this.showVersion = showVersion;
 	}
 
 	@Override

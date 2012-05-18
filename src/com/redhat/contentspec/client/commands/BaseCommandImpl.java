@@ -16,7 +16,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
 	@Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, hidden = true)
 	private String serverUrl;
 	
-	@Parameter(names = {Constants.USERNAME_LONG_PARAM, Constants.USERANME_SHORT_PARAM}, hidden = true)
+	@Parameter(names = {Constants.USERNAME_LONG_PARAM, Constants.USERNAME_SHORT_PARAM}, hidden = true)
 	private String username;
 	
 	@Parameter(names = Constants.HELP_LONG_PARAM, hidden = true)
@@ -28,6 +28,9 @@ public abstract class BaseCommandImpl implements BaseCommand {
 	@Parameter(names = Constants.DEBUG_LONG_PARAM, hidden = true)
 	private Boolean debug = false;
 	
+	@Parameter(names = Constants.VERSION_LONG_PARAM, hidden = true)
+	private Boolean showVersion = false;
+
 	protected final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 	protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 	
@@ -81,6 +84,14 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
 	public void setDebug(Boolean debug) {
 		this.debug = debug;
+	}
+	
+	public Boolean getShowVersion() {
+		return showVersion;
+	}
+
+	public void setShowVersion(Boolean showVersion) {
+		this.showVersion = showVersion;
 	}
 
 	@Override
