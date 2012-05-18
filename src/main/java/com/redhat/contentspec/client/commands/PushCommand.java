@@ -145,6 +145,7 @@ public class PushCommand extends BaseCommandImpl {
 		// Setup the processing options
 		final ProcessingOptions processingOptions = new ProcessingOptions();
 		processingOptions.setPermissiveMode(permissive);
+		processingOptions.setAllowEmptyLevels(true);
 		
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
 		Integer revision = null;

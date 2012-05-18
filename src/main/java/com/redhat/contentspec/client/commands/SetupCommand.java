@@ -71,8 +71,8 @@ public class SetupCommand extends BaseCommandImpl {
 			servers.put(Constants.DEFAULT_SERVER_NAME, new ServerConfiguration(Constants.DEFAULT_SERVER_NAME, defaultServerName, username));
 			
 			// Setup each servers settings
-			servers.put("test", new ServerConfiguration("test", "http://skynet.usersys.redhat.com:8080/TopicIndex/"));
-			servers.put("production", new ServerConfiguration("test", "http://skynet.usersys.redhat.com:8080/TopicIndex/"));
+			servers.put("test", new ServerConfiguration("test", "http://skynet-dev.usersys.redhat.com:8080/TopicIndex/"));
+			servers.put("production", new ServerConfiguration("production", "http://skynet.usersys.redhat.com:8080/TopicIndex/"));
 			
 		/* We need to read in a list of servers and then get the default server */
 		} else if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
@@ -116,16 +116,24 @@ public class SetupCommand extends BaseCommandImpl {
 				}
 			}
 			
-			// Get which server they want to connect to
-			while (!servers.containsKey(defaultServerName)) {
-				JCommander.getConsole().println("Which server do you want to connect to by default? (" + serverNames.substring(0, serverNames.length() - 1) + ")");
-				defaultServerName = JCommander.getConsole().readLine().toLowerCase();
-				
-				// Good point to check for a shutdown
-				if (isAppShuttingDown()) {
-					shutdown.set(true);
-					return;
+			/* Only ask for the default when there are multiple servers */
+			if (servers.size() > 1)
+			{
+				// Get which server they want to connect to
+				while (!servers.containsKey(defaultServerName)) {
+					JCommander.getConsole().println("Which server do you want to connect to by default? (" + serverNames.substring(0, serverNames.length() - 1) + ")");
+					defaultServerName = JCommander.getConsole().readLine().toLowerCase();
+					
+					// Good point to check for a shutdown
+					if (isAppShuttingDown()) {
+						shutdown.set(true);
+						return;
+					}
 				}
+			}
+			else
+			{
+				defaultServerName = serverNames.substring(0, serverNames.length() - 1);
 			}
 			
 			// Create the default settings

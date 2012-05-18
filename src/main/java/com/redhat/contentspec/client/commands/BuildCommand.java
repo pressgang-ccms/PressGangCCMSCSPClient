@@ -62,6 +62,9 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
+	@Parameter(names = Constants.EMPTY_LEVELS_LONG_PARAM, description = "Allow building with empty levels.")
+	private Boolean allowEmptyLevels = false;
+	
 	private File output;
 	
 	private ContentSpecProcessor csp = null;
@@ -172,6 +175,14 @@ public class BuildCommand extends BaseCommandImpl
 		this.outputPath = outputPath;
 	}
 
+	public Boolean getAllowEmptyLevels() {
+		return allowEmptyLevels;
+	}
+
+	public void setAllowEmptyLevels(Boolean allowEmptyLevels) {
+		this.allowEmptyLevels = allowEmptyLevels;
+	}
+
 	public CSDocbookBuildingOptions getBuildOptions()
 	{
 		CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
@@ -243,6 +254,8 @@ public class BuildCommand extends BaseCommandImpl
 		processingOptions.setPermissiveMode(permissive);
 		processingOptions.setValidating(true);
 		processingOptions.setIgnoreChecksum(true);
+		if (allowEmptyLevels)
+			processingOptions.setAllowEmptyLevels(true);
 		
 		// Validate and parse the Content Specification
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);

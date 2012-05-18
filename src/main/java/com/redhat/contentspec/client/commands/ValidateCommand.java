@@ -130,6 +130,7 @@ public class ValidateCommand extends BaseCommandImpl {
 		final ProcessingOptions processingOptions = new ProcessingOptions();
 		processingOptions.setPermissiveMode(permissive);
 		processingOptions.setValidating(true);
+		processingOptions.setAllowEmptyLevels(true);
 		
 		// Process the content spec to see if its valid
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);

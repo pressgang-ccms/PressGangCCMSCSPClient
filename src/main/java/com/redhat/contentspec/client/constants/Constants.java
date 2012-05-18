@@ -199,4 +199,6 @@ public class Constants {
 	public static final String COMMENTED_LONG_PARAM = "--commented";
 	
 	public static final String VERSION_LONG_PARAM = "--version";
+	
+	public static final String EMPTY_LEVELS_LONG_PARAM = "--empty-levels";
 }
