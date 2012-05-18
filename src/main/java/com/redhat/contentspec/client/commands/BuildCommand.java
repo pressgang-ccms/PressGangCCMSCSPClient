@@ -280,6 +280,7 @@ public class BuildCommand extends BaseCommandImpl
 		processingOptions.setPermissiveMode(permissive);
 		processingOptions.setValidating(true);
 		processingOptions.setIgnoreChecksum(true);
+		processingOptions.setAllowNewTopics(false);
 		if (allowEmptyLevels)
 			processingOptions.setAllowEmptyLevels(true);
 		
