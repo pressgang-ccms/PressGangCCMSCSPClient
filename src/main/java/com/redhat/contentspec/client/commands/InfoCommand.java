@@ -23,8 +23,8 @@ public class InfoCommand extends BaseCommandImpl {
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 	
-	public InfoCommand(JCommander parser) {
-		super(parser);
+	public InfoCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public List<Integer> getIds() {
@@ -51,9 +51,10 @@ public class InfoCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		// Add the details for the csprocessor.cfg if no ids are specified
-		if (ids.size() == 0 && cspConfig.getContentSpecId() != null) {
+		if (loadFromCSProcessorCfg()) {
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
 		}
 		
@@ -126,6 +127,11 @@ public class InfoCommand extends BaseCommandImpl {
 		
 		// Print the completion status
 		JCommander.getConsole().println(String.format(Constants.CSP_COMPLETION_MSG, numTopics, numTopicsComplete, ((float)numTopicsComplete/(float)numTopics*100.0f)));
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 
 }

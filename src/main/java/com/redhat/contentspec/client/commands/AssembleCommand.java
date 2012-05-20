@@ -29,8 +29,8 @@ public class AssembleCommand extends BuildCommand {
 	
 	protected String publicanBuildOptions;
 	
-	public AssembleCommand(JCommander parser) {
-		super(parser);
+	public AssembleCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 	
 	public Boolean getNoBuild() {
@@ -50,10 +50,10 @@ public class AssembleCommand extends BuildCommand {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
 	{
 		final RESTReader reader = restManager.getReader();
-		final boolean assembleFromConfig = getIds() != null && getIds().isEmpty() && cspConfig.getContentSpecId() != null;
+		final boolean assembleFromConfig = loadFromCSProcessorCfg();
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
@@ -62,7 +62,7 @@ public class AssembleCommand extends BuildCommand {
 		}
 		
 		if (!noBuild) {
-			super.process(cspConfig, restManager, elm, user);
+			super.process(restManager, elm, user);
 			if (isShutdown()) return;
 		}
 		

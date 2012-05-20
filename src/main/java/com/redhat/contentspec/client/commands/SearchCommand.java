@@ -30,8 +30,8 @@ public class SearchCommand extends BaseCommandImpl {
 	@Parameter(names = {Constants.SNAPSHOT_LONG_PARAM, Constants.SNAPSHOT_SHORT_PARAM}, hidden = true)
 	private Boolean useSnapshot = false;
 
-	public SearchCommand(JCommander parser) {
-		super(parser);
+	public SearchCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 	
 	public List<String> getQueries() {
@@ -74,7 +74,8 @@ public class SearchCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		List<TopicV1> csList = new ArrayList<TopicV1>();
 		String searchText = StringUtilities.buildString(queries.toArray(new String[queries.size()]), " ");
 		
@@ -138,5 +139,14 @@ public class SearchCommand extends BaseCommandImpl {
 				shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 			}
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		/* 
+		 * Searching involves looking for a String so
+		 * there's no point in loading from the csprocessor.cfg
+		 */
+		return false;
 	}
 }

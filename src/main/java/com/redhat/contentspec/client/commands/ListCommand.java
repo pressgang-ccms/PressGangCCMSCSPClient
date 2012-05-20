@@ -33,8 +33,8 @@ public class ListCommand extends BaseCommandImpl{
 	@Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", description = "Limit the results to only show up to <NUM> results.")
 	private Integer limit = Constants.MAX_LIST_RESULT;
 	
-	public ListCommand(JCommander parser) {
-		super(parser);
+	public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 	
 	public Boolean useContentSpec() {
@@ -100,13 +100,14 @@ public class ListCommand extends BaseCommandImpl{
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		if (!isValid()) {
 			printError(Constants.INVALID_ARG_MSG, true);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
-		RESTReader reader = restManager.getReader();
+		final RESTReader reader = restManager.getReader();
 		
 		// Get the number of results to display
 		Integer numResults = 0;
@@ -153,5 +154,15 @@ public class ListCommand extends BaseCommandImpl{
 				}
 			}
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		/* 
+		 * We shouldn't use a csprocessor.cfg file for the 
+		 * list URL as it should be specified or read from the
+		 * csprocessor.ini
+		 */
+		return false;
 	}
 }

@@ -72,9 +72,9 @@ public class BuildCommand extends BaseCommandImpl
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
 	
-	public BuildCommand(JCommander parser)
+	public BuildCommand(final JCommander parser, final ContentSpecConfiguration cspConfig)
 	{
-		super(parser);
+		super(parser, cspConfig);
 	}
 	
 	public List<String> getInjectionTypes()
@@ -231,14 +231,14 @@ public class BuildCommand extends BaseCommandImpl
 	}
 	
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
 	{
-		long startTime = System.currentTimeMillis();
-		RESTReader reader = restManager.getReader();
+		final long startTime = System.currentTimeMillis();
+		final RESTReader reader = restManager.getReader();
 		boolean buildingFromConfig = false;
 		
 		// Add the details for the csprocessor.cfg if no ids are specified
-		if (ids.size() == 0 && cspConfig.getContentSpecId() != null) {
+		if (loadFromCSProcessorCfg()) {
 			buildingFromConfig = true;
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId().toString()));
 			if (cspConfig.getRootOutputDirectory() != null && !cspConfig.getRootOutputDirectory().equals("")) {
@@ -449,5 +449,10 @@ public class BuildCommand extends BaseCommandImpl
 		{
 			builder.shutdown();
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

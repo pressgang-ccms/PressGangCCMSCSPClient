@@ -44,8 +44,8 @@ public class CreateCommand extends BaseCommandImpl {
 	
 	private ContentSpecProcessor csp = null;
 	
-	public CreateCommand(JCommander parser) {
-		super(parser);
+	public CreateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public List<File> getFiles() {
@@ -102,7 +102,8 @@ public class CreateCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		if (!isValid()) {
 			printError(Constants.ERROR_NO_FILE_MSG, true);
 			shutdown(Constants.EXIT_FAILURE);
@@ -248,5 +249,11 @@ public class CreateCommand extends BaseCommandImpl {
 		if (csp != null) {
 			csp.shutdown();
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		/* Never use the csprocessor.cfg for creating files */
+		return false;
 	}
 }

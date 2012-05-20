@@ -25,8 +25,8 @@ public class ChecksumCommand extends BaseCommandImpl {
 	@Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
 	private Boolean contentSpec = true;
 	
-	public ChecksumCommand(JCommander parser) {
-		super(parser);
+	public ChecksumCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public Boolean useContentSpec() {
@@ -62,9 +62,10 @@ public class ChecksumCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		// If there are no ids then use the csprocessor.cfg file
-		if (ids.size() == 0 && cspConfig.getContentSpecId() != null) {
+		if (loadFromCSProcessorCfg()) {
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
 		}
 		
@@ -89,5 +90,10 @@ public class ChecksumCommand extends BaseCommandImpl {
 		String contentSpec = cs.getXml().replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
 		String checksum = HashUtilities.generateMD5(contentSpec);
 		JCommander.getConsole().println("CHECKSUM=" + checksum);
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

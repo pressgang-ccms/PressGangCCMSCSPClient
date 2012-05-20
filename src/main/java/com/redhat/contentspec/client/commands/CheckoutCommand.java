@@ -28,8 +28,8 @@ public class CheckoutCommand extends BaseCommandImpl {
 	@Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, description = "Force the Content Specification directories to be created.")
 	private Boolean force = false;
 
-	public CheckoutCommand(JCommander parser) {
-		super(parser);
+	public CheckoutCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public List<Integer> getIds() {
@@ -64,7 +64,8 @@ public class CheckoutCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		// Check that an ID was entered
 		if (ids.size() == 0) {
 			printError(Constants.ERROR_NO_ID_MSG, false);
@@ -75,14 +76,14 @@ public class CheckoutCommand extends BaseCommandImpl {
 		}
 		
 		// Get the content spec from the server
-		TopicV1 contentSpec = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+		final TopicV1 contentSpec = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 		if (contentSpec == null || contentSpec.getXml() == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 			
 		// Check that the output directory doesn't already exist
-		File directory = new File(cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
+		final File directory = new File(cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
 		if (directory.exists() && !force) {
 			printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
 			shutdown(Constants.EXIT_FAILURE);
@@ -98,10 +99,10 @@ public class CheckoutCommand extends BaseCommandImpl {
 		}
 		
 		// Save the csprocessor.cfg and post spec to file if the create was successful
-		String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-		File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
-		File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-		String config = ClientUtilities.generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());
+		final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+		final File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
+		final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
+		final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());
 		
 		// Create the directory
 		if (outputConfig.getParentFile() != null)
@@ -111,7 +112,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		
 		// Save the csprocessor.cfg
 		try {
-			FileOutputStream fos = new FileOutputStream(outputConfig);
+			final FileOutputStream fos = new FileOutputStream(outputConfig);
 			fos.write(config.getBytes());
 			fos.flush();
 			fos.close();
@@ -123,7 +124,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		
 		// Save the Post Processed spec
 		try {
-			FileOutputStream fos = new FileOutputStream(outputSpec);
+			final FileOutputStream fos = new FileOutputStream(outputSpec);
 			fos.write(contentSpec.getXml().getBytes());
 			fos.flush();
 			fos.close();
@@ -136,5 +137,11 @@ public class CheckoutCommand extends BaseCommandImpl {
 		if (error) {
 			shutdown(Constants.EXIT_FAILURE);
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		/* Never load from a cspconfig when checking out */
+		return false;
 	}
 }

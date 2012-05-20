@@ -37,8 +37,8 @@ public class PushCommand extends BaseCommandImpl {
 	
 	private ContentSpecProcessor csp = null;
 	
-	public PushCommand(JCommander parser) {
-		super(parser);
+	public PushCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public List<File> getFiles() {
@@ -94,10 +94,11 @@ public class PushCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		boolean pushingFromConfig = false;
 		// If files is empty then we must be using a csprocessor.cfg file
-		if (files.size() == 0 && cspConfig.getContentSpecId() != null) {
+		if (loadFromCSProcessorCfg()) {
 			TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
 			String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 			File file = new File(fileName);
@@ -205,5 +206,10 @@ public class PushCommand extends BaseCommandImpl {
 		if (csp != null) {
 			csp.shutdown();
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return files.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

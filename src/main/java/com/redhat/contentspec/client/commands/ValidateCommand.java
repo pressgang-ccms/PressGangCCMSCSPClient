@@ -32,8 +32,8 @@ public class ValidateCommand extends BaseCommandImpl {
 	
 	private ContentSpecProcessor csp = null;
 	
-	public ValidateCommand(JCommander parser) {
-		super(parser);
+	public ValidateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public List<File> getFiles() {
@@ -81,11 +81,12 @@ public class ValidateCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		// If files is empty then we must be using a csprocessor.cfg file
-		if (files.size() == 0 && cspConfig.getContentSpecId() != null) {
-			TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
-			String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+		if (loadFromCSProcessorCfg()) {
+			final TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
+			final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 			File file = new File(fileName);
 			if (!file.exists()) {
 				// Backwards compatibility check for files ending with .txt
@@ -164,5 +165,10 @@ public class ValidateCommand extends BaseCommandImpl {
 		if (csp != null) {
 			csp.shutdown();
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return files.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

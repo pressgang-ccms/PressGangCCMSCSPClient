@@ -27,10 +27,10 @@ public class PullCommand extends BaseCommandImpl{
 	private List<Integer> ids = new ArrayList<Integer>();
 	
 	@Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
-	private Boolean contentSpec = false;
+	private Boolean pullContentSpec = false;
 	
 	@Parameter(names = {Constants.TOPIC_LONG_PARAM, Constants.TOPIC_SHORT_PARAM})
-	private Boolean topic = false;
+	private Boolean pullTopic = false;
 	
 	@Parameter(names = {Constants.XML_LONG_PARAM, Constants.XML_SHORT_PARAM})
 	private Boolean useXml = false;
@@ -50,24 +50,24 @@ public class PullCommand extends BaseCommandImpl{
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
-	public PullCommand(JCommander parser) {
-		super(parser);
+	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public Boolean useContentSpec() {
-		return contentSpec;
+		return pullContentSpec;
 	}
 
 	public void setContentSpec(Boolean contentSpec) {
-		this.contentSpec = contentSpec;
+		this.pullContentSpec = contentSpec;
 	}
 
-	public Boolean getTopic() {
-		return topic;
+	public Boolean useTopic() {
+		return pullTopic;
 	}
 
 	public void setTopic(Boolean topic) {
-		this.topic = topic;
+		this.pullTopic = topic;
 	}
 
 	public Boolean isUseXml() {
@@ -127,14 +127,14 @@ public class PullCommand extends BaseCommandImpl{
 	}
 	
 	public boolean isValid() {
-		if (topic && !contentSpec) {
+		if (pullTopic && !pullContentSpec) {
 			if (useXml && useHtml) {
 				return false;
 			}
 			if (usePre || usePost) {
 				return false;
 			}
-		} else if (!topic) {
+		} else if (!pullTopic) {
 			if (usePre && usePost) {
 				return false;
 			}
@@ -148,12 +148,13 @@ public class PullCommand extends BaseCommandImpl{
 	}
 	
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
-		RESTReader reader = restManager.getReader();
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
+		final RESTReader reader = restManager.getReader();
 		boolean pullForConfig = false;
 		
 		// Load the data from the config data if no ids were specified
-		if (ids.size() == 0 && !topic && cspConfig.getContentSpecId() != null) {
+		if (loadFromCSProcessorCfg()) {
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
 			pullForConfig = true;
 			revision = null;
@@ -183,7 +184,7 @@ public class PullCommand extends BaseCommandImpl{
 		String data = "";
 		String fileName = "";
 		// Topic
-		if (topic) {
+		if (pullTopic) {
 			TopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 			if (topic == null) {
 				printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
@@ -294,5 +295,10 @@ public class PullCommand extends BaseCommandImpl{
 	@Override
 	public void printHelp() {
 		printHelp(Constants.PULL_COMMAND_NAME);
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null && !pullTopic;
 	}
 }

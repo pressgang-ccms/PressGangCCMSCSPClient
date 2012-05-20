@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTReader;
@@ -12,6 +13,7 @@ import com.redhat.topicindex.rest.entities.UserV1;
 public abstract class BaseCommandImpl implements BaseCommand {
 	
 	protected final JCommander parser;
+	protected final ContentSpecConfiguration cspConfig;
 	
 	@Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, hidden = true)
 	private String serverUrl;
@@ -34,8 +36,9 @@ public abstract class BaseCommandImpl implements BaseCommand {
 	protected final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 	protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 	
-	public BaseCommandImpl(JCommander parser) {
+	public BaseCommandImpl(final JCommander parser, final ContentSpecConfiguration cspConfig) {
 		this.parser = parser;
+		this.cspConfig = cspConfig;
 	}
 	
 	@Override

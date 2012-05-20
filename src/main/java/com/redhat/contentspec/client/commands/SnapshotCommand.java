@@ -10,8 +10,8 @@ import com.redhat.topicindex.rest.entities.UserV1;
 
 public class SnapshotCommand extends BaseCommandImpl {
 
-	public SnapshotCommand(JCommander jc) {
-		super(jc);
+	public SnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	@Override
@@ -30,8 +30,15 @@ public class SnapshotCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		printError("Snapshots aren't currently supported", false);
 		// TODO Add the ability to create snapshots at a later stage
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

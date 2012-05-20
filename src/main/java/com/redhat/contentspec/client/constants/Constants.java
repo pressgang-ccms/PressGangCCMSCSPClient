@@ -25,8 +25,9 @@ public class Constants {
 	
 	// General Messages
 	public static final String BUILD_MSG			= "CSProcessor client version: %s";
-	public static final String WEBSERVICE_MSG		= "Connecting to Skynet server: %s\n";
+	public static final String WEBSERVICE_MSG		= "Connecting to Skynet server: %s";
 	public static final String CONFIG_LOADING_MSG 	= "Loading configuration from %s";
+	public static final String CSP_CONFIG_LOADING_MSG 	= "Loading project configuration from csprocessor.cfg";
 	public static final String CONFIG_CREATING_MSG	= "Creating the default configuration file: %s";
 	public static final String ZIP_SAVED_MSG		= "INFO: Content Specification successfully built!";
 	
@@ -81,7 +82,7 @@ public class Constants {
 	public static final String ERROR_UNSUPPORTED_FORMAT				= "\"%s\" is not currently supported as a preview format.";
 	public static final String ERROR_INVALID_CSPROCESSOR_CFG_MSG	= "The csprocessor.cfg file doesn't have an ID specified.";
 	public static final String ERROR_CONTENT_SPEC_EXISTS_MSG		= "A directory already exists for the Content Specification. Please check the \"%s\" directory first and if it's correct, then use the --force option.";
-	public static final String ERROR_NO_SERVER_FOUND_MSG			= "No server is setup for the specified csprocessor.cfg server url.";
+	public static final String ERROR_NO_SERVER_FOUND_MSG			= "No credentials are setup for the \"%s\" server specified in the csprocessor.cfg file. Please setup the server in your csprocessor.ini configuration file.";
 	public static final String ERROR_NO_ID_MSG						= "No ID was specified by the command line or a csprocessor.cfg file.";
 	public static final String ERROR_MULTIPLE_ID_MSG				= "Multiple ID's specified. Please only specify one ID.";
 	public static final String ERROR_FAILED_CREATING_CONFIG_MSG		= "Failed to create the default configuration file.";

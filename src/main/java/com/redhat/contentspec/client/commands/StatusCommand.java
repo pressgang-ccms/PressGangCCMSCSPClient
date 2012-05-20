@@ -27,8 +27,8 @@ public class StatusCommand extends BaseCommandImpl {
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 
-	public StatusCommand(JCommander parser) {
-		super(parser);
+	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public List<Integer> getIds() {
@@ -55,11 +55,12 @@ public class StatusCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
-		RESTReader reader = restManager.getReader();
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
+		final RESTReader reader = restManager.getReader();
 		
 		// Load the data from the config data if no ids were specified
-		if (ids.size() == 0 && cspConfig.getContentSpecId() != null) {
+		if (loadFromCSProcessorCfg()) {
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
 		}
 		
@@ -149,6 +150,11 @@ public class StatusCommand extends BaseCommandImpl {
 		} else {
 			JCommander.getConsole().println(Constants.UP_TO_DATE_MSG);
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 
 }

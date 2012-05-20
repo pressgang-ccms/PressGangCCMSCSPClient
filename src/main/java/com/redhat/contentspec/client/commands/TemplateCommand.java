@@ -26,8 +26,8 @@ public class TemplateCommand extends BaseCommandImpl {
 			converter = FileConverter.class)
 	private File output;
 	
-	public TemplateCommand(JCommander parser) {
-		super(parser);
+	public TemplateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	public Boolean getCommented() {
@@ -62,8 +62,9 @@ public class TemplateCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
-		String template = commented ? TemplateConstants.FULLY_COMMENTED_TEMPLATE : TemplateConstants.EMPTY_TEMPLATE;
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
+		final String template = commented ? TemplateConstants.FULLY_COMMENTED_TEMPLATE : TemplateConstants.EMPTY_TEMPLATE;
 		
 		// Save or print the data
 		if (output == null || output.equals("")) {
@@ -97,6 +98,12 @@ public class TemplateCommand extends BaseCommandImpl {
 				shutdown(Constants.EXIT_FAILURE);
 			}
 		}
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		/* Doesn't need an ID so no point in loading from csprocessor.cfg */
+		return false;
 	}
 
 }

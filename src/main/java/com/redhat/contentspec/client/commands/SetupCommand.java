@@ -19,8 +19,8 @@ import com.redhat.topicindex.rest.entities.UserV1;
 @Parameters(commandDescription = "Setup the Content Specification Processor configuration files")
 public class SetupCommand extends BaseCommandImpl {
 
-	public SetupCommand(JCommander parser) {
-		super(parser);
+	public SetupCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 
 	@Override
@@ -39,14 +39,15 @@ public class SetupCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		JCommander.getConsole().println("Use the default server configuration? (Yes/No)");
 		String answer = JCommander.getConsole().readLine();
 		
 		String username = "";
 		String defaultServerName = "";
 		String rootDir = "";
-		HashMap<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
+		final HashMap<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 		
 		/* We are using the default setup so we only need to get the default server and a username */
 		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
@@ -220,6 +221,15 @@ public class SetupCommand extends BaseCommandImpl {
 		}
 		
 		JCommander.getConsole().println(Constants.SUCCESSFUL_SETUP_MSG);
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		/* 
+		 * No need to load from csprocessor.cfg as this
+		 * command configures the client before use.
+		 */
+		return false;
 	}
 
 }

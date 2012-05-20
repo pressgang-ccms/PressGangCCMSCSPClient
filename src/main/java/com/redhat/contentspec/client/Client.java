@@ -116,7 +116,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		
 		// Setup the commands that are to be used
-		setupCommands(parser);
+		setupCommands(parser, cspConfig);
 	}
 	
 	/**
@@ -166,7 +166,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		else if (command instanceof SetupCommand)
 		{
-			command.process(cspConfig, restManager, elm, null);
+			command.process(restManager, elm, null);
 		}
 		else
 		{
@@ -191,6 +191,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 				return;
 			}
 			
+			// If we are loading from csprocessor.cfg then display a message
+			if (command.loadFromCSProcessorCfg())
+			{
+				JCommander.getConsole().println(Constants.CSP_CONFIG_LOADING_MSG);
+			}
+			
 			// Apply the settings from the csprocessor.cfg, csprocessor.ini & command line.
 			applySettings();
 			
@@ -202,6 +208,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			
 			// Print the server url
 			JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, command.getServerUrl()));
+			
+			// Print a line to separate content
+			JCommander.getConsole().println("");
 			
 			// Test that the server address is valid
 			if (!ClientUtilities.validateServerExists(command.getServerUrl())) {
@@ -220,7 +229,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			
 			// Process the commands 
 			UserV1 user = command.authenticate(restManager.getReader());
-			command.process(cspConfig, restManager, elm, user);
+			command.process(restManager, elm, user);
 			
 			// Check if the program was shutdown
 			if (isShutdown()) return;
@@ -236,25 +245,25 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	 * 
 	 * @param parser
 	 */
-	protected void setupCommands(JCommander parser)
+	protected void setupCommands(final JCommander parser, final ContentSpecConfiguration cspConfig)
 	{
-		AssembleCommand assemble = new AssembleCommand(parser);
-		BuildCommand build = new BuildCommand(parser);
-		CheckoutCommand checkout = new CheckoutCommand(parser);
-		CreateCommand create = new CreateCommand(parser);
-		ChecksumCommand checksum = new ChecksumCommand(parser);
-		InfoCommand info = new InfoCommand(parser);
-		ListCommand list = new ListCommand(parser);
-		PreviewCommand preview = new PreviewCommand(parser);
-		PullCommand pull = new PullCommand(parser);
-		PushCommand push = new PushCommand(parser);
-		RevisionsCommand revisions = new RevisionsCommand(parser);
-		SearchCommand search = new SearchCommand(parser);
-		SetupCommand setup = new SetupCommand(parser);
-		//SnapshotCommand snapshot = new SnapshotCommand(parser);
-		StatusCommand status = new StatusCommand(parser);
-		TemplateCommand template = new TemplateCommand(parser);
-		ValidateCommand validate = new ValidateCommand(parser);
+		AssembleCommand assemble = new AssembleCommand(parser, cspConfig);
+		BuildCommand build = new BuildCommand(parser, cspConfig);
+		CheckoutCommand checkout = new CheckoutCommand(parser, cspConfig);
+		CreateCommand create = new CreateCommand(parser, cspConfig);
+		ChecksumCommand checksum = new ChecksumCommand(parser, cspConfig);
+		InfoCommand info = new InfoCommand(parser, cspConfig);
+		ListCommand list = new ListCommand(parser, cspConfig);
+		PreviewCommand preview = new PreviewCommand(parser, cspConfig);
+		PullCommand pull = new PullCommand(parser, cspConfig);
+		PushCommand push = new PushCommand(parser, cspConfig);
+		RevisionsCommand revisions = new RevisionsCommand(parser, cspConfig);
+		SearchCommand search = new SearchCommand(parser, cspConfig);
+		SetupCommand setup = new SetupCommand(parser, cspConfig);
+		//SnapshotCommand snapshot = new SnapshotCommand(parser, cspConfig);
+		StatusCommand status = new StatusCommand(parser, cspConfig);
+		TemplateCommand template = new TemplateCommand(parser, cspConfig);
+		ValidateCommand validate = new ValidateCommand(parser, cspConfig);
 		
 		parser.addCommand(Constants.ASSEMBLE_COMMAND_NAME, assemble);
 		commands.put(Constants.ASSEMBLE_COMMAND_NAME, assemble);
@@ -357,7 +366,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			
 			url = ClientUtilities.validateHost(command.getServerUrl());
 		}
-		else if (cspConfig != null && cspConfig.getServerUrl() != null)
+		else if (cspConfig != null && cspConfig.getServerUrl() != null && command.loadFromCSProcessorCfg())
 		{
 			for (String serverName: servers.keySet())
 			{
@@ -383,11 +392,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			// If no URL matched between the csprocessor.ini and csprocessor.cfg then print an error
 			if (url == null && !firstRun)
 			{
-				printError(Constants.ERROR_NO_SERVER_FOUND_MSG, false);
+				JCommander.getConsole().println("");
+				printError(String.format(Constants.ERROR_NO_SERVER_FOUND_MSG, cspConfig.getServerUrl()), false);
 				shutdown(Constants.EXIT_CONFIG_ERROR);
 			}
 			else if (url == null)
 			{
+				JCommander.getConsole().println("");
 				printError(Constants.SETUP_CONFIG_MSG, false);
 				shutdown(Constants.EXIT_CONFIG_ERROR);
 			}
@@ -463,9 +474,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	 * @return Returns false if an error occurs otherwise true
 	 */
 	@SuppressWarnings("unchecked")
-	protected boolean setConfigOptions(String location) {
-		location = ClientUtilities.validateConfigLocation(location);
-		HierarchicalINIConfiguration configReader = null;
+	protected boolean setConfigOptions(final String location) {
+		final String fixedLocation = ClientUtilities.validateConfigLocation(location);
+		final HierarchicalINIConfiguration configReader;
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
@@ -479,7 +490,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			JCommander.getConsole().println(String.format(Constants.CONFIG_LOADING_MSG, location));
 			// Initialise the configuration reader with the skynet.ini content
 			try {
-				configReader = new HierarchicalINIConfiguration(location);
+				configReader = new HierarchicalINIConfiguration(fixedLocation);
 			} catch (ConfigurationException e) {
 				command.printError(Constants.INI_NOT_FOUND_MSG, false);
 				return false;
@@ -718,8 +729,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig,
-			RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {	
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{	
 	}
 
 	@Override
@@ -752,5 +763,10 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	@Override
 	public void setShutdown(boolean shutdown) {
 		this.shutdown.set(shutdown);
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg() {
+		return cspConfig != null && csprocessorcfg.exists();
 	}
 }

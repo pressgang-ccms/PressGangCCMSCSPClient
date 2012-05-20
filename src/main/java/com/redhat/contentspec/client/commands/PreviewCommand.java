@@ -24,8 +24,8 @@ public class PreviewCommand extends AssembleCommand {
 	
 	protected String previewFormat = Constants.DEFAULT_PUBLICAN_FORMAT;
 	
-	public PreviewCommand(JCommander jc) {
-		super(jc);
+	public PreviewCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
+		super(parser, cspConfig);
 	}
 	
 	public Boolean getNoAssemble() {
@@ -52,9 +52,10 @@ public class PreviewCommand extends AssembleCommand {
 	}
 
 	@Override
-	public void process(ContentSpecConfiguration cspConfig, RESTManager restManager, ErrorLoggerManager elm, UserV1 user) {
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	{
 		final RESTReader reader = restManager.getReader();
-		final boolean previewFromConfig = getIds() != null && getIds().isEmpty() && cspConfig.getContentSpecId() != null;
+		final boolean previewFromConfig = loadFromCSProcessorCfg();
 		
 		// Check that the format can be previewed
 		if (!validateFormat()) {
@@ -70,7 +71,7 @@ public class PreviewCommand extends AssembleCommand {
 		
 		if (!noAssemble) {
 			// Assemble the content specification
-			super.process(cspConfig, restManager, elm, user);
+			super.process(restManager, elm, user);
 			if (isShutdown()) return;
 		}
 		
