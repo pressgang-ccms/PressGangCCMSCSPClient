@@ -289,7 +289,7 @@ public class BuildCommand extends BaseCommandImpl
 		boolean success = false;
 		try
 		{
-			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
 		}
 		catch (Exception e)
 		{
