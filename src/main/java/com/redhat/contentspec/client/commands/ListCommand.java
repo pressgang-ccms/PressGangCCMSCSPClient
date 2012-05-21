@@ -31,7 +31,7 @@ public class ListCommand extends BaseCommandImpl{
 	private Boolean force = false;
 	
 	@Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", description = "Limit the results to only show up to <NUM> results.")
-	private Integer limit = Constants.MAX_LIST_RESULT;
+	private Integer limit = null;
 	
 	public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
 		super(parser, cspConfig);
@@ -130,7 +130,7 @@ public class ListCommand extends BaseCommandImpl{
 			}
 			
 			// If there are too many content specs & force isn't set then send back an error message
-			if (noSpecs > Constants.MAX_LIST_RESULT && numResults >= Constants.MAX_LIST_RESULT && !force) {
+			if (noSpecs > Constants.MAX_LIST_RESULT && limit == null && !force) {
 				printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
 				shutdown(Constants.EXIT_FAILURE);
 			} else {
