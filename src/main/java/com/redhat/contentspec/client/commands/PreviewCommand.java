@@ -169,6 +169,6 @@ public class PreviewCommand extends AssembleCommand {
 	
 	@Override
 	public UserV1 authenticate(RESTReader reader) {
-		return authenticate(getUsername(), reader);
+		return noAssemble || getNoBuild() ? null : authenticate(getUsername(), reader);
 	}
 }

@@ -165,7 +165,7 @@ public class AssembleCommand extends BuildCommand {
 	
 	@Override
 	public UserV1 authenticate(RESTReader reader) {
-		return authenticate(getUsername(), reader);
+		return noBuild ? null : authenticate(getUsername(), reader);
 	}
 
 	public String getPublicanBuildOptions() {
