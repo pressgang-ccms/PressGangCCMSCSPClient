@@ -24,23 +24,23 @@
   	<plugins>
   		<!-- build standalone exe jar -->
        	<plugin>
-			<artifactId>maven-assembly-plugin</artifactId>
+			<artifactId>maven-shade-plugin</artifactId>
 			<configuration>
-	       		<descriptorRefs>
-	          		<descriptorRef>jar-with-dependencies</descriptorRef>
-	       		</descriptorRefs>
-	       		<archive>
-	       			<manifest>
-	       				<mainClass>com.redhat.contentspec.client.Client</mainClass>
-	       			</manifest>
-	       		</archive>
+	       		<transformers>
+	       			<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+	       			<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+	       				<manifestEntries>
+	       					<Main-Class>com.redhat.contentspec.client.Client</Main-Class>
+	       				</manifestEntries>
+	       			</transformer>
+	       		</transformers>
 			</configuration>
 			<executions>
           		<execution>
-					<id>make-assembly</id> <!-- this is used for inheritance merges -->
+					<id>make-shade</id> <!-- this is used for inheritance merges -->
             		<phase>package</phase> <!-- bind to the packaging phase -->
             		<goals>
-              			<goal>single</goal>
+              			<goal>shade</goal>
             		</goals>
           		</execution>
         	</executions>
