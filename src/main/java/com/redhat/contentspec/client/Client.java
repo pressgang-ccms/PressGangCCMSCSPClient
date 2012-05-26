@@ -88,10 +88,15 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	public static void main(String[] args) {
 		Client client = new Client();
 		Runtime.getRuntime().addShutdownHook(new ShutdownInterceptor(client));
+		client.setup();
 		client.processArgs(args);
 	}
 	
 	public Client() {
+	}
+	
+	public void setup()
+	{
 		// Set the column width
 		try {
 			parser.setColumnSize(Integer.parseInt(System.getenv("COLUMNS")));
