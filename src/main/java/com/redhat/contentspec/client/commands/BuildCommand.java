@@ -192,7 +192,7 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setInjectionTypes(injectionTypes);
 		buildOptions.setIgnoreMissingCustomInjections(hideErrors);
 		buildOptions.setSuppressErrorsPage(hideErrors);
-		buildOptions.setInsertSurveyLink(false);
+		buildOptions.setInsertSurveyLink(true);
 		buildOptions.setInsertBugzillaLinks(!hideBugLinks);
 		buildOptions.setPermissive(permissive);
 		buildOptions.setOverrides(overrides);
