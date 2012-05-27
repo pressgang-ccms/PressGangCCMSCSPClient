@@ -23,8 +23,13 @@ public class LoggingUtilities
 
     public static PrintStream createLoggingProxy(final Logger logger, final PrintStream realPrintStream, final Priority priority) {
         return new PrintStream(realPrintStream) {
+        	@Override
             public void print(final String string) {
-                realPrintStream.print(string);
+                logger.log(priority, string);
+            }
+        	
+        	@Override
+            public void println(final String string) {
                 logger.log(priority, string);
             }
         };
