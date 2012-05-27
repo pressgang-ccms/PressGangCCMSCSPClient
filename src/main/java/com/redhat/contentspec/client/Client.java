@@ -23,6 +23,7 @@ import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.DefaultConfigurationNode;
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -34,6 +35,7 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
+import com.redhat.contentspec.client.utils.LoggingUtilities;
 import com.redhat.contentspec.interfaces.ShutdownAbleApp;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
@@ -97,6 +99,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	
 	public void setup()
 	{
+		/* Set stderr to log to log4j */
+		LoggingUtilities.tieSystemErrToLog(Logger.getLogger(Client.class));
+		
 		// Set the column width
 		try {
 			parser.setColumnSize(Integer.parseInt(System.getenv("COLUMNS")));
