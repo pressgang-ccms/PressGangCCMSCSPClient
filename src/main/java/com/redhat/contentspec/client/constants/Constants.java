@@ -167,7 +167,7 @@ public class Constants {
 	
 	public static final String HIDE_ERRORS_LONG_PARAM = "--hide-errors";
 	
-	public static final String HIDE_CONTENT_SPEC_LONG_PARAM = "--hide-contentspec";
+	public static final String SHOW_CONTENT_SPEC_LONG_PARAM = "--show-contentspec";
 	
 	public static final String INLINE_INJECTION_LONG_PARAM = "--hide-injections";
 	

@@ -40,7 +40,7 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.HIDE_ERRORS_LONG_PARAM, description = "Hide the errors in the output.")
 	private Boolean hideErrors = false;
 	
-	@Parameter(names = Constants.HIDE_CONTENT_SPEC_LONG_PARAM, description = "Hide the content spec page in the output.")
+	@Parameter(names = Constants.SHOW_CONTENT_SPEC_LONG_PARAM, description = "Show the content spec page in the output.")
 	private Boolean hideContentSpec = true;
 	
 	@Parameter(names = Constants.INLINE_INJECTION_LONG_PARAM, description = "Stop injections from being processed when building.")
