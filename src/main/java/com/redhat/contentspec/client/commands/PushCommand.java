@@ -20,8 +20,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "Push an updated Content Specification to the server")
 public class PushCommand extends BaseCommandImpl {
@@ -99,7 +99,7 @@ public class PushCommand extends BaseCommandImpl {
 		boolean pushingFromConfig = false;
 		// If files is empty then we must be using a csprocessor.cfg file
 		if (loadFromCSProcessorCfg()) {
-			TopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
+			final ITopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
 			String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 			File file = new File(fileName);
 			if (!file.exists()) {
@@ -179,8 +179,8 @@ public class PushCommand extends BaseCommandImpl {
 		
 		if (success && pushingFromConfig) {
 			// Save the post spec to file if the push was successful
-			String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
-			TopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
+			final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			final ITopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
 			File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			
 			// Create the directory

@@ -15,8 +15,8 @@ import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.StringUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "Search for a Content Specification")
 public class SearchCommand extends BaseCommandImpl {
@@ -76,7 +76,7 @@ public class SearchCommand extends BaseCommandImpl {
 	@Override
 	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
 	{
-		List<TopicV1> csList = new ArrayList<TopicV1>();
+		final List<ITopicV1> csList = new ArrayList<ITopicV1>();
 		String searchText = StringUtilities.buildString(queries.toArray(new String[queries.size()]), " ");
 		
 		// Good point to check for a shutdown
@@ -86,9 +86,9 @@ public class SearchCommand extends BaseCommandImpl {
 		}
 		
 		// Search the database for content specs that match the query parameters
-		List<TopicV1> contentSpecs = restManager.getReader().getContentSpecs(null, null);
+		final List<ITopicV1> contentSpecs = restManager.getReader().getContentSpecs(null, null);
 		if (contentSpecs != null) {
-			for (TopicV1 contentSpec: contentSpecs) {
+			for (final ITopicV1 contentSpec: contentSpecs) {
 				
 				// Good point to check for a shutdown
 				if (isAppShuttingDown()) {
@@ -96,7 +96,7 @@ public class SearchCommand extends BaseCommandImpl {
 					return;
 				}
 				
-				ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+				final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
 				try {
 					csp.parse(contentSpec.getXml());
 				} catch (Exception e) {
@@ -114,8 +114,8 @@ public class SearchCommand extends BaseCommandImpl {
 				} else if (csp.getContentSpec().getVersion().matches(".*" + searchText + ".*")) {
 					csList.add(contentSpec);
 				// Search on created by
-				} else if (contentSpec.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null && contentSpec.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue() != null) {
-					if (contentSpec.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue().matches(".*" + searchText + ".*")) {
+				} else if (contentSpec.returnProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null && contentSpec.returnProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue() != null) {
+					if (contentSpec.returnProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue().matches(".*" + searchText + ".*")) {
 						csList.add(contentSpec);
 					}
 				}

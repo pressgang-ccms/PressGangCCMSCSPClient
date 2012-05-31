@@ -16,8 +16,8 @@ import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "Checkout an existing Content Specification from the server")
 public class CheckoutCommand extends BaseCommandImpl {
@@ -76,7 +76,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		}
 		
 		// Get the content spec from the server
-		final TopicV1 contentSpec = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+		final ITopicV1 contentSpec = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 		if (contentSpec == null || contentSpec.getXml() == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);

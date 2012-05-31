@@ -12,8 +12,8 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
 public class ListCommand extends BaseCommandImpl{
@@ -134,7 +134,7 @@ public class ListCommand extends BaseCommandImpl{
 				printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
 				shutdown(Constants.EXIT_FAILURE);
 			} else {
-				List<TopicV1> csList = reader.getContentSpecs(0, numResults);
+				final List<ITopicV1> csList = reader.getContentSpecs(0, numResults);
 				
 				// Good point to check for a shutdown
 				if (isAppShuttingDown()) {

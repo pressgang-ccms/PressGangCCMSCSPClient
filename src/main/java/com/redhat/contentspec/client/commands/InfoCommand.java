@@ -14,8 +14,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.topicindex.rest.collections.BaseRestCollectionV1;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "Get some basic information and metrics about a project.")
 public class InfoCommand extends BaseCommandImpl {
@@ -74,7 +74,7 @@ public class InfoCommand extends BaseCommandImpl {
 		}
 		
 		// Get the Content Specification from the server.
-		final TopicV1 contentSpec = restManager.getReader().getContentSpecById(ids.get(0), null);
+		final ITopicV1 contentSpec = restManager.getReader().getContentSpecById(ids.get(0), null);
 		if (contentSpec == null || contentSpec.getXml() == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
@@ -110,9 +110,9 @@ public class InfoCommand extends BaseCommandImpl {
 		// Calculate the percentage complete
 		final int numTopics = csp.getReferencedTopicIds().size();
 		int numTopicsComplete = 0;
-		BaseRestCollectionV1<TopicV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds());
+		final BaseRestCollectionV1<ITopicV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds());
 		if (topics != null && topics.getItems() != null) {
-			for (TopicV1 topic: topics.getItems()) {
+			for (final ITopicV1 topic: topics.getItems()) {
 				if (topic.getXml() != null && !topic.getXml().isEmpty()) {
 					numTopicsComplete++;
 				}

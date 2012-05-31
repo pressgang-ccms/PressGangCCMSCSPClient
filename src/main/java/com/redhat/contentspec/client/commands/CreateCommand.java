@@ -21,8 +21,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "Create a new Content Specification on the server")
 public class CreateCommand extends BaseCommandImpl {
@@ -188,11 +188,11 @@ public class CreateCommand extends BaseCommandImpl {
 			boolean error = false;
 			
 			// Save the csprocessor.cfg and post spec to file if the create was successful
-			String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
-			TopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
-			File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
-			File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-			String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl());
+			final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			final ITopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
+			final File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
+			final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
+			final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl());
 			
 			// Create the directory
 			if (outputConfig.getParentFile() != null)
@@ -200,7 +200,7 @@ public class CreateCommand extends BaseCommandImpl {
 			
 			// Save the csprocessor.cfg
 			try {
-				FileOutputStream fos = new FileOutputStream(outputConfig);
+				final FileOutputStream fos = new FileOutputStream(outputConfig);
 				fos.write(config.getBytes());
 				fos.flush();
 				fos.close();
@@ -212,7 +212,7 @@ public class CreateCommand extends BaseCommandImpl {
 			
 			// Save the Post Processed spec
 			try {
-				FileOutputStream fos = new FileOutputStream(outputSpec);
+				final FileOutputStream fos = new FileOutputStream(outputSpec);
 				fos.write(contentSpecTopic.getXml().getBytes());
 				fos.flush();
 				fos.close();

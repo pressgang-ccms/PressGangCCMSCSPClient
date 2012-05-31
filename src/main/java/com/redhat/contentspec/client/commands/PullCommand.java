@@ -17,8 +17,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 @Parameters(commandDescription = "Pull a Content Specification from the server")
 public class PullCommand extends BaseCommandImpl{
@@ -185,7 +185,7 @@ public class PullCommand extends BaseCommandImpl{
 		String fileName = "";
 		// Topic
 		if (pullTopic) {
-			TopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+			final ITopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 			if (topic == null) {
 				printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
@@ -201,7 +201,7 @@ public class PullCommand extends BaseCommandImpl{
 		// Content Specification
 		} else {
 			if (usePre) {
-				TopicV1 contentSpec = reader.getPreContentSpecById(ids.get(0), revision);
+				final ITopicV1 contentSpec = reader.getPreContentSpecById(ids.get(0), revision);
 				if (contentSpec == null) {
 					printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 					shutdown(Constants.EXIT_FAILURE);
@@ -213,7 +213,7 @@ public class PullCommand extends BaseCommandImpl{
 					}
 				}
 			} else {
-				TopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
+				final ITopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
 				if (contentSpec == null) {
 					printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 					shutdown(Constants.EXIT_FAILURE);

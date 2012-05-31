@@ -27,8 +27,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.StringUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
 import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
 
 public class ClientUtilities {
 	
@@ -180,7 +180,7 @@ public class ClientUtilities {
 	 * @param serverUrl The server URL that the content specification exists on.
 	 * @return The generated contents of the csprocessor.cfg file.
 	 */
-	public static String generateCsprocessorCfg(TopicV1 contentSpec, String serverUrl) {
+	public static String generateCsprocessorCfg(final ITopicV1 contentSpec, final String serverUrl) {
 		String output = "";
 		output += "# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n";
 		output += "SPEC_ID=" + contentSpec.getId() + "\n";
@@ -272,12 +272,12 @@ public class ClientUtilities {
 	/**
 	 * Builds a Content Specification list for a list of content specifications.
 	 */
-	public static SpecList buildSpecList(List<TopicV1> specList, RESTManager restManager, ErrorLoggerManager elm) throws Exception {
+	public static SpecList buildSpecList(final List<ITopicV1> specList, final RESTManager restManager, final ErrorLoggerManager elm) throws Exception {
 		final List<Spec> specs = new ArrayList<Spec>();
-		for (TopicV1 cs: specList) {
+		for (final ITopicV1 cs: specList) {
 			UserV1 creator = null;
-			if (cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
-				List<UserV1> users = restManager.getReader().getUsersByName(cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
+			if (cs.returnProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
+				List<UserV1> users = restManager.getReader().getUsersByName(cs.returnProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
 				if (users.size() == 1) {
 					creator = users.get(0);
 				}
