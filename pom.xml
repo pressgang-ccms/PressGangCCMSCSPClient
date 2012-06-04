@@ -8,7 +8,7 @@
   </parent>
   <groupId>com.redhat.contentspec</groupId>
   <artifactId>csprocessor-client</artifactId>
-  <version>0.24.3-SNAPSHOT</version>
+  <version>0.24.5-SNAPSHOT</version>
   <name>Content Specification Processor Client</name>
   
   <url>http://www.github.com/lnewson/csprocessor</url>

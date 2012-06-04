@@ -14,7 +14,7 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.HashUtilities;
 import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Get the checksum value for a Content Specification")
 public class ChecksumCommand extends BaseCommandImpl {
@@ -78,7 +78,7 @@ public class ChecksumCommand extends BaseCommandImpl {
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
-		final ITopicV1 cs = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+		final RESTTopicV1 cs = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 		
 		// Check that that content specification was found
 		if (cs == null || cs.getXml() == null) {

@@ -19,7 +19,7 @@ import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.ecs.commonutils.HashUtilities;
 import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Check the status of a local copy of a Content Specification compared to the server")
 public class StatusCommand extends BaseCommandImpl {
@@ -80,7 +80,7 @@ public class StatusCommand extends BaseCommandImpl {
 		}
 		
 		// Get the content specification from the server
-		final ITopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), null);
+		final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), null);
 		if (contentSpec == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);

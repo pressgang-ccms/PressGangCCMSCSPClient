@@ -28,7 +28,7 @@ import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.interfaces.ITopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
 public class BuildCommand extends BaseCommandImpl
@@ -206,7 +206,7 @@ public class BuildCommand extends BaseCommandImpl
 		if (id.matches("^\\d+$"))
 		{
 			// Get the Content Specification from the server.
-			final ITopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			final RESTTopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
