@@ -228,7 +228,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			}
 			
 			// Create the REST Manager
-			restManager = new RESTManager(elm, command.getSkynetServerUrl());
+			restManager = new RESTManager(command.getSkynetServerUrl());
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown()) {
