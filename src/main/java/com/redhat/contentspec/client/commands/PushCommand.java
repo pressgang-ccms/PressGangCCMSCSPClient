@@ -181,7 +181,7 @@ public class PushCommand extends BaseCommandImpl {
 			// Save the post spec to file if the push was successful
 			final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 			final RESTTopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
-			File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
+			File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			
 			// Create the directory
 			if (outputSpec.getParentFile() != null)
@@ -189,7 +189,7 @@ public class PushCommand extends BaseCommandImpl {
 			
 			// Save the Post Processed spec
 			try {
-				FileOutputStream fos = new FileOutputStream(outputSpec);
+				final FileOutputStream fos = new FileOutputStream(outputSpec);
 				fos.write(contentSpecTopic.getXml().getBytes());
 				fos.flush();
 				fos.close();
