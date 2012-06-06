@@ -14,7 +14,7 @@ import com.redhat.contentspec.constants.TemplateConstants;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Get a basic Content Specification template.")
 public class TemplateCommand extends BaseCommandImpl {
@@ -52,17 +52,17 @@ public class TemplateCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp) {
 		printError(errorMsg, displayHelp, Constants.TEMPLATE_COMMAND_NAME);
 	}
 
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader) {
 		return null;
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final String template = commented ? TemplateConstants.FULLY_COMMENTED_TEMPLATE : TemplateConstants.EMPTY_TEMPLATE;
 		

@@ -14,7 +14,7 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Setup the Content Specification Processor configuration files")
 public class SetupCommand extends BaseCommandImpl {
@@ -29,17 +29,17 @@ public class SetupCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp) {
 		printError(errorMsg, displayHelp, Constants.SEARCH_COMMAND_NAME);
 	}
 
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader) {
 		return null;
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		JCommander.getConsole().println("Use the default server configuration? (Yes/No)");
 		String answer = JCommander.getConsole().readLine();

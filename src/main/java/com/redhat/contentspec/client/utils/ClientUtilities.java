@@ -28,8 +28,8 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.StringUtilities;
 import com.redhat.topicindex.rest.entities.ComponentTopicV1;
-import com.redhat.topicindex.rest.entities.UserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 public class ClientUtilities {
 	
@@ -147,13 +147,13 @@ public class ClientUtilities {
 	 * @param username The key used to search the database for a user
 	 * @return The database User object for the specified API Key or null if none was found
 	 */
-	public static UserV1 authenticateUser(String username, RESTReader reader) {
+	public static RESTUserV1 authenticateUser(final String username, final RESTReader reader) {
 		// Check that the username is valid and get the user for that username
 		if (username == null) return null;
 		if (!StringUtilities.isAlphanumeric(username)) {
 			return null;
 		}
-		List<UserV1> users = reader.getUsersByName(username);
+		List<RESTUserV1> users = reader.getUsersByName(username);
 		return users != null && users.size() == 1 ? users.get(0) : null;
 	}
 	
@@ -165,9 +165,9 @@ public class ClientUtilities {
 	 * @throws FileNotFoundException The csprocessor.cfg couldn't be found
 	 * @throws IOException
 	 */
-	public static ContentSpecConfiguration readFromCsprocessorCfg(File csprocessorcfg) throws FileNotFoundException, IOException {
-		ContentSpecConfiguration cspCfg = new ContentSpecConfiguration();
-		Properties prop = new Properties();
+	public static ContentSpecConfiguration readFromCsprocessorCfg(final File csprocessorcfg) throws FileNotFoundException, IOException {
+		final ContentSpecConfiguration cspCfg = new ContentSpecConfiguration();
+		final Properties prop = new Properties();
 		prop.load(new FileInputStream(csprocessorcfg));
 		cspCfg.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
 		cspCfg.setServerUrl(prop.getProperty("SERVER_URL"));
@@ -259,7 +259,7 @@ public class ClientUtilities {
             throw new Exception("Desktop is not supported");
         }
 
-        Desktop desktop = Desktop.getDesktop();
+		final Desktop desktop = Desktop.getDesktop();
 
         // Check that the open functionality is supported
         if(!desktop.isSupported(Desktop.Action.OPEN)) {
@@ -276,9 +276,9 @@ public class ClientUtilities {
 	public static SpecList buildSpecList(final List<RESTTopicV1> specList, final RESTManager restManager, final ErrorLoggerManager elm) throws Exception {
 		final List<Spec> specs = new ArrayList<Spec>();
 		for (final RESTTopicV1 cs: specList) {
-			UserV1 creator = null;
+			RESTUserV1 creator = null;
 			if (ComponentTopicV1.returnProperty(cs, CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
-				List<UserV1> users = restManager.getReader().getUsersByName(ComponentTopicV1.returnProperty(cs, CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
+				List<RESTUserV1> users = restManager.getReader().getUsersByName(ComponentTopicV1.returnProperty(cs, CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
 				if (users.size() == 1) {
 					creator = users.get(0);
 				}

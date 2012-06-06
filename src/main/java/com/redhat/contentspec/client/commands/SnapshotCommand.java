@@ -6,7 +6,7 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 public class SnapshotCommand extends BaseCommandImpl {
 
@@ -15,7 +15,7 @@ public class SnapshotCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp) {
 		printError(errorMsg, displayHelp, Constants.SNAPSHOT_COMMAND_NAME);
 	}
 
@@ -25,12 +25,12 @@ public class SnapshotCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader) {
 		return authenticate(getUsername(), reader);
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		printError("Snapshots aren't currently supported", false);
 		// TODO Add the ability to create snapshots at a later stage

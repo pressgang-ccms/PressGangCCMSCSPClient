@@ -4,7 +4,7 @@ import com.redhat.contentspec.interfaces.ShutdownAbleApp;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 public interface BaseCommand extends ShutdownAbleApp {
 
@@ -25,7 +25,7 @@ public interface BaseCommand extends ShutdownAbleApp {
 	
 	void printHelp();
 	void printError(String errorMsg, boolean displayHelp);
-	UserV1 authenticate(RESTReader reader);
-	void process(RESTManager restManager, ErrorLoggerManager elm, UserV1 user);
+	RESTUserV1 authenticate(RESTReader reader);
+	void process(RESTManager restManager, ErrorLoggerManager elm, RESTUserV1 user);
 	boolean loadFromCSProcessorCfg();
 }

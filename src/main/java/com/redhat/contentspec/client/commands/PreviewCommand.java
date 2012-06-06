@@ -13,7 +13,7 @@ import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Build, Assemble and then open the preview of the Content Specification")
@@ -52,7 +52,7 @@ public class PreviewCommand extends AssembleCommand {
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final RESTReader reader = restManager.getReader();
 		final boolean previewFromConfig = loadFromCSProcessorCfg();
@@ -168,7 +168,7 @@ public class PreviewCommand extends AssembleCommand {
 	}
 	
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader) {
 		return noAssemble || getNoBuild() ? null : authenticate(getUsername(), reader);
 	}
 }

@@ -12,7 +12,7 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
@@ -88,7 +88,7 @@ public class ListCommand extends BaseCommandImpl{
 	}
 
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(RESTReader reader) {
 		return null;
 	}
 	
@@ -100,7 +100,7 @@ public class ListCommand extends BaseCommandImpl{
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		if (!isValid()) {
 			printError(Constants.INVALID_ARG_MSG, true);

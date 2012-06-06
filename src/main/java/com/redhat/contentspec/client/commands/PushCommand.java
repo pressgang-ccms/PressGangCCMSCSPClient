@@ -20,7 +20,7 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Push an updated Content Specification to the server")
@@ -76,7 +76,7 @@ public class PushCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(RESTReader reader) {
 		return authenticate(getUsername(), reader);
 	}
 
@@ -94,7 +94,7 @@ public class PushCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		boolean pushingFromConfig = false;
 		// If files is empty then we must be using a csprocessor.cfg file

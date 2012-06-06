@@ -8,7 +8,7 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 public abstract class BaseCommandImpl implements BaseCommand {
 	
@@ -158,12 +158,12 @@ public abstract class BaseCommandImpl implements BaseCommand {
 	 * @param reader The RESTReader that is used to connect via REST to the server.
 	 * @return The user object if they existed otherwise false.
 	 */
-	public UserV1 authenticate(String username, RESTReader reader) {
+	public RESTUserV1 authenticate(String username, RESTReader reader) {
 		if (username == null || username.equals("")) {
 			printError(Constants.ERROR_NO_USERNAME, false);
 			shutdown(Constants.EXIT_UNAUTHORISED);
 		}
-		UserV1 user = ClientUtilities.authenticateUser(username, reader);
+		RESTUserV1 user = ClientUtilities.authenticateUser(username, reader);
 		if (user == null) {
 			printError(Constants.ERROR_UNAUTHORISED, false);
 			shutdown(Constants.EXIT_UNAUTHORISED);

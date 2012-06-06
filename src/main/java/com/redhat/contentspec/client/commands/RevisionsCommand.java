@@ -15,7 +15,7 @@ import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Get a list of revisions for a specified ID")
 public class RevisionsCommand extends BaseCommandImpl {
@@ -58,7 +58,7 @@ public class RevisionsCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp) {
 		printError(errorMsg, displayHelp, Constants.REVISIONS_COMMAND_NAME);
 	}
 
@@ -68,7 +68,7 @@ public class RevisionsCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader) {
 		return null;
 	}
 	
@@ -79,7 +79,7 @@ public class RevisionsCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		// If there are no ids then use the csprocessor.cfg file
 		if (loadFromCSProcessorCfg()) {
