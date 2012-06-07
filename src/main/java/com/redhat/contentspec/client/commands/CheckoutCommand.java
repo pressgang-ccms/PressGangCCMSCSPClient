@@ -102,7 +102,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 		final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		final File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 		final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-		final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());
+		final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, getServerUrl());
 		
 		// Create the directory
 		if (outputConfig.getParentFile() != null)
