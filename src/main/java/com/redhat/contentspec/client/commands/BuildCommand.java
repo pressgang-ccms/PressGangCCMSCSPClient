@@ -293,6 +293,7 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		catch (Exception e)
 		{
+			JCommander.getConsole().println(elm.generateLogs());
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
@@ -302,7 +303,6 @@ public class BuildCommand extends BaseCommandImpl
 		// Check that everything validated fine
 		if (!success)
 		{
-			JCommander.getConsole().println(elm.generateLogs());
 			shutdown(Constants.EXIT_TOPIC_INVALID);
 		}
 		
