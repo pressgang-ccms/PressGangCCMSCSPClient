@@ -272,9 +272,7 @@ public class BuildCommand extends BaseCommandImpl
 			shutdown.set(true);
 			return;
 		}
-		
-		JCommander.getConsole().println(Constants.STARTING_VALIDATE_MSG);
-		
+				
 		// Setup the processing options
 		final ProcessingOptions processingOptions = new ProcessingOptions();
 		processingOptions.setPermissiveMode(permissive);

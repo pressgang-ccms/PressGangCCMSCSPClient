@@ -17,6 +17,7 @@ public class Constants {
 	public static final String DEFAULT_CONFIG_PUBLICAN_LOCATION = "assembly" + File.separator + "publican" + File.separator;
 	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --format=html-single";
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
+	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
 	public static final String BUILD = "0.24.7";
 	
@@ -41,11 +42,11 @@ public class Constants {
 	public static final String LIST_COMMAND_NAME = "list";
 	public static final String PREVIEW_COMMAND_NAME = "preview";
 	public static final String PULL_COMMAND_NAME = "pull";
+	public static final String PULL_SNAPSHOT_COMMAND_NAME = "pull-snapshot";
 	public static final String PUSH_COMMAND_NAME = "push";
 	public static final String REVISIONS_COMMAND_NAME = "revisions";
 	public static final String SEARCH_COMMAND_NAME = "search";
 	public static final String SETUP_COMMAND_NAME = "setup";
-	public static final String SNAPSHOT_COMMAND_NAME = "snapshot";
 	public static final String STATUS_COMMAND_NAME = "status";
 	public static final String TEMPLATE_COMMAND_NAME = "template";
 	public static final String VALIDATE_COMMAND_NAME = "validate";
@@ -91,6 +92,7 @@ public class Constants {
 	public static final String ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG		= "The local copy and server copy of the Content Specification has been updated. Please use \"csprocessor pull\" to update your local copy. Your unsaved local changes will be saved as %s.backup.";
 	public static final String ERROR_NO_FILE_OUT_OF_DATE_MSG		= "The \"%s\" file couldn't be found. This could mean the title has changed on the server or the ID is wrong.";
 	public static final String ERROR_NO_USERNAME					= "No username was specified for the server. Please check your configuration files and make sure a username exists.";
+	public static final String ERROR_PULL_SNAPSHOT_INVALID 			= "The revision of the Content Specification is invalid and as such the snapshot couldn't be pulled.";
 	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";

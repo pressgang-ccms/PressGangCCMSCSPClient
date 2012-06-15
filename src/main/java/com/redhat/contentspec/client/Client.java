@@ -265,11 +265,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		ListCommand list = new ListCommand(parser, cspConfig);
 		PreviewCommand preview = new PreviewCommand(parser, cspConfig);
 		PullCommand pull = new PullCommand(parser, cspConfig);
+		PullSnapshotCommand snapshot = new PullSnapshotCommand(parser, cspConfig);
 		PushCommand push = new PushCommand(parser, cspConfig);
 		RevisionsCommand revisions = new RevisionsCommand(parser, cspConfig);
 		SearchCommand search = new SearchCommand(parser, cspConfig);
 		SetupCommand setup = new SetupCommand(parser, cspConfig);
-		//SnapshotCommand snapshot = new SnapshotCommand(parser, cspConfig);
 		StatusCommand status = new StatusCommand(parser, cspConfig);
 		TemplateCommand template = new TemplateCommand(parser, cspConfig);
 		ValidateCommand validate = new ValidateCommand(parser, cspConfig);
@@ -304,6 +304,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		parser.addCommand(Constants.PUSH_COMMAND_NAME, push);
 		commands.put(Constants.PUSH_COMMAND_NAME, push);
 		
+		parser.addCommand(Constants.PULL_SNAPSHOT_COMMAND_NAME, snapshot);
+		commands.put(Constants.PULL_SNAPSHOT_COMMAND_NAME, snapshot);
+		
 		parser.addCommand(Constants.REVISIONS_COMMAND_NAME, revisions);
 		commands.put(Constants.REVISIONS_COMMAND_NAME, revisions);
 		
@@ -312,9 +315,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		
 		parser.addCommand(Constants.SETUP_COMMAND_NAME, setup);
 		commands.put(Constants.SETUP_COMMAND_NAME, setup);
-		
-		//parser.addCommand(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
-		//commands.put(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
 		
 		parser.addCommand(Constants.STATUS_COMMAND_NAME, status);
 		commands.put(Constants.STATUS_COMMAND_NAME, status);
@@ -346,7 +346,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		{
 			command.setUsername(getUsername());
 		}
-		
+				
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
 		{

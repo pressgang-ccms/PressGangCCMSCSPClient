@@ -45,12 +45,12 @@ public class ClientUtilities {
 			fixedLocation = Constants.HOME_LOCATION + location.substring(1);
 		} else if (location.startsWith("./") || location.startsWith("../")) {
 			try {
-				fixedLocation = location.substring(location.indexOf("/")) + new File(location.substring(0, location.indexOf("/"))).getCanonicalPath();
+				fixedLocation = new File(location).getCanonicalPath();
 			} catch (IOException e) {
 				// Do nothing
 			}
 		}
-		File file = new File(location);
+		File file = new File(fixedLocation);
 		if (file.exists() && file.isFile()) {
 			return fixedLocation;
 		}
@@ -78,7 +78,7 @@ public class ClientUtilities {
 			fixedLocation = Constants.HOME_LOCATION + fixedLocation.substring(1);
 		} else if (location.startsWith("./") || location.startsWith("../")) {
 			try {
-				fixedLocation = location.substring(location.indexOf("/")) + new File(location.substring(0, location.indexOf("/"))).getCanonicalPath();
+				fixedLocation = new File(location).getCanonicalPath();
 			} catch (IOException e) {
 				// Do nothing
 			}

@@ -92,6 +92,8 @@ public class InfoCommand extends BaseCommandImpl {
 			return;
 		}
 		
+		JCommander.getConsole().println("Starting to calculate the statistics...");
+		
 		// Parse the spec to get the ids
 		ContentSpecParser csp = new ContentSpecParser(elm, restManager);
 		try {
@@ -110,7 +112,7 @@ public class InfoCommand extends BaseCommandImpl {
 		// Calculate the percentage complete
 		final int numTopics = csp.getReferencedTopicIds().size();
 		int numTopicsComplete = 0;
-		final BaseRestCollectionV1<RESTTopicV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds());
+		final BaseRestCollectionV1<RESTTopicV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds(), false);
 		if (topics != null && topics.getItems() != null) {
 			for (final RESTTopicV1 topic: topics.getItems()) {
 				if (topic.getXml() != null && !topic.getXml().isEmpty()) {
