@@ -14,6 +14,7 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.topicindex.rest.collections.BaseRestCollectionV1;
+import com.redhat.topicindex.rest.collections.RESTTopicCollectionV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
@@ -112,7 +113,7 @@ public class InfoCommand extends BaseCommandImpl {
 		// Calculate the percentage complete
 		final int numTopics = csp.getReferencedTopicIds().size();
 		int numTopicsComplete = 0;
-		final BaseRestCollectionV1<RESTTopicV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds(), false);
+		final BaseRestCollectionV1<RESTTopicV1, RESTTopicCollectionV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds(), false);
 		if (topics != null && topics.getItems() != null) {
 			for (final RESTTopicV1 topic: topics.getItems()) {
 				if (topic.getXml() != null && !topic.getXml().isEmpty()) {
