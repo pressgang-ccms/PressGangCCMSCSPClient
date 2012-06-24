@@ -72,8 +72,8 @@ public class SetupCommand extends BaseCommandImpl {
 			servers.put(Constants.DEFAULT_SERVER_NAME, new ServerConfiguration(Constants.DEFAULT_SERVER_NAME, defaultServerName, username));
 			
 			// Setup each servers settings
-			servers.put("test", new ServerConfiguration("test", "http://skynet-dev.usersys.redhat.com:8080/TopicIndex/"));
-			servers.put("production", new ServerConfiguration("production", "http://skynet.usersys.redhat.com:8080/TopicIndex/"));
+			servers.put("test", new ServerConfiguration("test", Constants.DEFAULT_TEST_SERVER));
+			servers.put("production", new ServerConfiguration("production", Constants.DEFAULT_PROD_SERVER));
 			
 		/* We need to read in a list of servers and then get the default server */
 		} else if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
