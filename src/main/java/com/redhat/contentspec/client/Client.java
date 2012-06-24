@@ -522,11 +522,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			configFile += "#default.username=\n\n";
 			// Create the Production server in the config file
 			configFile += "# Production Server settings\n";
-			configFile += Constants.PRODUCTION_SERVER_NAME + ".url=http://skynet.cloud.lab.eng.bne.redhat.com:8080/TopicIndex/\n";
+			configFile += Constants.PRODUCTION_SERVER_NAME + ".url=" + Constants.DEFAULT_PROD_SERVER + "\n";
 			configFile += Constants.PRODUCTION_SERVER_NAME + ".username=\n\n";
 			// Create the Test server in the config file
 			configFile += "# Test Server settings\n";
-			configFile += Constants.TEST_SERVER_NAME + ".url=http://skynet.usersys.redhat.com:8080/TopicIndex/\n";
+			configFile += Constants.TEST_SERVER_NAME + ".url=" + Constants.DEFAULT_TEST_SERVER + "\n";
 			configFile += Constants.TEST_SERVER_NAME + ".username=\n\n";
 			
 			// Create the Root Directory
