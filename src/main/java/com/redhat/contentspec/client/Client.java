@@ -87,10 +87,18 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 	
 	public static void main(String[] args) {
-		Client client = new Client();
-		Runtime.getRuntime().addShutdownHook(new ShutdownInterceptor(client));
-		client.setup();
-		client.processArgs(args);
+		try
+		{
+			Client client = new Client();
+			Runtime.getRuntime().addShutdownHook(new ShutdownInterceptor(client));
+			client.setup();
+			client.processArgs(args);
+		}
+		catch (Throwable ex)
+		{
+			JCommander.getConsole().println(ex.getMessage());
+			System.exit(Constants.EXIT_FAILURE);
+		}
 	}
 	
 	public Client() {
