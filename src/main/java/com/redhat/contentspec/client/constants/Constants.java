@@ -19,9 +19,9 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.24.9";
-	public static final String DEFAULT_PROD_SERVER = "http://skynet.usersys.redhat.com:8080/TopicIndex/";
-	public static final String DEFAULT_TEST_SERVER = "http://skynet-dev.usersys.redhat.com:8080/TopicIndex/";
+	public static final String BUILD = "0.24.10";
+	public static final String DEFAULT_PROD_SERVER = "";
+	public static final String DEFAULT_TEST_SERVER = "";
 	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
