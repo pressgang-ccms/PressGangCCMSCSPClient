@@ -206,4 +206,8 @@ public class Constants {
 	public static final String VERSION_LONG_PARAM = "--version";
 	
 	public static final String EMPTY_LEVELS_LONG_PARAM = "--empty-levels";
+	
+	public static final String LOCALE_LONG_PARAM = "--lang";
+	
+	public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
 }

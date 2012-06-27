@@ -27,8 +27,8 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
+import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
 public class BuildCommand extends BaseCommandImpl
@@ -66,6 +66,12 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.EMPTY_LEVELS_LONG_PARAM, description = "Allow building with empty levels.", hidden=true)
 	private Boolean allowEmptyLevels = false;
+	
+	@Parameter(names = Constants.EDITOR_LINKS_LONG_PARAM, description = "Insert Editor links for each topic.")
+	private Boolean insertEditorLinks = false;
+	
+	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.")
+	private String locale = null;
 	
 	private File output;
 	
@@ -185,9 +191,17 @@ public class BuildCommand extends BaseCommandImpl
 		this.allowEmptyLevels = allowEmptyLevels;
 	}
 
+	public Boolean getInsertEditorLinks() {
+		return insertEditorLinks;
+	}
+
+	public void setInsertEditorLinks(Boolean insertEditorLinks) {
+		this.insertEditorLinks = insertEditorLinks;
+	}
+
 	public CSDocbookBuildingOptions getBuildOptions()
 	{
-		CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
+		final CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
 		buildOptions.setInjection(inlineInjection);
 		buildOptions.setInjectionTypes(injectionTypes);
 		buildOptions.setIgnoreMissingCustomInjections(hideErrors);
@@ -197,16 +211,27 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setPermissive(permissive);
 		buildOptions.setOverrides(overrides);
 		buildOptions.setSuppressContentSpecPage(hideContentSpec);
+		buildOptions.setInsertEditorLinks(insertEditorLinks);
 		return buildOptions;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	protected String getContentSpecString(final RESTReader reader, final String id)
 	{
 		final String contentSpec;
 		if (id.matches("^\\d+$"))
 		{
-			// Get the Content Specification from the server.
-			final RESTTopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			final RESTBaseTopicV1 contentSpecTopic;
+			if (locale == null)
+			{
+				// Get the Content Specification from the server.
+				contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			}
+			else
+			{
+				// Get the Content Specification from the server.
+				contentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
+			}
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
