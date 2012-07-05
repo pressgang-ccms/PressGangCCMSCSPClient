@@ -9,6 +9,7 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
@@ -50,8 +51,8 @@ public class PullCommand extends BaseCommandImpl{
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
-	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+		super(parser, cspConfig, clientConfig);
 	}
 
 	public Boolean useContentSpec() {

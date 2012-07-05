@@ -9,6 +9,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.rest.RESTManager;
@@ -27,8 +28,8 @@ public class StatusCommand extends BaseCommandImpl {
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 
-	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+		super(parser, cspConfig, clientConfig);
 	}
 
 	public List<Integer> getIds() {

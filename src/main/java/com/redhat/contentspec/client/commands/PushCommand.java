@@ -9,6 +9,7 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.converter.FileConverter;
@@ -24,8 +25,8 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Push an updated Content Specification to the server")
-public class PushCommand extends BaseCommandImpl {
-
+public class PushCommand extends BaseCommandImpl
+{
 	@Parameter(converter = FileConverter.class, metaVar = "[FILE]")
 	private List<File> files = new ArrayList<File>();
 	
@@ -37,55 +38,66 @@ public class PushCommand extends BaseCommandImpl {
 	
 	private ContentSpecProcessor csp = null;
 	
-	public PushCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public PushCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
+		super(parser, cspConfig, clientConfig);
 	}
 
-	public List<File> getFiles() {
+	public List<File> getFiles()
+	{
 		return files;
 	}
 
-	public void setFiles(List<File> files) {
+	public void setFiles(final List<File> files)
+	{
 		this.files = files;
 	}
 
-	public Boolean getPermissive() {
+	public Boolean getPermissive()
+	{
 		return permissive;
 	}
 
-	public void setPermissive(Boolean permissive) {
+	public void setPermissive(final Boolean permissive)
+	{
 		this.permissive = permissive;
 	}
 
-	public Boolean getExecutionTime() {
+	public Boolean getExecutionTime()
+	{
 		return executionTime;
 	}
 
-	public void setExecutionTime(Boolean executionTime) {
+	public void setExecutionTime(final Boolean executionTime)
+	{
 		this.executionTime = executionTime;
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.PUSH_COMMAND_NAME);
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.PUSH_COMMAND_NAME);
 	}
 	
 	@Override
-	public RESTUserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return authenticate(getUsername(), reader);
 	}
 
-	public boolean isValid() {
+	public boolean isValid()
+	{
 		// We should have only one file
 		if (files.size() != 1) return false;
 		
 		// Check that the file exists
-		File file = files.get(0);
+		final File file = files.get(0);
 		if (file.isDirectory()) return false;
 		if (!file.exists()) return false;
 		if (!file.isFile()) return false;
@@ -98,14 +110,17 @@ public class PushCommand extends BaseCommandImpl {
 	{
 		boolean pushingFromConfig = false;
 		// If files is empty then we must be using a csprocessor.cfg file
-		if (loadFromCSProcessorCfg()) {
+		if (loadFromCSProcessorCfg())
+		{
 			final RESTTopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
-			String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+			final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 			File file = new File(fileName);
-			if (!file.exists()) {
+			if (!file.exists())
+			{
 				// Backwards compatibility check for files ending with .txt
 				file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
-				if (!file.exists()) {
+				if (!file.exists())
+				{
 					printError(String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
 					shutdown(Constants.EXIT_FAILURE);
 				}
@@ -115,13 +130,15 @@ public class PushCommand extends BaseCommandImpl {
 		}
 		
 		// Check that the parameters are valid
-		if (!isValid()) {
+		if (!isValid())
+		{
 			printError(Constants.ERROR_NO_FILE_MSG, true);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
 		// Good point to check for a shutdown (before starting)
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -132,13 +149,15 @@ public class PushCommand extends BaseCommandImpl {
 		// Read in the file contents
 		String contentSpec = FileUtilities.readFileContents(files.get(0));
 		
-		if (contentSpec == null  || contentSpec.equals("")) {
+		if (contentSpec == null  || contentSpec.equals(""))
+		{
 			printError(Constants.ERROR_EMPTY_FILE_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -150,12 +169,16 @@ public class PushCommand extends BaseCommandImpl {
 		
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
 		Integer revision = null;
-		try {
+		try
+		{
 			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
-			if (success) {
+			if (success)
+			{
 				revision = restManager.getReader().getLatestCSRevById(csp.getContentSpec().getId());
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) 
+		{
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}
@@ -163,37 +186,44 @@ public class PushCommand extends BaseCommandImpl {
 		// Print the logs
 		long elapsedTime = System.currentTimeMillis() - startTime;
 		JCommander.getConsole().println(elm.generateLogs());
-		if (success) {
+		if (success)
+		{
 			JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, csp.getContentSpec().getId(), revision));
 		}
-		if (executionTime) {
+		if (executionTime)
+		{
 			JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
 		}
 		
 		// Good point to check for a shutdown
 		// Doesn't matter if the latest copy doesn't get downloaded just so long as the push goes through
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
-		if (success && pushingFromConfig) {
+		if (success && pushingFromConfig)
+		{
 			// Save the post spec to file if the push was successful
 			final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 			final RESTTopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
-			File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
+			final File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			
 			// Create the directory
 			if (outputSpec.getParentFile() != null)
 				outputSpec.getParentFile().mkdirs();
 			
 			// Save the Post Processed spec
-			try {
+			try
+			{
 				final FileOutputStream fos = new FileOutputStream(outputSpec);
 				fos.write(contentSpecTopic.getXml().getBytes());
 				fos.flush();
 				fos.close();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
@@ -201,15 +231,18 @@ public class PushCommand extends BaseCommandImpl {
 	}
 	
 	@Override
-	public void shutdown() {
+	public void shutdown()
+	{
 		super.shutdown();
-		if (csp != null) {
+		if (csp != null)
+		{
 			csp.shutdown();
 		}
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
+	public boolean loadFromCSProcessorCfg()
+	{
 		return files.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

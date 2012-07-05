@@ -6,8 +6,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
-public interface BaseCommand extends ShutdownAbleApp {
-
+public interface BaseCommand extends ShutdownAbleApp
+{
 	String getUsername();
 	void setUsername(String username);
 	String getServerUrl();

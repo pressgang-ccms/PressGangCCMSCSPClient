@@ -6,6 +6,7 @@ import java.io.IOException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
@@ -26,26 +27,29 @@ public class AssembleCommand extends BuildCommand {
 
 	@Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, description = "Hide the output from assembling the Content Specification.")
 	private Boolean hideOutput = false;
-	
-	protected String publicanBuildOptions;
-	
-	public AssembleCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+		
+	public AssembleCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
+		super(parser, cspConfig, clientConfig);
 	}
 	
-	public Boolean getNoBuild() {
+	public Boolean getNoBuild()
+	{
 		return noBuild;
 	}
 
-	public void setNoBuild(Boolean noBuild) {
+	public void setNoBuild(final Boolean noBuild)
+	{
 		this.noBuild = noBuild;
 	}
 
-	public Boolean getHideOutput() {
+	public Boolean getHideOutput()
+	{
 		return hideOutput;
 	}
 
-	public void setHideOutput(Boolean hideOutput) {
+	public void setHideOutput(Boolean hideOutput)
+	{
 		this.hideOutput = hideOutput;
 	}
 
@@ -56,12 +60,14 @@ public class AssembleCommand extends BuildCommand {
 		final boolean assembleFromConfig = loadFromCSProcessorCfg();
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
-		if (!noBuild) {
+		if (!noBuild)
+		{
 			super.process(restManager, elm, user);
 			if (isShutdown()) return;
 		}
@@ -71,50 +77,63 @@ public class AssembleCommand extends BuildCommand {
 		String fileDirectory = "";
 		String outputDirectory = "";
 		String fileName = null;
-		if (assembleFromConfig) {
+		if (assembleFromConfig)
+		{
 			final RESTTopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
 			
 			// Check that that content specification was found
-			if (contentSpec == null || contentSpec.getXml() == null) {
+			if (contentSpec == null || contentSpec.getXml() == null) 
+			{
 				printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
 			
-			String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + File.separator));
+			final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + File.separator));
 			
 			fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
 			outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
 			fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
-		} else if (getIds() != null && getIds().size() == 1) {
+		}
+		else if (getIds() != null && getIds().size() == 1)
+		{
 			final String contentSpec = getContentSpecString(reader, getIds().get(0));
 			
 			/* parse the spec to get the main details */
 			final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
-			try {
+			try
+			{
 				csp.parse(contentSpec);
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				printError(Constants.ERROR_INTERNAL_ERROR, false);
 				shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 			}
 			
 			outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 			fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
-		} else if (getIds().size() == 0){
+		}
+		else if (getIds().size() == 0)
+		{
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		} else {
+		}
+		else
+		{
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
 		File file = new File(fileDirectory + fileName);
-		if (!file.exists()) {
+		if (!file.exists())
+		{
 			printError(String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, fileName), false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
@@ -127,26 +146,40 @@ public class AssembleCommand extends BuildCommand {
 		ClientUtilities.deleteDirContents(outputDir);
 		
 		// Unzip the file
-		if (!ZipUtilities.unzipFileIntoDirectory(file, outputDirectory)) {
+		if (!ZipUtilities.unzipFileIntoDirectory(file, outputDirectory))
+		{
 			printError(Constants.ERROR_FAILED_TO_ASSEMBLE_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
-		} else {
+		}
+		else
+		{
 			JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_UNZIP_MSG, outputDir.getAbsolutePath()));
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
-		try {
+		String publicanOptions = clientConfig.getPublicanBuildOptions();
+		
+		// Replace the locale in the build options if the locale has been set
+		if (getLocale() != null)
+			publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--lang=" + getLocale());
+		
+		try
+		{
 			JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
-			Integer exitValue = ClientUtilities.runCommand("publican build " + publicanBuildOptions, outputDir, JCommander.getConsole(), !hideOutput);
-			if (exitValue == null || exitValue != 0) {
+			Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, outputDir, JCommander.getConsole(), !hideOutput);
+			if (exitValue == null || exitValue != 0)
+			{
 				shutdown(Constants.EXIT_FAILURE);
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			printError(Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
@@ -154,25 +187,20 @@ public class AssembleCommand extends BuildCommand {
 	}
 	
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.ASSEMBLE_COMMAND_NAME);
 	}
 	
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.ASSEMBLE_COMMAND_NAME);
 	}
 	
 	@Override
-	public RESTUserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return noBuild ? null : authenticate(getUsername(), reader);
-	}
-
-	public String getPublicanBuildOptions() {
-		return publicanBuildOptions;
-	}
-
-	public void setPublicanBuildOptions(String publicanBuildOptions) {
-		this.publicanBuildOptions = publicanBuildOptions;
 	}
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
@@ -38,46 +39,56 @@ public class PullSnapshotCommand extends BaseCommandImpl
 	
 	private ContentSpecProcessor csp = null;
 	
-	public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
+		super(parser, cspConfig, clientConfig);
 	}
 
-	public List<Integer> getIds() {
+	public List<Integer> getIds()
+	{
 		return ids;
 	}
 
-	public void setIds(List<Integer> ids) {
+	public void setIds(final List<Integer> ids)
+	{
 		this.ids = ids;
 	}
 
-	public Integer getRevision() {
+	public Integer getRevision()
+	{
 		return revision;
 	}
 
-	public void setRevision(Integer revision) {
+	public void setRevision(final Integer revision)
+	{
 		this.revision = revision;
 	}
 
-	public String getOutputPath() {
+	public String getOutputPath()
+	{
 		return outputPath;
 	}
 
-	public void setOutputPath(String outputPath) {
+	public void setOutputPath(final String outputPath)
+	{
 		this.outputPath = outputPath;
 	}
 
 	@Override
-	public void printError(final String errorMsg, final boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.PULL_SNAPSHOT_COMMAND_NAME);
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.PULL_SNAPSHOT_COMMAND_NAME);
 	}
 	
 	@Override
-	public RESTUserV1 authenticate(final RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return authenticate(getUsername(), reader);
 	}
 
@@ -88,21 +99,26 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		final boolean pullForConfig = loadFromCSProcessorCfg();
 		
 		// If files is empty then we must be using a csprocessor.cfg file
-		if (pullForConfig) {
+		if (pullForConfig)
+		{
 			ids.add(cspConfig.getContentSpecId());
 		}
 		
 		// Check that only one ID exists
-		if (ids.size() == 0) {
+		if (ids.size() == 0)
+		{
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		} else if (ids.size() > 1) {
+		}
+		else if (ids.size() > 1)
+		{
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -118,7 +134,8 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -133,9 +150,12 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		
 		// Process the content spec to make sure the spec is valid, 
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
-		try {
+		try
+		{
 			success = csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EITHER);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace();
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
@@ -157,48 +177,64 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
 		final String data = csp.getContentSpec().toString();
 		final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-snapshot-" + dateFormatter.format(contentSpec.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
-		if (outputPath == null) {
+		if (outputPath == null)
+		{
 			JCommander.getConsole().println(data);
-		} else {
+		}
+		else
+		{
 			// Create the output file
 			File output;
 			outputPath = ClientUtilities.validateFilePath(outputPath);
-			if (outputPath != null && outputPath.endsWith(File.separator)) {
+			if (outputPath != null && outputPath.endsWith(File.separator))
+			{
 				output = new File(outputPath + fileName);
-			} else if (outputPath == null || outputPath.equals("")) {
+			}
+			else if (outputPath == null || outputPath.equals(""))
+			{
 				output = new File(fileName);
-			} else {
+			}
+			else
+			{
 				output = new File(outputPath);
 			}
 			
 			// Make sure the directories exist
-			if (output.isDirectory()) {
+			if (output.isDirectory())
+			{
 				output.mkdirs();
 				output = new File(output.getAbsolutePath() + File.separator + fileName);
-			} else {
+			}
+			else
+			{
 				if (output.getParentFile() != null)
 					output.getParentFile().mkdirs();
 			}
 			
 			// Good point to check for a shutdown
-			if (isAppShuttingDown()) {
+			if (isAppShuttingDown())
+			{
 				shutdown.set(true);
 				return;
 			}
 			
 			// If the file exists then create a backup file
-			if (output.exists()) {
+			if (output.exists())
+			{
 				output.renameTo(new File(output.getAbsolutePath() + ".backup"));
 			}
 			
 			// Create and write to the file
-			try {
+			try
+			{
 				FileOutputStream fos = new FileOutputStream(output);
 				fos.write(data.getBytes());
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				printError(Constants.ERROR_FAILED_SAVING, false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
@@ -206,7 +242,8 @@ public class PullSnapshotCommand extends BaseCommandImpl
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
+	public boolean loadFromCSProcessorCfg()
+	{
 		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

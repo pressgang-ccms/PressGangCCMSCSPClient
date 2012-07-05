@@ -23,6 +23,11 @@ public class Constants {
 	public static final String DEFAULT_PROD_SERVER = "http://skynet.usersys.redhat.com:8080/TopicIndex/";
 	public static final String DEFAULT_TEST_SERVER = "http://skynet-dev.usersys.redhat.com:8080/TopicIndex/";
 	
+	// Zanata Constants
+	public static final String DEFAULT_ZANATA_URL = "http://translate.zanata.org/";
+	public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
+	public static final String DEFAULT_ZANATA_VERSION = "1";
+	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
 	

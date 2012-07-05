@@ -30,6 +30,7 @@ import com.redhat.ecs.commonutils.StringUtilities;
 import com.redhat.topicindex.rest.entities.ComponentTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.zanata.ZanataDetails;
 
 public class ClientUtilities {
 	
@@ -39,25 +40,34 @@ public class ClientUtilities {
 	 * @param location The path location to be checked
 	 * @return The fixed path location string
 	 */
-	public static String validateConfigLocation(String location) {
+	public static String validateConfigLocation(final String location)
+	{
 		String fixedLocation = location;
-		if (location.startsWith("~")) {
+		if (location.startsWith("~"))
+		{
 			fixedLocation = Constants.HOME_LOCATION + location.substring(1);
-		} else if (location.startsWith("./") || location.startsWith("../")) {
-			try {
+		} else if (location.startsWith("./") || location.startsWith("../"))
+		{
+			try
+			{
 				fixedLocation = new File(location).getCanonicalPath();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				// Do nothing
 			}
 		}
-		File file = new File(fixedLocation);
-		if (file.exists() && file.isFile()) {
+		final File file = new File(fixedLocation);
+		if (file.exists() && file.isFile())
+		{
 			return fixedLocation;
 		}
-		if (!location.endsWith(File.separator) && !location.endsWith(".ini")) {
+		if (!location.endsWith(File.separator) && !location.endsWith(".ini"))
+		{
 			fixedLocation += File.separator;
 		}
-		if (!location.endsWith(".ini")) {
+		if (!location.endsWith(".ini"))
+		{
 			fixedLocation += Constants.CONFIG_FILENAME;
 		}
 		return fixedLocation;
@@ -69,17 +79,25 @@ public class ClientUtilities {
 	 * @param location The path location to be checked
 	 * @return The fixed path location string
 	 */
-	public static String validateLocation(final String location) {
+	public static String validateLocation(final String location)
+	{
 		String fixedLocation = location;
-		if (!location.endsWith(File.separator)) {
+		if (!location.endsWith(File.separator))
+		{
 			fixedLocation += File.separator;
 		}
-		if (location.startsWith("~")) {
+		if (location.startsWith("~"))
+		{
 			fixedLocation = Constants.HOME_LOCATION + fixedLocation.substring(1);
-		} else if (location.startsWith("./") || location.startsWith("../")) {
-			try {
+		}
+		else if (location.startsWith("./") || location.startsWith("../"))
+		{
+			try
+			{
 				fixedLocation = new File(fixedLocation).getCanonicalPath();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				// Do nothing
 			}
 		}
@@ -92,12 +110,15 @@ public class ClientUtilities {
 	 * @param host The host address of the server to be checked
 	 * @return The fixed host address string
 	 */
-	public static String validateHost(final String host) {
+	public static String validateHost(final String host)
+	{
 		String fixedHost = host;
-		if (!host.endsWith("/")) {
+		if (!host.endsWith("/"))
+		{
 			fixedHost += "/";
 		}
-		if (!host.startsWith("http://") && !host.startsWith("https://")) {
+		if (!host.startsWith("http://") && !host.startsWith("https://"))
+		{
 			fixedHost = "http://" + fixedHost;
 		}
 		return fixedHost;
@@ -109,13 +130,17 @@ public class ClientUtilities {
 	 * @param serverUrl The URL of the server.
 	 * @return True if the server exists and got a succesful response otherwise false.
 	 */
-	public static boolean validateServerExists(final String serverUrl) {
-		try {
+	public static boolean validateServerExists(final String serverUrl)
+	{
+		try
+		{
 			URL url = new URL(serverUrl);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("HEAD");
 			return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			return false;
 		}
 	}
@@ -130,12 +155,18 @@ public class ClientUtilities {
 	{
 		if (filePath == null) return null;
 		String fixedPath = filePath;
-		if (filePath.startsWith("~")) {
+		if (filePath.startsWith("~"))
+		{
 			fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
-		} else if (filePath.startsWith("./") || filePath.startsWith("../")) {
-			try {
+		}
+		else if (filePath.startsWith("./") || filePath.startsWith("../"))
+		{
+			try
+			{
 				fixedPath = new File(fixedPath).getCanonicalPath();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				// Do nothing
 			}
 		}
@@ -152,7 +183,8 @@ public class ClientUtilities {
 	{
 		// Check that the username is valid and get the user for that username
 		if (username == null) return null;
-		if (!StringUtilities.isAlphanumeric(username)) {
+		if (!StringUtilities.isAlphanumeric(username))
+		{
 			return null;
 		}
 		final List<RESTUserV1> users = reader.getUsersByName(username);
@@ -174,6 +206,9 @@ public class ClientUtilities {
 		prop.load(new FileInputStream(csprocessorcfg));
 		cspCfg.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
 		cspCfg.setServerUrl(prop.getProperty("SERVER_URL"));
+		cspCfg.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
+		cspCfg.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
+		cspCfg.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
 		return cspCfg;
 	}
 	
@@ -182,14 +217,18 @@ public class ClientUtilities {
 	 * 
 	 * @param contentSpec The content specification object the csprocessor.cfg will be used for.
 	 * @param serverUrl The server URL that the content specification exists on.
+	 * @param zanataDetails TODO
 	 * @return The generated contents of the csprocessor.cfg file.
 	 */
-	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl)
+	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ZanataDetails zanataDetails)
 	{
 		final StringBuilder output = new StringBuilder();
 		output.append("# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n");
 		output.append("SPEC_ID=" + contentSpec.getId() + "\n");
 		output.append("SERVER_URL=" + serverUrl + "\n");
+		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
+		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
+		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");
 		return output.toString();
 	}
 	
