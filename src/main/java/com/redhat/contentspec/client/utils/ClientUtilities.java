@@ -27,8 +27,10 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.StringUtilities;
-import com.redhat.topicindex.rest.entities.TopicV1;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.ComponentTopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.zanata.ZanataDetails;
 
 public class ClientUtilities {
 	
@@ -38,25 +40,34 @@ public class ClientUtilities {
 	 * @param location The path location to be checked
 	 * @return The fixed path location string
 	 */
-	public static String validateConfigLocation(String location) {
+	public static String validateConfigLocation(final String location)
+	{
 		String fixedLocation = location;
-		if (location.startsWith("~")) {
+		if (location.startsWith("~"))
+		{
 			fixedLocation = Constants.HOME_LOCATION + location.substring(1);
-		} else if (location.startsWith("./") || location.startsWith("../")) {
-			try {
+		} else if (location.startsWith("./") || location.startsWith("../"))
+		{
+			try
+			{
 				fixedLocation = new File(location).getCanonicalPath();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				// Do nothing
 			}
 		}
-		File file = new File(fixedLocation);
-		if (file.exists() && file.isFile()) {
+		final File file = new File(fixedLocation);
+		if (file.exists() && file.isFile())
+		{
 			return fixedLocation;
 		}
-		if (!location.endsWith(File.separator) && !location.endsWith(".ini")) {
+		if (!location.endsWith(File.separator) && !location.endsWith(".ini"))
+		{
 			fixedLocation += File.separator;
 		}
-		if (!location.endsWith(".ini")) {
+		if (!location.endsWith(".ini"))
+		{
 			fixedLocation += Constants.CONFIG_FILENAME;
 		}
 		return fixedLocation;
@@ -68,17 +79,25 @@ public class ClientUtilities {
 	 * @param location The path location to be checked
 	 * @return The fixed path location string
 	 */
-	public static String validateLocation(String location) {
+	public static String validateLocation(final String location)
+	{
 		String fixedLocation = location;
-		if (!location.endsWith(File.separator)) {
+		if (!location.endsWith(File.separator))
+		{
 			fixedLocation += File.separator;
 		}
-		if (location.startsWith("~")) {
+		if (location.startsWith("~"))
+		{
 			fixedLocation = Constants.HOME_LOCATION + fixedLocation.substring(1);
-		} else if (location.startsWith("./") || location.startsWith("../")) {
-			try {
-				fixedLocation = new File(location).getCanonicalPath();
-			} catch (IOException e) {
+		}
+		else if (location.startsWith("./") || location.startsWith("../"))
+		{
+			try
+			{
+				fixedLocation = new File(fixedLocation).getCanonicalPath();
+			}
+			catch (IOException e)
+			{
 				// Do nothing
 			}
 		}
@@ -91,12 +110,15 @@ public class ClientUtilities {
 	 * @param host The host address of the server to be checked
 	 * @return The fixed host address string
 	 */
-	public static String validateHost(String host) {
+	public static String validateHost(final String host)
+	{
 		String fixedHost = host;
-		if (!host.endsWith("/")) {
+		if (!host.endsWith("/"))
+		{
 			fixedHost += "/";
 		}
-		if (!host.startsWith("http://") && !host.startsWith("https://")) {
+		if (!host.startsWith("http://") && !host.startsWith("https://"))
+		{
 			fixedHost = "http://" + fixedHost;
 		}
 		return fixedHost;
@@ -108,13 +130,17 @@ public class ClientUtilities {
 	 * @param serverUrl The URL of the server.
 	 * @return True if the server exists and got a succesful response otherwise false.
 	 */
-	public static boolean validateServerExists(String serverUrl) {
-		try {
+	public static boolean validateServerExists(final String serverUrl)
+	{
+		try
+		{
 			URL url = new URL(serverUrl);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("HEAD");
 			return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 			return false;
 		}
 	}
@@ -125,15 +151,22 @@ public class ClientUtilities {
 	 * @param host The path location to be checked
 	 * @return The fixed path location string
 	 */
-	public static String validateFilePath(String filePath) {
+	public static String validateFilePath(final String filePath)
+	{
 		if (filePath == null) return null;
 		String fixedPath = filePath;
-		if (filePath.startsWith("~")) {
+		if (filePath.startsWith("~"))
+		{
 			fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
-		} else if (filePath.startsWith("./") || filePath.startsWith("../")) {
-			try {
-				fixedPath = filePath.substring(filePath.indexOf("/")) + new File(filePath.substring(0, filePath.indexOf("/"))).getCanonicalPath();
-			} catch (IOException e) {
+		}
+		else if (filePath.startsWith("./") || filePath.startsWith("../"))
+		{
+			try
+			{
+				fixedPath = new File(fixedPath).getCanonicalPath();
+			}
+			catch (IOException e)
+			{
 				// Do nothing
 			}
 		}
@@ -146,13 +179,15 @@ public class ClientUtilities {
 	 * @param username The key used to search the database for a user
 	 * @return The database User object for the specified API Key or null if none was found
 	 */
-	public static UserV1 authenticateUser(final String username, final RESTReader reader) {
+	public static RESTUserV1 authenticateUser(final String username, final RESTReader reader)
+	{
 		// Check that the username is valid and get the user for that username
 		if (username == null) return null;
-		if (!StringUtilities.isAlphanumeric(username)) {
+		if (!StringUtilities.isAlphanumeric(username))
+		{
 			return null;
 		}
-		List<UserV1> users = reader.getUsersByName(username);
+		final List<RESTUserV1> users = reader.getUsersByName(username);
 		return users != null && users.size() == 1 ? users.get(0) : null;
 	}
 	
@@ -164,12 +199,16 @@ public class ClientUtilities {
 	 * @throws FileNotFoundException The csprocessor.cfg couldn't be found
 	 * @throws IOException
 	 */
-	public static ContentSpecConfiguration readFromCsprocessorCfg(final File csprocessorcfg) throws FileNotFoundException, IOException {
+	public static ContentSpecConfiguration readFromCsprocessorCfg(final File csprocessorcfg) throws FileNotFoundException, IOException
+	{
 		final ContentSpecConfiguration cspCfg = new ContentSpecConfiguration();
 		final Properties prop = new Properties();
 		prop.load(new FileInputStream(csprocessorcfg));
 		cspCfg.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
 		cspCfg.setServerUrl(prop.getProperty("SERVER_URL"));
+		cspCfg.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
+		cspCfg.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
+		cspCfg.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
 		return cspCfg;
 	}
 	
@@ -178,14 +217,19 @@ public class ClientUtilities {
 	 * 
 	 * @param contentSpec The content specification object the csprocessor.cfg will be used for.
 	 * @param serverUrl The server URL that the content specification exists on.
+	 * @param zanataDetails TODO
 	 * @return The generated contents of the csprocessor.cfg file.
 	 */
-	public static String generateCsprocessorCfg(final TopicV1 contentSpec, final String serverUrl) {
-		String output = "";
-		output += "# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n";
-		output += "SPEC_ID=" + contentSpec.getId() + "\n";
-		output += "SERVER_URL=" + serverUrl + "\n";
-		return output;
+	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ZanataDetails zanataDetails)
+	{
+		final StringBuilder output = new StringBuilder();
+		output.append("# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n");
+		output.append("SPEC_ID=" + contentSpec.getId() + "\n");
+		output.append("SERVER_URL=" + serverUrl + "\n");
+		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
+		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
+		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");
+		return output.toString();
 	}
 	
 	/**
@@ -198,24 +242,30 @@ public class ClientUtilities {
 	 * @return The exit value of the command
 	 * @throws IOException
 	 */
-	public static Integer runCommand(String command, File dir, final Console console, boolean displayOutput) throws IOException {
+	public static Integer runCommand(final String command, final File dir, final Console console, boolean displayOutput) throws IOException
+	{
 		if (!dir.isDirectory()) throw new IOException();
 		
-		try {
+		try
+		{
 			final Process p = Runtime.getRuntime().exec(command, null, dir);
 			// Get the output of the command
-			if (displayOutput) {
-				
+			if (displayOutput)
+			{
 				// Create a separate thread to read the stderr stream
-				Thread t = new Thread(new Runnable() {
+				final Thread t = new Thread(new Runnable()
+				{
 
 		            @Override
-		            public void run() {
+		            public void run()
+		            {
 		            	BufferedReader br = new BufferedReader( new InputStreamReader(p.getErrorStream()));
 						String line = null;
 						try {
-							while ((line = br.readLine()) != null) {
-								synchronized(console) {
+							while ((line = br.readLine()) != null)
+							{
+								synchronized(console)
+								{
 									console.println(line);
 								}
 							}
@@ -227,17 +277,21 @@ public class ClientUtilities {
 		        } );
 		        t.start();
 				
-		        BufferedReader br = new BufferedReader( new InputStreamReader(p.getInputStream()));
+		        final BufferedReader br = new BufferedReader( new InputStreamReader(p.getInputStream()));
 				String line = null;
-				while ((line = br.readLine()) != null) {
-					synchronized(console) {
+				while ((line = br.readLine()) != null)
+				{
+					synchronized(console)
+					{
 						console.println(line);
 					}
 				}
 			}
 			p.waitFor();
 			return p.exitValue();
-		} catch (InterruptedException e) {
+		}
+		catch (InterruptedException e)
+		{
 			e.printStackTrace();
 			return null;
 		}
@@ -249,19 +303,22 @@ public class ClientUtilities {
 	 * @param file The file to be opened.
 	 * @throws Exception
 	 */
-	public static void openFile(File file) throws Exception {
+	public static void openFile(final File file) throws Exception
+	{
 		// Check that the file is a file
 		if (!file.isFile()) throw new Exception("Passed file is not a file.");
 		
 		// Check that the Desktop API is supported
-		if(!Desktop.isDesktopSupported()) {
+		if(!Desktop.isDesktopSupported())
+		{
             throw new Exception("Desktop is not supported");
         }
 
 		final Desktop desktop = Desktop.getDesktop();
 
         // Check that the open functionality is supported
-        if(!desktop.isSupported(Desktop.Action.OPEN)) {
+        if(!desktop.isSupported(Desktop.Action.OPEN))
+        {
         	throw new Exception("Desktop doesn't support the open action");
         }
         
@@ -272,20 +329,23 @@ public class ClientUtilities {
 	/**
 	 * Builds a Content Specification list for a list of content specifications.
 	 */
-	public static SpecList buildSpecList(final List<TopicV1> specList, final RESTManager restManager, final ErrorLoggerManager elm) throws Exception {
+	public static SpecList buildSpecList(final List<RESTTopicV1> specList, final RESTManager restManager, final ErrorLoggerManager elm) throws Exception
+	{
 		final List<Spec> specs = new ArrayList<Spec>();
-		for (final TopicV1 cs: specList) {
-			UserV1 creator = null;
-			if (cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null)
+		for (final RESTTopicV1 cs: specList)
+		{
+			RESTUserV1 creator = null;
+			if (ComponentTopicV1.returnProperty(cs, CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null)
 			{
-				final List<UserV1> users = restManager.getReader().getUsersByName(cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
-				if (users.size() == 1) {
+				final List<RESTUserV1> users = restManager.getReader().getUsersByName(ComponentTopicV1.returnProperty(cs, CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
+				if (users.size() == 1)
+				{
 					creator = users.get(0);
 				}
 			}
 			final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
 			csp.parse(cs.getXml());
-			ContentSpec contentSpec = csp.getContentSpec();
+			final ContentSpec contentSpec = csp.getContentSpec();
 			specs.add(new Spec(cs.getId(), cs.getTitle(), contentSpec.getProduct(), contentSpec.getVersion(), creator != null ? creator.getName() : null));
 		}
 		return new SpecList(specs, specs.size());
@@ -297,8 +357,9 @@ public class ClientUtilities {
 	 * @param contentSpecs The SpecList that contains the processed Content Specifications
 	 * @return The generated response ouput.
 	 */
-	public static String generateContentSpecListResponse(SpecList contentSpecs) {
-		LinkedHashMap<String, Integer> sizes = new LinkedHashMap<String, Integer>();
+	public static String generateContentSpecListResponse(final SpecList contentSpecs)
+	{
+		final LinkedHashMap<String, Integer> sizes = new LinkedHashMap<String, Integer>();
 		// Create the initial sizes incase they never increase
 		sizes.put("ID", 2);
 		sizes.put("SPEC ID", 7);
@@ -307,35 +368,47 @@ public class ClientUtilities {
 		sizes.put("PRODUCT", 7);
 		sizes.put("VERSION", 7);
 		sizes.put("CREATED BY", 10);
-		if (contentSpecs != null && contentSpecs.getSpecs() != null && !contentSpecs.getSpecs().isEmpty()) {
-			for (Spec spec: contentSpecs.getSpecs()) {
-				if (spec.getId().toString().length() > sizes.get("ID")) {
+		if (contentSpecs != null && contentSpecs.getSpecs() != null && !contentSpecs.getSpecs().isEmpty())
+		{
+			for (final Spec spec: contentSpecs.getSpecs())
+			{
+				if (spec.getId().toString().length() > sizes.get("ID"))
+				{
 					sizes.put("ID", spec.getId().toString().length());
 				}
-				if (spec.getProduct() != null && spec.getProduct().length() > sizes.get("PRODUCT")) {
+				
+				if (spec.getProduct() != null && spec.getProduct().length() > sizes.get("PRODUCT"))
+				{
 					sizes.put("PRODUCT", spec.getProduct().length());
 				}
-				if (spec.getTitle().length() > sizes.get("TITLE")) {
+				
+				if (spec.getTitle().length() > sizes.get("TITLE"))
+				{
 					sizes.put("TITLE", spec.getTitle().length());
 				}
-				if (spec.getVersion() != null && spec.getVersion().length() > sizes.get("VERSION")) {
+				
+				if (spec.getVersion() != null && spec.getVersion().length() > sizes.get("VERSION"))
+				{
 					sizes.put("VERSION", spec.getVersion().length());
 				}
-				if (spec.getCreator() != null && spec.getCreator().length() > sizes.get("CREATED BY")) {
+				
+				if (spec.getCreator() != null && spec.getCreator().length() > sizes.get("CREATED BY"))
+				{
 					sizes.put("CREATED BY", spec.getCreator().length());
 				}
 			}
-			String format = "%" + (sizes.get("ID") + 2) + "s" +
+			
+			final String format = "%" + (sizes.get("ID") + 2) + "s" +
 							"%" + (sizes.get("TITLE") + 2) + "s" +
 							"%" + (sizes.get("PRODUCT") + 2) + "s" +
 							"%" + (sizes.get("VERSION") + 2) + "s" +
 							"%" + (sizes.get("CREATED BY") + 2) + "s";
 			
-			String output = String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY") + "\n";
-			for (Spec spec: contentSpecs.getSpecs()) {
-				output += String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(), spec.getCreator()) + "\n";
+			final StringBuilder output = new StringBuilder(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY") + "\n");
+			for (final Spec spec: contentSpecs.getSpecs()) {
+				output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(), spec.getCreator()) + "\n");
 			}
-			return output;
+			return output.toString();
 		}
 		return "";
 	}
@@ -346,7 +419,8 @@ public class ClientUtilities {
 	 * @param dir The directory to be deleted.
 	 * @return True if the directory was deleted otherwise false if an error occurred.
 	 */
-	public static boolean deleteDir(File dir) {
+	public static boolean deleteDir(final File dir)
+	{
 		// Delete the contents of the directory first
 	    if (!deleteDirContents(dir)) return false;
 	    
@@ -360,11 +434,15 @@ public class ClientUtilities {
 	 * @param dir The directory whose content is to be deleted.
 	 * @return True if the directories contents were deleted otherwise false if an error occurred.
 	 */
-	public static boolean deleteDirContents(File dir) {
-	    if (dir.isDirectory()) {
+	public static boolean deleteDirContents(final File dir)
+	{
+	    if (dir.isDirectory())
+	    {
 	        String[] children = dir.list();
-	        for (int i=0; i<children.length; i++) {
-	            if (!deleteDir(new File(dir, children[i]))) {
+	        for (int i=0; i<children.length; i++)
+	        {
+	            if (!deleteDir(new File(dir, children[i])))
+	            {
 	                return false;
 	            }
 	        }

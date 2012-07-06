@@ -9,6 +9,7 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
@@ -17,8 +18,8 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.TopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Pull a Content Specification from the server")
 public class PullCommand extends BaseCommandImpl{
@@ -50,8 +51,8 @@ public class PullCommand extends BaseCommandImpl{
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
-	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+		super(parser, cspConfig, clientConfig);
 	}
 
 	public Boolean useContentSpec() {
@@ -148,7 +149,7 @@ public class PullCommand extends BaseCommandImpl{
 	}
 	
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final RESTReader reader = restManager.getReader();
 		boolean pullForConfig = false;
@@ -185,7 +186,7 @@ public class PullCommand extends BaseCommandImpl{
 		String fileName = "";
 		// Topic
 		if (pullTopic) {
-			final TopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+			final RESTTopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 			if (topic == null) {
 				printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
@@ -201,7 +202,7 @@ public class PullCommand extends BaseCommandImpl{
 		// Content Specification
 		} else {
 			if (usePre) {
-				final TopicV1 contentSpec = reader.getPreContentSpecById(ids.get(0), revision);
+				final RESTTopicV1 contentSpec = reader.getPreContentSpecById(ids.get(0), revision);
 				if (contentSpec == null) {
 					printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 					shutdown(Constants.EXIT_FAILURE);
@@ -213,7 +214,7 @@ public class PullCommand extends BaseCommandImpl{
 					}
 				}
 			} else {
-				final TopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
+				final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
 				if (contentSpec == null) {
 					printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 					shutdown(Constants.EXIT_FAILURE);
@@ -283,7 +284,7 @@ public class PullCommand extends BaseCommandImpl{
 	}
 	
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(RESTReader reader) {
 		return null;
 	}
 

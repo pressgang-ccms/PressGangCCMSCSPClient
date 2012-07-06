@@ -14,6 +14,7 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.CommaParameterSplitter;
 import com.beust.jcommander.internal.Maps;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
@@ -27,13 +28,12 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.TopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
 public class BuildCommand extends BaseCommandImpl
 {
-
 	@Parameter(metaVar = "[ID] or [FILE]")
 	private List<String> ids = new ArrayList<String>();
 	
@@ -67,14 +67,20 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.EMPTY_LEVELS_LONG_PARAM, description = "Allow building with empty levels.", hidden=true)
 	private Boolean allowEmptyLevels = false;
 	
+	@Parameter(names = Constants.EDITOR_LINKS_LONG_PARAM, description = "Insert Editor links for each topic.")
+	private Boolean insertEditorLinks = false;
+	
+	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.", metaVar = "<LOCALE>")
+	private String locale = null;
+	
 	private File output;
 	
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
 	
-	public BuildCommand(final JCommander parser, final ContentSpecConfiguration cspConfig)
+	public BuildCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
 	{
-		super(parser, cspConfig);
+		super(parser, cspConfig, clientConfig);
 	}
 	
 	public List<String> getInjectionTypes()
@@ -82,7 +88,7 @@ public class BuildCommand extends BaseCommandImpl
 		return injectionTypes;
 	}
 
-	public void setInjectionTypes(List<String> injectionTypes)
+	public void setInjectionTypes(final List<String> injectionTypes)
 	{
 		this.injectionTypes = injectionTypes;
 	}
@@ -92,7 +98,7 @@ public class BuildCommand extends BaseCommandImpl
 		return inlineInjection;
 	}
 
-	public void setInlineInjection(Boolean inlineInjection)
+	public void setInlineInjection(final Boolean inlineInjection)
 	{
 		this.inlineInjection = inlineInjection;
 	}
@@ -102,7 +108,7 @@ public class BuildCommand extends BaseCommandImpl
 		return hideErrors;
 	}
 
-	public void setHideErrors(Boolean hideErrors)
+	public void setHideErrors(final Boolean hideErrors)
 	{
 		this.hideErrors = hideErrors;
 	}
@@ -112,7 +118,7 @@ public class BuildCommand extends BaseCommandImpl
 		return hideErrors;
 	}
 
-	public void setHideContentSpecPage(Boolean hideContentSpecPage)
+	public void setHideContentSpecPage(final Boolean hideContentSpecPage)
 	{
 		this.hideContentSpec = hideContentSpecPage;
 	}
@@ -122,7 +128,7 @@ public class BuildCommand extends BaseCommandImpl
 		return ids;
 	}
 
-	public void setIds(List<String> ids)
+	public void setIds(final List<String> ids)
 	{
 		this.ids = ids;
 	}
@@ -132,7 +138,7 @@ public class BuildCommand extends BaseCommandImpl
 		return executionTime;
 	}
 
-	public void setExecutionTime(Boolean executionTime)
+	public void setExecutionTime(final Boolean executionTime)
 	{
 		this.executionTime = executionTime;
 	}
@@ -142,7 +148,7 @@ public class BuildCommand extends BaseCommandImpl
 		return overrides;
 	}
 
-	public void setOverrides(Map<String, String> overrides)
+	public void setOverrides(final Map<String, String> overrides)
 	{
 		this.overrides = overrides;
 	}
@@ -152,7 +158,7 @@ public class BuildCommand extends BaseCommandImpl
 		return permissive;
 	}
 
-	public void setPermissive(Boolean permissive)
+	public void setPermissive(final Boolean permissive)
 	{
 		this.permissive = permissive;
 	}
@@ -162,7 +168,7 @@ public class BuildCommand extends BaseCommandImpl
 		return output;
 	}
 	
-	public void setOutputFile(File outputFile)
+	public void setOutputFile(final File outputFile)
 	{
 		this.output = outputFile;
 	}
@@ -172,22 +178,43 @@ public class BuildCommand extends BaseCommandImpl
 		return outputPath;
 	}
 
-	public void setOutputPath(String outputPath)
+	public void setOutputPath(final String outputPath)
 	{
 		this.outputPath = outputPath;
 	}
 
-	public Boolean getAllowEmptyLevels() {
+	public Boolean getAllowEmptyLevels()
+	{
 		return allowEmptyLevels;
 	}
 
-	public void setAllowEmptyLevels(Boolean allowEmptyLevels) {
+	public void setAllowEmptyLevels(final Boolean allowEmptyLevels) {
 		this.allowEmptyLevels = allowEmptyLevels;
+	}
+
+	public Boolean getInsertEditorLinks()
+	{
+		return insertEditorLinks;
+	}
+
+	public void setInsertEditorLinks(final Boolean insertEditorLinks)
+	{
+		this.insertEditorLinks = insertEditorLinks;
+	}
+
+	public String getLocale()
+	{
+		return locale;
+	}
+
+	public void setLocale(final String locale)
+	{
+		this.locale = locale;
 	}
 
 	public CSDocbookBuildingOptions getBuildOptions()
 	{
-		CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
+		final CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
 		buildOptions.setInjection(inlineInjection);
 		buildOptions.setInjectionTypes(injectionTypes);
 		buildOptions.setIgnoreMissingCustomInjections(hideErrors);
@@ -197,16 +224,29 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setPermissive(permissive);
 		buildOptions.setOverrides(overrides);
 		buildOptions.setSuppressContentSpecPage(hideContentSpec);
+		buildOptions.setInsertEditorLinks(insertEditorLinks);
 		return buildOptions;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	protected String getContentSpecString(final RESTReader reader, final String id)
 	{
 		final String contentSpec;
 		if (id.matches("^\\d+$"))
 		{
-			// Get the Content Specification from the server.
-			final TopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			final RESTBaseTopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			/*
+			// TODO Use this code once content specs can be pushed to zanata
+			if (locale == null)
+			{
+				// Get the Content Specification from the server.
+				contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+			}
+			else
+			{
+				// Get the Content Specification from the server.
+				contentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
+			}*/
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
@@ -221,7 +261,8 @@ public class BuildCommand extends BaseCommandImpl
 			// Get the content spec from the file
 			contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.validateFilePath(id)));
 			
-			if (contentSpec == null  || contentSpec.equals("")) {
+			if (contentSpec == null  || contentSpec.equals(""))
+			{
 				printError(Constants.ERROR_EMPTY_FILE_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
@@ -231,17 +272,19 @@ public class BuildCommand extends BaseCommandImpl
 	}
 	
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final long startTime = System.currentTimeMillis();
 		final RESTReader reader = restManager.getReader();
 		boolean buildingFromConfig = false;
 		
 		// Add the details for the csprocessor.cfg if no ids are specified
-		if (loadFromCSProcessorCfg()) {
+		if (loadFromCSProcessorCfg())
+		{
 			buildingFromConfig = true;
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId().toString()));
-			if (cspConfig.getRootOutputDirectory() != null && !cspConfig.getRootOutputDirectory().equals("")) {
+			if (cspConfig.getRootOutputDirectory() != null && !cspConfig.getRootOutputDirectory().equals(""))
+			{
 				setOutputPath(cspConfig.getRootOutputDirectory());
 			}
 		}
@@ -259,7 +302,8 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -287,7 +331,7 @@ public class BuildCommand extends BaseCommandImpl
 		boolean success = false;
 		try
 		{
-			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
 		}
 		catch (Exception e)
 		{
@@ -318,7 +362,7 @@ public class BuildCommand extends BaseCommandImpl
 		try
 		{
 			builder = new ContentSpecBuilder(restManager);
-			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
+			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions(), cspConfig.getZanataDetails());
 		}
 		catch (Exception e)
 		{
@@ -347,7 +391,7 @@ public class BuildCommand extends BaseCommandImpl
 			fileName += ".zip";
 		}
 		
-		// Create the fully qaulified output path
+		// Create the fully qualified output path
 		if (outputPath != null && outputPath.endsWith("/"))
 		{
 			output = new File(outputPath + outputDir + fileName);
@@ -416,7 +460,7 @@ public class BuildCommand extends BaseCommandImpl
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp)
+	public void printError(final String errorMsg, final boolean displayHelp)
 	{
 		printError(errorMsg, displayHelp, Constants.BUILD_COMMAND_NAME);
 	}
@@ -428,7 +472,7 @@ public class BuildCommand extends BaseCommandImpl
 	}
 
 	@Override
-	public UserV1 authenticate(RESTReader reader)
+	public RESTUserV1 authenticate(final RESTReader reader)
 	{
 		return authenticate(getUsername(), reader);
 	}
@@ -452,7 +496,8 @@ public class BuildCommand extends BaseCommandImpl
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
+	public boolean loadFromCSProcessorCfg()
+	{
 		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

@@ -9,6 +9,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.rest.RESTManager;
@@ -18,8 +19,8 @@ import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.ecs.commonutils.HashUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.TopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Check the status of a local copy of a Content Specification compared to the server")
 public class StatusCommand extends BaseCommandImpl {
@@ -27,8 +28,8 @@ public class StatusCommand extends BaseCommandImpl {
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 
-	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+		super(parser, cspConfig, clientConfig);
 	}
 
 	public List<Integer> getIds() {
@@ -50,12 +51,12 @@ public class StatusCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public UserV1 authenticate(final RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader) {
 		return null;
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final RESTReader reader = restManager.getReader();
 		
@@ -80,7 +81,7 @@ public class StatusCommand extends BaseCommandImpl {
 		}
 		
 		// Get the content specification from the server
-		final TopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), null);
+		final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), null);
 		if (contentSpec == null) {
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);

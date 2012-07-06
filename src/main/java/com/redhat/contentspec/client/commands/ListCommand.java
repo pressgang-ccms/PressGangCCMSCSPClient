@@ -6,14 +6,15 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.TopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
 public class ListCommand extends BaseCommandImpl{
@@ -33,8 +34,8 @@ public class ListCommand extends BaseCommandImpl{
 	@Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", description = "Limit the results to only show up to <NUM> results.")
 	private Integer limit = null;
 	
-	public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+		super(parser, cspConfig, clientConfig);
 	}
 	
 	public Boolean useContentSpec() {
@@ -88,7 +89,7 @@ public class ListCommand extends BaseCommandImpl{
 	}
 
 	@Override
-	public UserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(RESTReader reader) {
 		return null;
 	}
 	
@@ -100,7 +101,7 @@ public class ListCommand extends BaseCommandImpl{
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		if (!isValid()) {
 			printError(Constants.INVALID_ARG_MSG, true);
@@ -134,7 +135,7 @@ public class ListCommand extends BaseCommandImpl{
 				printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
 				shutdown(Constants.EXIT_FAILURE);
 			} else {
-				final List<TopicV1> csList = reader.getContentSpecs(0, numResults);
+				final List<RESTTopicV1> csList = reader.getContentSpecs(0, numResults);
 				
 				// Good point to check for a shutdown
 				if (isAppShuttingDown()) {

@@ -6,6 +6,7 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.rest.RESTManager;
@@ -13,75 +14,88 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.HashUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
-import com.redhat.topicindex.rest.entities.TopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Get the checksum value for a Content Specification")
-public class ChecksumCommand extends BaseCommandImpl {
-
+public class ChecksumCommand extends BaseCommandImpl
+{
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 	
 	@Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
 	private Boolean contentSpec = true;
 	
-	public ChecksumCommand(final JCommander parser, final ContentSpecConfiguration cspConfig) {
-		super(parser, cspConfig);
+	public ChecksumCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
+		super(parser, cspConfig, clientConfig);
 	}
 
-	public Boolean useContentSpec() {
+	public Boolean useContentSpec()
+	{
 		return contentSpec;
 	}
 
-	public void setContentSpec(Boolean contentSpec) {
+	public void setContentSpec(Boolean contentSpec)
+	{
 		this.contentSpec = contentSpec;
 	}
 
-	public List<Integer> getIds() {
+	public List<Integer> getIds() 
+	{
 		return ids;
 	}
 
-	public void setIds(List<Integer> ids) {
+	public void setIds(List<Integer> ids)
+	{
 		this.ids = ids;
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(String errorMsg, boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.CHECKSUM_COMMAND_NAME);
 		
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.CHECKSUM_COMMAND_NAME);
 	}
 	
 	@Override
-	public UserV1 authenticate(final RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return null;
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		// If there are no ids then use the csprocessor.cfg file
-		if (loadFromCSProcessorCfg()) {
+		if (loadFromCSProcessorCfg())
+		{
 			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
 		}
 		
 		// Check that one and only one ID exists
-		if (ids.size() == 0) {
+		if (ids.size() == 0)
+		{
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		} else if (ids.size() > 1) {
+		}
+		else if (ids.size() > 1)
+		{
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
-		final TopicV1 cs = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+		final RESTTopicV1 cs = restManager.getReader().getPostContentSpecById(ids.get(0), null);
 		
 		// Check that that content specification was found
-		if (cs == null || cs.getXml() == null) {
+		if (cs == null || cs.getXml() == null)
+		{
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
@@ -93,7 +107,8 @@ public class ChecksumCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
+	public boolean loadFromCSProcessorCfg()
+	{
 		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 }

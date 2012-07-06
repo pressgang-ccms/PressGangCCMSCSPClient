@@ -19,9 +19,14 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.24.10";
+	public static final String BUILD = "0.25.0";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
+	
+	// Zanata Constants
+	public static final String DEFAULT_ZANATA_URL = "http://translate.zanata.org/";
+	public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
+	public static final String DEFAULT_ZANATA_VERSION = "1";
 	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
@@ -207,4 +212,8 @@ public class Constants {
 	public static final String VERSION_LONG_PARAM = "--version";
 	
 	public static final String EMPTY_LEVELS_LONG_PARAM = "--empty-levels";
+	
+	public static final String LOCALE_LONG_PARAM = "--lang";
+	
+	public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
 }

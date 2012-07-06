@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,6 +32,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.redhat.contentspec.client.commands.*;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -41,7 +43,8 @@ import com.redhat.contentspec.rest.RESTManager;
 import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.topicindex.rest.entities.UserV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.zanata.ZanataDetails;
 
 @SuppressWarnings("unused")
 public class Client implements BaseCommand, ShutdownAbleApp {
@@ -61,13 +64,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	private File csprocessorcfg = new File("csprocessor.cfg");
 	private ContentSpecConfiguration cspConfig = new ContentSpecConfiguration();
 	
-	private String rootDirectory = "";
-	private String publicanBuildOptions = Constants.DEFAULT_PUBLICAN_OPTIONS;
-	private String publicanPreviewFormat = Constants.DEFAULT_PUBLICAN_FORMAT;
+	private ClientConfiguration clientConfig = new ClientConfiguration();
 	private boolean firstRun = false;
-	
-	private HashMap<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
-	
+		
 	@Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, metaVar = "<URL>")
 	private String serverUrl;
 	
@@ -87,8 +86,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 	
 	public static void main(String[] args) {
-		try
-		{
+		try {
 			Client client = new Client();
 			Runtime.getRuntime().addShutdownHook(new ShutdownInterceptor(client));
 			client.setup();
@@ -97,7 +95,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		catch (Throwable ex)
 		{
 			JCommander.getConsole().println(ex.getMessage());
-			System.exit(Constants.EXIT_FAILURE);
 		}
 	}
 	
@@ -120,20 +117,25 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		parser.setProgramName(Constants.PROGRAM_NAME);
 		
 		// Load the csprocessor.cfg file from the current directory
-		try {
-			if (csprocessorcfg.exists()) {
+		try
+		{
+			if (csprocessorcfg.exists()) 
+			{
 				cspConfig = ClientUtilities.readFromCsprocessorCfg(csprocessorcfg);
-				if (cspConfig.getContentSpecId() == null) {
+				if (cspConfig.getContentSpecId() == null)
+				{
 					printError(Constants.ERROR_INVALID_CSPROCESSOR_CFG_MSG, false);
 					shutdown(Constants.EXIT_CONFIG_ERROR);
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			// Do nothing if the csprocessor.cfg file couldn't be read
 		}
 		
 		// Setup the commands that are to be used
-		setupCommands(parser, cspConfig);
+		setupCommands(parser, cspConfig, clientConfig);
 	}
 	
 	/**
@@ -161,7 +163,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		
 		// Get the command used
-		String commandName = parser.getParsedCommand();
+		final String commandName = parser.getParsedCommand();
 		if (commandName == null)
 		{
 			command = this;
@@ -187,12 +189,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		else
 		{
-		
 			// Print the version details
 			printVersionDetails(Constants.BUILD_MSG, Constants.BUILD, false);
 			
 			// Good point to check for a shutdown
-			if (isAppShuttingDown()) {
+			if (isAppShuttingDown())
+			{
 				shutdown.set(true);
 				return;
 			}
@@ -203,7 +205,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			}
 			
 			// Good point to check for a shutdown
-			if (isAppShuttingDown()) {
+			if (isAppShuttingDown())
+			{
 				shutdown.set(true);
 				return;
 			}
@@ -230,7 +233,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			JCommander.getConsole().println("");
 			
 			// Test that the server address is valid
-			if (!ClientUtilities.validateServerExists(command.getServerUrl())) {
+			if (!ClientUtilities.validateServerExists(command.getServerUrl()))
+			{
 				command.printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
 				shutdown(Constants.EXIT_NO_SERVER);
 			}
@@ -239,13 +243,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			restManager = new RESTManager(command.getSkynetServerUrl());
 			
 			// Good point to check for a shutdown
-			if (isAppShuttingDown()) {
+			if (isAppShuttingDown())
+			{
 				shutdown.set(true);
 				return;
 			}
 			
 			// Process the commands 
-			final UserV1 user = command.authenticate(restManager.getReader());
+			final RESTUserV1 user = command.authenticate(restManager.getReader());
 			command.process(restManager, elm, user);
 			
 			// Check if the program was shutdown
@@ -262,25 +267,25 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	 * 
 	 * @param parser
 	 */
-	protected void setupCommands(final JCommander parser, final ContentSpecConfiguration cspConfig)
+	protected void setupCommands(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
 	{
-		AssembleCommand assemble = new AssembleCommand(parser, cspConfig);
-		BuildCommand build = new BuildCommand(parser, cspConfig);
-		CheckoutCommand checkout = new CheckoutCommand(parser, cspConfig);
-		CreateCommand create = new CreateCommand(parser, cspConfig);
-		ChecksumCommand checksum = new ChecksumCommand(parser, cspConfig);
-		InfoCommand info = new InfoCommand(parser, cspConfig);
-		ListCommand list = new ListCommand(parser, cspConfig);
-		PreviewCommand preview = new PreviewCommand(parser, cspConfig);
-		PullCommand pull = new PullCommand(parser, cspConfig);
-		PullSnapshotCommand snapshot = new PullSnapshotCommand(parser, cspConfig);
-		PushCommand push = new PushCommand(parser, cspConfig);
-		RevisionsCommand revisions = new RevisionsCommand(parser, cspConfig);
-		SearchCommand search = new SearchCommand(parser, cspConfig);
-		SetupCommand setup = new SetupCommand(parser, cspConfig);
-		StatusCommand status = new StatusCommand(parser, cspConfig);
-		TemplateCommand template = new TemplateCommand(parser, cspConfig);
-		ValidateCommand validate = new ValidateCommand(parser, cspConfig);
+		final AssembleCommand assemble = new AssembleCommand(parser, cspConfig, clientConfig);
+		final BuildCommand build = new BuildCommand(parser, cspConfig, clientConfig);
+		final CheckoutCommand checkout = new CheckoutCommand(parser, cspConfig, clientConfig);
+		final CreateCommand create = new CreateCommand(parser, cspConfig, clientConfig);
+		final ChecksumCommand checksum = new ChecksumCommand(parser, cspConfig, clientConfig);
+		final InfoCommand info = new InfoCommand(parser, cspConfig, clientConfig);
+		final ListCommand list = new ListCommand(parser, cspConfig, clientConfig);
+		final PreviewCommand preview = new PreviewCommand(parser, cspConfig, clientConfig);
+		final PullCommand pull = new PullCommand(parser, cspConfig, clientConfig);
+		final PullSnapshotCommand snapshot = new PullSnapshotCommand(parser, cspConfig, clientConfig);
+		final PushCommand push = new PushCommand(parser, cspConfig, clientConfig);
+		final RevisionsCommand revisions = new RevisionsCommand(parser, cspConfig, clientConfig);
+		final SearchCommand search = new SearchCommand(parser, cspConfig, clientConfig);
+		final SetupCommand setup = new SetupCommand(parser, cspConfig, clientConfig);
+		final StatusCommand status = new StatusCommand(parser, cspConfig, clientConfig);
+		final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
+		final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
 		
 		parser.addCommand(Constants.ASSEMBLE_COMMAND_NAME, assemble);
 		commands.put(Constants.ASSEMBLE_COMMAND_NAME, assemble);
@@ -309,11 +314,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		parser.addCommand(Constants.PULL_COMMAND_NAME, pull);
 		commands.put(Constants.PULL_COMMAND_NAME, pull);
 		
-		parser.addCommand(Constants.PUSH_COMMAND_NAME, push);
-		commands.put(Constants.PUSH_COMMAND_NAME, push);
-		
 		parser.addCommand(Constants.PULL_SNAPSHOT_COMMAND_NAME, snapshot);
 		commands.put(Constants.PULL_SNAPSHOT_COMMAND_NAME, snapshot);
+		
+		parser.addCommand(Constants.PUSH_COMMAND_NAME, push);
+		commands.put(Constants.PUSH_COMMAND_NAME, push);
 		
 		parser.addCommand(Constants.REVISIONS_COMMAND_NAME, revisions);
 		commands.put(Constants.REVISIONS_COMMAND_NAME, revisions);
@@ -362,12 +367,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			return;
 		}
 		
+		final Map<String, ServerConfiguration> servers = clientConfig.getServers();
+		
 		// Set the URL
 		String url = null;
 		if (command.getServerUrl() != null)
 		{
 			// Check if the server url is a name defined in csprocessor.ini
-			for (String serverName: servers.keySet())
+			for (final String serverName: servers.keySet())
 			{
 				// Ignore the default server for csprocessor.cfg configuration files
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
@@ -468,19 +475,25 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		
 		// Set the root directory in the csprocessor configuration
-		cspConfig.setRootOutputDirectory(rootDirectory);
-		if (cspConfig.getServerUrl() == null) {
+		cspConfig.setRootOutputDirectory(clientConfig.getRootDirectory());
+		if (cspConfig.getServerUrl() == null)
+		{
 			cspConfig.setServerUrl(url);
 		}
 		
-		// Set the publican build options for assemble or preview commands
-		if (command instanceof AssembleCommand)
+		// Set the zanata details
+		final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+		if (zanataDetails.getProject() == null || zanataDetails.getProject().isEmpty())
 		{
-			((AssembleCommand)command).setPublicanBuildOptions(publicanBuildOptions);
-			if (command instanceof PreviewCommand)
-			{
-				((PreviewCommand)command).setPreviewFormat(publicanPreviewFormat);
-			}
+			zanataDetails.setProject(clientConfig.getZanataDetails().getProject());
+		}
+		if (zanataDetails.getServer() == null || zanataDetails.getServer().isEmpty())
+		{
+			zanataDetails.setServer(clientConfig.getZanataDetails().getServer());
+		}
+		if (zanataDetails.getVersion() == null || zanataDetails.getVersion().isEmpty())
+		{
+			zanataDetails.setVersion(clientConfig.getZanataDetails().getVersion());
 		}
 	}
 	
@@ -491,103 +504,129 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	 * @return Returns false if an error occurs otherwise true
 	 */
 	@SuppressWarnings("unchecked")
-	protected boolean setConfigOptions(final String location) {
+	protected boolean setConfigOptions(final String location)
+	{
 		final String fixedLocation = ClientUtilities.validateConfigLocation(location);
 		final HierarchicalINIConfiguration configReader;
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return false;
 		}
 		
 		// Checks if the file exists in the specified location
-		File file = new File(location);
-		if (file.exists() && !file.isDirectory()) {
+		final File file = new File(location);
+		if (file.exists() && !file.isDirectory())
+		{
 			JCommander.getConsole().println(String.format(Constants.CONFIG_LOADING_MSG, location));
 			// Initialise the configuration reader with the skynet.ini content
-			try {
+			try
+			{
 				configReader = new HierarchicalINIConfiguration(fixedLocation);
-			} catch (ConfigurationException e) {
+			}
+			catch (ConfigurationException e)
+			{
 				command.printError(Constants.INI_NOT_FOUND_MSG, false);
 				return false;
 			}
-		} else if (location.equals(Constants.DEFAULT_CONFIG_LOCATION)) {
+		}
+		else if (location.equals(Constants.DEFAULT_CONFIG_LOCATION))
+		{
 			JCommander.getConsole().println(String.format(Constants.CONFIG_CREATING_MSG, location));
 			
-			String configFile = "";
+			final StringBuilder configFile = new StringBuilder();
 			firstRun = true;
 			
 			// Create the configuration
 			
-			configFile += "[servers]\n";
+			configFile.append("[servers]\n");
 			// Create the Default server in the config file
-			configFile += "# Uncomment one of the default servers below based on the server you wish to connect to.\n";
-			configFile += "#" + Constants.DEFAULT_SERVER_NAME + "=production\n";
-			configFile += "#" + Constants.DEFAULT_SERVER_NAME + "=test\n\n";
+			configFile.append("# Uncomment one of the default servers below based on the server you wish to connect to.\n");
+			configFile.append("#" + Constants.DEFAULT_SERVER_NAME + "=production\n");
+			configFile.append("#" + Constants.DEFAULT_SERVER_NAME + "=test\n\n");
 			// Create the default.username attribute
-			configFile += "#If you use one username for all servers then uncomment and set-up the below value instead of each servers username\n";
-			configFile += "#default.username=\n\n";
+			configFile.append("#If you use one username for all servers then uncomment and set-up the below value instead of each servers username\n");
+			configFile.append("#default.username=\n\n");
 			// Create the Production server in the config file
-			configFile += "# Production Server settings\n";
-			configFile += Constants.PRODUCTION_SERVER_NAME + ".url=" + Constants.DEFAULT_PROD_SERVER + "\n";
-			configFile += Constants.PRODUCTION_SERVER_NAME + ".username=\n\n";
+			configFile.append("# Production Server settings\n");
+			configFile.append(Constants.PRODUCTION_SERVER_NAME + ".url=" + Constants.DEFAULT_PROD_SERVER + "\n");
+			configFile.append(Constants.PRODUCTION_SERVER_NAME + ".username=\n\n");
 			// Create the Test server in the config file
-			configFile += "# Test Server settings\n";
-			configFile += Constants.TEST_SERVER_NAME + ".url=" + Constants.DEFAULT_TEST_SERVER + "\n";
-			configFile += Constants.TEST_SERVER_NAME + ".username=\n\n";
+			configFile.append("# Test Server settings\n");
+			configFile.append(Constants.TEST_SERVER_NAME + ".url=" + Constants.DEFAULT_TEST_SERVER + "\n");
+			configFile.append(Constants.TEST_SERVER_NAME + ".username=\n\n");
 			
 			// Create the Root Directory
-			configFile += "[directory]\n";
-			configFile += "root=\n\n";
+			configFile.append("[directory]\n");
+			configFile.append("root=\n\n");
 			
 			// Create the publican options
-			configFile += "[publican]\n";
-			configFile += "build.parameters=" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\n";
-			configFile += "preview.format=" + Constants.DEFAULT_PUBLICAN_FORMAT + "\n";
+			configFile.append("[publican]\n");
+			configFile.append("build.parameters=" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\n");
+			configFile.append("preview.format=" + Constants.DEFAULT_PUBLICAN_FORMAT + "\n\n");
+			
+			// Create the default translation options
+			configFile.append("[translations]\n");
+			configFile.append("zanata.url=" + Constants.DEFAULT_ZANATA_URL + "\n");
+			configFile.append("zanata.project.name=" + Constants.DEFAULT_ZANATA_PROJECT + "\n");
+			configFile.append("zanata.project.version=" + Constants.DEFAULT_ZANATA_VERSION + "\n");
 			
 			// Save the configuration file
-			try {
+			try
+			{
 				// Make sure the directory exists
-				if (file.getParentFile() != null) {
+				if (file.getParentFile() != null)
+				{
 					file.getParentFile().mkdirs();
 				}
 				
 				// Save the config
-				FileOutputStream fos = new FileOutputStream(file);
-				fos.write(configFile.getBytes());
+				final FileOutputStream fos = new FileOutputStream(file);
+				fos.write(configFile.toString().getBytes());
 				fos.flush();
 				fos.close();
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				printError(Constants.ERROR_FAILED_CREATING_CONFIG_MSG, false);
 				return false;
 			}
 			return setConfigOptions(location);
-		} else {
+		}
+		else
+		{
 			command.printError(Constants.INI_NOT_FOUND_MSG, false);
 			return false;
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return false;
 		}
 		
+		final Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
+		
 		// Read in and process the servers
-		if (!configReader.getRootNode().getChildren("servers").isEmpty()) {
-			SubnodeConfiguration serversNode = configReader.getSection("servers");
-			for (Iterator<String> it = serversNode.getKeys(); it.hasNext();) {
+		if (!configReader.getRootNode().getChildren("servers").isEmpty())
+		{
+			final SubnodeConfiguration serversNode = configReader.getSection("servers");
+			for (final Iterator<String> it = serversNode.getKeys(); it.hasNext();)
+			{
 				String prefix = "";
-				String key = it.next();
+				final String key = it.next();
 				
 				// Find the prefix (aka server name) on urls
-				if (key.endsWith(".url")) {
+				if (key.endsWith(".url"))
+				{
 					prefix = key.substring(0, key.length() - ".url".length());
 					
-					String name = prefix.substring(0, prefix.length() - 1);
-					String url = serversNode.getString(prefix + ".url");
-					String username = serversNode.getString(prefix + ".username");
+					final String name = prefix.substring(0, prefix.length() - 1);
+					final String url = serversNode.getString(prefix + ".url");
+					final String username = serversNode.getString(prefix + ".username");
 					
 					// Check that a url was specified
 					if (url == null) {
@@ -596,16 +635,18 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 					}
 					
 					// Create the Server Configuration
-					ServerConfiguration serverConfig = new ServerConfiguration();
+					final ServerConfiguration serverConfig = new ServerConfiguration();
 					serverConfig.setName(name);
 					serverConfig.setUrl(url);
 					serverConfig.setUsername(username);
 					
 					servers.put(name, serverConfig);
 				// Just the default server name
-				} else if (key.equals(Constants.DEFAULT_SERVER_NAME)) {
+				}
+				else if (key.equals(Constants.DEFAULT_SERVER_NAME))
+				{
 					// Create the Server Configuration
-					ServerConfiguration serverConfig = new ServerConfiguration();
+					final ServerConfiguration serverConfig = new ServerConfiguration();
 					serverConfig.setName(key);
 					serverConfig.setUrl(serversNode.getString(key));
 					serverConfig.setUsername(serversNode.getString(key + "..username"));
@@ -615,48 +656,87 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			}
 
 			// Check that a default exists in the configuration files or via command line arguments
-			if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && command.getServerUrl() == null) {
+			if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && command.getServerUrl() == null)
+			{
 				command.printError(String.format(Constants.NO_DEFAULT_SERVER_FOUND, file.getAbsolutePath()), false);
 				return false;
-			} else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches("^(http://|https://).*")) {
-				if (!servers.containsKey(servers.get(Constants.DEFAULT_SERVER_NAME).getUrl())) {
+			}
+			else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches("^(http://|https://).*"))
+			{
+				if (!servers.containsKey(servers.get(Constants.DEFAULT_SERVER_NAME).getUrl()))
+				{
 					command.printError(Constants.NO_SERVER_FOUND_FOR_DEFAULT_SERVER, false);
 					return false;
-				} else {
-					ServerConfiguration defaultConfig = servers.get(Constants.DEFAULT_SERVER_NAME);
-					ServerConfiguration config = servers.get(defaultConfig.getUrl());
+				}
+				else
+				{
+					final ServerConfiguration defaultConfig = servers.get(Constants.DEFAULT_SERVER_NAME);
+					final ServerConfiguration config = servers.get(defaultConfig.getUrl());
 					defaultConfig.setUrl(config.getUrl());
-					if (config.getUsername() != null && !config.getUsername().equals("")) defaultConfig.setUsername(config.getUsername());
+					if (config.getUsername() != null && !config.getUsername().equals(""))
+						defaultConfig.setUsername(config.getUsername());
 				}
 			}
-		} else {
+		}
+		else
+		{
 			// Add the default server config to the list of server configurations
-			ServerConfiguration config = new ServerConfiguration();
+			final ServerConfiguration config = new ServerConfiguration();
 			config.setName(Constants.DEFAULT_SERVER_NAME);
 			config.setUrl("http://localhost:8080/TopicIndex/");
 			servers.put(Constants.DEFAULT_SERVER_NAME, config);
 		}
 		
+		// Add the servers to the client configuration
+		clientConfig.setServers(servers);
+		
 		// Read in the root directory
-		if (!configReader.getRootNode().getChildren("directory").isEmpty()) {
+		if (!configReader.getRootNode().getChildren("directory").isEmpty())
+		{
 			// Load the root content specs directory
-			if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals("")) {
-				rootDirectory = ClientUtilities.validateLocation(configReader.getProperty("directory.root").toString());
+			if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals(""))
+			{
+				clientConfig.setRootDirectory(ClientUtilities.validateLocation(configReader.getProperty("directory.root").toString()));
 			}
 		}
 		
 		// Read in the publican build options
-		if (!configReader.getRootNode().getChildren("publican").isEmpty()) {
+		if (!configReader.getRootNode().getChildren("publican").isEmpty())
+		{
 			// Load the publican setup values
-			if (configReader.getProperty("publican.build..parameters") != null && !configReader.getProperty("publican.build..parameters").equals("")) {
-				publicanBuildOptions = configReader.getProperty("publican.build..parameters").toString();
+			if (configReader.getProperty("publican.build..parameters") != null && !configReader.getProperty("publican.build..parameters").equals(""))
+			{
+				clientConfig.setPublicanBuildOptions(configReader.getProperty("publican.build..parameters").toString());
 			}
-			if (configReader.getProperty("publican.preview..format") != null && !configReader.getProperty("publican.preview..format").equals("")) {
-				publicanPreviewFormat = configReader.getProperty("publican.preview..format").toString();
+			if (configReader.getProperty("publican.preview..format") != null && !configReader.getProperty("publican.preview..format").equals(""))
+			{
+				clientConfig.setPublicanPreviewFormat(configReader.getProperty("publican.preview..format").toString());
 			}
-		} else {
-			publicanBuildOptions = Constants.DEFAULT_PUBLICAN_OPTIONS;
-			publicanPreviewFormat = Constants.DEFAULT_PUBLICAN_FORMAT;
+		}
+		else
+		{
+			clientConfig.setPublicanBuildOptions(Constants.DEFAULT_PUBLICAN_OPTIONS);
+			clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
+		}
+		
+		// Read in the zanata translation information
+		if (!configReader.getRootNode().getChildren("translations").isEmpty())
+		{
+			// Load the zanata server URL
+			if (configReader.getProperty("translations.zanata..url") != null && !configReader.getProperty("translations.zanata..url").equals(""))
+			{
+				clientConfig.getZanataDetails().setServer(ClientUtilities.validateLocation(configReader.getProperty("translations.zanata..url").toString()));
+			}
+			// Load the zanata project name
+			if (configReader.getProperty("translations.zanata..project..name") != null && !configReader.getProperty("translations.zanata..project..name").equals(""))
+			{
+				clientConfig.getZanataDetails().setProject(ClientUtilities.validateLocation(configReader.getProperty("translations.zanata..project..name").toString()));
+			}
+			// Load the zanata project version number
+			if (configReader.getProperty("translations.zanata..project..version") != null && !configReader.getProperty("translations.zanata..project..version").equals(""))
+			{
+				clientConfig.getZanataDetails().setVersion(ClientUtilities.validateLocation(configReader.getProperty("translations.zanata..project..version").toString()));
+			}
 		}
 
 		return true;
@@ -665,17 +745,20 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	/**
 	 * Prints the version of the client to the console
 	 */
-	private void printVersionDetails(String msg, String version, boolean printNL) {
+	private void printVersionDetails(String msg, String version, boolean printNL)
+	{
 		JCommander.getConsole().println(String.format(msg, version) + (printNL ? "\n" : ""));
 	}
 
 	@Override
-	public String getUsername() {
+	public String getUsername()
+	{
 		return username;
 	}
 
 	@Override
-	public void setUsername(String username) {
+	public void setUsername(final String username)
+	{
 		this.username = username;
 	}
 
@@ -741,12 +824,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	}
 
 	@Override
-	public UserV1 authenticate(final RESTReader reader) {
+	public RESTUserV1 authenticate(RESTReader reader) {
 		return null;
 	}
 
 	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final UserV1 user)
+	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{	
 	}
 
