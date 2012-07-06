@@ -19,7 +19,7 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.25.0";
+	public static final String BUILD = "0.25.1";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	

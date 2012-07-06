@@ -265,7 +265,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	/**
 	 * Setup the commands to be used in the client
 	 * 
-	 * @param parser
+	 * @param parser The parser used to parse the command line arguments.
+	 * @param cspConfig The configuration settings for the csprocessor.cfg if one exists in the current directory.
+	 * @param clientConfig The configuration settings for the client.
 	 */
 	protected void setupCommands(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
 	{
@@ -392,7 +394,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 		else if (cspConfig != null && cspConfig.getServerUrl() != null && command.loadFromCSProcessorCfg())
 		{
-			for (String serverName: servers.keySet())
+			for (final String serverName: servers.keySet())
 			{
 				// Ignore the default server for csprocessor.cfg configuration files
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
@@ -443,9 +445,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		// Set the username
 		if (command.getUsername() == null)
 		{
-			for (String serverName: servers.keySet())
+			for (final String serverName: servers.keySet())
 			{
-				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
+				if (serverName.equals(Constants.DEFAULT_SERVER_NAME) || servers.get(serverName).getUrl().isEmpty()) 
+					continue;
+				
 				try
 				{
 					URL serverUrl = new URL(servers.get(serverName).getUrl());
@@ -456,12 +460,15 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 				}
 				catch (MalformedURLException e)
 				{
-					command.setUsername(servers.get(Constants.DEFAULT_SERVER_NAME).getUsername());
+					if (servers.get(Constants.DEFAULT_SERVER_NAME) != null)
+					{
+						command.setUsername(servers.get(Constants.DEFAULT_SERVER_NAME).getUsername());
+					}
 				}
 			}
 			
 			// If none were found for the server then use the default
-			if (command.getUsername() == null || command.getUsername().equals(""))
+			if ((command.getUsername() == null || command.getUsername().equals("")) && servers.get(Constants.DEFAULT_SERVER_NAME) != null)
 			{
 				command.setUsername(servers.get(Constants.DEFAULT_SERVER_NAME).getUsername());
 			}
@@ -656,7 +663,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			}
 
 			// Check that a default exists in the configuration files or via command line arguments
-			if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && command.getServerUrl() == null)
+			if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null)
 			{
 				command.printError(String.format(Constants.NO_DEFAULT_SERVER_FOUND, file.getAbsolutePath()), false);
 				return false;
@@ -730,12 +737,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 			// Load the zanata project name
 			if (configReader.getProperty("translations.zanata..project..name") != null && !configReader.getProperty("translations.zanata..project..name").equals(""))
 			{
-				clientConfig.getZanataDetails().setProject(ClientUtilities.validateLocation(configReader.getProperty("translations.zanata..project..name").toString()));
+				clientConfig.getZanataDetails().setProject(configReader.getProperty("translations.zanata..project..name").toString());
 			}
 			// Load the zanata project version number
 			if (configReader.getProperty("translations.zanata..project..version") != null && !configReader.getProperty("translations.zanata..project..version").equals(""))
 			{
-				clientConfig.getZanataDetails().setVersion(ClientUtilities.validateLocation(configReader.getProperty("translations.zanata..project..version").toString()));
+				clientConfig.getZanataDetails().setVersion(configReader.getProperty("translations.zanata..project..version").toString());
 			}
 		}
 
