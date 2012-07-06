@@ -47,8 +47,8 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.zanata.ZanataDetails;
 
 @SuppressWarnings("unused")
-public class Client implements BaseCommand, ShutdownAbleApp {
-	
+public class Client implements BaseCommand, ShutdownAbleApp
+{	
 	private final JCommander parser = new JCommander(this);
 	
 	/**
@@ -85,8 +85,10 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 	protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 	
-	public static void main(String[] args) {
-		try {
+	public static void main(String[] args)
+	{
+		try
+		{
 			Client client = new Client();
 			Runtime.getRuntime().addShutdownHook(new ShutdownInterceptor(client));
 			client.setup();
@@ -98,7 +100,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		}
 	}
 	
-	public Client() {
+	public Client()
+	{
 	}
 	
 	public void setup()
@@ -107,9 +110,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 		LoggingUtilities.tieSystemErrToLog(Logger.getLogger(Client.class));
 		
 		// Set the column width
-		try {
+		try
+		{
 			parser.setColumnSize(Integer.parseInt(System.getenv("COLUMNS")));
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			parser.setColumnSize(160);
 		}
 		
@@ -770,27 +776,32 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	}
 
 	@Override
-	public String getServerUrl() {
+	public String getServerUrl()
+	{
 		return serverUrl;
 	}
 	
 	@Override
-	public String getSkynetServerUrl() {
+	public String getSkynetServerUrl()
+	{
 		return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest");
 	}
 
 	@Override
-	public void setServerUrl(String serverUrl) {
+	public void setServerUrl(final String serverUrl)
+	{
 		this.serverUrl = serverUrl;
 	}
 
 	@Override
-	public Boolean isShowHelp() {
+	public Boolean isShowHelp()
+	{
 		return showHelp;
 	}
 	
 	@Override
-	public void setShowHelp(Boolean showHelp) {
+	public void setShowHelp(final Boolean showHelp)
+	{
 		this.showHelp = showHelp;
 	}
 
@@ -800,38 +811,47 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	}
 
 	@Override
-	public void setConfigLocation(String configLocation) {
+	public void setConfigLocation(final String configLocation)
+	{
 		this.configLocation = configLocation;
 	}
 	
 	@Override
-	public Boolean isShowVersion() {
+	public Boolean isShowVersion()
+	{
 		return showVersion;
 	}
 
 	@Override
-	public void setShowVersion(Boolean showVersion) {
+	public void setShowVersion(final Boolean showVersion)
+	{
 		this.showVersion = showVersion;
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		parser.usage(false);
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		JCommander.getConsole().println("ERROR: " + errorMsg);
-		if (displayHelp) {
+		if (displayHelp)
+		{
 			JCommander.getConsole().println("");
 			printHelp();
-		} else {
+		}
+		else
+		{
 			JCommander.getConsole().println("");
 		}
 	}
 
 	@Override
-	public RESTUserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return null;
 	}
 
@@ -841,39 +861,46 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 	}
 
 	@Override
-	public void shutdown() {
+	public void shutdown()
+	{
 		this.isShuttingDown.set(true);
 		if (command != null && command != this) command.shutdown();
 	}
 	
-	public void shutdown(int exitStatus) {
+	public void shutdown(int exitStatus)
+	{
 		shutdown.set(true);
 		if (command != null) command.setShutdown(true);
 		System.exit(exitStatus);
 	}
 
 	@Override
-	public boolean isAppShuttingDown() {
+	public boolean isAppShuttingDown()
+	{
 		return isShuttingDown.get();
 	}
 	
 	@Override
-	public void setAppShuttingDown(boolean shuttingDown) {
+	public void setAppShuttingDown(boolean shuttingDown)
+	{
 		this.isShuttingDown.set(shuttingDown);
 	}
 
 	@Override
-	public boolean isShutdown() {
+	public boolean isShutdown()
+	{
 		return command == null || command == this ? shutdown.get() : command.isShutdown();
 	}
 	
 	@Override
-	public void setShutdown(boolean shutdown) {
+	public void setShutdown(boolean shutdown)
+	{
 		this.shutdown.set(shutdown);
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
+	public boolean loadFromCSProcessorCfg()
+	{
 		return cspConfig != null && csprocessorcfg.exists();
 	}
 }
