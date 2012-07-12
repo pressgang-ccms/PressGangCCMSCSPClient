@@ -53,7 +53,7 @@ public class BuildCommand extends BaseCommandImpl
 	private Boolean executionTime = false;
 	
 	@Parameter(names = {Constants.PERMISSIVE_LONG_PARAM, Constants.PERMISSIVE_SHORT_PARAM}, description = "Turn on permissive processing.")
-	private Boolean permissive = false;
+	private Boolean permissive = null;
 	
 	@DynamicParameter(names = Constants.OVERRIDE_LONG_PARAM, metaVar = "<variable>=<value>")
 	private Map<String, String> overrides = Maps.newHashMap();
@@ -255,6 +255,11 @@ public class BuildCommand extends BaseCommandImpl
 			}
 			
 			contentSpec = contentSpecTopic.getXml();
+			
+			if (permissive == null)
+			{
+				permissive = true;
+			}
 		}
 		else
 		{
@@ -265,6 +270,11 @@ public class BuildCommand extends BaseCommandImpl
 			{
 				printError(Constants.ERROR_EMPTY_FILE_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
+			}
+			
+			if (permissive == null)
+			{
+				permissive = false;
 			}
 		}
 		
