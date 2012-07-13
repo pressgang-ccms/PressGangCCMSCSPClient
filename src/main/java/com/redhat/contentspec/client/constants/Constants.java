@@ -19,9 +19,10 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
-	public static final String BUILD = "0.25.2";
+	public static final String BUILD = "0.25.3";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
+	public static final String DEFAULT_KOJIHUB_URL = "";
 	
 	// Zanata Constants
 	public static final String DEFAULT_ZANATA_URL = "http://translate.zanata.org/";
@@ -76,15 +77,15 @@ public class Constants {
 	public static final String LIST_SNAPSHOT_ERROR_MSG		= "There are %s Snapshots on this server. You should probably use \"csprocessor search -s\" if you have an idea what you are looking for. Otherwise, rerun the list command, and this time use the --limit<NUMBER>";
 	public static final String NO_FILE_FOUND_FOR_CONFIG		= "The file \"%s\" was not found in the current directory.";
 	
-	public static final String ERROR_UNAUTHORISED			= "Unauthorised Request! Please check your username and the server URL is correct.";
-	public static final String ERROR_INTERNAL_ERROR			= "Internal processing error!";
-	public static final String ERROR_NO_REV_ID_FOUND_MSG	= "No data was found for the specified ID and revision!";
-	public static final String ERROR_NO_ID_FOUND_MSG		= "No data was found for the specified ID!";
-	public static final String ERROR_NO_FILE_MSG			= "No file was found for the specified file name!";
-	public static final String ERROR_EMPTY_FILE_MSG			= "The specified file was empty!";
-	public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG	= "Unable to assemble the Content Specification because the \"%s\" file couldn't be found.";
-	public static final String ERROR_FAILED_TO_ASSEMBLE_MSG = "The content specification failed to be assembled.";
-	public static final String ERROR_RUNNING_PUBLICAN_MSG	= "Unable to assemble the Content Specification because an error occured while running Publican.";
+	public static final String ERROR_UNAUTHORISED					= "Unauthorised Request! Please check your username and the server URL is correct.";
+	public static final String ERROR_INTERNAL_ERROR					= "Internal processing error!";
+	public static final String ERROR_NO_REV_ID_FOUND_MSG			= "No data was found for the specified ID and revision!";
+	public static final String ERROR_NO_ID_FOUND_MSG				= "No data was found for the specified ID!";
+	public static final String ERROR_NO_FILE_MSG					= "No file was found for the specified file name!";
+	public static final String ERROR_EMPTY_FILE_MSG					= "The specified file was empty!";
+	public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG			= "Unable to assemble the Content Specification because the \"%s\" file couldn't be found.";
+	public static final String ERROR_FAILED_TO_ASSEMBLE_MSG 		= "The content specification failed to be assembled.";
+	public static final String ERROR_RUNNING_PUBLICAN_MSG			= "Unable to assemble the Content Specification because an error occured while running Publican.";
 	public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG	= "Unable to preview the Content Specification because the \"%s\" file couldn't be found.";
 	public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG		= "Unable to open the \"%s\" file.";
 	public static final String ERROR_UNSUPPORTED_FORMAT				= "\"%s\" is not currently supported as a preview format.";
@@ -101,6 +102,8 @@ public class Constants {
 	public static final String ERROR_NO_USERNAME					= "No username was specified for the server. Please check your configuration files and make sure a username exists.";
 	public static final String ERROR_PULL_SNAPSHOT_INVALID 			= "The revision of the Content Specification is invalid and as such the snapshot couldn't be pulled.";
 	public static final String ERROR_FAILED_TO_CLEAN_ASSEMBLY		= "The assembly directory was unable to be emptied. Please close an open previews and try again.";
+	public static final String ERROR_FAILED_FETCH_PUBSNUM			= "An error occured when fetching the pubsnumber from koji.";
+	public static final String ERROR_INVALID_KOJIHUB_URL			= "The Koji Hub URL is invalid or is blank. Please ensure that the URL is valid.";
 	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";
@@ -216,4 +219,6 @@ public class Constants {
 	public static final String LOCALE_LONG_PARAM = "--lang";
 	
 	public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
+	
+	public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
 }

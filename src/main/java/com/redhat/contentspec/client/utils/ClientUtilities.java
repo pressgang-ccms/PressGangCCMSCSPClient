@@ -8,13 +8,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Properties;
-
 import com.beust.jcommander.internal.Console;
+import com.google.code.regexp.NamedMatcher;
+import com.google.code.regexp.NamedPattern;
 import com.redhat.contentspec.ContentSpec;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -27,6 +29,11 @@ import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.StringUtilities;
+import com.redhat.ecs.constants.CommonConstants;
+import com.redhat.j2koji.base.KojiConnector;
+import com.redhat.j2koji.entities.KojiBuild;
+import com.redhat.j2koji.exceptions.KojiException;
+import com.redhat.j2koji.rpc.search.KojiBuildSearch;
 import com.redhat.topicindex.rest.entities.ComponentTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
@@ -112,7 +119,7 @@ public class ClientUtilities {
 	 */
 	public static String validateHost(final String host)
 	{
-		String fixedHost = host;
+		String fixedHost = new String(host);
 		if (!host.endsWith("/"))
 		{
 			fixedHost += "/";
@@ -128,7 +135,7 @@ public class ClientUtilities {
 	 * Checks that a server exists at the specified URL by sending a request to get the headers from the URL.
 	 * 
 	 * @param serverUrl The URL of the server.
-	 * @return True if the server exists and got a succesful response otherwise false.
+	 * @return True if the server exists and got a successful response otherwise false.
 	 */
 	public static boolean validateServerExists(final String serverUrl)
 	{
@@ -448,5 +455,60 @@ public class ClientUtilities {
 	        }
 	    }
 	    return true;
+	}
+	
+	/**
+	 * Get the next pubsnumber from koji for the content spec that will be built.
+	 * 
+	 * @param contentSpec The contentspec to be built.
+	 * @param kojiHubUrl The URL of the Koji Hub server to connect to.
+	 * @return The next valid pubsnumber for a build to koji.
+	 * @throws KojiException Thrown if an error occurs when searching koji for the builds.
+	 * @throws MalformedURLException Thrown if the passed Koji Hub URL isn't a valid URL.
+	 */
+	public static Integer getPubsnumberFromKoji(final ContentSpec contentSpec, final String kojiHubUrl) throws KojiException, MalformedURLException
+	{
+		assert contentSpec != null;
+		
+		if (kojiHubUrl == null)
+		{
+			throw new MalformedURLException();
+		}
+		
+		final String product = DocBookUtilities.escapeTitle(contentSpec.getProduct());
+		final String version = contentSpec.getVersion();
+		final String bookTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+		final String locale = contentSpec.getLocale() == null ? CommonConstants.DEFAULT_LOCALE : contentSpec.getLocale();
+		final String edition = contentSpec.getEdition();
+		
+		// Connect to the koji hub
+		final KojiConnector connector = new KojiConnector();
+		connector.connectTo(validateHost(kojiHubUrl));
+		
+		// Perform the search using the info from the content spec
+		final String packageName = product + "-" + bookTitle + "-" + version + "-web-" + locale + "-" + edition + "-";
+		final KojiBuildSearch buildSearch = new KojiBuildSearch(packageName + "*");
+		connector.executeMethod(buildSearch);
+		
+		// Search through each result to find the pubsnumber
+		final List<KojiBuild> builds = buildSearch.getResults();
+		Integer pubsnumber = 0;
+		for (final KojiBuild build : builds)
+		{
+			final String buildName = build.getName();
+			final String matchString = buildName.replace(packageName, "");
+			final NamedPattern pattern = NamedPattern.compile("(?<Pubsnumber>[0-9]+).*");
+			final NamedMatcher matcher = pattern.matcher(matchString);
+			
+			while (matcher.find())
+			{
+				final Integer buildPubsnumber = Integer.parseInt(matcher.group("Pubsnumber"));
+				if (buildPubsnumber > pubsnumber)
+					pubsnumber = buildPubsnumber;
+				break;
+			}
+		}
+		
+		return pubsnumber + 1;
 	}
 }

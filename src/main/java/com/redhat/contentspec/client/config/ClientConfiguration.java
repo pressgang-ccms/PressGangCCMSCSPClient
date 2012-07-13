@@ -12,6 +12,7 @@ public class ClientConfiguration
 	private String publicanBuildOptions = Constants.DEFAULT_PUBLICAN_OPTIONS;
 	private String publicanPreviewFormat = Constants.DEFAULT_PUBLICAN_FORMAT;
 	private ZanataDetails zanataDetails = new ZanataDetails();
+	private String kojiHubUrl = Constants.DEFAULT_KOJIHUB_URL;
 	
 	private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 
@@ -63,5 +64,15 @@ public class ClientConfiguration
 	public void setZanataDetails(final ZanataDetails zanataDetails)
 	{
 		this.zanataDetails = zanataDetails;
+	}
+
+	public String getKojiHubUrl()
+	{
+		return kojiHubUrl;
+	}
+
+	public void setKojiHubUrl(final String kojiHubUrl)
+	{
+		this.kojiHubUrl = kojiHubUrl;
 	}
 }

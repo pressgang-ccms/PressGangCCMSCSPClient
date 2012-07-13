@@ -149,7 +149,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	 * 
 	 * @param args The array of arguments from the command line
 	 */
-	public void processArgs(String[] args)
+	public void processArgs(final String[] args)
 	{
 		try
 		{
@@ -508,6 +508,12 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		{
 			zanataDetails.setVersion(clientConfig.getZanataDetails().getVersion());
 		}
+		
+		// Set the publish options
+		if (cspConfig.getKojiHubUrl() == null && clientConfig.getKojiHubUrl() != null)
+		{
+			cspConfig.setKojiHubUrl(ClientUtilities.validateHost(clientConfig.getKojiHubUrl()));
+		}
 	}
 	
 	/**
@@ -584,7 +590,11 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			configFile.append("[translations]\n");
 			configFile.append("zanata.url=" + Constants.DEFAULT_ZANATA_URL + "\n");
 			configFile.append("zanata.project.name=" + Constants.DEFAULT_ZANATA_PROJECT + "\n");
-			configFile.append("zanata.project.version=" + Constants.DEFAULT_ZANATA_VERSION + "\n");
+			configFile.append("zanata.project.version=" + Constants.DEFAULT_ZANATA_VERSION + "\n\n");
+			
+			// Create the default translation options
+			configFile.append("[publish]\n");
+			configFile.append("koji.huburl=" + Constants.DEFAULT_KOJIHUB_URL + "\n");
 			
 			// Save the configuration file
 			try
@@ -642,7 +652,8 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					final String username = serversNode.getString(prefix + ".username");
 					
 					// Check that a url was specified
-					if (url == null) {
+					if (url == null)
+					{
 						command.printError(String.format(Constants.NO_SERVER_URL_MSG, name), false);
 						return false;
 					}
@@ -749,6 +760,16 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			if (configReader.getProperty("translations.zanata..project..version") != null && !configReader.getProperty("translations.zanata..project..version").equals(""))
 			{
 				clientConfig.getZanataDetails().setVersion(configReader.getProperty("translations.zanata..project..version").toString());
+			}
+		}
+		
+		// Read in the zanata translation information
+		if (!configReader.getRootNode().getChildren("publish").isEmpty())
+		{
+			// Load the koji hub url
+			if (configReader.getProperty("publish.koji..huburl") != null && !configReader.getProperty("publish.koji..huburl").equals(""))
+			{
+				clientConfig.setKojiHubUrl(configReader.getProperty("publish.koji..huburl").toString());
 			}
 		}
 

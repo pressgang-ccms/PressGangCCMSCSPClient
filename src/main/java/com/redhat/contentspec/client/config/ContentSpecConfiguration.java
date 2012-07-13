@@ -4,10 +4,11 @@ import com.redhat.topicindex.zanata.ZanataDetails;
 
 public class ContentSpecConfiguration
 {
-	private String serverUrl;
-	private Integer contentSpecId;
-	private String rootOutputDir;
+	private String serverUrl = null;
+	private Integer contentSpecId = null;
+	private String rootOutputDir = null;
 	private ZanataDetails zanataDetails = new ZanataDetails();
+	private String kojiHubUrl = null;
 	
 	public Integer getContentSpecId()
 	{
@@ -47,5 +48,15 @@ public class ContentSpecConfiguration
 	public void setZanataDetails(final ZanataDetails zanataDetails)
 	{
 		this.zanataDetails = zanataDetails;
+	}
+
+	public String getKojiHubUrl()
+	{
+		return kojiHubUrl;
+	}
+
+	public void setKojiHubUrl(final String kojiHubUrl)
+	{
+		this.kojiHubUrl = kojiHubUrl;
 	}
 }

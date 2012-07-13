@@ -8,7 +8,7 @@
   </parent>
   <groupId>com.redhat.contentspec</groupId>
   <artifactId>csprocessor-client</artifactId>
-  <version>0.25.2-SNAPSHOT</version>
+  <version>0.25.3-SNAPSHOT</version>
   <name>Content Specification Processor Client</name>
   
   <url>http://www.github.com/lnewson/csprocessor</url>
@@ -61,6 +61,12 @@
 		<groupId>com.redhat.contentspec</groupId>
 		<artifactId>csprocessor</artifactId>
 		<version>0.0.2-SNAPSHOT</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>com.redhat</groupId>
+		<artifactId>j2koji</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
 	</dependency>
       
 	<dependency>

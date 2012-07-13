@@ -3,6 +3,7 @@ package com.redhat.contentspec.client.commands;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
+import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
@@ -72,6 +74,9 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.", metaVar = "<LOCALE>")
 	private String locale = null;
+	
+	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from koji.")
+	private Boolean fetchPubsnum = false;
 	
 	private File output;
 	
@@ -210,6 +215,16 @@ public class BuildCommand extends BaseCommandImpl
 	public void setLocale(final String locale)
 	{
 		this.locale = locale;
+	}
+
+	public Boolean getFetchPubsnum()
+	{
+		return fetchPubsnum;
+	}
+
+	public void setFetchPubsnum(final Boolean fetchPubsnum)
+	{
+		this.fetchPubsnum = fetchPubsnum;
 	}
 
 	public CSDocbookBuildingOptions getBuildOptions()
@@ -356,6 +371,26 @@ public class BuildCommand extends BaseCommandImpl
 		if (!success)
 		{
 			shutdown(Constants.EXIT_TOPIC_INVALID);
+		}
+		
+		// Pull in the pubsnumber from koji if the option is set
+		if (fetchPubsnum)
+		{
+			try
+			{
+				final Integer pubsnumber = ClientUtilities.getPubsnumberFromKoji(csp.getContentSpec(), cspConfig.getKojiHubUrl());
+				csp.getContentSpec().setPubsNumber(pubsnumber);
+			}
+			catch (MalformedURLException e)
+			{
+				printError(Constants.ERROR_INVALID_KOJIHUB_URL, false);
+				shutdown(Constants.EXIT_CONFIG_ERROR);
+			}
+			catch (KojiException e)
+			{
+				printError(Constants.ERROR_FAILED_FETCH_PUBSNUM, false);
+				shutdown(Constants.EXIT_FAILURE);
+			}
 		}
 		
 		// Good point to check for a shutdown
