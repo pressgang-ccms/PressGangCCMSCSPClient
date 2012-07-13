@@ -22,7 +22,7 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 @Parameters(commandDescription = "Builds and Assembles a Content Specification so that it is ready to be previewed")
 public class AssembleCommand extends BuildCommand {
 	
-	@Parameter(names = Constants.NO_BUILD_LONG_PARAM, description = "Don't build the content specification.")
+	@Parameter(names = Constants.NO_BUILD_LONG_PARAM, description = "Don't build the Content Specification.")
 	private Boolean noBuild = false;
 
 	@Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, description = "Hide the output from assembling the Content Specification.")

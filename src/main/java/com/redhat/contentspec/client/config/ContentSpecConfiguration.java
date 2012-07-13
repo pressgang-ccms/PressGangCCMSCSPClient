@@ -9,6 +9,7 @@ public class ContentSpecConfiguration
 	private String rootOutputDir = null;
 	private ZanataDetails zanataDetails = new ZanataDetails();
 	private String kojiHubUrl = null;
+	private String publishCommand = null;
 	
 	public Integer getContentSpecId()
 	{
@@ -58,5 +59,15 @@ public class ContentSpecConfiguration
 	public void setKojiHubUrl(final String kojiHubUrl)
 	{
 		this.kojiHubUrl = kojiHubUrl;
+	}
+	
+	public String getPublishCommand()
+	{
+		return publishCommand;
+	}
+
+	public void setPublishCommand(final String publishCommand)
+	{
+		this.publishCommand = publishCommand;
 	}
 }

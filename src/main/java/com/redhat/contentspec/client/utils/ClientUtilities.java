@@ -18,6 +18,7 @@ import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
 import com.redhat.contentspec.ContentSpec;
+import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Spec;
@@ -225,19 +226,21 @@ public class ClientUtilities {
 	 * 
 	 * @param contentSpec The content specification object the csprocessor.cfg will be used for.
 	 * @param serverUrl The server URL that the content specification exists on.
-	 * @param zanataDetails TODO
+	 * @param clientConfig TODO
 	 * @return The generated contents of the csprocessor.cfg file.
 	 */
-	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ZanataDetails zanataDetails, final String kojiHubUrl)
+	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ClientConfiguration clientConfig)
 	{
 		final StringBuilder output = new StringBuilder();
 		output.append("# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n");
 		output.append("SPEC_ID=" + contentSpec.getId() + "\n");
 		output.append("SERVER_URL=" + serverUrl + "\n");
+		final ZanataDetails zanataDetails = clientConfig.getZanataDetails();
 		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
 		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
 		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");
-		output.append("KOJI_HUB_URL=" + (kojiHubUrl == null ? "" : kojiHubUrl));
+		output.append("KOJI_HUB_URL=" + (clientConfig.getKojiHubUrl() == null ? "" : clientConfig.getKojiHubUrl()));
+		output.append("PUBLISH_COMMAND=" + (clientConfig.getPublishCommand() == null ? "" : clientConfig.getPublishCommand()));
 		return output.toString();
 	}
 	

@@ -2,8 +2,8 @@ package com.redhat.contentspec.client.constants;
 
 import java.io.File;
 
-public class Constants {
-	
+public class Constants
+{	
 	public static final String PROGRAM_NAME = "csprocessor";
 	
 	// Default client settings
@@ -19,10 +19,14 @@ public class Constants {
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
+	
+	// Options that need configuring for a build
 	public static final String BUILD = "0.25.3";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
+	public static final String DEFAULT_PUBLISH_COMMAND = "";
+	public static final String KOJI_NAME = "brew";
 	
 	// Zanata Constants
 	public static final String DEFAULT_ZANATA_URL = "http://translate.zanata.org/";
@@ -49,6 +53,7 @@ public class Constants {
 	public static final String INFO_COMMAND_NAME = "info";
 	public static final String LIST_COMMAND_NAME = "list";
 	public static final String PREVIEW_COMMAND_NAME = "preview";
+	public static final String PUBLISH_COMMAND_NAME = "publish";
 	public static final String PULL_COMMAND_NAME = "pull";
 	public static final String PULL_SNAPSHOT_COMMAND_NAME = "pull-snapshot";
 	public static final String PUSH_COMMAND_NAME = "push";
@@ -102,8 +107,10 @@ public class Constants {
 	public static final String ERROR_NO_USERNAME					= "No username was specified for the server. Please check your configuration files and make sure a username exists.";
 	public static final String ERROR_PULL_SNAPSHOT_INVALID 			= "The revision of the Content Specification is invalid and as such the snapshot couldn't be pulled.";
 	public static final String ERROR_FAILED_TO_CLEAN_ASSEMBLY		= "The assembly directory was unable to be emptied. Please close an open previews and try again.";
-	public static final String ERROR_FAILED_FETCH_PUBSNUM			= "An error occured when fetching the pubsnumber from koji.";
-	public static final String ERROR_INVALID_KOJIHUB_URL			= "The Koji Hub URL is invalid or is blank. Please ensure that the URL is valid.";
+	public static final String ERROR_FAILED_FETCH_PUBSNUM			= "An error occured when fetching the pubsnumber from " + Constants.KOJI_NAME + ".";
+	public static final String ERROR_INVALID_KOJIHUB_URL			= "The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure that the URL is valid.";
+	public static final String ERROR_RUNNING_PUBLISH_MSG			= "Unable to publish the Content Specification because an error occured while running the publish command.";
+	public static final String ERROR_NO_PUBLISH_COMMAND				= "No publish comand or options were found. Please configure these options via the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
 	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";
@@ -121,13 +128,15 @@ public class Constants {
 	public static final String CSP_REVISION_MSG				= "Content Specification Revision: %d";
 	public static final String CSP_TITLE_MSG				= "Content Specification Title: %s";
 	public static final String CSP_COMPLETION_MSG			= "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %.2f%%";
+	public static final String SUCCESSFUL_PUBLISH_MSG		= "Content Specification successfully published.";
 	
 	// Start Messages
 	public static final String STARTING_ASSEMBLE_MSG		= "Starting to assemble...";
 	public static final String STARTING_BUILD_MSG			= "Starting to build...";
 	public static final String STARTING_PUBLICAN_BUILD_MSG	= "Starting the publican build...";
 	public static final String STARTING_VALIDATE_MSG		= "Starting to validate...";
-	public static final String FETCHING_PUBSNUMBER_MSG		= "Fetching the pubsnumber from koji...";
+	public static final String FETCHING_PUBSNUMBER_MSG		= "Fetching the pubsnumber from " + Constants.KOJI_NAME + "...";
+	public static final String PUBLISH_BUILD_MSG			= "Publishing the Content Specification...";
 	
 	// Exit statuses
 	public static final int EXIT_SUCCESS = 0;
@@ -222,4 +231,6 @@ public class Constants {
 	public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
 	
 	public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
+	
+	public static final String PUBLICAN_BUILD_LONG_PARAM = "--publican-build";
 }

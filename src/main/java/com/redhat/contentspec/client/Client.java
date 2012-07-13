@@ -285,6 +285,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		final InfoCommand info = new InfoCommand(parser, cspConfig, clientConfig);
 		final ListCommand list = new ListCommand(parser, cspConfig, clientConfig);
 		final PreviewCommand preview = new PreviewCommand(parser, cspConfig, clientConfig);
+		final PublishCommand publish = new PublishCommand(parser, cspConfig, clientConfig);
 		final PullCommand pull = new PullCommand(parser, cspConfig, clientConfig);
 		final PullSnapshotCommand snapshot = new PullSnapshotCommand(parser, cspConfig, clientConfig);
 		final PushCommand push = new PushCommand(parser, cspConfig, clientConfig);
@@ -318,6 +319,9 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		
 		parser.addCommand(Constants.PREVIEW_COMMAND_NAME, preview);
 		commands.put(Constants.PREVIEW_COMMAND_NAME, preview);
+		
+		parser.addCommand(Constants.PUBLISH_COMMAND_NAME, publish);
+		commands.put(Constants.PUBLISH_COMMAND_NAME, publish);
 		
 		parser.addCommand(Constants.PULL_COMMAND_NAME, pull);
 		commands.put(Constants.PULL_COMMAND_NAME, pull);
@@ -514,6 +518,10 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		{
 			cspConfig.setKojiHubUrl(ClientUtilities.validateHost(clientConfig.getKojiHubUrl()));
 		}
+		if ((cspConfig.getPublishCommand() == null || cspConfig.getPublishCommand().isEmpty()) && clientConfig.getPublishCommand() != null)
+		{
+			cspConfig.setPublishCommand(clientConfig.getPublishCommand());
+		}
 	}
 	
 	/**
@@ -594,7 +602,8 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			
 			// Create the default translation options
 			configFile.append("[publish]\n");
-			configFile.append("koji.huburl=" + Constants.DEFAULT_KOJIHUB_URL + "\n");
+			configFile.append("koji.huburl=" + Constants.DEFAULT_KOJIHUB_URL + "\n\n");
+			configFile.append("command=" + Constants.DEFAULT_PUBLISH_COMMAND + "\n");
 			
 			// Save the configuration file
 			try
@@ -770,6 +779,12 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			if (configReader.getProperty("publish.koji..huburl") != null && !configReader.getProperty("publish.koji..huburl").equals(""))
 			{
 				clientConfig.setKojiHubUrl(configReader.getProperty("publish.koji..huburl").toString());
+			}
+			
+			// Load the publish command name
+			if (configReader.getProperty("publish.command") != null && !configReader.getProperty("publish.command").equals(""))
+			{
+				clientConfig.setPublishCommand(configReader.getProperty("publish.command").toString());
 			}
 		}
 

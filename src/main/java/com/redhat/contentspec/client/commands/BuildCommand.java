@@ -75,7 +75,7 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.", metaVar = "<LOCALE>")
 	private String locale = null;
 	
-	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from koji.")
+	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
 	private Boolean fetchPubsnum = false;
 	
 	private File output;

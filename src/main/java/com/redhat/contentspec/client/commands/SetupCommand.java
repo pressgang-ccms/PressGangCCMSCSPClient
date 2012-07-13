@@ -187,6 +187,21 @@ public class SetupCommand extends BaseCommandImpl
 		JCommander.getConsole().println("Please enter the preferred publican preview format. (" + Constants.DEFAULT_PUBLICAN_FORMAT + ")");
 		publicanFormat = JCommander.getConsole().readLine();
 		
+		// Get the publishing options
+		JCommander.getConsole().println("Setup the publishing options? (Yes/No)");
+		answer = JCommander.getConsole().readLine();
+		
+		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
+		{
+			// Get the translation options
+			JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. (" + Constants.DEFAULT_KOJIHUB_URL + ")");
+			publicanParams = JCommander.getConsole().readLine();
+			JCommander.getConsole().println("Please enter the default Project to use from zanata. (" + Constants.DEFAULT_ZANATA_PROJECT + ")");
+			publicanFormat = JCommander.getConsole().readLine();
+			JCommander.getConsole().println("Please enter the default Version of the Project to use from zanata. (" + Constants.DEFAULT_ZANATA_VERSION + ")");
+			publicanFormat = JCommander.getConsole().readLine();
+		}
+		
 		JCommander.getConsole().println("Setup zanata translation editor link information? (Yes/No)");
 		answer = JCommander.getConsole().readLine();
 		
