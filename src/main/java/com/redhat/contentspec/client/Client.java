@@ -510,7 +510,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		}
 		
 		// Set the publish options
-		if (cspConfig.getKojiHubUrl() == null && clientConfig.getKojiHubUrl() != null)
+		if ((cspConfig.getKojiHubUrl() == null || cspConfig.getKojiHubUrl().isEmpty()) && clientConfig.getKojiHubUrl() != null)
 		{
 			cspConfig.setKojiHubUrl(ClientUtilities.validateHost(clientConfig.getKojiHubUrl()));
 		}

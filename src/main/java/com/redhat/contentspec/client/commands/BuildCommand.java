@@ -376,6 +376,8 @@ public class BuildCommand extends BaseCommandImpl
 		// Pull in the pubsnumber from koji if the option is set
 		if (fetchPubsnum)
 		{
+			JCommander.getConsole().println(Constants.FETCHING_PUBSNUMBER_MSG);
+			
 			try
 			{
 				final Integer pubsnumber = ClientUtilities.getPubsnumberFromKoji(csp.getContentSpec(), cspConfig.getKojiHubUrl());

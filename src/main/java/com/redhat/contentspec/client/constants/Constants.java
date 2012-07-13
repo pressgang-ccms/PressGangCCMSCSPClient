@@ -127,6 +127,7 @@ public class Constants {
 	public static final String STARTING_BUILD_MSG			= "Starting to build...";
 	public static final String STARTING_PUBLICAN_BUILD_MSG	= "Starting the publican build...";
 	public static final String STARTING_VALIDATE_MSG		= "Starting to validate...";
+	public static final String FETCHING_PUBSNUMBER_MSG		= "Fetching the pubsnumber from koji...";
 	
 	// Exit statuses
 	public static final int EXIT_SUCCESS = 0;

@@ -223,7 +223,7 @@ public class CreateCommand extends BaseCommandImpl
 			final RESTTopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
 			final File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-			final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), clientConfig.getZanataDetails());
+			final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), clientConfig.getZanataDetails(), clientConfig.getKojiHubUrl());
 			
 			// Create the directory
 			if (outputConfig.getParentFile() != null)

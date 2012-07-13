@@ -216,6 +216,7 @@ public class ClientUtilities {
 		cspCfg.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
 		cspCfg.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
 		cspCfg.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
+		cspCfg.setKojiHubUrl(prop.getProperty("KOJI_HUB_URL"));
 		return cspCfg;
 	}
 	
@@ -227,7 +228,7 @@ public class ClientUtilities {
 	 * @param zanataDetails TODO
 	 * @return The generated contents of the csprocessor.cfg file.
 	 */
-	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ZanataDetails zanataDetails)
+	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ZanataDetails zanataDetails, final String kojiHubUrl)
 	{
 		final StringBuilder output = new StringBuilder();
 		output.append("# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n");
@@ -236,6 +237,7 @@ public class ClientUtilities {
 		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
 		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
 		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");
+		output.append("KOJI_HUB_URL=" + (kojiHubUrl == null ? "" : kojiHubUrl));
 		return output.toString();
 	}
 	
