@@ -159,11 +159,11 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		{
 			if (parser.getParsedCommand() != null)
 			{
-				commands.get(parser.getParsedCommand()).printError(Constants.INVALID_ARG_MSG, true);
+				commands.get(parser.getParsedCommand()).printError(e.getMessage(), true);
 			}
 			else
 			{
-				printError(Constants.INVALID_ARG_MSG, true);
+				printError(e.getMessage(), true);
 			}
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}

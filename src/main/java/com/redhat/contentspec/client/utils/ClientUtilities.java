@@ -50,11 +50,12 @@ public class ClientUtilities {
 	 */
 	public static String validateConfigLocation(final String location)
 	{
-		String fixedLocation = location;
+		String fixedLocation = new String(location);
 		if (location.startsWith("~"))
 		{
 			fixedLocation = Constants.HOME_LOCATION + location.substring(1);
-		} else if (location.startsWith("./") || location.startsWith("../"))
+		}
+		else if (location.startsWith("./") || location.startsWith("../"))
 		{
 			try
 			{
@@ -89,7 +90,7 @@ public class ClientUtilities {
 	 */
 	public static String validateLocation(final String location)
 	{
-		String fixedLocation = location;
+		String fixedLocation = new String(location);
 		if (!location.endsWith(File.separator))
 		{
 			fixedLocation += File.separator;
@@ -162,7 +163,7 @@ public class ClientUtilities {
 	public static String validateFilePath(final String filePath)
 	{
 		if (filePath == null) return null;
-		String fixedPath = filePath;
+		String fixedPath = new String(filePath);
 		if (filePath.startsWith("~"))
 		{
 			fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
