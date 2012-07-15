@@ -76,7 +76,7 @@ public class BuildCommand extends BaseCommandImpl
 	private String locale = null;
 	
 	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
-	private Boolean fetchPubsnum = false;
+	protected Boolean fetchPubsnum = false;
 	
 	private File output;
 	

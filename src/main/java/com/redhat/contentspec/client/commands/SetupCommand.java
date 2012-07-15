@@ -54,6 +54,9 @@ public class SetupCommand extends BaseCommandImpl
 		String publicanParams = "";
 		String publicanFormat = "";
 		
+		String kojiHubUrl = "";
+		String publishCommand = "";
+		
 		String zanataUrl = "";
 		String zanataProject = "";
 		String zanataVersion = "";
@@ -193,13 +196,11 @@ public class SetupCommand extends BaseCommandImpl
 		
 		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
 		{
-			// Get the translation options
+			// Get the publish options
 			JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. (" + Constants.DEFAULT_KOJIHUB_URL + ")");
-			publicanParams = JCommander.getConsole().readLine();
-			JCommander.getConsole().println("Please enter the default Project to use from zanata. (" + Constants.DEFAULT_ZANATA_PROJECT + ")");
-			publicanFormat = JCommander.getConsole().readLine();
-			JCommander.getConsole().println("Please enter the default Version of the Project to use from zanata. (" + Constants.DEFAULT_ZANATA_VERSION + ")");
-			publicanFormat = JCommander.getConsole().readLine();
+			kojiHubUrl = JCommander.getConsole().readLine();
+			JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("(" + Constants.DEFAULT_PUBLISH_COMMAND + ")")));
+			publishCommand = JCommander.getConsole().readLine();
 		}
 		
 		JCommander.getConsole().println("Setup zanata translation editor link information? (Yes/No)");
@@ -262,7 +263,12 @@ public class SetupCommand extends BaseCommandImpl
 		configFile.append("[translations]\n");
 		configFile.append("zanata.url=" + (zanataUrl.isEmpty() ? Constants.DEFAULT_ZANATA_URL : ClientUtilities.validateHost(zanataUrl)) + "\n");
 		configFile.append("zanata.project.name=" + (zanataProject.isEmpty() ? Constants.DEFAULT_ZANATA_PROJECT : zanataProject) + "\n");
-		configFile.append("zanata.project.version=" + (zanataVersion.isEmpty() ? Constants.DEFAULT_ZANATA_VERSION : zanataVersion) + "\n");
+		configFile.append("zanata.project.version=" + (zanataVersion.isEmpty() ? Constants.DEFAULT_ZANATA_VERSION : zanataVersion) + "\n\n");
+		
+		// Create the Root Directory
+		configFile.append("[publish]\n");
+		configFile.append("koji.huburl=" + kojiHubUrl + "\n");
+		configFile.append("command=" + publishCommand + "\n\n");
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
