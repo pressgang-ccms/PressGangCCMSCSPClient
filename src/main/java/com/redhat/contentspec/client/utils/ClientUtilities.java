@@ -146,7 +146,8 @@ public class ClientUtilities {
 			URL url = new URL(serverUrl);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("HEAD");
-			return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
+			int response = connection.getResponseCode();
+			return response == HttpURLConnection.HTTP_OK || response == HttpURLConnection.HTTP_BAD_METHOD;
 		}
 		catch (IOException e)
 		{
@@ -218,7 +219,8 @@ public class ClientUtilities {
 		cspCfg.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
 		cspCfg.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
 		cspCfg.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
-		cspCfg.setKojiHubUrl(prop.getProperty("KOJI_HUB_URL"));
+		cspCfg.setKojiHubUrl(validateHost(prop.getProperty("KOJI_HUB_URL")));
+		cspCfg.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
 		return cspCfg;
 	}
 	

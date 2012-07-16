@@ -215,4 +215,21 @@ public abstract class BaseCommandImpl implements BaseCommand
 		shutdown.set(true);
 		System.exit(exitStatus);
 	}
+	
+	@Override
+	public void validateServerUrl()
+	{
+		// Print the server url
+		JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
+		
+		// Test that the server address is valid
+		if (!ClientUtilities.validateServerExists(getServerUrl()))
+		{
+			// Print a line to separate content
+			JCommander.getConsole().println("");
+			
+			printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+			shutdown(Constants.EXIT_NO_SERVER);
+		}
+	}
 }

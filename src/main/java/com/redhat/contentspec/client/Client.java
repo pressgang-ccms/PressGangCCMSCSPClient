@@ -233,18 +233,11 @@ public class Client implements BaseCommand, ShutdownAbleApp
 				return;
 			}
 			
-			// Print the server url
-			JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, command.getServerUrl()));
+			// Check that the server Urls are valid
+			command.validateServerUrl();
 			
 			// Print a line to separate content
 			JCommander.getConsole().println("");
-			
-			// Test that the server address is valid
-			if (!ClientUtilities.validateServerExists(command.getServerUrl()))
-			{
-				command.printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
-				shutdown(Constants.EXIT_NO_SERVER);
-			}
 			
 			// Create the REST Manager
 			restManager = new RESTManager(command.getSkynetServerUrl());
@@ -988,5 +981,22 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	public boolean loadFromCSProcessorCfg()
 	{
 		return cspConfig != null && csprocessorcfg.exists();
+	}
+	
+	@Override
+	public void validateServerUrl()
+	{
+		// Print the server url
+		JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
+
+		// Test that the server address is valid
+		if (!ClientUtilities.validateServerExists(getServerUrl()))
+		{
+			// Print a line to separate content
+			JCommander.getConsole().println("");
+			
+			printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+			shutdown(Constants.EXIT_NO_SERVER);
+		}
 	}
 }

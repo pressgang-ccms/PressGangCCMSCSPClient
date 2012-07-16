@@ -39,7 +39,9 @@ public class Constants
 	// General Messages
 	public static final String BUILD_MSG			= "CSProcessor client version: %s";
 	public static final String WEBSERVICE_MSG		= "Connecting to Skynet server: %s";
-	public static final String CONFIG_LOADING_MSG 	= "Loading configuration from %s";
+	public static final String ZANATA_WEBSERVICE_MSG	= "Connecting to Zanata server: %s";
+	public static final String KOJI_WEBSERVICE_MSG		= "Connecting to " + KOJI_NAME + "hub server: %s";
+	public static final String CONFIG_LOADING_MSG 		= "Loading configuration from %s";
 	public static final String CSP_CONFIG_LOADING_MSG 	= "Loading project configuration from csprocessor.cfg";
 	public static final String CONFIG_CREATING_MSG	= "Creating the default configuration file: %s";
 	public static final String ZIP_SAVED_MSG		= "INFO: Content Specification successfully built!";

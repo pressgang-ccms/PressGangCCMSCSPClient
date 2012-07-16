@@ -28,4 +28,5 @@ public interface BaseCommand extends ShutdownAbleApp
 	RESTUserV1 authenticate(RESTReader reader);
 	void process(RESTManager restManager, ErrorLoggerManager elm, RESTUserV1 user);
 	boolean loadFromCSProcessorCfg();
+	void validateServerUrl();
 }

@@ -548,4 +548,37 @@ public class BuildCommand extends BaseCommandImpl
 	{
 		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
+	
+	@Override
+	public void validateServerUrl()
+	{
+		// Print the server url
+		JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
+		
+		// Test that the server address is valid
+		if (!ClientUtilities.validateServerExists(getServerUrl()))
+		{
+			// Print a line to separate content
+			JCommander.getConsole().println("");
+			
+			printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+			shutdown(Constants.EXIT_NO_SERVER);
+		}
+		
+		if (fetchPubsnum)
+		{
+			// Print the kojihub server url
+			JCommander.getConsole().println(String.format(Constants.KOJI_WEBSERVICE_MSG, cspConfig.getKojiHubUrl()));
+			
+			// Test that the server address is valid
+			if (!ClientUtilities.validateServerExists(cspConfig.getKojiHubUrl()))
+			{
+				// Print a line to separate content
+				JCommander.getConsole().println("");
+				
+				printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+				shutdown(Constants.EXIT_NO_SERVER);
+			}
+		}
+	}
 }

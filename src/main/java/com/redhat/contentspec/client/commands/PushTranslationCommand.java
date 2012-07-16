@@ -19,6 +19,7 @@ import com.redhat.contentspec.builder.utils.XMLUtilities;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser.ParsingMode;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
@@ -77,6 +78,38 @@ public class PushTranslationCommand extends BaseCommandImpl
 	public RESTUserV1 authenticate(final RESTReader reader)
 	{
 		return authenticate(getUsername(), reader);
+	}
+	
+	@Override
+	public void validateServerUrl()
+	{
+		// Print the server url
+		JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
+		
+		// Test that the server address is valid
+		if (!ClientUtilities.validateServerExists(getServerUrl()))
+		{
+			// Print a line to separate content
+			JCommander.getConsole().println("");
+			
+			printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+			shutdown(Constants.EXIT_NO_SERVER);
+		}
+		
+		final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+		
+		// Print the zanata server url
+		JCommander.getConsole().println(String.format(Constants.ZANATA_WEBSERVICE_MSG, zanataDetails.getServer()));
+		
+		// Test that the server address is valid
+		if (!ClientUtilities.validateServerExists(zanataDetails.getServer()))
+		{
+			// Print a line to separate content
+			JCommander.getConsole().println("");
+			
+			printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+			shutdown(Constants.EXIT_NO_SERVER);
+		}
 	}
 	
 	protected boolean isValid()
