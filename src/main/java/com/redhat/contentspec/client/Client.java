@@ -622,10 +622,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			configFile.append("preview.format=" + Constants.DEFAULT_PUBLICAN_FORMAT + "\n\n");
 			
 			// Create the default translation options
-			configFile.append("[translations]\n");
-			configFile.append("zanata.url=" + Constants.DEFAULT_ZANATA_URL + "\n");
-			configFile.append("zanata.project.name=" + Constants.DEFAULT_ZANATA_PROJECT + "\n");
-			configFile.append("zanata.project.version=" + Constants.DEFAULT_ZANATA_VERSION + "\n\n");
+			configFile.append("[zanata]\n\n");
 			
 			// Create the default translation options
 			configFile.append("[publish]\n");
@@ -779,26 +776,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
 		}
 		
-		// Read in the zanata translation information
-		/*if (!configReader.getRootNode().getChildren("translations").isEmpty())
-		{
-			// Load the zanata server URL
-			if (configReader.getProperty("translations.zanata..url") != null && !configReader.getProperty("translations.zanata..url").equals(""))
-			{
-				clientConfig.getZanataDetails().setServer(ClientUtilities.validateLocation(configReader.getProperty("translations.zanata..url").toString()));
-			}
-			// Load the zanata project name
-			if (configReader.getProperty("translations.zanata..project..name") != null && !configReader.getProperty("translations.zanata..project..name").equals(""))
-			{
-				clientConfig.getZanataDetails().setProject(configReader.getProperty("translations.zanata..project..name").toString());
-			}
-			// Load the zanata project version number
-			if (configReader.getProperty("translations.zanata..project..version") != null && !configReader.getProperty("translations.zanata..project..version").equals(""))
-			{
-				clientConfig.getZanataDetails().setVersion(configReader.getProperty("translations.zanata..project..version").toString());
-			}
-		}*/
-		
+		// Read in the zanata server information
 		final Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
 		
 		// Read in and process the servers
@@ -823,7 +801,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					// Check that a url was specified
 					if (url == null)
 					{
-						command.printError(String.format(Constants.NO_SERVER_URL_MSG, name), false);
+						command.printError(String.format(Constants.NO_ZANATA_SERVER_URL_MSG, name), false);
 						return false;
 					}
 					
@@ -834,20 +812,10 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					serverConfig.setUsername(username);
 					
 					zanataServers.put(name, serverConfig);
-				// Just the default server name
-				}
-				else if (key.equals(Constants.DEFAULT_SERVER_NAME))
-				{
-					// Create the Server Configuration
-					final ServerConfiguration serverConfig = new ServerConfiguration();
-					serverConfig.setName(key);
-					serverConfig.setUrl(serversNode.getString(key));
-					serverConfig.setUsername(serversNode.getString(key + "..username"));
-					
-					servers.put(Constants.DEFAULT_SERVER_NAME, serverConfig);
 				}
 			}
 		}
+		clientConfig.setZanataServers(zanataServers);
 		
 		// Read in the publishing information
 		if (!configReader.getRootNode().getChildren("publish").isEmpty())

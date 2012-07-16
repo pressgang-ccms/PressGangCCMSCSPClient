@@ -21,7 +21,7 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.25.3";
+	public static final String BUILD = "0.26.0";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
@@ -74,6 +74,7 @@ public class Constants
 	public static final String NO_SERVER_FOUND_FOR_DEFAULT_SERVER = "No server was found for the specified default.";
 	public static final String NO_SERVER_USERNAME_MSG		= "No Username was specified for the \"%s\" server in the configuration files.";
 	public static final String NO_SERVER_URL_MSG			= "No Server URL was specified for the \"%s\" server in the configuration files.";
+	public static final String NO_ZANATA_SERVER_URL_MSG		= "No Zanata Server URL was specified for the \"%s\" zanat server in the configuration files.";
 	public static final String UNABLE_TO_FIND_SERVER_MSG	= "Cannot connect to the server, as the server address can't be resolved.";
 	public static final String FILE_EXISTS_OVERWRITE_MSG 	= "%s already exists! Overwrite existing file (y/n)? ";
 	public static final String ERROR_FAILED_SAVING			= "An error occured while trying to save the file.";

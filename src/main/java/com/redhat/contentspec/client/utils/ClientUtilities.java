@@ -239,8 +239,8 @@ public class ClientUtilities {
 		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
 		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
 		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");
-		output.append("KOJI_HUB_URL=" + (clientConfig.getKojiHubUrl() == null ? "" : clientConfig.getKojiHubUrl()));
-		output.append("PUBLISH_COMMAND=" + (clientConfig.getPublishCommand() == null ? "" : clientConfig.getPublishCommand()));
+		output.append("KOJI_HUB_URL=" + (clientConfig.getKojiHubUrl() == null ? "" : clientConfig.getKojiHubUrl()) + "\n");
+		output.append("PUBLISH_COMMAND=" + (clientConfig.getPublishCommand() == null ? "" : clientConfig.getPublishCommand()) + "\n");
 		return output.toString();
 	}
 	
