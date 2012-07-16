@@ -290,6 +290,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		final PullCommand pull = new PullCommand(parser, cspConfig, clientConfig);
 		final PullSnapshotCommand snapshot = new PullSnapshotCommand(parser, cspConfig, clientConfig);
 		final PushCommand push = new PushCommand(parser, cspConfig, clientConfig);
+		final PushTranslationCommand pushTranslation = new PushTranslationCommand(parser, cspConfig, clientConfig);
 		final RevisionsCommand revisions = new RevisionsCommand(parser, cspConfig, clientConfig);
 		final SearchCommand search = new SearchCommand(parser, cspConfig, clientConfig);
 		final SetupCommand setup = new SetupCommand(parser, cspConfig, clientConfig);
@@ -332,6 +333,9 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		
 		parser.addCommand(Constants.PUSH_COMMAND_NAME, push);
 		commands.put(Constants.PUSH_COMMAND_NAME, push);
+		
+		parser.addCommand(Constants.PUSH_TRANSLATION_COMMAND_NAME, pushTranslation);
+		commands.put(Constants.PUSH_TRANSLATION_COMMAND_NAME, pushTranslation);
 		
 		parser.addCommand(Constants.REVISIONS_COMMAND_NAME, revisions);
 		commands.put(Constants.REVISIONS_COMMAND_NAME, revisions);
@@ -514,7 +518,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 				try
 				{
 					URI serverUrl = new URI(ClientUtilities.validateHost(zanataServers.get(serverName).getUrl()));
-					if (serverUrl.equals(new URI(cspConfig.getServerUrl())))
+					if (serverUrl.equals(new URI(cspConfig.getZanataDetails().getServer())))
 					{
 						zanataServerConfig = zanataServers.get(serverName);
 						break;
@@ -810,6 +814,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					serverConfig.setName(name);
 					serverConfig.setUrl(url);
 					serverConfig.setUsername(username);
+					serverConfig.setToken(token);
 					
 					zanataServers.put(name, serverConfig);
 				}
