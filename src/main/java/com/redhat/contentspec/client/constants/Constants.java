@@ -240,5 +240,5 @@ public class Constants
 	
 	public static final String ZANATA_PROJECT_VERSION_LONG_PARAM = "--zanata-version";
 	
-	public static final String ZANATA_SERVER_LONG_PARAM = "--zanata-url";
+	public static final String ZANATA_SERVER_LONG_PARAM = "--zanata-server";
 }

@@ -30,13 +30,13 @@ public class CheckoutCommand extends BaseCommandImpl
 	@Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, description = "Force the Content Specification directories to be created.")
 	private Boolean force = false;
 	
-	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata URL to be associated with the project.")
+	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata server to be associated with the Content Specification.")
 	private String zanataUrl = null;
 	
-	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The zanata project name to be associated with the project.")
+	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The zanata project name to be associated with the Content Specification.")
 	private String zanataProject = null;
 	
-	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the project.")
+	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the Content Specification.")
 	private String zanataVersion = null;
 
 	public CheckoutCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
@@ -153,6 +153,16 @@ public class CheckoutCommand extends BaseCommandImpl
 		{
 			shutdown.set(true);
 			return;
+		}
+		
+		// Find the zanata server if the url is a reference to the zanata server name
+		for (final String serverName: clientConfig.getZanataServers().keySet())
+		{
+			if (serverName.equals(zanataUrl))
+			{
+				zanataUrl = clientConfig.getZanataServers().get(serverName).getUrl();
+				break;
+			}
 		}
 		
 		// Create the zanata details from the command line options
