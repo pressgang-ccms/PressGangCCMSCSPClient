@@ -50,6 +50,8 @@ public class ClientUtilities {
 	 */
 	public static String validateConfigLocation(final String location)
 	{
+		if (location == null || location.isEmpty()) return location;
+		
 		String fixedLocation = new String(location);
 		if (location.startsWith("~"))
 		{
@@ -90,6 +92,8 @@ public class ClientUtilities {
 	 */
 	public static String validateLocation(final String location)
 	{
+		if (location == null || location.isEmpty()) return location;
+		
 		String fixedLocation = new String(location);
 		if (!location.endsWith(File.separator))
 		{
@@ -121,6 +125,8 @@ public class ClientUtilities {
 	 */
 	public static String validateHost(final String host)
 	{
+		if (host == null || host.isEmpty()) return host;
+		
 		String fixedHost = new String(host);
 		if (!host.endsWith("/"))
 		{
@@ -241,8 +247,8 @@ public class ClientUtilities {
 		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
 		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
 		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");
-		output.append("KOJI_HUB_URL=" + (clientConfig.getKojiHubUrl() == null ? "" : clientConfig.getKojiHubUrl()) + "\n");
-		output.append("PUBLISH_COMMAND=" + (clientConfig.getPublishCommand() == null ? "" : clientConfig.getPublishCommand()) + "\n");
+		output.append("KOJI_HUB_URL=\n");
+		output.append("PUBLISH_COMMAND=\n");
 		return output.toString();
 	}
 	
