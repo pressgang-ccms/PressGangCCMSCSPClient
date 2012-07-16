@@ -19,6 +19,7 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
+import com.redhat.topicindex.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Checkout an existing Content Specification from the server")
 public class CheckoutCommand extends BaseCommandImpl
@@ -28,6 +29,15 @@ public class CheckoutCommand extends BaseCommandImpl
 	
 	@Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, description = "Force the Content Specification directories to be created.")
 	private Boolean force = false;
+	
+	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata URL to be associated with the project.")
+	private String zanataUrl = null;
+	
+	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The zanata project name to be associated with the project.")
+	private String zanataProject = null;
+	
+	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the project.")
+	private String zanataVersion = null;
 
 	public CheckoutCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
 	{
@@ -44,6 +54,36 @@ public class CheckoutCommand extends BaseCommandImpl
 		this.ids = ids;
 	}
 	
+	public String getZanataUrl()
+	{
+		return zanataUrl;
+	}
+
+	public void setZanataUrl(final String zanataUrl)
+	{
+		this.zanataUrl = zanataUrl;
+	}
+
+	public String getZanataProject()
+	{
+		return zanataProject;
+	}
+
+	public void setZanataProject(final String zanataProject)
+	{
+		this.zanataProject = zanataProject;
+	}
+
+	public String getZanataVersion()
+	{
+		return zanataVersion;
+	}
+
+	public void setZanataVersion(final String zanataVersion)
+	{
+		this.zanataVersion = zanataVersion;
+	}
+
 	public Boolean getForce()
 	{
 		return force;
@@ -115,11 +155,17 @@ public class CheckoutCommand extends BaseCommandImpl
 			return;
 		}
 		
+		// Create the zanata details from the command line options
+		final ZanataDetails zanataDetails = new ZanataDetails();
+		zanataDetails.setServer(ClientUtilities.validateHost(zanataUrl));
+		zanataDetails.setProject(zanataProject);
+		zanataDetails.setVersion(zanataVersion);
+		
 		// Save the csprocessor.cfg and post spec to file if the create was successful
 		final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		final File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 		final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-		final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, getServerUrl(), clientConfig);
+		final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, getServerUrl(), clientConfig, zanataDetails);
 		
 		// Create the directory
 		if (outputConfig.getParentFile() != null)

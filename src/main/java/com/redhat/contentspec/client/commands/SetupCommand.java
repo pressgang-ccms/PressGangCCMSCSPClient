@@ -10,6 +10,7 @@ import com.beust.jcommander.Parameters;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.config.ServerConfiguration;
+import com.redhat.contentspec.client.config.ZanataServerConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.rest.RESTManager;
@@ -47,19 +48,116 @@ public class SetupCommand extends BaseCommandImpl
 	@Override
 	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{	
+		final StringBuilder configFile = new StringBuilder();
+		
+		setupServers(configFile);
+		
+		// Good point to check for a shutdown
+		if (isAppShuttingDown()) 
+		{
+			shutdown.set(true);
+			return;
+		}
+		
+		setupRootDirectory(configFile);
+		
+		// Good point to check for a shutdown
+		if (isAppShuttingDown()) 
+		{
+			shutdown.set(true);
+			return;
+		}
+		
+		configFile.append("\n");
+		
+		setupPublican(configFile);
+		
+		// Get the publishing options
+		JCommander.getConsole().println("Setup the publishing options? (Yes/No)");
+		String answer = JCommander.getConsole().readLine();
+		
+		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
+		{
+			// Good point to check for a shutdown
+			if (isAppShuttingDown()) 
+			{
+				shutdown.set(true);
+				return;
+			}
+			
+			configFile.append("\n");
+			
+			setupPublish(configFile);
+		}
+		
+		JCommander.getConsole().println("Setup zanata servers? (Yes/No)");
+		answer = JCommander.getConsole().readLine();
+		
+		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
+		{
+			// Good point to check for a shutdown
+			if (isAppShuttingDown()) 
+			{
+				shutdown.set(true);
+				return;
+			}
+			
+			configFile.append("\n");
+			
+			setupZanata(configFile);
+		}
+		
+		// Good point to check for a shutdown
+		if (isAppShuttingDown())
+		{
+			shutdown.set(true);
+			return;
+		}
+		
+		// Save the configuration file
+		final File file = new File(System.getProperty("user.home") + "/.config/csprocessor.ini");
+		try {
+			// Make sure the directory exists
+			if (file.getParentFile() != null)
+			{
+				file.getParentFile().mkdirs();
+			}
+			
+			// Make a backup of any existing csprocessor.ini
+			if (file.exists())
+			{
+				file.renameTo(new File(file.getAbsolutePath() + ".backup"));
+			}
+			
+			// Save the config
+			final FileOutputStream fos = new FileOutputStream(file);
+			fos.write(configFile.toString().getBytes());
+			fos.flush();
+			fos.close();
+		}
+		catch (IOException e)
+		{
+			printError(Constants.ERROR_FAILED_CREATING_CONFIG_MSG, false);
+			shutdown(Constants.EXIT_CONFIG_ERROR);
+		}
+		
+		JCommander.getConsole().println(Constants.SUCCESSFUL_SETUP_MSG);
+	}
+
+	@Override
+	public boolean loadFromCSProcessorCfg()
+	{
+		/* 
+		 * No need to load from csprocessor.cfg as this
+		 * command configures the client before use.
+		 */
+		return false;
+	}
+
+	protected void setupServers(final StringBuilder configFile)
+	{
 		String username = "";
 		String defaultServerName = "";
-		String rootDir = "";
-		
-		String publicanParams = "";
-		String publicanFormat = "";
-		
-		String kojiHubUrl = "";
-		String publishCommand = "";
-		
-		String zanataUrl = "";
-		String zanataProject = "";
-		String zanataVersion = "";
 		
 		final HashMap<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 		
@@ -173,52 +271,8 @@ public class SetupCommand extends BaseCommandImpl
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
-		// Get the root directory to store content specifications
-		JCommander.getConsole().println("Enter a root directory to store Content Specifications. (Press enter for no root directory)");
-		rootDir = JCommander.getConsole().readLine();
-		
-		// Good point to check for a shutdown
-		if (isAppShuttingDown()) 
-		{
-			shutdown.set(true);
-			return;
-		}
-		
-		// Get the publican options
-		JCommander.getConsole().println("Please enter the publican build command line options. (\"" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\")");
-		publicanParams = JCommander.getConsole().readLine();
-		JCommander.getConsole().println("Please enter the preferred publican preview format. (" + Constants.DEFAULT_PUBLICAN_FORMAT + ")");
-		publicanFormat = JCommander.getConsole().readLine();
-		
-		// Get the publishing options
-		JCommander.getConsole().println("Setup the publishing options? (Yes/No)");
-		answer = JCommander.getConsole().readLine();
-		
-		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
-		{
-			// Get the publish options
-			JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. (" + Constants.DEFAULT_KOJIHUB_URL + ")");
-			kojiHubUrl = JCommander.getConsole().readLine();
-			JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("(" + Constants.DEFAULT_PUBLISH_COMMAND + ")")));
-			publishCommand = JCommander.getConsole().readLine();
-		}
-		
-		JCommander.getConsole().println("Setup zanata translation editor link information? (Yes/No)");
-		answer = JCommander.getConsole().readLine();
-		
-		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
-		{
-			// Get the translation options
-			JCommander.getConsole().println("Please enter the default URL for zanata. (" + Constants.DEFAULT_ZANATA_URL + ")");
-			publicanParams = JCommander.getConsole().readLine();
-			JCommander.getConsole().println("Please enter the default Project to use from zanata. (" + Constants.DEFAULT_ZANATA_PROJECT + ")");
-			publicanFormat = JCommander.getConsole().readLine();
-			JCommander.getConsole().println("Please enter the default Version of the Project to use from zanata. (" + Constants.DEFAULT_ZANATA_VERSION + ")");
-			publicanFormat = JCommander.getConsole().readLine();
-		}
-		
-		// Create the configuration file
-		final StringBuilder configFile = new StringBuilder("[servers]\n");
+		// Add the information to the configuration file
+		configFile.append("[servers]\n");
 		for (final String serverName: servers.keySet())
 		{
 			final ServerConfiguration config = servers.get(serverName);
@@ -249,72 +303,161 @@ public class SetupCommand extends BaseCommandImpl
 				return;
 			}
 		}
+	}
+	
+	/**
+	 * Setup the root directory configuration options by asking 
+	 * the user for specific details.
+	 * 
+	 * @param configFile
+	 */
+	protected void setupRootDirectory(final StringBuilder configFile)
+	{
+		String rootDir = "";
+
+		// Get the root directory to store content specifications
+		JCommander.getConsole().println("Enter a root directory to store Content Specifications. (Press enter for no root directory)");
+		rootDir = JCommander.getConsole().readLine();
 		
 		// Create the Root Directory
 		configFile.append("[directory]\n");
-		configFile.append("root=" + rootDir + "\n\n");
+		configFile.append("root=" + rootDir + "\n");
+	}
+	
+	/**
+	 * Setup the publican configuration options by asking 
+	 * the user for specific details.
+	 * 
+	 * @param configFile
+	 */
+	protected void setupPublican(final StringBuilder configFile)
+	{
+		String publicanParams = "";
+		String publicanFormat = "";
+		
+		// Get the publican options
+		JCommander.getConsole().println("Please enter the publican build command line options. (\"" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\")");
+		publicanParams = JCommander.getConsole().readLine();
+		JCommander.getConsole().println("Please enter the preferred publican preview format. (" + Constants.DEFAULT_PUBLICAN_FORMAT + ")");
+		publicanFormat = JCommander.getConsole().readLine();
 		
 		// Create the publican options
 		configFile.append("[publican]\n");
 		configFile.append("build.parameters=" + (publicanParams.isEmpty() ? Constants.DEFAULT_PUBLICAN_OPTIONS : publicanParams) + "\n");
-		configFile.append("preview.format=" + (publicanFormat.isEmpty() ? Constants.DEFAULT_PUBLICAN_FORMAT : publicanFormat) + "\n\n");
+		configFile.append("preview.format=" + (publicanFormat.isEmpty() ? Constants.DEFAULT_PUBLICAN_FORMAT : publicanFormat) + "\n");
+	}
+	
+	/**
+	 * Setup the publishing configuration options by asking 
+	 * the user for specific details.
+	 * 
+	 * @param configFile
+	 */
+	protected void setupPublish(final StringBuilder configFile)
+	{
+		String kojiHubUrl = "";
+		String publishCommand = "";
 		
-		// Create the zanata translation options
-		configFile.append("[translations]\n");
-		configFile.append("zanata.url=" + (zanataUrl.isEmpty() ? Constants.DEFAULT_ZANATA_URL : ClientUtilities.validateHost(zanataUrl)) + "\n");
-		configFile.append("zanata.project.name=" + (zanataProject.isEmpty() ? Constants.DEFAULT_ZANATA_PROJECT : zanataProject) + "\n");
-		configFile.append("zanata.project.version=" + (zanataVersion.isEmpty() ? Constants.DEFAULT_ZANATA_VERSION : zanataVersion) + "\n\n");
+		// Get the publish options
+		JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. (" + Constants.DEFAULT_KOJIHUB_URL + ")");
+		kojiHubUrl = JCommander.getConsole().readLine();
+		JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("(" + Constants.DEFAULT_PUBLISH_COMMAND + ")")));
+		publishCommand = JCommander.getConsole().readLine();
 		
-		// Create the Root Directory
+		// Create the Publish Settings
 		configFile.append("[publish]\n");
 		configFile.append("koji.huburl=" + kojiHubUrl + "\n");
 		configFile.append("command=" + publishCommand + "\n\n");
-		
-		// Good point to check for a shutdown
-		if (isAppShuttingDown())
-		{
-			shutdown.set(true);
-			return;
-		}
-		
-		// Save the configuration file
-		final File file = new File(System.getProperty("user.home") + "/.config/csprocessor.ini");
-		try {
-			// Make sure the directory exists
-			if (file.getParentFile() != null)
-			{
-				file.getParentFile().mkdirs();
-			}
-			
-			// Make a backup of any existing csprocessor.ini
-			if (file.exists())
-			{
-				file.renameTo(new File(file.getAbsolutePath() + ".backup"));
-			}
-			
-			// Save the config
-			final FileOutputStream fos = new FileOutputStream(file);
-			fos.write(configFile.toString().getBytes());
-			fos.flush();
-			fos.close();
-		}
-		catch (IOException e)
-		{
-			printError(Constants.ERROR_FAILED_CREATING_CONFIG_MSG, false);
-			shutdown(Constants.EXIT_CONFIG_ERROR);
-		}
-		
-		JCommander.getConsole().println(Constants.SUCCESSFUL_SETUP_MSG);
 	}
-
-	@Override
-	public boolean loadFromCSProcessorCfg()
+	
+	/**
+	 * Setup the zanata servers configuration options by asking 
+	 * the user for specific details. This setups up the servers
+	 * in the same form as zanata for convenience.
+	 * 
+	 * @param configFile
+	 */
+	protected void setupZanata(final StringBuilder configFile)
 	{
-		/* 
-		 * No need to load from csprocessor.cfg as this
-		 * command configures the client before use.
-		 */
-		return false;
+		final HashMap<String, ZanataServerConfiguration> servers = new HashMap<String, ZanataServerConfiguration>();
+		String answer = "";
+		
+		while (!answer.matches("^[0-9]+$"))
+		{
+			JCommander.getConsole().print("How many zanata servers are to be configured? ");
+			answer = JCommander.getConsole().readLine();
+			
+			// Good point to check for a shutdown
+			if (isAppShuttingDown())
+			{
+				shutdown.set(true);
+				return;
+			}
+		}
+		
+		// Get the server setup details from the user
+		final Integer numProjects = Integer.parseInt(answer);
+		for (int i = 1; i <= numProjects; i++)
+		{
+			final ZanataServerConfiguration config = new ZanataServerConfiguration();
+			
+			// Get the name of the server
+			JCommander.getConsole().println("Please enter the name of server no " + i + ": ");
+			config.setName(JCommander.getConsole().readLine().toLowerCase());
+			
+			// Get the url of the server
+			JCommander.getConsole().println("Please enter the URL of server no. " + i + ": ");
+			config.setUrl(ClientUtilities.validateHost(JCommander.getConsole().readLine()));
+			
+			// Get the username for the server
+			JCommander.getConsole().println("Please enter the username of server no. " + i + ": ");
+			config.setUsername(JCommander.getConsole().readLine());
+			
+			// Get the token for the server
+			JCommander.getConsole().println("Please enter the API Key of server no. " + i + ": ");
+			config.setUsername(JCommander.getConsole().readLine());
+			
+			// Add the server configuration and add the name to the list of displayable strings
+			servers.put(config.getName(), config);
+			
+			// Good point to check for a shutdown
+			if (isAppShuttingDown())
+			{
+				shutdown.set(true);
+				return;
+			}
+		}
+		
+		// Add the information to the configuration file
+		configFile.append("[zanata]\n");
+		for (final String serverName: servers.keySet())
+		{
+			final ZanataServerConfiguration config = servers.get(serverName);
+			
+			// Setup the url for the server
+			configFile.append(serverName + ".url=" + config.getUrl() + "\n");
+			
+			// Setup the username for the server
+			if (config.getUsername() != null && !config.getUsername().equals(""))
+				configFile.append(serverName + ".username=" + config.getUsername() + "\n");
+			else
+				configFile.append(serverName + ".username=\n");
+			
+			// Setup the token for the server
+			if (config.getToken() != null && !config.getToken().equals(""))
+				configFile.append(serverName + ".key=" + config.getToken() + "\n");
+			else
+				configFile.append(serverName + ".key=\n");
+			
+			// Add a blank line to separate servers
+			configFile.append("\n");
+			
+			// Good point to check for a shutdown
+			if (isAppShuttingDown())
+			{
+				shutdown.set(true);
+				return;
+			}
+		}
 	}
-
 }

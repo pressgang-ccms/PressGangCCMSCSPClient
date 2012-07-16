@@ -35,6 +35,7 @@ import com.redhat.contentspec.client.commands.*;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.config.ServerConfiguration;
+import com.redhat.contentspec.client.config.ZanataServerConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
@@ -499,18 +500,44 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		}
 		
 		// Set the zanata details
-		final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
-		if (zanataDetails.getProject() == null || zanataDetails.getProject().isEmpty())
+		
+		final Map<String, ZanataServerConfiguration> zanataServers = clientConfig.getZanataServers();
+		
+		// Set the zanata details
+		if (cspConfig != null && cspConfig.getZanataDetails() != null && cspConfig.getZanataDetails().getServer() != null 
+				&& !cspConfig.getZanataDetails().getServer().isEmpty() && command.loadFromCSProcessorCfg())
 		{
-			zanataDetails.setProject(clientConfig.getZanataDetails().getProject());
-		}
-		if (zanataDetails.getServer() == null || zanataDetails.getServer().isEmpty())
-		{
-			zanataDetails.setServer(clientConfig.getZanataDetails().getServer());
-		}
-		if (zanataDetails.getVersion() == null || zanataDetails.getVersion().isEmpty())
-		{
-			zanataDetails.setVersion(clientConfig.getZanataDetails().getVersion());
+			ZanataServerConfiguration zanataServerConfig = null;
+			for (final String serverName: zanataServers.keySet())
+			{
+				// Compare the urls
+				try
+				{
+					URI serverUrl = new URI(ClientUtilities.validateHost(zanataServers.get(serverName).getUrl()));
+					if (serverUrl.equals(new URI(cspConfig.getServerUrl())))
+					{
+						zanataServerConfig = zanataServers.get(serverName);
+						break;
+					}
+				}
+				catch (URISyntaxException e)
+				{
+					break;
+				}
+			}
+			
+			// If no URL matched between the csprocessor.ini and csprocessor.cfg then print an error
+			if (zanataServerConfig == null)
+			{
+				JCommander.getConsole().println("");
+				printError(String.format(Constants.ERROR_NO_ZANATA_SERVER_SETUP_MSG, cspConfig.getZanataDetails().getServer()), false);
+				shutdown(Constants.EXIT_CONFIG_ERROR);
+			}
+			else
+			{
+				cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
+				cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
+			}
 		}
 		
 		// Set the publish options
@@ -753,7 +780,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		}
 		
 		// Read in the zanata translation information
-		if (!configReader.getRootNode().getChildren("translations").isEmpty())
+		/*if (!configReader.getRootNode().getChildren("translations").isEmpty())
 		{
 			// Load the zanata server URL
 			if (configReader.getProperty("translations.zanata..url") != null && !configReader.getProperty("translations.zanata..url").equals(""))
@@ -770,9 +797,59 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			{
 				clientConfig.getZanataDetails().setVersion(configReader.getProperty("translations.zanata..project..version").toString());
 			}
+		}*/
+		
+		final Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
+		
+		// Read in and process the servers
+		if (!configReader.getRootNode().getChildren("zanata").isEmpty())
+		{
+			final SubnodeConfiguration serversNode = configReader.getSection("zanata");
+			for (final Iterator<String> it = serversNode.getKeys(); it.hasNext();)
+			{
+				String prefix = "";
+				final String key = it.next();
+				
+				// Find the prefix (aka server name) on urls
+				if (key.endsWith(".url"))
+				{
+					prefix = key.substring(0, key.length() - ".url".length());
+					
+					final String name = prefix.substring(0, prefix.length() - 1);
+					final String url = serversNode.getString(prefix + ".url");
+					final String username = serversNode.getString(prefix + ".username");
+					final String token = serversNode.getString(prefix + ".key");
+					
+					// Check that a url was specified
+					if (url == null)
+					{
+						command.printError(String.format(Constants.NO_SERVER_URL_MSG, name), false);
+						return false;
+					}
+					
+					// Create the Server Configuration
+					final ZanataServerConfiguration serverConfig = new ZanataServerConfiguration();
+					serverConfig.setName(name);
+					serverConfig.setUrl(url);
+					serverConfig.setUsername(username);
+					
+					zanataServers.put(name, serverConfig);
+				// Just the default server name
+				}
+				else if (key.equals(Constants.DEFAULT_SERVER_NAME))
+				{
+					// Create the Server Configuration
+					final ServerConfiguration serverConfig = new ServerConfiguration();
+					serverConfig.setName(key);
+					serverConfig.setUrl(serversNode.getString(key));
+					serverConfig.setUsername(serversNode.getString(key + "..username"));
+					
+					servers.put(Constants.DEFAULT_SERVER_NAME, serverConfig);
+				}
+			}
 		}
 		
-		// Read in the zanata translation information
+		// Read in the publishing information
 		if (!configReader.getRootNode().getChildren("publish").isEmpty())
 		{
 			// Load the koji hub url

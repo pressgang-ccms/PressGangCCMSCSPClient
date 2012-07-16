@@ -110,7 +110,7 @@ public class InfoCommand extends BaseCommandImpl
 		JCommander.getConsole().println("Starting to calculate the statistics...");
 		
 		// Parse the spec to get the ids
-		ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+		final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
 		try
 		{
 			csp.parse(contentSpec.getXml());

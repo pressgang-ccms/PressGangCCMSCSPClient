@@ -101,5 +101,21 @@
      	<version>1.2.16</version>
    	</dependency>
 
-   </dependencies>
+	<!-- Zanata Libraries -->
+  	<dependency>
+  		<groupId>org.zanata</groupId>
+  		<artifactId>zanata-common-api</artifactId>
+  		<version>1.5.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.zanata</groupId>
+  		<artifactId>zanata-common-util</artifactId>
+  		<version>1.5.0</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.zanata</groupId>
+  		<artifactId>zanata-rest-client</artifactId>
+  		<version>1.5.0</version>
+  	</dependency>
+  </dependencies>
 </project>

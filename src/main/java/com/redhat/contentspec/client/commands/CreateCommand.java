@@ -24,6 +24,7 @@ import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
+import com.redhat.topicindex.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Create a new Content Specification on the server")
 public class CreateCommand extends BaseCommandImpl
@@ -216,6 +217,12 @@ public class CreateCommand extends BaseCommandImpl
 		
 		if (success && createCsprocessorCfg)
 		{
+			// Create the blank zanata details as we shouldn't have a zanata setup at creation time
+			final ZanataDetails zanataDetails = new ZanataDetails();
+			zanataDetails.setServer(null);
+			zanataDetails.setProject(null);
+			zanataDetails.setVersion(null);
+			
 			boolean error = false;
 			
 			// Save the csprocessor.cfg and post spec to file if the create was successful
@@ -223,7 +230,7 @@ public class CreateCommand extends BaseCommandImpl
 			final RESTTopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
 			final File outputSpec = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
 			final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-			final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), clientConfig);
+			final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), clientConfig, zanataDetails);
 			
 			// Create the directory
 			if (outputConfig.getParentFile() != null)

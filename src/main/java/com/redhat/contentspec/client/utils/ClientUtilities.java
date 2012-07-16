@@ -230,13 +230,12 @@ public class ClientUtilities {
 	 * @param clientConfig TODO
 	 * @return The generated contents of the csprocessor.cfg file.
 	 */
-	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ClientConfiguration clientConfig)
+	public static String generateCsprocessorCfg(final RESTTopicV1 contentSpec, final String serverUrl, final ClientConfiguration clientConfig, final ZanataDetails zanataDetails)
 	{
 		final StringBuilder output = new StringBuilder();
 		output.append("# SPEC_TITLE=" + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "\n");
 		output.append("SPEC_ID=" + contentSpec.getId() + "\n");
 		output.append("SERVER_URL=" + serverUrl + "\n");
-		final ZanataDetails zanataDetails = clientConfig.getZanataDetails();
 		output.append("ZANATA_URL=" + (zanataDetails.getServer() == null ? "" : zanataDetails.getServer()) + "\n");
 		output.append("ZANATA_PROJECT_NAME=" + (zanataDetails.getProject() == null ? "" : zanataDetails.getProject()) + "\n");
 		output.append("ZANATA_PROJECT_VERSION=" + (zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()) + "\n");

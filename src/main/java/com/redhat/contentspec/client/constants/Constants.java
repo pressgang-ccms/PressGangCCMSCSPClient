@@ -57,6 +57,7 @@ public class Constants
 	public static final String PULL_COMMAND_NAME = "pull";
 	public static final String PULL_SNAPSHOT_COMMAND_NAME = "pull-snapshot";
 	public static final String PUSH_COMMAND_NAME = "push";
+	public static final String PUSH_TRANSLATION_COMMAND_NAME = "push-translation";
 	public static final String REVISIONS_COMMAND_NAME = "revisions";
 	public static final String SEARCH_COMMAND_NAME = "search";
 	public static final String SETUP_COMMAND_NAME = "setup";
@@ -111,7 +112,8 @@ public class Constants
 	public static final String ERROR_INVALID_KOJIHUB_URL			= "The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure that the URL is valid.";
 	public static final String ERROR_RUNNING_PUBLISH_MSG			= "Unable to publish the Content Specification because an error occured while running the publish command.";
 	public static final String ERROR_NO_PUBLISH_COMMAND				= "No publish comand or options were found. Please configure these options via the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
-	
+	public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG		= "No credentials are setup for the \"%s\" zanata server specified in the csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
+
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";
 	public static final String EXEC_TIME_MSG				= "Request processed in %dms";
@@ -233,4 +235,10 @@ public class Constants
 	public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
 	
 	public static final String PUBLICAN_BUILD_LONG_PARAM = "--publican-build";
+	
+	public static final String ZANATA_PROJECT_LONG_PARAM = "--zanata-project";
+	
+	public static final String ZANATA_PROJECT_VERSION_LONG_PARAM = "--zanata-version";
+	
+	public static final String ZANATA_SERVER_LONG_PARAM = "--zanata-url";
 }
