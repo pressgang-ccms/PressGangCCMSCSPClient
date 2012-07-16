@@ -14,6 +14,7 @@ import org.zanata.rest.dto.resource.TextFlow;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
 import com.redhat.contentspec.ContentSpec;
 import com.redhat.contentspec.builder.utils.XMLUtilities;
 import com.redhat.contentspec.client.config.ClientConfiguration;
@@ -40,6 +41,7 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.zanata.ZanataDetails;
 import com.redhat.topicindex.zanata.ZanataInterface;
 
+@Parameters(commandDescription = "Push a Content Specification and it's topics to Zanata for translation.")
 public class PushTranslationCommand extends BaseCommandImpl
 {
 	@Parameter(metaVar = "[ID]")
