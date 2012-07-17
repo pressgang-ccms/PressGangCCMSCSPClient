@@ -167,7 +167,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 		// Check that the zanata details are valid
 		if (!isValid())
 		{
-			// TODO Error Message
+			printError(Constants.ERROR_PUSH_NO_ZANATA_DETAILS_MSG, false);
 			shutdown(Constants.EXIT_CONFIG_ERROR);
 		}
 		
@@ -252,13 +252,12 @@ public class PushTranslationCommand extends BaseCommandImpl
 		
 		if (!pushCSTopicsToZanata(topics, contentSpecTopic, csp.getContentSpec()))
 		{
-			// TODO Error Message
-			printError("", false);
+			printError(Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
 			System.exit(Constants.EXIT_FAILURE);
 		}
 		else
 		{
-			// TODO success message
+			JCommander.getConsole().println(Constants.SUCCESSFUL_ZANATA_PUSH_MSG);
 		}
 	}
 
@@ -374,7 +373,10 @@ public class PushTranslationCommand extends BaseCommandImpl
 						}
 					}
 
-					zanataInterface.createFile(resource);
+					if (!zanataInterface.createFile(resource))
+					{
+						JCommander.getConsole().println("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+					}
 				}
 				else
 				{

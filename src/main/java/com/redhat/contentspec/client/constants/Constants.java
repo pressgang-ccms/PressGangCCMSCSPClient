@@ -116,7 +116,9 @@ public class Constants
 	public static final String ERROR_RUNNING_PUBLISH_MSG			= "Unable to publish the Content Specification because an error occured while running the publish command.";
 	public static final String ERROR_NO_PUBLISH_COMMAND				= "No publish comand or options were found. Please configure these options via the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
 	public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG		= "No credentials are setup for the \"%s\" zanata server specified in the csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
-
+	public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG		= "The zanata details specified in the csprocessor.cfg and/or zanata authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
+	public static final String ERROR_ZANATA_PUSH_FAILED_MSG			= "Pushing topics to zanata failed.";
+	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";
 	public static final String EXEC_TIME_MSG				= "Request processed in %dms";
@@ -134,6 +136,7 @@ public class Constants
 	public static final String CSP_TITLE_MSG				= "Content Specification Title: %s";
 	public static final String CSP_COMPLETION_MSG			= "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %.2f%%";
 	public static final String SUCCESSFUL_PUBLISH_MSG		= "Content Specification successfully published.";
+	public static final String SUCCESSFUL_ZANATA_PUSH_MSG	= "Topics successfully pushed to Zanata for translation.";
 	
 	// Start Messages
 	public static final String STARTING_ASSEMBLE_MSG		= "Starting to assemble...";
