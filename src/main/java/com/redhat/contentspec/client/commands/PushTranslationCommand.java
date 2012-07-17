@@ -32,9 +32,9 @@ import com.redhat.ecs.commonstructures.Pair;
 import com.redhat.ecs.commonstructures.StringToCSNodeCollection;
 import com.redhat.ecs.commonstructures.StringToNodeCollection;
 import com.redhat.ecs.commonutils.CollectionUtilities;
+import com.redhat.ecs.commonutils.DocBookUtilities;
 import com.redhat.ecs.commonutils.HashUtilities;
 import com.redhat.ecs.constants.CommonConstants;
-import com.redhat.ecs.services.docbookcompiling.DocbookUtils;
 import com.redhat.topicindex.rest.collections.RESTTopicCollectionV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
@@ -298,7 +298,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 			}
 			else
 			{
-				DocbookUtils.setSectionTitle(topic.getTitle(), doc);
+				DocBookUtilities.setSectionTitle(topic.getTitle(), doc);
 				topicToDoc.put(topic, doc);
 			}
 			
