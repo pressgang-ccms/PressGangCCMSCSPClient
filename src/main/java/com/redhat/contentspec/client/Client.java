@@ -160,11 +160,11 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		{
 			if (parser.getParsedCommand() != null)
 			{
-				commands.get(parser.getParsedCommand()).printError(e.getMessage(), true);
+				commands.get(parser.getParsedCommand()).printError("Invalid Argument! Error Message: " + e.getMessage(), true);
 			}
 			else
 			{
-				printError(e.getMessage(), true);
+				printError("Invalid Argument! Error Message: " + e.getMessage(), true);
 			}
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}

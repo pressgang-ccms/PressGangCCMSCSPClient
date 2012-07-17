@@ -309,6 +309,12 @@ public class PushTranslationCommand extends BaseCommandImpl
 			}
 		}
 		
+		// Return if creating the documents failed
+		if (error)
+		{
+			return false;
+		}
+		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
 		{
@@ -316,16 +322,20 @@ public class PushTranslationCommand extends BaseCommandImpl
 			return false;
 		}
 		
-		final int total = topics.getItems().size() + 1;
-		int current = 0;
+		final float total = topics.getItems().size() + 1;
+		float current = 0;
 		final int showPercent = 5;
 		int lastPercent = 0;
 		
-		JCommander.getConsole().println("You are about to push " + total + " topics to zanata. Continue? (Yes/No)");
+		JCommander.getConsole().println("You are about to push " + ((int)total) + " topics to zanata. Continue? (Yes/No)");
 		String answer = JCommander.getConsole().readLine();
+		
+		final List<String> messages = new ArrayList<String>();
 		
 		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
 		{
+			JCommander.getConsole().println("Starting to push topics to zanata...");
+			
 			// Loop through each topic and upload it to zanata
 			for (final RESTTopicV1 topic : topicToDoc.keySet())
 			{
@@ -375,12 +385,12 @@ public class PushTranslationCommand extends BaseCommandImpl
 
 					if (!zanataInterface.createFile(resource))
 					{
-						JCommander.getConsole().println("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+						messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
 					}
 				}
 				else
 				{
-					JCommander.getConsole().println("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - Skipping.");
+					messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - Skipping.");
 				}
 			}
 			// Upload the content specification to zanata
@@ -414,12 +424,22 @@ public class PushTranslationCommand extends BaseCommandImpl
 					}
 				}
 
-				zanataInterface.createFile(resource);
+				if (!zanataInterface.createFile(resource))
+				{
+					messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Zanata.");
+				}
 			}
 			else
 			{
-				JCommander.getConsole().println("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " already exists - Skipping.");
+				messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " already exists - Skipping.");
 			}
+		}
+		
+		// Print the info/error messages
+		JCommander.getConsole().println("Output:");
+		for (final String message : messages)
+		{
+			JCommander.getConsole().println("\t" + message);
 		}
 
 		return !error;

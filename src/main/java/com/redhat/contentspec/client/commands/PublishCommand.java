@@ -34,7 +34,7 @@ public class PublishCommand extends BuildCommand
 	@Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, description = "Hide the output from assembling & publishing the Content Specification.")
 	private Boolean hideOutput = false;
 	
-	@Parameter(names = {Constants.PUBLISH_MESSAGE_LONG_PARAM, Constants.PUBLISH_MESSAGE_SHORT_PARAM}, description = "Message to be used with the publish command.", metaVar = "<MESSAGE>")
+	@Parameter(names = {Constants.PUBLISH_MESSAGE_LONG_PARAM, Constants.PUBLISH_MESSAGE_SHORT_PARAM}, description = "Add a message to be used with the publish command.", metaVar = "<MESSAGE>")
 	private String message = null;
 	
 	public PublishCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
