@@ -18,8 +18,8 @@ import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Get a basic Content Specification template.")
-public class TemplateCommand extends BaseCommandImpl {
-
+public class TemplateCommand extends BaseCommandImpl
+{
 	@Parameter(names = Constants.COMMENTED_LONG_PARAM, description = "Get the fully commented template")
 	private Boolean commented = false;
 	
@@ -27,38 +27,46 @@ public class TemplateCommand extends BaseCommandImpl {
 			converter = FileConverter.class)
 	private File output;
 	
-	public TemplateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+	public TemplateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
 		super(parser, cspConfig, clientConfig);
 	}
 
-	public Boolean getCommented() {
+	public Boolean getCommented()
+	{
 		return commented;
 	}
 
-	public void setCommented(Boolean commented) {
+	public void setCommented(final Boolean commented)
+	{
 		this.commented = commented;
 	}
 
-	public File getOutput() {
+	public File getOutput()
+	{
 		return output;
 	}
 
-	public void setOutput(File output) {
+	public void setOutput(File output)
+	{
 		this.output = output;
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.TEMPLATE_COMMAND_NAME);
 	}
 
 	@Override
-	public void printError(final String errorMsg, final boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp) 
+	{
 		printError(errorMsg, displayHelp, Constants.TEMPLATE_COMMAND_NAME);
 	}
 
 	@Override
-	public RESTUserV1 authenticate(final RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return null;
 	}
 
@@ -68,33 +76,42 @@ public class TemplateCommand extends BaseCommandImpl {
 		final String template = commented ? TemplateConstants.FULLY_COMMENTED_TEMPLATE : TemplateConstants.EMPTY_TEMPLATE;
 		
 		// Save or print the data
-		if (output == null || output.equals("")) {
+		if (output == null || output.equals(""))
+		{
 			JCommander.getConsole().println(template);
-		} else {
-			
+		}
+		else
+		{
 			// Make sure the directories exist
-			if (output.isDirectory()) {
+			if (output.isDirectory())
+			{
 				output.mkdirs();
 				output = new File(output.getAbsolutePath() + File.separator + "template." + Constants.FILENAME_EXTENSION);
-			} else {
+			}
+			else
+			{
 				if (output.getParentFile() != null)
 					output.getParentFile().mkdirs();
 			}
 			
 			// Good point to check for a shutdown
-			if (isAppShuttingDown()) {
+			if (isAppShuttingDown())
+			{
 				shutdown.set(true);
 				return;
 			}
 			
 			// Create and write to the file
-			try {
-				FileOutputStream fos = new FileOutputStream(output);
+			try
+			{
+				final FileOutputStream fos = new FileOutputStream(output);
 				fos.write(template.getBytes());
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getAbsolutePath()));
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				printError(Constants.ERROR_FAILED_SAVING, false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
@@ -102,7 +119,8 @@ public class TemplateCommand extends BaseCommandImpl {
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
+	public boolean loadFromCSProcessorCfg()
+	{
 		/* Doesn't need an ID so no point in loading from csprocessor.cfg */
 		return false;
 	}
