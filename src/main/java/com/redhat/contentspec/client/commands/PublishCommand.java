@@ -34,6 +34,9 @@ public class PublishCommand extends BuildCommand
 	@Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, description = "Hide the output from assembling & publishing the Content Specification.")
 	private Boolean hideOutput = false;
 	
+	@Parameter(names = {Constants.PUBLISH_MESSAGE_LONG_PARAM, Constants.PUBLISH_MESSAGE_SHORT_PARAM}, description = "Message to be used with the publish command.", metaVar = "<MESSAGE>")
+	private String message = null;
+	
 	public PublishCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
 	{
 		super(parser, cspConfig, clientConfig);
@@ -77,6 +80,14 @@ public class PublishCommand extends BuildCommand
 	public void setHideOutput(Boolean hideOutput)
 	{
 		this.hideOutput = hideOutput;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
 	@Override
@@ -250,6 +261,10 @@ public class PublishCommand extends BuildCommand
 		// Replace the locale in the build options if the locale has been set
 		if (getLocale() != null)
 			publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--lang=" + getLocale());
+		
+		// Add the message to the script
+		if (message != null)
+			publishCommand += " -m \"" + message + "\"";
 		
 		try
 		{
