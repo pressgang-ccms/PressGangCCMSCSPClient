@@ -1,6 +1,7 @@
 package com.redhat.contentspec.client.commands;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import com.redhat.ecs.commonutils.HashUtilities;
 import com.redhat.ecs.constants.CommonConstants;
 import com.redhat.topicindex.rest.collections.RESTTopicCollectionV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
+import com.redhat.topicindex.rest.entities.interfaces.RESTTranslatedTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.zanata.ZanataDetails;
 import com.redhat.topicindex.zanata.ZanataInterface;
@@ -250,7 +252,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 			return;
 		}
 		
-		if (!pushCSTopicsToZanata(topics, contentSpecTopic, csp.getContentSpec()))
+		if (!pushCSTopicsToZanata(restManager, topics, contentSpecTopic, csp.getContentSpec()))
 		{
 			printError(Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
 			System.exit(Constants.EXIT_FAILURE);
@@ -267,7 +269,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
 	}
 	
-	protected boolean pushCSTopicsToZanata(final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)
+	protected boolean pushCSTopicsToZanata(final RESTManager restManager, final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)
 	{
 		final Map<RESTTopicV1, Document> topicToDoc = new HashMap<RESTTopicV1, Document>();
 		boolean error = false;
@@ -376,7 +378,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 							final TextFlow textFlow = new TextFlow();
 							textFlow.setContent(translatableString);
 							textFlow.setLang(LocaleId.fromJavaName(topic.getLocale()));
-							textFlow.setId(createId(topic, translatableString));
+							textFlow.setId(createZanataUniqueId(topic, translatableString));
 							textFlow.setRevision(1);
 
 							resource.getTextFlows().add(textFlow);
@@ -386,6 +388,21 @@ public class PushTranslationCommand extends BaseCommandImpl
 					if (!zanataInterface.createFile(resource))
 					{
 						messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+					}
+					else
+					{
+						final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
+						try
+						{
+							restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic);
+						}
+						catch (Exception e)
+						{
+							/*
+							 * Do nothing here as it shouldn't fail. If it does then it'll be created 
+							 * by the sync service anyways.
+							 */
+						}
 					}
 				}
 				else
@@ -417,7 +434,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 						final TextFlow textFlow = new TextFlow();
 						textFlow.setContent(translatableString);
 						textFlow.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
-						textFlow.setId(createId(contentSpecTopic, translatableString));
+						textFlow.setId(createZanataUniqueId(contentSpecTopic, translatableString));
 						textFlow.setRevision(1);
 
 						resource.getTextFlows().add(textFlow);
@@ -427,6 +444,22 @@ public class PushTranslationCommand extends BaseCommandImpl
 				if (!zanataInterface.createFile(resource))
 				{
 					messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Zanata.");
+				}
+				else
+				{
+					// Save the translated topic
+					final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
+					try
+					{
+						restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic);
+					}
+					catch (Exception e)
+					{
+						/*
+						 * Do nothing here as it shouldn't fail. If it does then it'll be created 
+						 * by the sync service anyways.
+						 */
+					}
 				}
 			}
 			else
@@ -445,10 +478,23 @@ public class PushTranslationCommand extends BaseCommandImpl
 		return !error;
 	}
 	
-	private static String createId(final RESTTopicV1 topic, final String text)
+	private static String createZanataUniqueId(final RESTTopicV1 topic, final String text)
 	{
 		final String sep = "\u0000";
 		final String hashBase = text + sep + topic.getId() + sep + topic.getRevision();
 		return HashUtilities.generateMD5(hashBase);
+	}
+	
+	protected RESTTranslatedTopicV1 createTranslatedTopic(final RESTTopicV1 topic)
+	{
+		final RESTTranslatedTopicV1 translatedTopic = new RESTTranslatedTopicV1();
+		translatedTopic.explicitSetLocale(topic.getLocale());
+		translatedTopic.explicitSetTranslationPercentage(100);
+		translatedTopic.explicitSetTopicId(topic.getId());
+		translatedTopic.explicitSetTopicRevision(topic.getRevision());
+		translatedTopic.explicitSetXml(topic.getXml());
+		translatedTopic.explicitSetHtml(topic.getHtml());
+		translatedTopic.explicitSetHtmlUpdated(new Date());
+		return translatedTopic;
 	}
 }
