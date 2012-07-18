@@ -13,6 +13,9 @@ public class ClientConfiguration
 	private String kojiHubUrl = Constants.DEFAULT_KOJIHUB_URL;
 	private String publishCommand = Constants.DEFAULT_PUBLISH_COMMAND;
 	
+	private String defaultZanataProject = Constants.DEFAULT_ZANATA_PROJECT;
+	private String defaultZanataVersion = Constants.DEFAULT_ZANATA_VERSION;
+	
 	private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 	private Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
 
@@ -84,5 +87,25 @@ public class ClientConfiguration
 	public void setPublishCommand(final String publishCommand)
 	{
 		this.publishCommand = publishCommand;
+	}
+
+	public String getDefaultZanataVersion()
+	{
+		return defaultZanataVersion;
+	}
+
+	public void setDefaultZanataVersion(final String defaultZanataVersion)
+	{
+		this.defaultZanataVersion = defaultZanataVersion;
+	}
+
+	public String getDefaultZanataProject()
+	{
+		return defaultZanataProject;
+	}
+
+	public void setDefaultZanataProject(final String defaultZanataProject)
+	{
+		this.defaultZanataProject = defaultZanataProject;
 	}
 }

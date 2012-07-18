@@ -90,7 +90,7 @@ public class SetupCommand extends BaseCommandImpl
 			setupPublish(configFile);
 		}
 		
-		JCommander.getConsole().println("Setup zanata servers? (Yes/No)");
+		JCommander.getConsole().println("Setup zanata configuration? (Yes/No)");
 		answer = JCommander.getConsole().readLine();
 		
 		if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y"))
@@ -379,6 +379,15 @@ public class SetupCommand extends BaseCommandImpl
 	 */
 	protected void setupZanata(final StringBuilder configFile)
 	{
+		String defaultZanataProject = "";
+		String defaultZanataVersion = "";
+		
+		JCommander.getConsole().print("Please enter a default zanata project name.");
+		defaultZanataProject = JCommander.getConsole().readLine();
+		
+		JCommander.getConsole().print("Please enter a default zanata project version.");
+		defaultZanataVersion = JCommander.getConsole().readLine();
+		
 		final HashMap<String, ZanataServerConfiguration> servers = new HashMap<String, ZanataServerConfiguration>();
 		String answer = "";
 		
@@ -397,6 +406,7 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Get the server setup details from the user
 		final Integer numProjects = Integer.parseInt(answer);
+		String serverNames = "";
 		for (int i = 1; i <= numProjects; i++)
 		{
 			final ZanataServerConfiguration config = new ZanataServerConfiguration();
@@ -419,6 +429,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Add the server configuration and add the name to the list of displayable strings
 			servers.put(config.getName(), config);
+			serverNames += config.getName() + "/";
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown())
@@ -428,6 +439,32 @@ public class SetupCommand extends BaseCommandImpl
 			}
 		}
 		
+		/* Only ask for the default when there are multiple servers */
+		String defaultZanataServerName = "";
+		if (servers.size() > 1)
+		{
+			// Get which server they want to connect to
+			while (!servers.containsKey(defaultZanataServerName))
+			{
+				JCommander.getConsole().println("Which zanata server do you want to connect to by default? (" + serverNames.substring(0, serverNames.length() - 1) + ")");
+				defaultZanataServerName = JCommander.getConsole().readLine().toLowerCase();
+				
+				// Good point to check for a shutdown
+				if (isAppShuttingDown()) 
+				{
+					shutdown.set(true);
+					return;
+				}
+			}
+		}
+		else
+		{
+			defaultZanataServerName = serverNames.substring(0, serverNames.length() - 1);
+		}
+		
+		// Create the default settings
+		servers.put(Constants.DEFAULT_SERVER_NAME, new ZanataServerConfiguration(Constants.DEFAULT_SERVER_NAME, defaultZanataServerName));
+		
 		// Add the information to the configuration file
 		configFile.append("[zanata]\n");
 		for (final String serverName: servers.keySet())
@@ -435,7 +472,16 @@ public class SetupCommand extends BaseCommandImpl
 			final ZanataServerConfiguration config = servers.get(serverName);
 			
 			// Setup the url for the server
-			configFile.append(serverName + ".url=" + config.getUrl() + "\n");
+			if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
+			{
+				configFile.append(serverName + "=" + config.getUrl() + "\n");
+				configFile.append(serverName + ".project=" + defaultZanataProject);
+				configFile.append(serverName + ".project-version=" + defaultZanataVersion);
+			}
+			else
+			{
+				configFile.append(serverName + ".url=" + config.getUrl() + "\n");
+			}
 			
 			// Setup the username for the server
 			if (config.getUsername() != null && !config.getUsername().equals(""))

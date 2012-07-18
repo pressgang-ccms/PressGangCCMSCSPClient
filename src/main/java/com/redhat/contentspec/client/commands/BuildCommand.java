@@ -33,6 +33,7 @@ import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import com.redhat.topicindex.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
 public class BuildCommand extends BaseCommandImpl
@@ -78,6 +79,15 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
 	protected Boolean fetchPubsnum = false;
+	
+	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata server to be associated with the Content Specification.")
+	private String zanataUrl = null;
+	
+	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The zanata project name to be associated with the Content Specification.")
+	private String zanataProject = null;
+	
+	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the Content Specification.")
+	private String zanataVersion = null;
 	
 	private File output;
 	
@@ -227,6 +237,36 @@ public class BuildCommand extends BaseCommandImpl
 	{
 		this.fetchPubsnum = fetchPubsnum;
 	}
+	
+	public String getZanataUrl()
+	{
+		return zanataUrl;
+	}
+
+	public void setZanataUrl(final String zanataUrl)
+	{
+		this.zanataUrl = zanataUrl;
+	}
+
+	public String getZanataProject()
+	{
+		return zanataProject;
+	}
+
+	public void setZanataProject(final String zanataProject)
+	{
+		this.zanataProject = zanataProject;
+	}
+
+	public String getZanataVersion()
+	{
+		return zanataVersion;
+	}
+
+	public void setZanataVersion(final String zanataVersion)
+	{
+		this.zanataVersion = zanataVersion;
+	}
 
 	public CSDocbookBuildingOptions getBuildOptions()
 	{
@@ -297,6 +337,41 @@ public class BuildCommand extends BaseCommandImpl
 		return contentSpec;
 	}
 	
+	/**
+	 * Sets the zanata options applied by the command line
+	 * to the options that were set via configuration files.
+	 */
+	protected void setupZanataOptions()
+	{
+		// Set the zanata url
+		if (this.zanataUrl != null)
+		{
+			// Find the zanata server if the url is a reference to the zanata server name
+			for (final String serverName: clientConfig.getZanataServers().keySet())
+			{
+				if (serverName.equals(zanataUrl))
+				{
+					zanataUrl = clientConfig.getZanataServers().get(serverName).getUrl();
+					break;
+				}
+			}
+			
+			cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
+		}
+		
+		// Set the zanata project
+		if (this.zanataProject != null)
+		{
+			cspConfig.getZanataDetails().setProject(zanataProject);
+		}
+		
+		// Set the zanata version
+		if (this.zanataVersion != null)
+		{
+			cspConfig.getZanataDetails().setVersion(zanataVersion);
+		}
+	}
+
 	@Override
 	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
@@ -308,10 +383,13 @@ public class BuildCommand extends BaseCommandImpl
 		if (loadFromCSProcessorCfg())
 		{
 			buildingFromConfig = true;
-			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId().toString()));
-			if (cspConfig.getRootOutputDirectory() != null && !cspConfig.getRootOutputDirectory().equals(""))
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
 			{
-				setOutputPath(cspConfig.getRootOutputDirectory());
+				setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId().toString()));
+				if (cspConfig.getRootOutputDirectory() != null && !cspConfig.getRootOutputDirectory().equals(""))
+				{
+					setOutputPath(cspConfig.getRootOutputDirectory());
+				}
 			}
 		}
 		
@@ -404,6 +482,9 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		
 		JCommander.getConsole().println(Constants.STARTING_BUILD_MSG);
+		
+		// Setup the zanata details incase some were overridden via the command line
+		setupZanataOptions();
 		
 		// Build the Content Specification
 		byte[] builderOutput = null;
@@ -546,7 +627,7 @@ public class BuildCommand extends BaseCommandImpl
 	@Override
 	public boolean loadFromCSProcessorCfg()
 	{
-		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
+		return ids.size() == 0;
 	}
 	
 	@Override
@@ -577,6 +658,21 @@ public class BuildCommand extends BaseCommandImpl
 				JCommander.getConsole().println("");
 				
 				printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+				shutdown(Constants.EXIT_NO_SERVER);
+			}
+		}
+		
+		if (insertEditorLinks && locale != null)
+		{
+			setupZanataOptions();
+			
+			final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+			if (!ClientUtilities.validateServerExists(zanataDetails.returnUrl()))
+			{
+				// Print a line to separate content
+				JCommander.getConsole().println("");
+				
+				printError(String.format(Constants.ERROR_INVALID_ZANATA_CONFIG_MSG, zanataDetails.getProject(), zanataDetails.getVersion(), zanataDetails.getServer()), false);
 				shutdown(Constants.EXIT_NO_SERVER);
 			}
 		}

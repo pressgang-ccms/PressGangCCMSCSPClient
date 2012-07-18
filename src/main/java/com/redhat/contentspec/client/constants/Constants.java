@@ -27,11 +27,14 @@ public class Constants
 	public static final String DEFAULT_KOJIHUB_URL = "";
 	public static final String DEFAULT_PUBLISH_COMMAND = "";
 	public static final String KOJI_NAME = "brew";
+	public static final String DEFAULT_ZANATA_URL = "";
 	
 	// Zanata Constants
-	public static final String DEFAULT_ZANATA_URL = "http://translate.zanata.org/";
 	public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
 	public static final String DEFAULT_ZANATA_VERSION = "1";
+	
+	// Publican environment variables
+	public static final String[] PUBLICAN_ENV_VARS = { "XML_CATALOG_FILES=/usr/share/sgml/docbook/xmlcatalog" };
 	
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
@@ -74,6 +77,7 @@ public class Constants
 	public static final String NO_WRITE_INI_MSG				= "Cannot write csprocessor.ini to " + DEFAULT_CONFIG_LOCATION + "! Please check the file permissions!";
 	public static final String NO_DEFAULT_SERVER_FOUND		= "No default server was found in the %s configuration file. Perhaps you need to uncomment a default?";
 	public static final String NO_SERVER_FOUND_FOR_DEFAULT_SERVER = "No server was found for the specified default.";
+	public static final String NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER = "No Zanata server was found for the specified default.";
 	public static final String NO_SERVER_USERNAME_MSG		= "No Username was specified for the \"%s\" server in the configuration files.";
 	public static final String NO_SERVER_URL_MSG			= "No Server URL was specified for the \"%s\" server in the configuration files.";
 	public static final String NO_ZANATA_SERVER_URL_MSG		= "No Zanata Server URL was specified for the \"%s\" zanat server in the configuration files.";
@@ -118,6 +122,7 @@ public class Constants
 	public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG		= "No credentials are setup for the \"%s\" zanata server specified in the csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
 	public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG		= "The zanata details specified in the csprocessor.cfg and/or zanata authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
 	public static final String ERROR_ZANATA_PUSH_FAILED_MSG			= "Pushing topics to zanata failed.";
+	public static final String ERROR_INVALID_ZANATA_CONFIG_MSG		= "No Zanata Project exists for the \"%s\" project at version \"%s\" from: %s";
 	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";

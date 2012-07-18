@@ -211,23 +211,21 @@ public class ClientUtilities {
 	 * Read from a csprocessor.cfg file and intitialise the variables into a configuration object.
 	 * 
 	 * @param csprocessorcfg The csprocessor.cfg file.
-	 * @return The initialised configuration object from the csprocessor.cfg file.
+	 * @param cspConfig The content spec configuration object to load the settings into
 	 * @throws FileNotFoundException The csprocessor.cfg couldn't be found
 	 * @throws IOException
 	 */
-	public static ContentSpecConfiguration readFromCsprocessorCfg(final File csprocessorcfg) throws FileNotFoundException, IOException
+	public static void readFromCsprocessorCfg(final File csprocessorcfg, final ContentSpecConfiguration cspConfig) throws FileNotFoundException, IOException
 	{
-		final ContentSpecConfiguration cspCfg = new ContentSpecConfiguration();
 		final Properties prop = new Properties();
 		prop.load(new FileInputStream(csprocessorcfg));
-		cspCfg.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
-		cspCfg.setServerUrl(prop.getProperty("SERVER_URL"));
-		cspCfg.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
-		cspCfg.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
-		cspCfg.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
-		cspCfg.setKojiHubUrl(validateHost(prop.getProperty("KOJI_HUB_URL")));
-		cspCfg.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
-		return cspCfg;
+		cspConfig.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
+		cspConfig.setServerUrl(prop.getProperty("SERVER_URL"));
+		cspConfig.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
+		cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
+		cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
+		cspConfig.setKojiHubUrl(validateHost(prop.getProperty("KOJI_HUB_URL")));
+		cspConfig.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
 	}
 	
 	/**

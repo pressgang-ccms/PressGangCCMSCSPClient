@@ -123,24 +123,6 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		// Set the program name
 		parser.setProgramName(Constants.PROGRAM_NAME);
 		
-		// Load the csprocessor.cfg file from the current directory
-		try
-		{
-			if (csprocessorcfg.exists()) 
-			{
-				cspConfig = ClientUtilities.readFromCsprocessorCfg(csprocessorcfg);
-				if (cspConfig.getContentSpecId() == null)
-				{
-					printError(Constants.ERROR_INVALID_CSPROCESSOR_CFG_MSG, false);
-					shutdown(Constants.EXIT_CONFIG_ERROR);
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			// Do nothing if the csprocessor.cfg file couldn't be read
-		}
-		
 		// Setup the commands that are to be used
 		setupCommands(parser, cspConfig, clientConfig);
 	}
@@ -222,6 +204,24 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			if (command.loadFromCSProcessorCfg())
 			{
 				JCommander.getConsole().println(Constants.CSP_CONFIG_LOADING_MSG);
+				
+				// Load the csprocessor.cfg file from the current directory
+				try
+				{
+					if (csprocessorcfg.exists() && csprocessorcfg.isFile()) 
+					{
+						ClientUtilities.readFromCsprocessorCfg(csprocessorcfg, cspConfig);
+						if (cspConfig.getContentSpecId() == null)
+						{
+							printError(Constants.ERROR_INVALID_CSPROCESSOR_CFG_MSG, false);
+							shutdown(Constants.EXIT_CONFIG_ERROR);
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					// Do nothing if the csprocessor.cfg file couldn't be read
+				}
 			}
 			
 			// Apply the settings from the csprocessor.cfg, csprocessor.ini & command line.
@@ -507,6 +507,9 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			ZanataServerConfiguration zanataServerConfig = null;
 			for (final String serverName: zanataServers.keySet())
 			{
+				// Ignore the default server for csprocessor.cfg configuration files
+				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
+				
 				// Compare the urls
 				try
 				{
@@ -535,6 +538,23 @@ public class Client implements BaseCommand, ShutdownAbleApp
 				cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
 				cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
 			}
+		}
+		else if (clientConfig.getZanataServers().containsKey(Constants.DEFAULT_SERVER_NAME))
+		{
+			final ZanataServerConfiguration zanataServerConfig = clientConfig.getZanataServers().get(Constants.DEFAULT_SERVER_NAME);
+			cspConfig.getZanataDetails().setServer(zanataServerConfig.getUrl());
+			cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
+			cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
+		}
+		
+		// Setup the default zanata project and version
+		if (cspConfig.getZanataDetails().getProject() == null || cspConfig.getZanataDetails().getProject().isEmpty())
+		{
+			cspConfig.getZanataDetails().setProject(clientConfig.getDefaultZanataProject());
+		}
+		if (cspConfig.getZanataDetails().getVersion() == null || cspConfig.getZanataDetails().getVersion().isEmpty())
+		{
+			cspConfig.getZanataDetails().setVersion(clientConfig.getDefaultZanataVersion());
 		}
 		
 		// Set the publish options
@@ -619,7 +639,10 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			configFile.append("preview.format=" + Constants.DEFAULT_PUBLICAN_FORMAT + "\n\n");
 			
 			// Create the default translation options
-			configFile.append("[zanata]\n\n");
+			configFile.append("[zanata]\n");
+			configFile.append("default=\n");
+			configFile.append("default.project=" + Constants.DEFAULT_ZANATA_PROJECT + "\n");
+			configFile.append("default.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n");
 			
 			// Create the default translation options
 			configFile.append("[publish]\n");
@@ -811,8 +834,52 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					
 					zanataServers.put(name, serverConfig);
 				}
+				else if (key.equals(Constants.DEFAULT_SERVER_NAME))
+				{
+					final String url = serversNode.getString(key);
+					
+					// Only load the default server if one is specified
+					if (url != null && !url.isEmpty())
+					{
+						// Create the Server Configuration
+						final ZanataServerConfiguration serverConfig = new ZanataServerConfiguration();
+						serverConfig.setName(key);
+						serverConfig.setUrl(url);
+						
+						zanataServers.put(Constants.DEFAULT_SERVER_NAME, serverConfig);
+					}
+					
+					// Find the default project and version values
+					final String project = serversNode.getString(key + "..project");
+					final String version = serversNode.getString(key + "..project-version");
+					
+					if (project != null && !project.isEmpty())
+						clientConfig.setDefaultZanataProject(project);
+					if (version != null && !version.isEmpty())
+						clientConfig.setDefaultZanataVersion(version);
+				}
 			}
 		}
+		
+		// Setup the default zanata server
+		if (zanataServers.containsKey(Constants.DEFAULT_SERVER_NAME) && !zanataServers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches("^(http://|https://).*"))
+		{
+			if (!zanataServers.containsKey(zanataServers.get(Constants.DEFAULT_SERVER_NAME).getUrl()))
+			{
+				command.printError(Constants.NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER, false);
+				return false;
+			}
+			else
+			{
+				final ZanataServerConfiguration defaultConfig = zanataServers.get(Constants.DEFAULT_SERVER_NAME);
+				final ZanataServerConfiguration config = zanataServers.get(defaultConfig.getUrl());
+				defaultConfig.setUrl(config.getUrl());
+				defaultConfig.setUsername(config.getUsername());
+				defaultConfig.setToken(config.getToken());
+				defaultConfig.setUsername(config.getUsername());
+			}
+		}
+		
 		clientConfig.setZanataServers(zanataServers);
 		
 		// Read in the publishing information
