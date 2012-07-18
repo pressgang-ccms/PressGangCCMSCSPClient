@@ -240,7 +240,7 @@ public class CreateCommand extends BaseCommandImpl
 			try
 			{
 				final FileOutputStream fos = new FileOutputStream(outputConfig);
-				fos.write(config.getBytes());
+				fos.write(config.getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputConfig.getAbsolutePath()));
@@ -255,7 +255,7 @@ public class CreateCommand extends BaseCommandImpl
 			try
 			{
 				final FileOutputStream fos = new FileOutputStream(outputSpec);
-				fos.write(contentSpecTopic.getXml().getBytes());
+				fos.write(contentSpecTopic.getXml().getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));

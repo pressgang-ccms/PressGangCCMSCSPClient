@@ -131,7 +131,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Save the config
 			final FileOutputStream fos = new FileOutputStream(file);
-			fos.write(configFile.toString().getBytes());
+			fos.write(configFile.toString().getBytes("UTF-8"));
 			fos.flush();
 			fos.close();
 		}

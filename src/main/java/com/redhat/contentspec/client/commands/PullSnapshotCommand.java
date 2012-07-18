@@ -227,8 +227,8 @@ public class PullSnapshotCommand extends BaseCommandImpl
 			// Create and write to the file
 			try
 			{
-				FileOutputStream fos = new FileOutputStream(output);
-				fos.write(data.getBytes());
+				final FileOutputStream fos = new FileOutputStream(output);
+				fos.write(data.getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));

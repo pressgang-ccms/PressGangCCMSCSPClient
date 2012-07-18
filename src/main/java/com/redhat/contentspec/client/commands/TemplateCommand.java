@@ -105,7 +105,7 @@ public class TemplateCommand extends BaseCommandImpl
 			try
 			{
 				final FileOutputStream fos = new FileOutputStream(output);
-				fos.write(template.getBytes());
+				fos.write(template.getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getAbsolutePath()));

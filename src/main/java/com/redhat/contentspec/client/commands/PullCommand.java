@@ -270,13 +270,16 @@ public class PullCommand extends BaseCommandImpl{
 			}
 			
 			// Create and write to the file
-			try {
-				FileOutputStream fos = new FileOutputStream(output);
-				fos.write(data.getBytes());
+			try
+			{
+				final FileOutputStream fos = new FileOutputStream(output);
+				fos.write(data.getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
-			} catch (IOException e) {
+			}
+			catch (IOException e)
+			{
 				printError(Constants.ERROR_FAILED_SAVING, false);
 				shutdown(Constants.EXIT_FAILURE);
 			}

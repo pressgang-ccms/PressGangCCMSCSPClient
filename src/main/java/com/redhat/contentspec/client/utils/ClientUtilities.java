@@ -264,11 +264,27 @@ public class ClientUtilities {
 	 */
 	public static Integer runCommand(final String command, final File dir, final Console console, boolean displayOutput) throws IOException
 	{
+		return runCommand(command, null, dir, console, displayOutput);
+	}
+	
+	/**
+	 * Runs a command from a specified directory
+	 * 
+	 * @param command The command to be run.
+	 * @param envVariables An array of environment variables to be used.
+	 * @param dir The directory to run the command from.
+	 * @param console The console to print the output to.
+	 * @param displayOutput Whether the output should be displayed or not.
+	 * @return The exit value of the command
+	 * @throws IOException
+	 */
+	public static Integer runCommand(final String command, final String[] envVariables, final File dir, final Console console, boolean displayOutput) throws IOException
+	{
 		if (!dir.isDirectory()) throw new IOException();
 		
 		try
 		{
-			final Process p = Runtime.getRuntime().exec(command, null, dir);
+			final Process p = Runtime.getRuntime().exec(command, envVariables, dir);
 			// Get the output of the command
 			if (displayOutput)
 			{

@@ -218,7 +218,7 @@ public class PushCommand extends BaseCommandImpl
 			try
 			{
 				final FileOutputStream fos = new FileOutputStream(outputSpec);
-				fos.write(contentSpecTopic.getXml().getBytes());
+				fos.write(contentSpecTopic.getXml().getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 			}

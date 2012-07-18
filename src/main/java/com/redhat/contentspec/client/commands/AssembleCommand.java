@@ -172,7 +172,7 @@ public class AssembleCommand extends BuildCommand {
 		try
 		{
 			JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
-			Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, outputDir, JCommander.getConsole(), !hideOutput);
+			Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, Constants.PUBLICAN_ENV_VARS, outputDir, JCommander.getConsole(), !hideOutput);
 			if (exitValue == null || exitValue != 0)
 			{
 				shutdown(Constants.EXIT_FAILURE);

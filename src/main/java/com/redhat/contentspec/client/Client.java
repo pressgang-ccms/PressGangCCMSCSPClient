@@ -637,7 +637,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 				
 				// Save the config
 				final FileOutputStream fos = new FileOutputStream(file);
-				fos.write(configFile.toString().getBytes());
+				fos.write(configFile.toString().getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 			}
