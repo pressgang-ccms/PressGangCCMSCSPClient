@@ -360,6 +360,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 
 				if (!zanataFileExists)
 				{
+					final boolean translatedTopicExists = restManager.getReader().getTranslatedTopicByTopicId(topic.getId(), topic.getRevision(), topic.getLocale()) != null;
+					
 					final Resource resource = new Resource();
 	
 					resource.setContentType(ContentType.TextPlain);
@@ -389,7 +391,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 					{
 						messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
 					}
-					else
+					else if (!translatedTopicExists)
 					{
 						final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
 						try
@@ -416,6 +418,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 
 			if (!zanataFileExists)
 			{
+				final boolean translatedTopicExists = restManager.getReader().getTranslatedContentSpecById(contentSpecTopic.getId(), contentSpecTopic.getRevision(), contentSpecTopic.getLocale()) != null;
+				
 				final Resource resource = new Resource();
 	
 				resource.setContentType(ContentType.TextPlain);
@@ -445,7 +449,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 				{
 					messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Zanata.");
 				}
-				else
+				else if (!translatedTopicExists)
 				{
 					// Save the translated topic
 					final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
@@ -469,10 +473,13 @@ public class PushTranslationCommand extends BaseCommandImpl
 		}
 		
 		// Print the info/error messages
-		JCommander.getConsole().println("Output:");
-		for (final String message : messages)
+		if (messages.size() > 0)
 		{
-			JCommander.getConsole().println("\t" + message);
+			JCommander.getConsole().println("Output:");
+			for (final String message : messages)
+			{
+				JCommander.getConsole().println("\t" + message);
+			}
 		}
 
 		return !error;
@@ -485,6 +492,12 @@ public class PushTranslationCommand extends BaseCommandImpl
 		return HashUtilities.generateMD5(hashBase);
 	}
 	
+	/**
+	 * Create a TranslatedTopic based on the content from a normal Topic.
+	 * 
+	 * @param topic The topic to transform to a TranslatedTopic
+	 * @return The new TranslatedTopic initialised with data from the topic.
+	 */
 	protected RESTTranslatedTopicV1 createTranslatedTopic(final RESTTopicV1 topic)
 	{
 		final RESTTranslatedTopicV1 translatedTopic = new RESTTranslatedTopicV1();
