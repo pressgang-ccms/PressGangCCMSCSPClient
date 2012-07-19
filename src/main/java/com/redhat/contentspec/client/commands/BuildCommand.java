@@ -29,6 +29,7 @@ import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
+import com.redhat.ecs.commonutils.ExceptionUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
@@ -495,6 +496,7 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		catch (Exception e)
 		{
+			JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}
@@ -549,11 +551,11 @@ public class BuildCommand extends BaseCommandImpl
 		// Check if the file exists. If it does then check if the file should be overwritten
 		if (!buildingFromConfig && output.exists())
 		{
-			JCommander.getConsole().println(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, fileName));
+			JCommander.getConsole().println(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, output.getName()));
 			answer = JCommander.getConsole().readLine();
 			while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("no")))
 			{
-				JCommander.getConsole().print(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, fileName));
+				JCommander.getConsole().print(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, output.getName()));
 				answer = JCommander.getConsole().readLine();
 				
 				// Need to check if the app is shutting down in this loop

@@ -151,7 +151,11 @@ public class PushTranslationCommand extends BaseCommandImpl
 		// Add the details for the csprocessor.cfg if no ids are specified
 		if (loadFromCSProcessorCfg())
 		{
-			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			// Check that the config details are valid
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
+			{
+				setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			}
 		}
 		
 		// Check that an id was entered
@@ -266,7 +270,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 	@Override
 	public boolean loadFromCSProcessorCfg()
 	{
-		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
+		return ids.size() == 0;
 	}
 	
 	protected boolean pushCSTopicsToZanata(final RESTManager restManager, final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)

@@ -61,28 +61,38 @@ public class StatusCommand extends BaseCommandImpl {
 		final RESTReader reader = restManager.getReader();
 		
 		// Load the data from the config data if no ids were specified
-		if (loadFromCSProcessorCfg()) {
-			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+		if (loadFromCSProcessorCfg())
+		{
+			// Check that the config details are valid
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
+			{
+				setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			}
 		}
 		
 		// Check that only one ID exists
-		if (ids.size() == 0) {
+		if (ids.size() == 0)
+		{
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		} else if (ids.size() > 1) {
+		}
+		else if (ids.size() > 1)
+		{
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
 		// Get the content specification from the server
 		final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), null);
-		if (contentSpec == null) {
+		if (contentSpec == null)
+		{
 			printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
@@ -92,17 +102,20 @@ public class StatusCommand extends BaseCommandImpl {
 		File file = new File(fileName);
 		
 		// Check that the file exists
-		if (!file.exists()) {
+		if (!file.exists())
+		{
 			// Backwards compatibility check for files ending with .txt
 			file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
-			if (!file.exists()) {
+			if (!file.exists())
+			{
 				printError(String.format(Constants.ERROR_NO_FILE_OUT_OF_DATE_MSG, file.getName()), false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -110,52 +123,63 @@ public class StatusCommand extends BaseCommandImpl {
 		// Read in the file contents
 		String contentSpecData = FileUtilities.readFileContents(file);
 		
-		if (contentSpecData == null  || contentSpecData.equals("")) {
+		if (contentSpecData == null  || contentSpecData.equals(""))
+		{
 			printError(Constants.ERROR_EMPTY_FILE_MSG, false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
 		// Calculate the server checksum value
-		String serverContentSpecData = contentSpec.getXml().replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
-		String serverChecksum = HashUtilities.generateMD5(serverContentSpecData);
+		final String serverContentSpecData = contentSpec.getXml().replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
+		final String serverChecksum = HashUtilities.generateMD5(serverContentSpecData);
 		
 		// Get the local checksum value
-		NamedPattern pattern = NamedPattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
-		NamedMatcher matcher = pattern.matcher(contentSpecData);
+		final NamedPattern pattern = NamedPattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
+		final NamedMatcher matcher = pattern.matcher(contentSpecData);
 		String localStringChecksum = "";
-		while (matcher.find()) {
-			String temp = matcher.group();
+		while (matcher.find())
+		{
+			final String temp = matcher.group();
 			localStringChecksum = temp.replaceAll("^CHECKSUM[ ]*=[ ]*", "");
 		}
 		
 		// Calculate the local checksum value
 		contentSpecData = contentSpecData.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
-		String localChecksum = HashUtilities.generateMD5(contentSpecData);
+		final String localChecksum = HashUtilities.generateMD5(contentSpecData);
 		
 		// Check that the checksums match
-		if (!localStringChecksum.equals(localChecksum) && !localStringChecksum.equals(serverChecksum)) {
+		if (!localStringChecksum.equals(localChecksum) && !localStringChecksum.equals(serverChecksum))
+		{
 			printError(String.format(Constants.ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG, fileName), false);
 			shutdown(Constants.EXIT_OUT_OF_DATE);
-		} else if (!localStringChecksum.equals(serverChecksum)) {
+		}
+		else if (!localStringChecksum.equals(serverChecksum))
+		{
 			printError(Constants.ERROR_OUT_OF_DATE_MSG, false);
 			shutdown(Constants.EXIT_OUT_OF_DATE);
-		} else if (!localChecksum.equals(serverChecksum)) {
+		}
+		else if (!localChecksum.equals(serverChecksum))
+		{
 			printError(Constants.ERROR_LOCAL_COPY_UPDATED_MSG, false);
 			shutdown(Constants.EXIT_OUT_OF_DATE);
-		} else {
+		}
+		else
+		{
 			JCommander.getConsole().println(Constants.UP_TO_DATE_MSG);
 		}
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
-		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
+	public boolean loadFromCSProcessorCfg()
+	{
+		return ids.size() == 0;
 	}
 
 }

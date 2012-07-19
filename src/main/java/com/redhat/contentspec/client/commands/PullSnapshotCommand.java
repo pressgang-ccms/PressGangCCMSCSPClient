@@ -101,7 +101,11 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		// If files is empty then we must be using a csprocessor.cfg file
 		if (pullForConfig)
 		{
-			ids.add(cspConfig.getContentSpecId());
+			// Check that the config details are valid
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
+			{
+				ids.add(cspConfig.getContentSpecId());
+			}
 		}
 		
 		// Check that only one ID exists
@@ -244,6 +248,6 @@ public class PullSnapshotCommand extends BaseCommandImpl
 	@Override
 	public boolean loadFromCSProcessorCfg()
 	{
-		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
+		return ids.size() == 0;
 	}
 }

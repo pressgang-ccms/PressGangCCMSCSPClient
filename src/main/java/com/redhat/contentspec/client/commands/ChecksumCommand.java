@@ -76,7 +76,11 @@ public class ChecksumCommand extends BaseCommandImpl
 		// If there are no ids then use the csprocessor.cfg file
 		if (loadFromCSProcessorCfg())
 		{
-			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			// Check that the config details are valid
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
+			{
+				setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			}
 		}
 		
 		// Check that one and only one ID exists
@@ -109,6 +113,6 @@ public class ChecksumCommand extends BaseCommandImpl
 	@Override
 	public boolean loadFromCSProcessorCfg()
 	{
-		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
+		return ids.size() == 0;
 	}
 }

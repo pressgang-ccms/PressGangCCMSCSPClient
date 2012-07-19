@@ -110,8 +110,22 @@ public class AssembleCommand extends BuildCommand {
 				shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 			}
 			
-			outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
-			fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
+			// Create the fully qualified output path
+			if (getOutputPath() != null && getOutputPath().endsWith("/"))
+			{
+				outputDirectory = this.getOutputPath();
+				fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
+			}
+			else if (getOutputPath() == null)
+			{
+				outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+				fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
+			}
+			else
+			{
+				outputDirectory = "";
+				fileName = this.getOutputPath();
+			}
 		}
 		else if (getIds().size() == 0)
 		{

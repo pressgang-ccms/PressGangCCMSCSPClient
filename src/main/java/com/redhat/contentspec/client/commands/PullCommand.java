@@ -22,8 +22,8 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Pull a Content Specification from the server")
-public class PullCommand extends BaseCommandImpl{
-
+public class PullCommand extends BaseCommandImpl
+{
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 	
@@ -51,63 +51,78 @@ public class PullCommand extends BaseCommandImpl{
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
-	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+	public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
 		super(parser, cspConfig, clientConfig);
 	}
 
-	public Boolean useContentSpec() {
+	public Boolean useContentSpec()
+	{
 		return pullContentSpec;
 	}
 
-	public void setContentSpec(Boolean contentSpec) {
+	public void setContentSpec(final Boolean contentSpec)
+	{
 		this.pullContentSpec = contentSpec;
 	}
 
-	public Boolean useTopic() {
+	public Boolean useTopic()
+	{
 		return pullTopic;
 	}
 
-	public void setTopic(Boolean topic) {
+	public void setTopic(final Boolean topic)
+	{
 		this.pullTopic = topic;
 	}
 
-	public Boolean isUseXml() {
+	public Boolean isUseXml()
+	{
 		return useXml;
 	}
 
-	public void setUseXml(Boolean useXml) {
+	public void setUseXml(final Boolean useXml)
+	{
 		this.useXml = useXml;
 	}
 
-	public Boolean isUseHtml() {
+	public Boolean isUseHtml()
+	{
 		return useHtml;
 	}
 
-	public void setUseHtml(Boolean useHtml) {
+	public void setUseHtml(final Boolean useHtml)
+	{
 		this.useHtml = useHtml;
 	}
 
-	public Boolean isUsePre() {
+	public Boolean isUsePre()
+	{
 		return usePre;
 	}
 
-	public void setUsePre(Boolean usePre) {
+	public void setUsePre(final Boolean usePre)
+	{
 		this.usePre = usePre;
 	}
 
-	public Boolean isUsePost() {
+	public Boolean isUsePost()
+	{
 		return usePost;
 	}
 
-	public void setUsePost(Boolean usePost) {
+	public void setUsePost(final Boolean usePost)
+	{
 		this.usePost = usePost;
 	}
 
-	public Integer getRevision() {
+	public Integer getRevision()
+	{
 		return revision;
 	}
 
-	public void setRevision(Integer revision) {
+	public void setRevision(final Integer revision)
+	{
 		this.revision = revision;
 	}
 
@@ -115,34 +130,47 @@ public class PullCommand extends BaseCommandImpl{
 		return ids;
 	}
 
-	public void setIds(List<Integer> ids) {
+	public void setIds(final List<Integer> ids)
+	{
 		this.ids = ids;
 	}
 
-	public String getOutputPath() {
+	public String getOutputPath()
+	{
 		return outputPath;
 	}
 
-	public void setOutputPath(String outputPath) {
+	public void setOutputPath(final String outputPath)
+	{
 		this.outputPath = outputPath;
 	}
 	
-	public boolean isValid() {
-		if (pullTopic && !pullContentSpec) {
-			if (useXml && useHtml) {
+	public boolean isValid()
+	{
+		if (pullTopic && !pullContentSpec)
+		{
+			if (useXml && useHtml)
+			{
 				return false;
 			}
-			if (usePre || usePost) {
+			if (usePre || usePost)
+			{
 				return false;
 			}
-		} else if (!pullTopic) {
-			if (usePre && usePost) {
+		}
+		else if (!pullTopic)
+		{
+			if (usePre && usePost)
+			{
 				return false;
 			}
-			if (useXml || useHtml) {
+			if (useXml || useHtml)
+			{
 				return false;
 			}
-		} else {
+		}
+		else
+		{
 			return false;
 		}
 		return true;
@@ -155,29 +183,39 @@ public class PullCommand extends BaseCommandImpl{
 		boolean pullForConfig = false;
 		
 		// Load the data from the config data if no ids were specified
-		if (loadFromCSProcessorCfg()) {
-			setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+		if (loadFromCSProcessorCfg())
+		{
+			// Check that the config details are valid
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
+			{
+				setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+			}
 			pullForConfig = true;
 			revision = null;
 		}
 		
 		// Check that the options are valid
-		if (!isValid()) {
+		if (!isValid())
+		{
 			printError(Constants.INVALID_ARG_MSG, true);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
 		// Check that only one ID exists
-		if (ids.size() == 0) {
+		if (ids.size() == 0)
+		{
 			printError(Constants.ERROR_NO_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		} else if (ids.size() > 1) {
+		}
+		else if (ids.size() > 1)
+		{
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
@@ -185,43 +223,63 @@ public class PullCommand extends BaseCommandImpl{
 		String data = "";
 		String fileName = "";
 		// Topic
-		if (pullTopic) {
+		if (pullTopic)
+		{
 			final RESTTopicV1 topic = restManager.getReader().getPostContentSpecById(ids.get(0), null);
-			if (topic == null) {
+			if (topic == null)
+			{
 				printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
-			} else {
-				if (useXml) {
+			}
+			else
+			{
+				if (useXml)
+				{
 					data = topic.getXml();
 					fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
-				} else if (useHtml) {
+				}
+				else if (useHtml)
+				{
 					data = topic.getHtml();
 					fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".html";
 				}
 			}
 		// Content Specification
-		} else {
-			if (usePre) {
+		}
+		else
+		{
+			if (usePre)
+			{
 				final RESTTopicV1 contentSpec = reader.getPreContentSpecById(ids.get(0), revision);
-				if (contentSpec == null) {
+				if (contentSpec == null)
+				{
 					printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 					shutdown(Constants.EXIT_FAILURE);
-				} else {
+				}
+				else
+				{
 					data = contentSpec.getXml();
 					fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-pre." + Constants.FILENAME_EXTENSION;
-					if (pullForConfig) {
+					if (pullForConfig)
+					{
 						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
 					}
 				}
-			} else {
+			}
+			else
+			{
 				final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
-				if (contentSpec == null) {
+				if (contentSpec == null)
+				{
 					printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
 					shutdown(Constants.EXIT_FAILURE);
-				} else {
+				}
+				else
+				{
 					data = contentSpec.getXml();
 					fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
-					if (pullForConfig) {
+					if (pullForConfig)
+					{
 						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
 					}
 				}
@@ -229,43 +287,57 @@ public class PullCommand extends BaseCommandImpl{
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}
 		
 		// Save or print the data
-		if (outputPath == null) {
+		if (outputPath == null)
+		{
 			JCommander.getConsole().println(data);
-		} else {
+		}
+		else
+		{
 			// Create the output file
 			File output;
 			outputPath = ClientUtilities.validateFilePath(outputPath);
-			if (outputPath != null && outputPath.endsWith(File.separator)) {
+			if (outputPath != null && outputPath.endsWith(File.separator))
+			{
 				output = new File(outputPath + fileName);
-			} else if (outputPath == null || outputPath.equals("")) {
+			}
+			else if (outputPath == null || outputPath.equals(""))
+			{
 				output = new File(fileName);
-			} else {
+			}
+			else
+			{
 				output = new File(outputPath);
 			}
 			
 			// Make sure the directories exist
-			if (output.isDirectory()) {
+			if (output.isDirectory())
+			{
 				output.mkdirs();
 				output = new File(output.getAbsolutePath() + File.separator + fileName);
-			} else {
+			}
+			else
+			{
 				if (output.getParentFile() != null)
 					output.getParentFile().mkdirs();
 			}
 			
 			// Good point to check for a shutdown
-			if (isAppShuttingDown()) {
+			if (isAppShuttingDown())
+			{
 				shutdown.set(true);
 				return;
 			}
 			
 			// If the file exists then create a backup file
-			if (output.exists()) {
+			if (output.exists())
+			{
 				output.renameTo(new File(output.getAbsolutePath() + ".backup"));
 			}
 			
@@ -287,22 +359,26 @@ public class PullCommand extends BaseCommandImpl{
 	}
 	
 	@Override
-	public RESTUserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return null;
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.PULL_COMMAND_NAME);
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.PULL_COMMAND_NAME);
 	}
 
 	@Override
-	public boolean loadFromCSProcessorCfg() {
-		return ids.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null && !pullTopic;
+	public boolean loadFromCSProcessorCfg()
+	{
+		return ids.size() == 0 && !pullTopic;
 	}
 }

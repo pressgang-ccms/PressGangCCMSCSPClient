@@ -112,20 +112,24 @@ public class PushCommand extends BaseCommandImpl
 		// If files is empty then we must be using a csprocessor.cfg file
 		if (loadFromCSProcessorCfg())
 		{
-			final RESTTopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
-			final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
-			File file = new File(fileName);
-			if (!file.exists())
+			// Check that the config details are valid
+			if (cspConfig != null && cspConfig.getContentSpecId() != null)
 			{
-				// Backwards compatibility check for files ending with .txt
-				file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+				final RESTTopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
+				final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+				File file = new File(fileName);
 				if (!file.exists())
 				{
-					printError(String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
-					shutdown(Constants.EXIT_FAILURE);
+					// Backwards compatibility check for files ending with .txt
+					file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+					if (!file.exists())
+					{
+						printError(String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
+						shutdown(Constants.EXIT_FAILURE);
+					}
 				}
+				files.add(file);
 			}
-			files.add(file);
 			pushingFromConfig = true;
 		}
 		
@@ -243,6 +247,6 @@ public class PushCommand extends BaseCommandImpl
 	@Override
 	public boolean loadFromCSProcessorCfg()
 	{
-		return files.size() == 0 && cspConfig != null && cspConfig.getContentSpecId() != null;
+		return files.size() == 0;
 	}
 }
