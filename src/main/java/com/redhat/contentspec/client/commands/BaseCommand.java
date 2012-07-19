@@ -23,10 +23,32 @@ public interface BaseCommand extends ShutdownAbleApp
 	void setAppShuttingDown(boolean shuttingDown);
 	void setShutdown(boolean shutdown);
 	
+	/**
+	 * Print the available options to the console
+	 * for the command.
+	 */
 	void printHelp();
+	
+	/**
+	 * Print an error message to the console. If the
+	 * display help parameter is set then the commands
+	 * options are printed as well.
+	 * 
+	 * @param errorMsg The error message to display.
+	 * @param displayHelp If the commands options should be
+	 * displayed.
+	 */
 	void printError(String errorMsg, boolean displayHelp);
 	RESTUserV1 authenticate(RESTReader reader);
 	void process(RESTManager restManager, ErrorLoggerManager elm, RESTUserV1 user);
+	
+	/**
+	 * Check to see if the command should load data from
+	 * a local csprocessor.cfg configuration file.
+	 * 
+	 * @return True if the data from the local csprocessor.cfg
+	 * should be loaded, otherwise false.
+	 */
 	boolean loadFromCSProcessorCfg();
 	void validateServerUrl();
 }

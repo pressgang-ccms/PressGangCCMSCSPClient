@@ -36,6 +36,7 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.config.ZanataServerConfiguration;
+import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
@@ -352,7 +353,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	/**
 	 * Apply the settings of the from the various configuration files and command line parameters to the used command.
 	 */
-	private void applySettings()
+	protected void applySettings()
 	{
 		// Move the main parameters into the sub command
 		if (getConfigLocation() != null)
@@ -377,6 +378,37 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			return;
 		}
 		
+		applyServerSettings();
+		
+		// Good point to check for a shutdown
+		if (isAppShuttingDown())
+		{
+			shutdown.set(true);
+			return;
+		}
+		
+		// Set the root directory in the csprocessor configuration
+		cspConfig.setRootOutputDirectory(clientConfig.getRootDirectory());
+		
+		applyZanataSettings();
+		
+		// Set the publish options
+		if ((cspConfig.getKojiHubUrl() == null || cspConfig.getKojiHubUrl().isEmpty()) && clientConfig.getKojiHubUrl() != null)
+		{
+			cspConfig.setKojiHubUrl(ClientUtilities.validateHost(clientConfig.getKojiHubUrl()));
+		}
+		if ((cspConfig.getPublishCommand() == null || cspConfig.getPublishCommand().isEmpty()) && clientConfig.getPublishCommand() != null)
+		{
+			cspConfig.setPublishCommand(clientConfig.getPublishCommand());
+		}
+	}
+	
+	/**
+	 * Apply the server settings from the client configuration
+	 * file to the command and/or Content Spec Configuration.
+	 */
+	protected void applyServerSettings()
+	{
 		final Map<String, ServerConfiguration> servers = clientConfig.getServers();
 		
 		// Set the URL
@@ -482,22 +514,19 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			}
 		}
 		
-		// Good point to check for a shutdown
-		if (isAppShuttingDown())
-		{
-			shutdown.set(true);
-			return;
-		}
-		
-		// Set the root directory in the csprocessor configuration
-		cspConfig.setRootOutputDirectory(clientConfig.getRootDirectory());
 		if (cspConfig.getServerUrl() == null)
 		{
 			cspConfig.setServerUrl(url);
 		}
-		
-		// Set the zanata details
-		
+	}
+	
+	/**
+	 * Apply the zanata settings from the client configuration
+	 * file to the command and/or Content Spec Configuration.
+	 */
+	protected void applyZanataSettings()
+	{
+		// Setup the zanata details
 		final Map<String, ZanataServerConfiguration> zanataServers = clientConfig.getZanataServers();
 		
 		// Set the zanata details
@@ -556,16 +585,6 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		{
 			cspConfig.getZanataDetails().setVersion(clientConfig.getDefaultZanataVersion());
 		}
-		
-		// Set the publish options
-		if ((cspConfig.getKojiHubUrl() == null || cspConfig.getKojiHubUrl().isEmpty()) && clientConfig.getKojiHubUrl() != null)
-		{
-			cspConfig.setKojiHubUrl(ClientUtilities.validateHost(clientConfig.getKojiHubUrl()));
-		}
-		if ((cspConfig.getPublishCommand() == null || cspConfig.getPublishCommand().isEmpty()) && clientConfig.getPublishCommand() != null)
-		{
-			cspConfig.setPublishCommand(clientConfig.getPublishCommand());
-		}
 	}
 	
 	/**
@@ -574,7 +593,6 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	 * @param location The location of the csprocessor.ini file (eg. /home/.config/)
 	 * @return Returns false if an error occurs otherwise true
 	 */
-	@SuppressWarnings("unchecked")
 	protected boolean setConfigOptions(final String location)
 	{
 		final String fixedLocation = ClientUtilities.validateConfigLocation(location);
@@ -606,48 +624,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		else if (location.equals(Constants.DEFAULT_CONFIG_LOCATION))
 		{
 			JCommander.getConsole().println(String.format(Constants.CONFIG_CREATING_MSG, location));
-			
-			final StringBuilder configFile = new StringBuilder();
 			firstRun = true;
-			
-			// Create the configuration
-			
-			configFile.append("[servers]\n");
-			// Create the Default server in the config file
-			configFile.append("# Uncomment one of the default servers below based on the server you wish to connect to.\n");
-			configFile.append("#" + Constants.DEFAULT_SERVER_NAME + "=production\n");
-			configFile.append("#" + Constants.DEFAULT_SERVER_NAME + "=test\n\n");
-			// Create the default.username attribute
-			configFile.append("#If you use one username for all servers then uncomment and set-up the below value instead of each servers username\n");
-			configFile.append("#default.username=\n\n");
-			// Create the Production server in the config file
-			configFile.append("# Production Server settings\n");
-			configFile.append(Constants.PRODUCTION_SERVER_NAME + ".url=" + Constants.DEFAULT_PROD_SERVER + "\n");
-			configFile.append(Constants.PRODUCTION_SERVER_NAME + ".username=\n\n");
-			// Create the Test server in the config file
-			configFile.append("# Test Server settings\n");
-			configFile.append(Constants.TEST_SERVER_NAME + ".url=" + Constants.DEFAULT_TEST_SERVER + "\n");
-			configFile.append(Constants.TEST_SERVER_NAME + ".username=\n\n");
-			
-			// Create the Root Directory
-			configFile.append("[directory]\n");
-			configFile.append("root=\n\n");
-			
-			// Create the publican options
-			configFile.append("[publican]\n");
-			configFile.append("build.parameters=" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\n");
-			configFile.append("preview.format=" + Constants.DEFAULT_PUBLICAN_FORMAT + "\n\n");
-			
-			// Create the default translation options
-			configFile.append("[zanata]\n");
-			configFile.append("default=\n");
-			configFile.append("default.project=" + Constants.DEFAULT_ZANATA_PROJECT + "\n");
-			configFile.append("default.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n");
-			
-			// Create the default translation options
-			configFile.append("[publish]\n");
-			configFile.append("koji.huburl=" + Constants.DEFAULT_KOJIHUB_URL + "\n\n");
-			configFile.append("command=" + Constants.DEFAULT_PUBLISH_COMMAND + "\n");
 			
 			// Save the configuration file
 			try
@@ -660,7 +637,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 				
 				// Save the config
 				final FileOutputStream fos = new FileOutputStream(file);
-				fos.write(configFile.toString().getBytes("UTF-8"));
+				fos.write(ConfigConstants.DEFAULT_CONFIG_FILE.getBytes("UTF-8"));
 				fos.flush();
 				fos.close();
 			}
@@ -684,6 +661,77 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			return false;
 		}
 		
+		/* Read in the servers from the config file */
+		if (!readServersFromConfig(configReader))
+		{
+			return false;
+		}
+		
+		// Read in the root directory
+		if (!configReader.getRootNode().getChildren("directory").isEmpty())
+		{
+			// Load the root content specs directory
+			if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals(""))
+			{
+				clientConfig.setRootDirectory(ClientUtilities.validateLocation(configReader.getProperty("directory.root").toString()));
+			}
+		}
+		
+		// Read in the publican build options
+		if (!configReader.getRootNode().getChildren("publican").isEmpty())
+		{
+			// Load the publican setup values
+			if (configReader.getProperty("publican.build..parameters") != null && !configReader.getProperty("publican.build..parameters").equals(""))
+			{
+				clientConfig.setPublicanBuildOptions(configReader.getProperty("publican.build..parameters").toString());
+			}
+			if (configReader.getProperty("publican.preview..format") != null && !configReader.getProperty("publican.preview..format").equals(""))
+			{
+				clientConfig.setPublicanPreviewFormat(configReader.getProperty("publican.preview..format").toString());
+			}
+		}
+		else
+		{
+			clientConfig.setPublicanBuildOptions(Constants.DEFAULT_PUBLICAN_OPTIONS);
+			clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
+		}
+		
+		/* Read in the zanata details from the config file */
+		if (!readZanataDetailsFromConfig(configReader))
+		{
+			return false;
+		}
+		
+		// Read in the publishing information
+		if (!configReader.getRootNode().getChildren("publish").isEmpty())
+		{
+			// Load the koji hub url
+			if (configReader.getProperty("publish.koji..huburl") != null && !configReader.getProperty("publish.koji..huburl").equals(""))
+			{
+				clientConfig.setKojiHubUrl(configReader.getProperty("publish.koji..huburl").toString());
+			}
+			
+			// Load the publish command name
+			if (configReader.getProperty("publish.command") != null && !configReader.getProperty("publish.command").equals(""))
+			{
+				clientConfig.setPublishCommand(configReader.getProperty("publish.command").toString());
+			}
+		}
+
+		return true;
+	}
+	
+	/**
+	 * Read the Server settings from a INI Configuration file.
+	 * 
+	 * @param configReader
+	 * 					The initialized configuration reader to read
+	 * 					the server configuration from file.
+	 * @return True if everything was read in correctly otherwise false.
+	 */
+	@SuppressWarnings("unchecked")
+	protected boolean readServersFromConfig(final HierarchicalINIConfiguration configReader)
+	{
 		final Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 		
 		// Read in and process the servers
@@ -718,8 +766,8 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					serverConfig.setUsername(username);
 					
 					servers.put(name, serverConfig);
-				// Just the default server name
 				}
+				// Just the default server name
 				else if (key.equals(Constants.DEFAULT_SERVER_NAME))
 				{
 					// Create the Server Configuration
@@ -735,7 +783,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			// Check that a default exists in the configuration files or via command line arguments
 			if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null)
 			{
-				command.printError(String.format(Constants.NO_DEFAULT_SERVER_FOUND, file.getAbsolutePath()), false);
+				command.printError(String.format(Constants.NO_DEFAULT_SERVER_FOUND, configReader.getFile().getAbsolutePath()), false);
 				return false;
 			}
 			else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches("^(http://|https://).*"))
@@ -766,36 +814,20 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		
 		// Add the servers to the client configuration
 		clientConfig.setServers(servers);
-		
-		// Read in the root directory
-		if (!configReader.getRootNode().getChildren("directory").isEmpty())
-		{
-			// Load the root content specs directory
-			if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals(""))
-			{
-				clientConfig.setRootDirectory(ClientUtilities.validateLocation(configReader.getProperty("directory.root").toString()));
-			}
-		}
-		
-		// Read in the publican build options
-		if (!configReader.getRootNode().getChildren("publican").isEmpty())
-		{
-			// Load the publican setup values
-			if (configReader.getProperty("publican.build..parameters") != null && !configReader.getProperty("publican.build..parameters").equals(""))
-			{
-				clientConfig.setPublicanBuildOptions(configReader.getProperty("publican.build..parameters").toString());
-			}
-			if (configReader.getProperty("publican.preview..format") != null && !configReader.getProperty("publican.preview..format").equals(""))
-			{
-				clientConfig.setPublicanPreviewFormat(configReader.getProperty("publican.preview..format").toString());
-			}
-		}
-		else
-		{
-			clientConfig.setPublicanBuildOptions(Constants.DEFAULT_PUBLICAN_OPTIONS);
-			clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
-		}
-		
+		return true;
+	}
+	
+	/**
+	 * Read the Zanata Server settings from a INI Configuration file.
+	 * 
+	 * @param configReader
+	 * 					The initialized configuration reader to read
+	 * 					the server configuration from file.
+	 * @return True if everything was read in correctly otherwise false.
+	 */
+	@SuppressWarnings("unchecked")
+	protected boolean readZanataDetailsFromConfig(final HierarchicalINIConfiguration configReader)
+	{
 		// Read in the zanata server information
 		final Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
 		
@@ -881,30 +913,17 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		}
 		
 		clientConfig.setZanataServers(zanataServers);
-		
-		// Read in the publishing information
-		if (!configReader.getRootNode().getChildren("publish").isEmpty())
-		{
-			// Load the koji hub url
-			if (configReader.getProperty("publish.koji..huburl") != null && !configReader.getProperty("publish.koji..huburl").equals(""))
-			{
-				clientConfig.setKojiHubUrl(configReader.getProperty("publish.koji..huburl").toString());
-			}
-			
-			// Load the publish command name
-			if (configReader.getProperty("publish.command") != null && !configReader.getProperty("publish.command").equals(""))
-			{
-				clientConfig.setPublishCommand(configReader.getProperty("publish.command").toString());
-			}
-		}
-
 		return true;
 	}
 	
 	/**
 	 * Prints the version of the client to the console
+	 * 
+	 * @param msg The version message format to be printed.
+	 * @param version The version to be displayed.
+	 * @param printNL Whether a newline should be printed after the message
 	 */
-	private void printVersionDetails(String msg, String version, boolean printNL)
+	private void printVersionDetails(final String msg, final String version, final boolean printNL)
 	{
 		JCommander.getConsole().println(String.format(msg, version) + (printNL ? "\n" : ""));
 	}

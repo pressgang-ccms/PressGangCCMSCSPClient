@@ -89,9 +89,7 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the Content Specification.")
 	private String zanataVersion = null;
-	
-	private File output;
-	
+		
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
 	
@@ -178,16 +176,6 @@ public class BuildCommand extends BaseCommandImpl
 	public void setPermissive(final Boolean permissive)
 	{
 		this.permissive = permissive;
-	}
-	
-	public File getOutputFile()
-	{
-		return output;
-	}
-	
-	public void setOutputFile(final File outputFile)
-	{
-		this.output = outputFile;
 	}
 	
 	public String getOutputPath()
@@ -421,28 +409,9 @@ public class BuildCommand extends BaseCommandImpl
 			shutdown.set(true);
 			return;
 		}
-				
-		// Setup the processing options
-		final ProcessingOptions processingOptions = new ProcessingOptions();
-		processingOptions.setPermissiveMode(permissive);
-		processingOptions.setValidating(true);
-		processingOptions.setIgnoreChecksum(true);
-		processingOptions.setAllowNewTopics(false);
-		if (allowEmptyLevels)
-			processingOptions.setAllowEmptyLevels(true);
 		
-		// Validate and parse the Content Specification
-		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
-		boolean success = false;
-		try
-		{
-			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
-		}
-		catch (Exception e)
-		{
-			JCommander.getConsole().println(elm.generateLogs());
-			shutdown(Constants.EXIT_FAILURE);
-		}
+		// Validate that the content spec is valid
+		boolean success = validateContentSpec(restManager, elm, user, contentSpec);
 		
 		// Print the error/warning messages
 		JCommander.getConsole().println(elm.generateLogs());
@@ -522,6 +491,64 @@ public class BuildCommand extends BaseCommandImpl
 			fileName += ".zip";
 		}
 		
+		// Create the output file based on the command line params and content spec
+		final File outputFile = getOutputFile(outputDir, fileName);
+		
+		// Make sure the directories exist
+		if (outputFile.isDirectory())
+		{
+			outputFile.mkdirs();
+		}
+		else
+		{
+			if (outputFile.getParentFile() != null)
+				outputFile.getParentFile().mkdirs();
+		}
+		
+		// Save the build output to the output file
+		saveBuildToFile(builderOutput, outputFile, buildingFromConfig);
+	}
+	
+	protected boolean validateContentSpec(final RESTManager restManager, final ErrorLoggerManager elm,
+			final RESTUserV1 user, final String contentSpec)
+	{
+		// Setup the processing options
+		final ProcessingOptions processingOptions = new ProcessingOptions();
+		processingOptions.setPermissiveMode(permissive);
+		processingOptions.setValidating(true);
+		processingOptions.setIgnoreChecksum(true);
+		processingOptions.setAllowNewTopics(false);
+		if (allowEmptyLevels)
+			processingOptions.setAllowEmptyLevels(true);
+		
+		// Validate and parse the Content Specification
+		csp = new ContentSpecProcessor(restManager, elm, processingOptions);
+		boolean success = false;
+		try
+		{
+			success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
+		}
+		catch (Exception e)
+		{
+			JCommander.getConsole().println(elm.generateLogs());
+			shutdown(Constants.EXIT_FAILURE);
+		}
+		
+		return success;
+	}
+	
+	/**
+	 * Generates the output file object using the command
+	 * line parameters and the calculated output directory
+	 * and filename from the content specification.
+	 * 
+	 * @param outputDir The output directory calculated from the content spec.
+	 * @param fileName The file name calculated from the content spec.
+	 * @return The file that 
+	 */
+	protected File getOutputFile(final String outputDir, final String fileName)
+	{
+		File output;
 		// Create the fully qualified output path
 		if (outputPath != null && outputPath.endsWith("/"))
 		{
@@ -536,26 +563,20 @@ public class BuildCommand extends BaseCommandImpl
 			output = new File(outputPath);
 		}
 		
-		// Make sure the directories exist
-		if (output.isDirectory())
-		{
-			output.mkdirs();
-		}
-		else
-		{
-			if (output.getParentFile() != null)
-				output.getParentFile().mkdirs();
-		}
-		
+		return output;
+	}
+	
+	protected void saveBuildToFile(final byte[] buildZip, final File outputFile, final boolean buildingFromConfig)
+	{
 		String answer = "y";
 		// Check if the file exists. If it does then check if the file should be overwritten
-		if (!buildingFromConfig && output.exists())
+		if (!buildingFromConfig && outputFile.exists())
 		{
-			JCommander.getConsole().println(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, output.getName()));
+			JCommander.getConsole().println(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, outputFile.getName()));
 			answer = JCommander.getConsole().readLine();
 			while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("no")))
 			{
-				JCommander.getConsole().print(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, output.getName()));
+				JCommander.getConsole().print(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, outputFile.getName()));
 				answer = JCommander.getConsole().readLine();
 				
 				// Need to check if the app is shutting down in this loop
@@ -572,11 +593,11 @@ public class BuildCommand extends BaseCommandImpl
 		{
 			if (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes"))
 			{
-				FileOutputStream fos = new FileOutputStream(output);
-				fos.write(builderOutput);
+				final FileOutputStream fos = new FileOutputStream(outputFile);
+				fos.write(buildZip);
 				fos.flush();
 				fos.close();
-				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getAbsolutePath()));
+				JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputFile.getAbsolutePath()));
 			}
 			else
 			{
@@ -648,6 +669,10 @@ public class BuildCommand extends BaseCommandImpl
 			shutdown(Constants.EXIT_NO_SERVER);
 		}
 		
+		/*
+		 * Check the KojiHub server url to ensure that it exists
+		 * if the user wants to fetch the pubsnumber from koji.
+		 */
 		if (fetchPubsnum)
 		{
 			// Print the kojihub server url
@@ -664,6 +689,10 @@ public class BuildCommand extends BaseCommandImpl
 			}
 		}
 		
+		/*
+		 * Check the Zanata server url and Project/Version to ensure that it
+		 * exists if the user wants to insert editor links for translations.
+		 */
 		if (insertEditorLinks && locale != null)
 		{
 			setupZanataOptions();

@@ -204,18 +204,35 @@ public abstract class BaseCommandImpl implements BaseCommand
 		return user;
 	}
 	
+	/**
+	 * Set the application to shutdown so that
+	 * any shutdown hooks know that the application
+	 * can be shutdown.
+	 */
 	@Override
 	public void shutdown()
 	{
 		setAppShuttingDown(true);
 	}
 	
+	/**
+	 * Shutdown the application with a specific exit
+	 * status.
+	 * 
+	 * @param exitStatus The exit status to shut the 
+	 * application down with.
+	 */
 	public void shutdown(final int exitStatus)
 	{
 		shutdown.set(true);
 		System.exit(exitStatus);
 	}
 	
+	/**
+	 * Validate that any servers connected to with this
+	 * command exist. If they don't then print an error
+	 * message and stop the program.
+	 */
 	@Override
 	public void validateServerUrl()
 	{
