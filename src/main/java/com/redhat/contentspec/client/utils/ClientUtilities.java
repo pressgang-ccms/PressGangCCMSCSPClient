@@ -152,8 +152,16 @@ public class ClientUtilities {
 			URL url = new URL(serverUrl);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("HEAD");
+			HttpURLConnection.setFollowRedirects(true);
 			int response = connection.getResponseCode();
-			return response == HttpURLConnection.HTTP_OK || response == HttpURLConnection.HTTP_BAD_METHOD;
+			if (response == HttpURLConnection.HTTP_MOVED_PERM || response == HttpURLConnection.HTTP_MOVED_TEMP)
+			{
+				return validateServerExists(connection.getHeaderField("Location"));
+			}
+			else
+			{
+				return response == HttpURLConnection.HTTP_OK || response == HttpURLConnection.HTTP_BAD_METHOD;
+			}
 		}
 		catch (IOException e)
 		{

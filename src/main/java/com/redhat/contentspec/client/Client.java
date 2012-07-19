@@ -542,7 +542,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		else if (clientConfig.getZanataServers().containsKey(Constants.DEFAULT_SERVER_NAME))
 		{
 			final ZanataServerConfiguration zanataServerConfig = clientConfig.getZanataServers().get(Constants.DEFAULT_SERVER_NAME);
-			cspConfig.getZanataDetails().setServer(zanataServerConfig.getUrl());
+			cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(zanataServerConfig.getUrl()));
 			cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
 			cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
 		}

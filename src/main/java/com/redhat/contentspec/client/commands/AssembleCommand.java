@@ -114,6 +114,7 @@ public class AssembleCommand extends BuildCommand {
 			if (getOutputPath() != null && getOutputPath().endsWith("/"))
 			{
 				outputDirectory = this.getOutputPath();
+				fileDirectory = this.getOutputPath();
 				fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
 			}
 			else if (getOutputPath() == null)
@@ -123,7 +124,6 @@ public class AssembleCommand extends BuildCommand {
 			}
 			else
 			{
-				outputDirectory = "";
 				fileName = this.getOutputPath();
 			}
 		}
