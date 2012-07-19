@@ -259,7 +259,14 @@ public class PullCommand extends BaseCommandImpl
 				else
 				{
 					data = contentSpec.getXml();
-					fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-pre." + Constants.FILENAME_EXTENSION;
+					if (revision == null)
+					{
+						fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-pre." + Constants.FILENAME_EXTENSION;
+					}
+					else
+					{
+						fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-pre-r" + revision + "." + Constants.FILENAME_EXTENSION;
+					}
 					if (pullForConfig)
 					{
 						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
@@ -277,7 +284,14 @@ public class PullCommand extends BaseCommandImpl
 				else
 				{
 					data = contentSpec.getXml();
-					fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+					if (revision == null)
+					{
+						fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+					}
+					else
+					{
+						fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post-r" + revision + "." + Constants.FILENAME_EXTENSION;
+					}
 					if (pullForConfig)
 					{
 						outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle() + File.separator)));
