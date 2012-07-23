@@ -39,7 +39,7 @@ public class CreateCommand extends BaseCommandImpl
 	private Boolean executionTime = false;
 	
 	@Parameter(names = Constants.NO_CREATE_CSPROCESSOR_CFG_LONG_PARAM, description = "Don't create the csprocessor.cfg and other files.")
-	private Boolean createCsprocessorCfg = true;
+	private Boolean noCsprocessorCfg = false;
 	
 	@Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, description = "Force the Content Specification directories to be created.")
 	private Boolean force = false;
@@ -83,12 +83,12 @@ public class CreateCommand extends BaseCommandImpl
 
 	public Boolean getCreateCsprocessorCfg()
 	{
-		return createCsprocessorCfg;
+		return noCsprocessorCfg;
 	}
 
 	public void setCreateCsprocessorCfg(final Boolean createCsprocessorCfg)
 	{
-		this.createCsprocessorCfg = createCsprocessorCfg;
+		this.noCsprocessorCfg = createCsprocessorCfg;
 	}
 
 	public Boolean getForce()
@@ -162,11 +162,6 @@ public class CreateCommand extends BaseCommandImpl
 			printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
-		// If it exists and force is enabled delete the directory contents
-		else if (directory.exists() && directory.isDirectory())
-		{
-			ClientUtilities.deleteDir(directory);
-		}
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
@@ -215,8 +210,14 @@ public class CreateCommand extends BaseCommandImpl
 			return;
 		}
 		
-		if (success && createCsprocessorCfg)
+		if (success && !noCsprocessorCfg)
 		{
+			// If the output directory exists and force is enabled delete the directory contents
+			if (directory.exists() && directory.isDirectory())
+			{
+				ClientUtilities.deleteDir(directory);
+			}
+			
 			// Create the blank zanata details as we shouldn't have a zanata setup at creation time
 			final ZanataDetails zanataDetails = new ZanataDetails();
 			zanataDetails.setServer(null);

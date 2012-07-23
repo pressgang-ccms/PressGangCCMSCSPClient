@@ -124,7 +124,17 @@ public class AssembleCommand extends BuildCommand {
 			{
 				fileName = this.getOutputPath();
 			}
-			outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			
+			// Add the full file path to the output path
+			final File file = new File(ClientUtilities.validateFilePath(fileDirectory + fileName));
+			if (file.getParent() != null)
+			{
+				outputDirectory = file.getParent() + File.separator + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			}
+			else
+			{
+				outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			}
 		}
 		else if (getIds().size() == 0)
 		{
@@ -149,12 +159,6 @@ public class AssembleCommand extends BuildCommand {
 		{
 			printError(String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, fileName), false);
 			shutdown(Constants.EXIT_FAILURE);
-		}
-		
-		// Add the full file path to the output path
-		if (file.getParent() != null)
-		{
-			outputDirectory = file.getParent() + File.separator + outputDirectory;
 		}
 		
 		// Make sure the output directories exist

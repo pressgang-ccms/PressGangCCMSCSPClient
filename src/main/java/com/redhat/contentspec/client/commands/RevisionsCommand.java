@@ -143,14 +143,7 @@ public class RevisionsCommand extends BaseCommandImpl
 		// Check that the content spec is valid
 		if (revisions == null)
 		{
-			if (topic)
-			{
-				JCommander.getConsole().println(Constants.NO_TOPICS_FOUND_MSG);
-			}
-			else
-			{
-				JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
-			}
+			JCommander.getConsole().println(Constants.ERROR_NO_ID_FOUND_MSG);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
