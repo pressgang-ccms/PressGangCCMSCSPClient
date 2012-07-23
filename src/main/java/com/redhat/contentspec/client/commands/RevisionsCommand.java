@@ -140,6 +140,20 @@ public class RevisionsCommand extends BaseCommandImpl
 			revisions = restManager.getReader().getContentSpecRevisionsById(ids.get(0));
 		}
 		
+		// Check that the content spec is valid
+		if (revisions == null)
+		{
+			if (topic)
+			{
+				JCommander.getConsole().println(Constants.NO_TOPICS_FOUND_MSG);
+			}
+			else
+			{
+				JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
+			}
+			shutdown(Constants.EXIT_FAILURE);
+		}
+		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
 			shutdown.set(true);
