@@ -560,22 +560,22 @@ public class BuildCommand extends BaseCommandImpl
 	 */
 	protected File getOutputFile(final String outputDir, final String fileName)
 	{
-		File output;
+		final String output;
 		// Create the fully qualified output path
 		if (outputPath != null && outputPath.endsWith("/"))
 		{
-			output = new File(outputPath + outputDir + fileName);
+			output = outputPath + outputDir + fileName;
 		}
 		else if (outputPath == null)
 		{
-			output = new File(outputDir + fileName);
+			output = outputDir + fileName;
 		}
 		else
 		{
-			output = new File(outputPath);
+			output = outputPath;
 		}
 		
-		return output;
+		return new File(ClientUtilities.validateFilePath(output));
 	}
 	
 	protected void saveBuildToFile(final byte[] buildZip, final File outputFile, final boolean buildingFromConfig)

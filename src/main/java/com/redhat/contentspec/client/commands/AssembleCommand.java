@@ -113,19 +113,18 @@ public class AssembleCommand extends BuildCommand {
 			// Create the fully qualified output path
 			if (getOutputPath() != null && getOutputPath().endsWith("/"))
 			{
-				outputDirectory = this.getOutputPath();
 				fileDirectory = this.getOutputPath();
 				fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
 			}
 			else if (getOutputPath() == null)
 			{
-				outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 				fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
 			}
 			else
 			{
 				fileName = this.getOutputPath();
 			}
+			outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 		}
 		else if (getIds().size() == 0)
 		{
@@ -145,15 +144,21 @@ public class AssembleCommand extends BuildCommand {
 			return;
 		}
 		
-		File file = new File(fileDirectory + fileName);
+		final File file = new File(ClientUtilities.validateFilePath(fileDirectory + fileName));
 		if (!file.exists())
 		{
 			printError(String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, fileName), false);
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
+		// Add the full file path to the output path
+		if (file.getParent() != null)
+		{
+			outputDirectory = file.getParent() + File.separator + outputDirectory;
+		}
+		
 		// Make sure the output directories exist
-		File outputDir = new File(outputDirectory);
+		final File outputDir = new File(ClientUtilities.validateDirLocation(outputDirectory));
 		outputDir.mkdirs();
 		
 		// Ensure that the directory is empty
