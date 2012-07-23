@@ -132,17 +132,30 @@ public class PreviewCommand extends AssembleCommand
 				shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 			}
 			
+			// Create the fully qualified output path
+			String fileDirectory = "";
+			if (getOutputPath() != null && getOutputPath().endsWith("/"))
+			{
+				fileDirectory = ClientUtilities.validateDirLocation(this.getOutputPath());
+			}
+			else
+			{
+				final File file = new File(ClientUtilities.validateFilePath(this.getOutputPath()));
+				if (file.getParent() != null)
+					fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
+			}
+			
 			final String locale = getLocale() == null ? 
 					(csp.getContentSpec().getLocale() == null ? CommonConstants.DEFAULT_LOCALE :  csp.getContentSpec().getLocale())
 					: getLocale();
 			
 			if (previewFormat.equals("pdf"))
 			{
-				previewFileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "-en-US.pdf";
+				previewFileName = fileDirectory + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "-en-US.pdf";
 			} 
 			else
 			{
-				previewFileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
+				previewFileName = fileDirectory + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
 			}
 		}
 		else if (getIds().size() == 0)
