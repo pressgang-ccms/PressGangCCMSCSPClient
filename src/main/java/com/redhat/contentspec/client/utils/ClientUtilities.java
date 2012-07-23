@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.NamedMatcher;
@@ -85,12 +86,12 @@ public class ClientUtilities {
 	}
 	
 	/**
-	 * Checks if the location is in the correct format then corrects it if not.
+	 * Checks if the directory location is in the correct format then corrects it if not.
 	 * 
 	 * @param location The path location to be checked
 	 * @return The fixed path location string
 	 */
-	public static String validateLocation(final String location)
+	public static String validateDirLocation(final String location)
 	{
 		if (location == null || location.isEmpty()) return location;
 		
@@ -290,7 +291,24 @@ public class ClientUtilities {
 		
 		try
 		{
-			final Process p = Runtime.getRuntime().exec(command, envVariables, dir);
+			String[] fixedEnvVariables = envVariables;
+			final Map<String, String> env = System.getenv();
+			final List<String> envVars = new ArrayList<String>();
+			for (final String key : env.keySet())
+			{
+				if (!key.equals("XML_CATALOG_FILES"))
+					envVars.add(key + "=" + env.get(key));
+			}
+			if (envVariables != null)
+			{
+				for (final String envVar : envVariables)
+				{
+					envVars.add(envVar);
+				}
+			}
+			fixedEnvVariables = envVars.toArray(new String[envVars.size()]);
+			
+			final Process p = Runtime.getRuntime().exec(command, fixedEnvVariables, dir);
 			// Get the output of the command
 			if (displayOutput)
 			{

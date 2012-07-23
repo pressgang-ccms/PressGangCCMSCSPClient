@@ -290,7 +290,7 @@ public class SetupCommand extends BaseCommandImpl
 			// Setup the username for the server
 			if (config.getUsername() != null && !config.getUsername().equals(""))
 				configFile.append(serverName + ".username=" + config.getUsername() + "\n");
-			else if (!serverName.equals(Constants.DEFAULT_SERVER_NAME))
+			else
 				configFile.append(serverName + ".username=\n");
 			
 			// Add a blank line to separate servers
@@ -321,7 +321,7 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Create the Root Directory
 		configFile.append("[directory]\n");
-		configFile.append("root=" + rootDir + "\n");
+		configFile.append("root=" + ClientUtilities.validateDirLocation(rootDir) + "\n");
 	}
 	
 	/**
@@ -382,10 +382,10 @@ public class SetupCommand extends BaseCommandImpl
 		String defaultZanataProject = "";
 		String defaultZanataVersion = "";
 		
-		JCommander.getConsole().print("Please enter a default zanata project name.");
+		JCommander.getConsole().println("Please enter a default zanata project name:");
 		defaultZanataProject = JCommander.getConsole().readLine();
 		
-		JCommander.getConsole().print("Please enter a default zanata project version.");
+		JCommander.getConsole().println("Please enter a default zanata project version:");
 		defaultZanataVersion = JCommander.getConsole().readLine();
 		
 		final HashMap<String, ZanataServerConfiguration> servers = new HashMap<String, ZanataServerConfiguration>();
@@ -425,7 +425,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Get the token for the server
 			JCommander.getConsole().println("Please enter the API Key of server no. " + i + ": ");
-			config.setUsername(JCommander.getConsole().readLine());
+			config.setToken(JCommander.getConsole().readLine());
 			
 			// Add the server configuration and add the name to the list of displayable strings
 			servers.put(config.getName(), config);
@@ -475,25 +475,25 @@ public class SetupCommand extends BaseCommandImpl
 			if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
 			{
 				configFile.append(serverName + "=" + config.getUrl() + "\n");
-				configFile.append(serverName + ".project=" + defaultZanataProject);
-				configFile.append(serverName + ".project-version=" + defaultZanataVersion);
+				configFile.append(serverName + ".project=" + defaultZanataProject + "\n");
+				configFile.append(serverName + ".project-version=" + defaultZanataVersion + "\n");
 			}
 			else
 			{
 				configFile.append(serverName + ".url=" + config.getUrl() + "\n");
+				
+				// Setup the username for the server
+				if (config.getUsername() != null && !config.getUsername().equals(""))
+					configFile.append(serverName + ".username=" + config.getUsername() + "\n");
+				else
+					configFile.append(serverName + ".username=\n");
+				
+				// Setup the token for the server
+				if (config.getToken() != null && !config.getToken().equals(""))
+					configFile.append(serverName + ".key=" + config.getToken() + "\n");
+				else
+					configFile.append(serverName + ".key=\n");
 			}
-			
-			// Setup the username for the server
-			if (config.getUsername() != null && !config.getUsername().equals(""))
-				configFile.append(serverName + ".username=" + config.getUsername() + "\n");
-			else
-				configFile.append(serverName + ".username=\n");
-			
-			// Setup the token for the server
-			if (config.getToken() != null && !config.getToken().equals(""))
-				configFile.append(serverName + ".key=" + config.getToken() + "\n");
-			else
-				configFile.append(serverName + ".key=\n");
 			
 			// Add a blank line to separate servers
 			configFile.append("\n");

@@ -21,21 +21,17 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.26.0";
+	public static final String BUILD = "0.26.1";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
 	public static final String DEFAULT_PUBLISH_COMMAND = "";
 	public static final String KOJI_NAME = "brew";
-	public static final String DEFAULT_ZANATA_URL = "";
 	
 	// Zanata Constants
 	public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
 	public static final String DEFAULT_ZANATA_VERSION = "1";
-	
-	// Publican environment variables
-	public static final String[] PUBLICAN_ENV_VARS = { "XML_CATALOG_FILES=/usr/share/sgml/docbook/xmlcatalog" };
-	
+
 	// Server based settings
 	public static final Integer MAX_LIST_RESULT = 50;
 	
@@ -255,4 +251,6 @@ public class Constants
 	
 	public static final String PUBLISH_MESSAGE_LONG_PARAM = "--message";
 	public static final String PUBLISH_MESSAGE_SHORT_PARAM = "-m";
+	
+	public static final String SHOW_REPORT_LONG_PARAM = "--show-report";
 }

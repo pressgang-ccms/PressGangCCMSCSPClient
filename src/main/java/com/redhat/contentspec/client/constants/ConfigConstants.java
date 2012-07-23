@@ -35,10 +35,10 @@ public class ConfigConstants
 			"[zanata]\n" +
 			"default=\n" +
 			"default.project=" + Constants.DEFAULT_ZANATA_PROJECT + "\n" +
-			"default.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n" +
+			"default.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n\n" +
 						
 			// Create the default translation options
 			"[publish]\n" +
-			"koji.huburl=" + Constants.DEFAULT_KOJIHUB_URL + "\n\n" +
-			"command=" + Constants.DEFAULT_PUBLISH_COMMAND + "\n";
+			"koji.huburl=" + Constants.DEFAULT_KOJIHUB_URL + "\n" +
+			"command=" + Constants.DEFAULT_PUBLISH_COMMAND + "\n\n";
 }

@@ -29,7 +29,6 @@ import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
 import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
 import com.redhat.ecs.commonutils.CollectionUtilities;
 import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.ecs.commonutils.ExceptionUtilities;
 import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
@@ -80,6 +79,9 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
 	protected Boolean fetchPubsnum = false;
+	
+	@Parameter(names = Constants.SHOW_REPORT_LONG_PARAM, description = "Show the Report chapter in the output.")
+	protected Boolean showReport = false;
 	
 	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata server to be associated with the Content Specification.")
 	private String zanataUrl = null;
@@ -227,6 +229,16 @@ public class BuildCommand extends BaseCommandImpl
 		this.fetchPubsnum = fetchPubsnum;
 	}
 	
+	public Boolean getShowReport()
+	{
+		return showReport;
+	}
+
+	public void setShowReport(final Boolean showReport)
+	{
+		this.showReport = showReport;
+	}
+
 	public String getZanataUrl()
 	{
 		return zanataUrl;
@@ -266,10 +278,11 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setSuppressErrorsPage(hideErrors);
 		buildOptions.setInsertSurveyLink(true);
 		buildOptions.setInsertBugzillaLinks(!hideBugLinks);
-		buildOptions.setPermissive(permissive);
 		buildOptions.setOverrides(overrides);
 		buildOptions.setSuppressContentSpecPage(hideContentSpec);
 		buildOptions.setInsertEditorLinks(insertEditorLinks);
+		buildOptions.setShowReportPage(showReport);
+		
 		return buildOptions;
 	}
 	
@@ -465,7 +478,6 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		catch (Exception e)
 		{
-			JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}

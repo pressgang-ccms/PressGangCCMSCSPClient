@@ -49,6 +49,15 @@ public class PushTranslationCommand extends BaseCommandImpl
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 	
+	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata server to be associated with the Content Specification.")
+	private String zanataUrl = null;
+	
+	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The zanata project name to be associated with the Content Specification.")
+	private String zanataProject = null;
+	
+	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the Content Specification.")
+	private String zanataVersion = null;
+	
 	private ContentSpecProcessor csp;
 	
 	public PushTranslationCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
@@ -64,6 +73,36 @@ public class PushTranslationCommand extends BaseCommandImpl
 	public void setIds(final List<Integer> ids)
 	{
 		this.ids = ids;
+	}
+	
+	public String getZanataUrl()
+	{
+		return zanataUrl;
+	}
+
+	public void setZanataUrl(final String zanataUrl)
+	{
+		this.zanataUrl = zanataUrl;
+	}
+
+	public String getZanataProject()
+	{
+		return zanataProject;
+	}
+
+	public void setZanataProject(final String zanataProject)
+	{
+		this.zanataProject = zanataProject;
+	}
+
+	public String getZanataVersion()
+	{
+		return zanataVersion;
+	}
+
+	public void setZanataVersion(final String zanataVersion)
+	{
+		this.zanataVersion = zanataVersion;
 	}
 
 	@Override
@@ -116,8 +155,44 @@ public class PushTranslationCommand extends BaseCommandImpl
 		}
 	}
 	
+	/**
+	 * Sets the zanata options applied by the command line
+	 * to the options that were set via configuration files.
+	 */
+	protected void setupZanataOptions()
+	{
+		// Set the zanata url
+		if (this.zanataUrl != null)
+		{
+			// Find the zanata server if the url is a reference to the zanata server name
+			for (final String serverName: clientConfig.getZanataServers().keySet())
+			{
+				if (serverName.equals(zanataUrl))
+				{
+					zanataUrl = clientConfig.getZanataServers().get(serverName).getUrl();
+					break;
+				}
+			}
+			
+			cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
+		}
+		
+		// Set the zanata project
+		if (this.zanataProject != null)
+		{
+			cspConfig.getZanataDetails().setProject(zanataProject);
+		}
+		
+		// Set the zanata version
+		if (this.zanataVersion != null)
+		{
+			cspConfig.getZanataDetails().setVersion(zanataVersion);
+		}
+	}
+	
 	protected boolean isValid()
 	{
+		setupZanataOptions();
 		final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
 		
 		// Check that we even have some zanata details.

@@ -673,7 +673,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			// Load the root content specs directory
 			if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals(""))
 			{
-				clientConfig.setRootDirectory(ClientUtilities.validateLocation(configReader.getProperty("directory.root").toString()));
+				clientConfig.setRootDirectory(ClientUtilities.validateDirLocation(configReader.getProperty("directory.root").toString()));
 			}
 		}
 		
