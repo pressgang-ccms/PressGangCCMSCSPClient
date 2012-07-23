@@ -138,7 +138,7 @@ public class PreviewCommand extends AssembleCommand
 			{
 				fileDirectory = ClientUtilities.validateDirLocation(this.getOutputPath());
 			}
-			else
+			else if (this.getOutputPath() != null)
 			{
 				final File file = new File(ClientUtilities.validateFilePath(this.getOutputPath()));
 				if (file.getParent() != null)
