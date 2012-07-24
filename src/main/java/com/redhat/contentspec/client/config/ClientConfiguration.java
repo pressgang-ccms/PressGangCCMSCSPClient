@@ -3,18 +3,16 @@ package com.redhat.contentspec.client.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.redhat.contentspec.client.constants.Constants;
-
 public class ClientConfiguration
 {
 	private String rootDirectory = "";
-	private String publicanBuildOptions = Constants.DEFAULT_PUBLICAN_OPTIONS;
-	private String publicanPreviewFormat = Constants.DEFAULT_PUBLICAN_FORMAT;
-	private String kojiHubUrl = Constants.DEFAULT_KOJIHUB_URL;
-	private String publishCommand = Constants.DEFAULT_PUBLISH_COMMAND;
+	private String publicanBuildOptions = null;
+	private String publicanPreviewFormat = null;
+	private String kojiHubUrl = null;
+	private String publishCommand = null;
 	
-	private String defaultZanataProject = Constants.DEFAULT_ZANATA_PROJECT;
-	private String defaultZanataVersion = Constants.DEFAULT_ZANATA_VERSION;
+	private String defaultZanataProject = null;
+	private String defaultZanataVersion = null;
 	
 	private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 	private Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();

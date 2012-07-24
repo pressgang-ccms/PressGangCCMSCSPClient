@@ -23,8 +23,8 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Validate a Content Specification")
-public class ValidateCommand extends BaseCommandImpl {
-
+public class ValidateCommand extends BaseCommandImpl
+{
 	@Parameter(converter = FileConverter.class, metaVar = "[FILE]")
 	private List<File> files = new ArrayList<File>();
 	
@@ -33,50 +33,59 @@ public class ValidateCommand extends BaseCommandImpl {
 	
 	private ContentSpecProcessor csp = null;
 	
-	public ValidateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+	public ValidateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
 		super(parser, cspConfig, clientConfig);
 	}
 
-	public List<File> getFiles() {
+	public List<File> getFiles()
+	{
 		return files;
 	}
 
-	public void setFiles(List<File> files) {
+	public void setFiles(final List<File> files)
+	{
 		this.files = files;
 	}
 
-	public Boolean getPermissive() {
+	public Boolean getPermissive()
+	{
 		return permissive;
 	}
 
-	public void setPermissive(Boolean permissive) {
+	public void setPermissive(final Boolean permissive)
+	{
 		this.permissive = permissive;
 	}
 
 	@Override
-	public void printError(String errorMsg, boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.VALIDATE_COMMAND_NAME);
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.VALIDATE_COMMAND_NAME);
 	}
 	
 	@Override
-	public RESTUserV1 authenticate(RESTReader reader) {
+	public RESTUserV1 authenticate(final RESTReader reader)
+	{
 		return authenticate(getUsername(), reader);
 	}
 	
-	public boolean isValid() {
+	public boolean isValid()
+	{
 		// We should have only one file
-		if (files.size() != 1) return false;
+		if (files.size() != 1)
+			return false;
 		
 		// Check that the file exists
-		File file = files.get(0);
-		if (file.isDirectory()) return false;
-		if (!file.exists()) return false;
-		if (!file.isFile()) return false;
+		final File file = files.get(0);
+		if (file.isDirectory() || !file.exists() || !file.isFile())
+			return false;
 		
 		return true;
 	}

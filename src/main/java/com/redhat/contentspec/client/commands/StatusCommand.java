@@ -23,30 +23,35 @@ import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Check the status of a local copy of a Content Specification compared to the server")
-public class StatusCommand extends BaseCommandImpl {
-	
+public class StatusCommand extends BaseCommandImpl
+{	
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 
-	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+	public StatusCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
+	{
 		super(parser, cspConfig, clientConfig);
 	}
 
-	public List<Integer> getIds() {
+	public List<Integer> getIds()
+	{
 		return ids;
 	}
 
-	public void setIds(List<Integer> ids) {
+	public void setIds(final List<Integer> ids)
+	{
 		this.ids = ids;
 	}
 
 	@Override
-	public void printHelp() {
+	public void printHelp()
+	{
 		printHelp(Constants.STATUS_COMMAND_NAME);
 	}
 
 	@Override
-	public void printError(final String errorMsg, final boolean displayHelp) {
+	public void printError(final String errorMsg, final boolean displayHelp)
+	{
 		printError(errorMsg, displayHelp, Constants.STATUS_COMMAND_NAME);
 	}
 

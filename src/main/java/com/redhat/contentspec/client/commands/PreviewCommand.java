@@ -39,9 +39,11 @@ public class PreviewCommand extends AssembleCommand
 		this.noAssemble = noAssemble;
 	}
 	
-	private boolean validateFormat()
+	private boolean validateFormat(final String previewFormat)
 	{
-		final String previewFormat = clientConfig.getPublicanPreviewFormat();
+		if (previewFormat == null)
+			return false;
+		
 		if (previewFormat.equals("html") || previewFormat.equals("html-single") || previewFormat.equals("pdf"))
 			return true;
 		else
@@ -56,7 +58,7 @@ public class PreviewCommand extends AssembleCommand
 		final String previewFormat = clientConfig.getPublicanPreviewFormat();
 		
 		// Check that the format can be previewed
-		if (!validateFormat())
+		if (!validateFormat(previewFormat))
 		{
 			printError(String.format(Constants.ERROR_UNSUPPORTED_FORMAT, previewFormat), false);
 			shutdown(Constants.EXIT_FAILURE);
@@ -170,7 +172,8 @@ public class PreviewCommand extends AssembleCommand
 		}
 		
 		// Good point to check for a shutdown
-		if (isAppShuttingDown()) {
+		if (isAppShuttingDown())
+		{
 			shutdown.set(true);
 			return;
 		}

@@ -154,6 +154,14 @@ public class SetupCommand extends BaseCommandImpl
 		return false;
 	}
 
+	/**
+	 * Setup the servers that are to be used by the program
+	 * by asking the user for specific details.
+	 * 
+	 * @param configFile
+	 * 					The output configuration file to add
+	 * 					the servers to.
+	 */
 	protected void setupServers(final StringBuilder configFile)
 	{
 		String username = "";

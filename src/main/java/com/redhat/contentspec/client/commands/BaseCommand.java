@@ -40,6 +40,22 @@ public interface BaseCommand extends ShutdownAbleApp
 	 */
 	void printError(String errorMsg, boolean displayHelp);
 	RESTUserV1 authenticate(RESTReader reader);
+	
+	/**
+	 * Do the main process working involved in running the
+	 * command by using the command line arguments and 
+	 * configuration files to do the command actions.
+	 * 
+	 * @param restManager
+	 * 				The REST manager containing the client
+	 * 				and actions to be used to access the 
+	 * 				REST Interface.
+	 * @param elm
+	 * 				The Error Logging Manager used to store 
+	 * 				logs and log messages.
+	 * @param user
+	 * 				The user to perform the actions for.
+	 */
 	void process(RESTManager restManager, ErrorLoggerManager elm, RESTUserV1 user);
 	
 	/**
