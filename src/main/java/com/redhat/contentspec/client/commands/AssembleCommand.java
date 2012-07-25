@@ -3,6 +3,14 @@ package com.redhat.contentspec.client.commands;
 import java.io.File;
 import java.io.IOException;
 
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.ZipUtilities;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -10,14 +18,7 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.client.utils.ZipUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Builds and Assembles a Content Specification so that it is ready to be previewed")
 public class AssembleCommand extends BuildCommand {

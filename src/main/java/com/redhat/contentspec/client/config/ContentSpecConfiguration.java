@@ -1,6 +1,6 @@
 package com.redhat.contentspec.client.config;
 
-import com.redhat.topicindex.zanata.ZanataDetails;
+import org.jboss.pressgangccms.zanata.ZanataDetails;
 
 public class ContentSpecConfiguration
 {

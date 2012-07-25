@@ -8,6 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
+import org.jboss.pressgangccms.utils.common.CollectionUtilities;
+import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.FileUtilities;
+import org.jboss.pressgangccms.zanata.ZanataDetails;
+
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -23,17 +33,8 @@ import com.redhat.contentspec.client.validator.OverrideValidator;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.j2koji.exceptions.KojiException;
-import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
 public class BuildCommand extends BaseCommandImpl

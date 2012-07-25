@@ -25,6 +25,11 @@ import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.DefaultConfigurationNode;
 import org.apache.log4j.Logger;
+import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -40,13 +45,6 @@ import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
-import com.redhat.contentspec.interfaces.ShutdownAbleApp;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.zanata.ZanataDetails;
 
 @SuppressWarnings("unused")
 public class Client implements BaseCommand, ShutdownAbleApp

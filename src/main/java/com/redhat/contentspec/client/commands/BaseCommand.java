@@ -1,10 +1,10 @@
 package com.redhat.contentspec.client.commands;
 
-import com.redhat.contentspec.interfaces.ShutdownAbleApp;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
+import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 
 public interface BaseCommand extends ShutdownAbleApp
 {

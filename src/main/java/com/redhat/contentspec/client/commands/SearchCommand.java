@@ -3,6 +3,15 @@ package com.redhat.contentspec.client.commands;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.pressgangccms.contentspec.constants.CSConstants;
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.components.ComponentTopicV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.utils.common.StringUtilities;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -10,15 +19,7 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.constants.CSConstants;
 import com.redhat.contentspec.processor.ContentSpecParser;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.StringUtilities;
-import com.redhat.topicindex.rest.entities.ComponentTopicV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
 
 @Parameters(commandDescription = "Search for a Content Specification")
 public class SearchCommand extends BaseCommandImpl

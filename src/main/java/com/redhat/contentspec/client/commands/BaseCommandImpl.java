@@ -2,14 +2,15 @@ package com.redhat.contentspec.client.commands;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 public abstract class BaseCommandImpl implements BaseCommand
 {
@@ -187,7 +188,7 @@ public abstract class BaseCommandImpl implements BaseCommand
 	 * @param reader The RESTReader that is used to connect via REST to the server.
 	 * @return The user object if they existed otherwise false.
 	 */
-	public RESTUserV1 authenticate(final String username, RESTReader reader)
+	public RESTUserV1 authenticate(final String username, final RESTReader reader)
 	{
 		if (username == null || username.equals(""))
 		{
