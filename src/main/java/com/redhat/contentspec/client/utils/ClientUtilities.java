@@ -545,23 +545,32 @@ public class ClientUtilities {
 		
 		// Search through each result to find the pubsnumber
 		final List<KojiBuild> builds = buildSearch.getResults();
-		Integer pubsnumber = 0;
-		for (final KojiBuild build : builds)
-		{
-			final String buildName = build.getName();
-			final String matchString = buildName.replace(packageName, "");
-			final NamedPattern pattern = NamedPattern.compile("(?<Pubsnumber>[0-9]+).*");
-			final NamedMatcher matcher = pattern.matcher(matchString);
-			
-			while (matcher.find())
-			{
-				final Integer buildPubsnumber = Integer.parseInt(matcher.group("Pubsnumber"));
-				if (buildPubsnumber > pubsnumber)
-					pubsnumber = buildPubsnumber;
-				break;
-			}
-		}
 		
-		return pubsnumber + 1;
+		// Check to see if we found any results
+		if (builds.size() > 0)
+		{
+			Integer pubsnumber = 0;
+			for (final KojiBuild build : builds)
+			{
+				final String buildName = build.getName();
+				final String matchString = buildName.replace(packageName, "");
+				final NamedPattern pattern = NamedPattern.compile("(?<Pubsnumber>[0-9]+).*");
+				final NamedMatcher matcher = pattern.matcher(matchString);
+				
+				while (matcher.find())
+				{
+					final Integer buildPubsnumber = Integer.parseInt(matcher.group("Pubsnumber"));
+					if (buildPubsnumber > pubsnumber)
+						pubsnumber = buildPubsnumber;
+					break;
+				}
+			}
+			
+			return pubsnumber + 1;
+		}
+		else
+		{
+			return null;
+		}
 	}
 }

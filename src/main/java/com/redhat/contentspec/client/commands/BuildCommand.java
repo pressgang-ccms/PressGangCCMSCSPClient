@@ -443,7 +443,10 @@ public class BuildCommand extends BaseCommandImpl
 			try
 			{
 				final Integer pubsnumber = ClientUtilities.getPubsnumberFromKoji(csp.getContentSpec(), cspConfig.getKojiHubUrl());
-				csp.getContentSpec().setPubsNumber(pubsnumber);
+				if (pubsnumber != null)
+				{
+					csp.getContentSpec().setPubsNumber(pubsnumber);
+				}
 			}
 			catch (MalformedURLException e)
 			{
