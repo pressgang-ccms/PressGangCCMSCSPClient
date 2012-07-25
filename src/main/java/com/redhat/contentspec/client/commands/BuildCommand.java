@@ -271,6 +271,9 @@ public class BuildCommand extends BaseCommandImpl
 
 	public CSDocbookBuildingOptions getBuildOptions()
 	{
+		// Fix up the values for overrides so file names are expanded
+		fixOverrides();
+		
 		final CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
 		buildOptions.setInjection(inlineInjection);
 		buildOptions.setInjectionTypes(injectionTypes);
@@ -579,6 +582,18 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		
 		return new File(ClientUtilities.validateFilePath(output));
+	}
+	
+	protected void fixOverrides()
+	{
+		final Map<String, String> overrides = this.getOverrides();
+		for (final String key : overrides.keySet())
+		{
+			if (key.equals(Constants.AUTHOR_GROUP_OVERRIDE) || key.equals(Constants.REVISION_HISTORY_OVERRIDE))
+			{
+				overrides.put(key, ClientUtilities.validateFilePath(overrides.get(key)));
+			}
+		}
 	}
 	
 	protected void saveBuildToFile(final byte[] buildZip, final File outputFile, final boolean buildingFromConfig)

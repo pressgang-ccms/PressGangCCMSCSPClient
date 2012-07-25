@@ -26,7 +26,12 @@ public class Constants
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
 	public static final String DEFAULT_PUBLISH_COMMAND = "";
-	public static final String KOJI_NAME = "brew";
+	public static final String KOJI_NAME = "koji";
+	
+	// Override keys
+	public static final String AUTHOR_GROUP_OVERRIDE = "Author_Group.xml";
+	public static final String REVISION_HISTORY_OVERRIDE = "Revision_History.xml";
+	public static final String PUBSNUMBER_OVERRIDE = "pubsnumber";
 	
 	// Zanata Constants
 	public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";

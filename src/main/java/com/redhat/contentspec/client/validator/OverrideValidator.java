@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
+import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.utils.ClientUtilities;
 
 public class OverrideValidator implements IParameterValidator
 {
@@ -14,9 +16,9 @@ public class OverrideValidator implements IParameterValidator
 		private static final long serialVersionUID = 8972067339176103456L;
 		
 		{
-			add("pubsnumber");
-			add("Author_Group.xml");
-			add("Revision_History.xml");
+			add(Constants.PUBSNUMBER_OVERRIDE);
+			add(Constants.AUTHOR_GROUP_OVERRIDE);
+			add(Constants.REVISION_HISTORY_OVERRIDE);
 		}
 	};
 	
@@ -31,15 +33,15 @@ public class OverrideValidator implements IParameterValidator
 			
 			if (validNames.contains(varName))
 			{
-				if (varName.equals("Author_Group.xml") || varName.equals("Revision_History.xml"))
+				if (varName.equals(Constants.AUTHOR_GROUP_OVERRIDE) || varName.equals(Constants.REVISION_HISTORY_OVERRIDE))
 				{
-					final File file = new File(varValue);
+					final File file = new File(ClientUtilities.validateFilePath(varValue));
 					if (!(file.exists() && file.isFile()))
 					{
 						throw new ParameterException("\"" + varName + "\" override is not a valid file.");
 					}
 				}
-				else if (varName.equals("pubsnumber"))
+				else if (varName.equals(Constants.PUBSNUMBER_OVERRIDE))
 				{
 					try
 					{
