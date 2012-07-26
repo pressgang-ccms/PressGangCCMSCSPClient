@@ -21,12 +21,12 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.26.1";
-	public static final String DEFAULT_PROD_SERVER = "";
-	public static final String DEFAULT_TEST_SERVER = "";
-	public static final String DEFAULT_KOJIHUB_URL = "";
-	public static final String DEFAULT_PUBLISH_COMMAND = "";
-	public static final String KOJI_NAME = "koji";
+	public static final String BUILD = "0.26.2";
+	public static final String DEFAULT_PROD_SERVER = "http://skynet.usersys.redhat.com:8080/TopicIndex/";
+	public static final String DEFAULT_TEST_SERVER = "http://skynet-dev.usersys.redhat.com:8080/TopicIndex/";
+	public static final String DEFAULT_KOJIHUB_URL = "http://brewhub.devel.redhat.com/brewhub";
+	public static final String DEFAULT_PUBLISH_COMMAND = "rhpkg publican-build --lang=en-US";
+	public static final String KOJI_NAME = "brew";
 	
 	// Override keys
 	public static final String AUTHOR_GROUP_OVERRIDE = "Author_Group.xml";
