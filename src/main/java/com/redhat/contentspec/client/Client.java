@@ -188,7 +188,8 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			}
 			
 			// Load the configuration options. If it fails then stop the program
-			if (!setConfigOptions(command.getConfigLocation())) {
+			if (!setConfigOptions(command.getConfigLocation()))
+			{
 				shutdown(Constants.EXIT_CONFIG_ERROR);
 			}
 			
