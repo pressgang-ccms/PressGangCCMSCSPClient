@@ -8,6 +8,7 @@ public class ClientConfiguration
 	private String rootDirectory = "";
 	private String publicanBuildOptions = null;
 	private String publicanPreviewFormat = null;
+	private String publicanCommonContentDirectory = null;
 	private String kojiHubUrl = null;
 	private String publishCommand = null;
 	
@@ -105,5 +106,15 @@ public class ClientConfiguration
 	public void setDefaultZanataProject(final String defaultZanataProject)
 	{
 		this.defaultZanataProject = defaultZanataProject;
+	}
+
+	public String getPublicanCommonContentDirectory()
+	{
+		return publicanCommonContentDirectory;
+	}
+
+	public void setPublicanCommonContentDirectory(final String publicanCommonContentDirectory)
+	{
+		this.publicanCommonContentDirectory = publicanCommonContentDirectory;
 	}
 }

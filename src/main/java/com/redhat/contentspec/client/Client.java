@@ -689,6 +689,14 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			{
 				clientConfig.setPublicanPreviewFormat(configReader.getProperty("publican.preview..format").toString());
 			}
+			if (configReader.getProperty("publican.common_content") != null && !configReader.getProperty("publican.common_content").equals(""))
+			{
+				clientConfig.setPublicanCommonContentDirectory(ClientUtilities.validateDirLocation(configReader.getProperty("publican.common_content").toString()));
+			}
+			else
+			{
+				clientConfig.setPublicanCommonContentDirectory(Constants.LINUX_PUBLICAN_COMMON_CONTENT);
+			}
 		}
 		else
 		{

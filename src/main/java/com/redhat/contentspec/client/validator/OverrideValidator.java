@@ -4,9 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.pressgangccms.contentspec.constants.CSConstants;
+
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
-import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 
 public class OverrideValidator implements IParameterValidator
@@ -16,9 +17,9 @@ public class OverrideValidator implements IParameterValidator
 		private static final long serialVersionUID = 8972067339176103456L;
 		
 		{
-			add(Constants.PUBSNUMBER_OVERRIDE);
-			add(Constants.AUTHOR_GROUP_OVERRIDE);
-			add(Constants.REVISION_HISTORY_OVERRIDE);
+			add(CSConstants.PUBSNUMBER_OVERRIDE);
+			add(CSConstants.AUTHOR_GROUP_OVERRIDE);
+			add(CSConstants.REVISION_HISTORY_OVERRIDE);
 		}
 	};
 	
@@ -33,7 +34,7 @@ public class OverrideValidator implements IParameterValidator
 			
 			if (validNames.contains(varName))
 			{
-				if (varName.equals(Constants.AUTHOR_GROUP_OVERRIDE) || varName.equals(Constants.REVISION_HISTORY_OVERRIDE))
+				if (varName.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || varName.equals(CSConstants.REVISION_HISTORY_OVERRIDE))
 				{
 					final File file = new File(ClientUtilities.validateFilePath(varValue));
 					if (!(file.exists() && file.isFile()))
@@ -41,7 +42,7 @@ public class OverrideValidator implements IParameterValidator
 						throw new ParameterException("\"" + varName + "\" override is not a valid file.");
 					}
 				}
-				else if (varName.equals(Constants.PUBSNUMBER_OVERRIDE))
+				else if (varName.equals(CSConstants.PUBSNUMBER_OVERRIDE))
 				{
 					try
 					{
