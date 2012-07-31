@@ -1,11 +1,13 @@
 package com.redhat.contentspec.client.commands;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
 import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.sort.RevisionSort;
 import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgangccms.utils.common.CollectionUtilities;
@@ -148,6 +150,9 @@ public class RevisionsCommand extends BaseCommandImpl
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
+		// Sort the revisions
+		Collections.sort(revisions, new RevisionSort());
+		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
 			shutdown.set(true);
@@ -160,7 +165,8 @@ public class RevisionsCommand extends BaseCommandImpl
 		{
 			final Number rev = (Number)o[0];
 			final Date revDate = (Date)o[1];
-			list.addRevision(new Revision((Integer) rev, revDate));
+			final String type = (String)o[2];
+			list.addRevision(new Revision((Integer) rev, revDate, type));
 		}
 		
 		// Display the list

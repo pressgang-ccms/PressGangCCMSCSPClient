@@ -1,66 +1,79 @@
 package com.redhat.contentspec.client.entities;
 
-public class Spec {
-	
+public class Spec
+{
 	private Integer id = 0;
 	private String title = null;
 	private String product = null;
 	private String version = null;
 	private String creator = null;
-	
-	public Spec(Integer id, String title, String product, String version, String creator) {
+
+	public Spec(final Integer id, final String title, final String product, final String version, final String creator)
+	{
 		this.id = id;
 		this.title = title;
 		this.product = product;
 		this.version = version;
 		this.creator = creator;
 	}
-	
-	public Spec() {
+
+	public Spec()
+	{
 		
 	}
 
-	public Integer getId() {
+	public Integer getId()
+	{
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(final Integer id)
+	{
 		this.id = id;
 	}
-	
-	public String getTitle() {
+
+	public String getTitle()
+	{
 		return title;
 	}
 
-	public void setTitle(String title) {
+	public void setTitle(final String title)
+	{
 		this.title = title;
 	}
 
-	public String getProduct() {
+	public String getProduct()
+	{
 		return product;
 	}
 
-	public void setProduct(String product) {
+	public void setProduct(final String product)
+	{
 		this.product = product;
 	}
 
-	public String getVersion() {
+	public String getVersion()
+	{
 		return version;
 	}
 
-	public void setVersion(String version) {
+	public void setVersion(final String version)
+	{
 		this.version = version;
 	}
-	
-	public String toString() {
+
+	public String toString()
+	{
 		return String.format("ID: %s, Title: %s, Product: %s, Version: %s, Created By: %s", Integer.toString(id), title, product, version, creator);
 	}
 
-	public String getCreator() {
+	public String getCreator()
+	{
 		return creator;
 	}
 
-	public void setCreator(String creator) {
+	public void setCreator(final String creator)
+	{
 		this.creator = creator;
 	}
 }

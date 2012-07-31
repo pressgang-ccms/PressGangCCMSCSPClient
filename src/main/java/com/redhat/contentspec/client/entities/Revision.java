@@ -3,38 +3,65 @@ package com.redhat.contentspec.client.entities;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Revision {
+public class Revision
+{
 	
 	private Integer id = 0;
 	private Date date = null;
+	private String type = null;
 	
-	public Revision(Integer id, Date date) {
+	public Revision(final Integer id, final Date date, final String type)
+	{
 		this.id = id;
 		this.date = date;
+		this.setType(type);
 	}
 	
-	public Revision() {
+	public Revision()
+	{
 		
 	}
 
-	public Integer getId() {
+	public Integer getId()
+	{
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(final Integer id)
+	{
 		this.id = id;
 	}
 	
-	public Date getDate() {
+	public Date getDate()
+	{
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(final Date date)
+	{
 		this.date = date;
 	}
 	
-	public String toString() {
-		SimpleDateFormat dateFormatter = new SimpleDateFormat("EEE, MMM d, yyyy 'at' hh:mm:ss a");
-		return String.format("-> ID: %d on %s", id, dateFormatter.format(date));
+	public String getType()
+	{
+		return type;
+	}
+
+	public void setType(final String type)
+	{
+		this.type = type;
+	}
+
+	public String toString()
+	{
+		final SimpleDateFormat dateFormatter = new SimpleDateFormat("EEE, MMM dd, yyyy 'at' hh:mm:ss a");
+		if (type == null || type.isEmpty())
+		{
+			return String.format("-> ID: %6d on %s", id, dateFormatter.format(date));
+		}
+		else
+		{
+			return String.format("-> ID: %6d [%14s] on %s", id, type, dateFormatter.format(date));
+		}
 	}
 }
