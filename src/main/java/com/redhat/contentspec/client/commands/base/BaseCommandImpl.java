@@ -1,4 +1,4 @@
-package com.redhat.contentspec.client.commands;
+package com.redhat.contentspec.client.commands.base;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

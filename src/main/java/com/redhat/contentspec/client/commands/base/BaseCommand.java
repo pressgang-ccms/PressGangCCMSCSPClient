@@ -1,4 +1,4 @@
-package com.redhat.contentspec.client.commands;
+package com.redhat.contentspec.client.commands.base;
 
 import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
