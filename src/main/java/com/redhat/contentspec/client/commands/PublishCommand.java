@@ -241,7 +241,7 @@ public class PublishCommand extends BuildCommand
 			
 			// Replace the locale in the build options if the locale has been set
 			if (getLocale() != null)
-				publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--lang=" + getLocale());
+				publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 			
 			try
 			{
@@ -263,7 +263,7 @@ public class PublishCommand extends BuildCommand
 		
 		// Replace the locale in the build options if the locale has been set
 		if (getLocale() != null)
-			publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--lang=" + getLocale());
+			publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 		
 		// Add the message to the script
 		if (message != null)
