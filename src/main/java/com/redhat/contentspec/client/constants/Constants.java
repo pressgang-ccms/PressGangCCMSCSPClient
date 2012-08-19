@@ -15,7 +15,7 @@ public class Constants
 	public static final String TEST_SERVER_NAME = "test";
 	public static final String DEFAULT_CONFIG_ZIP_LOCATION = "assembly" + File.separator;
 	public static final String DEFAULT_CONFIG_PUBLICAN_LOCATION = "assembly" + File.separator + "publican" + File.separator;
-	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --format=html-single";
+	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --formats=html-single";
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
@@ -122,6 +122,7 @@ public class Constants
 	public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG		= "The zanata details specified in the csprocessor.cfg and/or zanata authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
 	public static final String ERROR_ZANATA_PUSH_FAILED_MSG			= "Pushing topics to zanata failed.";
 	public static final String ERROR_INVALID_ZANATA_CONFIG_MSG		= "No Zanata Project exists for the \"%s\" project at version \"%s\" from: %s";
+	public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG		= "Failed to load the formatting XML Element Properties.";
 	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";
