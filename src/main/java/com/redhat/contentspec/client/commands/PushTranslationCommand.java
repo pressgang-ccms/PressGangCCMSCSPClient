@@ -1,10 +1,12 @@
 package com.redhat.contentspec.client.commands;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.jboss.pressgangccms.contentspec.ContentSpec;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
@@ -13,6 +15,7 @@ import org.jboss.pressgangccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgangccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgangccms.rest.v1.collections.RESTTopicCollectionV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTStringConstantV1;
 import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
 import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
@@ -20,6 +23,7 @@ import org.jboss.pressgangccms.utils.common.CollectionUtilities;
 import org.jboss.pressgangccms.utils.common.DocBookUtilities;
 import org.jboss.pressgangccms.utils.common.HashUtilities;
 import org.jboss.pressgangccms.utils.common.XMLUtilities;
+import org.jboss.pressgangccms.utils.constants.CommonConstants;
 import org.jboss.pressgangccms.utils.structures.Pair;
 import org.jboss.pressgangccms.utils.structures.StringToNodeCollection;
 import org.jboss.pressgangccms.zanata.ZanataConstants;
@@ -355,6 +359,26 @@ public class PushTranslationCommand extends BaseCommandImpl
 		boolean error = false;
 		final ZanataInterface zanataInterface = new ZanataInterface();
 		
+		/* Build the formatting properties */
+		final Properties prop = new Properties();
+		try
+		{
+			final RESTStringConstantV1 xmlElementProperties = restManager.getRESTClient().getJSONStringConstant(CommonConstants.XML_ELEMENTS_STRING_CONSTANT_ID, "");
+			prop.load(new StringReader(xmlElementProperties.getValue()));
+		}
+		catch (Exception e)
+		{
+			printError(Constants.ERROR_FAILED_LOAD_XML_PROPS_MSG, false);
+			System.exit(Constants.EXIT_FAILURE);
+		}
+		final String verbatimElementsString = prop.getProperty(CommonConstants.VERBATIM_XML_ELEMENTS_PROPERTY_KEY);
+		final String inlineElementsString = prop.getProperty(CommonConstants.INLINE_XML_ELEMENTS_PROPERTY_KEY);
+		final String contentsInlineElementsString = prop.getProperty(CommonConstants.CONTENTS_INLINE_XML_ELEMENTS_PROPERTY_KEY);
+		
+		final List<String> verbatimElements = verbatimElementsString == null ? new ArrayList<String>() : CollectionUtilities.toArrayList(verbatimElementsString.split("[\\s]*,[\\s]*"));
+		final List<String> inlineElements = inlineElementsString == null ? new ArrayList<String>() : CollectionUtilities.toArrayList(inlineElementsString.split("[\\s]*,[\\s]*"));
+		final List<String> contentsInlineElements = contentsInlineElementsString == null ? new ArrayList<String>() : CollectionUtilities.toArrayList(contentsInlineElementsString.split("[\\s]*,[\\s]*"));
+		
 		// Convert all the topics to DOM Documents first so we know if any are invalid
 		for (final RESTTopicV1 topic : topics.getItems())
 		{
@@ -365,7 +389,9 @@ public class PushTranslationCommand extends BaseCommandImpl
 			Document doc = null;
 			try
 			{
-				doc = XMLUtilities.convertStringToDocument(topic.getXml());
+				final Document tempDoc = XMLUtilities.convertStringToDocument(topic.getXml());
+				final String fixedXML = XMLUtilities.convertNodeToString(tempDoc, verbatimElements, inlineElements, contentsInlineElements, true);
+				doc = XMLUtilities.convertStringToDocument(fixedXML);
 			}
 			catch (Exception e)
 			{
