@@ -25,6 +25,11 @@ import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.DefaultConfigurationNode;
 import org.apache.log4j.Logger;
+import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -32,6 +37,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.redhat.contentspec.client.commands.*;
+import com.redhat.contentspec.client.commands.base.BaseCommand;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.config.ServerConfiguration;
@@ -40,13 +46,6 @@ import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
-import com.redhat.contentspec.interfaces.ShutdownAbleApp;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.zanata.ZanataDetails;
 
 @SuppressWarnings("unused")
 public class Client implements BaseCommand, ShutdownAbleApp
@@ -190,7 +189,8 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			}
 			
 			// Load the configuration options. If it fails then stop the program
-			if (!setConfigOptions(command.getConfigLocation())) {
+			if (!setConfigOptions(command.getConfigLocation()))
+			{
 				shutdown(Constants.EXIT_CONFIG_ERROR);
 			}
 			
@@ -688,6 +688,14 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			if (configReader.getProperty("publican.preview..format") != null && !configReader.getProperty("publican.preview..format").equals(""))
 			{
 				clientConfig.setPublicanPreviewFormat(configReader.getProperty("publican.preview..format").toString());
+			}
+			if (configReader.getProperty("publican.common_content") != null && !configReader.getProperty("publican.common_content").equals(""))
+			{
+				clientConfig.setPublicanCommonContentDirectory(ClientUtilities.validateDirLocation(configReader.getProperty("publican.common_content").toString()));
+			}
+			else
+			{
+				clientConfig.setPublicanCommonContentDirectory(Constants.LINUX_PUBLICAN_COMMON_CONTENT);
 			}
 		}
 		else

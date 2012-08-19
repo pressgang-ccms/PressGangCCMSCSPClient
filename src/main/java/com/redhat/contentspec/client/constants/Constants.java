@@ -15,23 +15,21 @@ public class Constants
 	public static final String TEST_SERVER_NAME = "test";
 	public static final String DEFAULT_CONFIG_ZIP_LOCATION = "assembly" + File.separator;
 	public static final String DEFAULT_CONFIG_PUBLICAN_LOCATION = "assembly" + File.separator + "publican" + File.separator;
-	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --format=html-single";
+	public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --formats=html-single";
 	public static final String DEFAULT_PUBLICAN_FORMAT= "html-single";
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.26.2";
-	public static final String DEFAULT_PROD_SERVER = "http://skynet.usersys.redhat.com:8080/TopicIndex/";
-	public static final String DEFAULT_TEST_SERVER = "http://skynet-dev.usersys.redhat.com:8080/TopicIndex/";
-	public static final String DEFAULT_KOJIHUB_URL = "http://brewhub.devel.redhat.com/brewhub";
-	public static final String DEFAULT_PUBLISH_COMMAND = "rhpkg publican-build --lang=en-US";
-	public static final String KOJI_NAME = "brew";
+	public static final String BUILD = "0.26.4";
+	public static final String DEFAULT_PROD_SERVER = "";
+	public static final String DEFAULT_TEST_SERVER = "";
+	public static final String DEFAULT_KOJIHUB_URL = "";
+	public static final String DEFAULT_PUBLISH_COMMAND = "";
+	public static final String KOJI_NAME = "koji";
 	
-	// Override keys
-	public static final String AUTHOR_GROUP_OVERRIDE = "Author_Group.xml";
-	public static final String REVISION_HISTORY_OVERRIDE = "Revision_History.xml";
-	public static final String PUBSNUMBER_OVERRIDE = "pubsnumber";
+	// Publican Common Content Defaults
+	public static final String LINUX_PUBLICAN_COMMON_CONTENT = "/usr/share/publican/Common_Content/";
 	
 	// Zanata Constants
 	public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
@@ -124,6 +122,7 @@ public class Constants
 	public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG		= "The zanata details specified in the csprocessor.cfg and/or zanata authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
 	public static final String ERROR_ZANATA_PUSH_FAILED_MSG			= "Pushing topics to zanata failed.";
 	public static final String ERROR_INVALID_ZANATA_CONFIG_MSG		= "No Zanata Project exists for the \"%s\" project at version \"%s\" from: %s";
+	public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG		= "Failed to load the formatting XML Element Properties.";
 	
 	// Info Messages
 	public static final String ZIP_SAVED_ERRORS_MSG			= "Content Specification successfully built with %s Errors and %s Warnings";
@@ -227,35 +226,37 @@ public class Constants
 	public static final String NO_ASSEMBLE_LONG_PARAM = "--no-assemble";
 	
 	public static final String LIMIT_LONG_PARAM = "--limit";
-	
+
 	public static final String HIDE_OUTPUT_LONG_PARAM = "--hide-output";
-	
+
 	public static final String NO_CREATE_CSPROCESSOR_CFG_LONG_PARAM = "--no-csprocessor-cfg";
-	
+
 	public static final String DEBUG_LONG_PARAM = "--debug";
-	
+
 	public static final String COMMENTED_LONG_PARAM = "--commented";
-	
+
 	public static final String VERSION_LONG_PARAM = "--version";
-	
+
 	public static final String EMPTY_LEVELS_LONG_PARAM = "--empty-levels";
-	
+
 	public static final String LOCALE_LONG_PARAM = "--lang";
-	
+
 	public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
-	
+
 	public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
-	
+
 	public static final String PUBLICAN_BUILD_LONG_PARAM = "--publican-build";
-	
+
 	public static final String ZANATA_PROJECT_LONG_PARAM = "--zanata-project";
-	
+
 	public static final String ZANATA_PROJECT_VERSION_LONG_PARAM = "--zanata-version";
-	
+
 	public static final String ZANATA_SERVER_LONG_PARAM = "--zanata-server";
-	
+
 	public static final String PUBLISH_MESSAGE_LONG_PARAM = "--message";
 	public static final String PUBLISH_MESSAGE_SHORT_PARAM = "-m";
-	
+
 	public static final String SHOW_REPORT_LONG_PARAM = "--show-report";
+
+	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
 }

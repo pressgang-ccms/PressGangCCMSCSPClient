@@ -8,7 +8,7 @@
   </parent>
   <groupId>com.redhat.contentspec</groupId>
   <artifactId>csprocessor-client</artifactId>
-  <version>0.26.2-SNAPSHOT</version>
+  <version>0.26.4-SNAPSHOT</version>
   <name>Content Specification Processor Client</name>
   
   <url>http://www.github.com/lnewson/csprocessor</url>
@@ -54,13 +54,13 @@
 	<dependency>
 		<groupId>com.redhat.contentspec</groupId>
 		<artifactId>csbuilder</artifactId>
-		<version>0.1.5-SNAPSHOT</version>
+		<version>0.1.6-SNAPSHOT</version>
 	</dependency>
       
 	<dependency>
 		<groupId>com.redhat.contentspec</groupId>
 		<artifactId>csprocessor</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.0.3-SNAPSHOT</version>
 	</dependency>
 	
 	<dependency>
@@ -74,7 +74,35 @@
       	<artifactId>jcommander-extended</artifactId>
       	<version>1.24-SNAPSHOT</version>
 	</dependency>
-      <!-- === -->
+
+    <!-- Named-Regexp Library -->
+	<dependency>
+		<groupId>com.google.code.regexp</groupId>
+		<artifactId>named-regexp</artifactId>
+		<version>0.0.2-SNAPSHOT</version>
+	</dependency>
+	
+	<!-- RESTEasy Libraries -->
+    <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-atom-provider</artifactId>
+        <version>2.3.4.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-jackson-provider</artifactId>
+        <version>2.3.4.Final</version>
+    </dependency>
+    <dependency>
+		<groupId>org.jboss.resteasy</groupId>
+		<artifactId>resteasy-jaxrs</artifactId>
+		<version>2.3.4.Final</version>
+    </dependency>
+	<dependency>
+	    <groupId>javax.ws.rs</groupId>
+	    <artifactId>javax.ws.rs-api</artifactId>
+	    <version>2.0-m04</version>
+	</dependency>
 
 	<!-- Apache Commons Libraries -->
   	<dependency>
@@ -88,13 +116,13 @@
       	<artifactId>commons-configuration</artifactId>
       	<version>1.7</version>
     </dependency>
-      
+
     <dependency>
       	<groupId>com.ibm.icu</groupId>
       	<artifactId>icu4j</artifactId>
       	<version>4.8.1.1</version>
 	</dependency>
-    
+
     <dependency>
    		<groupId>log4j</groupId>
      	<artifactId>log4j</artifactId>

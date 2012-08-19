@@ -8,6 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.pressgangccms.contentspec.constants.CSConstants;
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
+import org.jboss.pressgangccms.utils.common.CollectionUtilities;
+import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.FileUtilities;
+import org.jboss.pressgangccms.zanata.ZanataDetails;
+
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -15,6 +26,7 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.CommaParameterSplitter;
 import com.beust.jcommander.internal.Maps;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
+import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -23,17 +35,8 @@ import com.redhat.contentspec.client.validator.OverrideValidator;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
 import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.ecs.commonutils.FileUtilities;
 import com.redhat.j2koji.exceptions.KojiException;
-import com.redhat.topicindex.rest.entities.interfaces.RESTBaseTopicV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
 public class BuildCommand extends BaseCommandImpl
@@ -91,6 +94,9 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the Content Specification.")
 	private String zanataVersion = null;
+	
+	@Parameter(names = Constants.COMMON_CONTENT_LONG_PARAM, hidden = true)
+	private String commonContentLocale = null;
 		
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
@@ -269,6 +275,16 @@ public class BuildCommand extends BaseCommandImpl
 		this.zanataVersion = zanataVersion;
 	}
 
+	public String getCommonContentLocale()
+	{
+		return commonContentLocale;
+	}
+
+	public void setCommonContentLocale(final String commonContentLocale)
+	{
+		this.commonContentLocale = commonContentLocale;
+	}
+
 	public CSDocbookBuildingOptions getBuildOptions()
 	{
 		// Fix up the values for overrides so file names are expanded
@@ -285,10 +301,12 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setSuppressContentSpecPage(hideContentSpec);
 		buildOptions.setInsertEditorLinks(insertEditorLinks);
 		buildOptions.setShowReportPage(showReport);
+		buildOptions.setCommonContentLocale(commonContentLocale);
+		buildOptions.setCommonContentDirectory(clientConfig.getPublicanCommonContentDirectory());
 		
 		return buildOptions;
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	protected String getContentSpecString(final RESTReader reader, final String id)
 	{
@@ -341,7 +359,7 @@ public class BuildCommand extends BaseCommandImpl
 		
 		return contentSpec;
 	}
-	
+
 	/**
 	 * Sets the zanata options applied by the command line
 	 * to the options that were set via configuration files.
@@ -383,7 +401,7 @@ public class BuildCommand extends BaseCommandImpl
 		final long startTime = System.currentTimeMillis();
 		final RESTReader reader = restManager.getReader();
 		boolean buildingFromConfig = false;
-		
+
 		// Add the details for the csprocessor.cfg if no ids are specified
 		if (loadFromCSProcessorCfg())
 		{
@@ -397,7 +415,7 @@ public class BuildCommand extends BaseCommandImpl
 				}
 			}
 		}
-		
+
 		// Check that an id was entered
 		if (ids.size() == 0)
 		{
@@ -409,23 +427,23 @@ public class BuildCommand extends BaseCommandImpl
 			printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
 			shutdown(Constants.EXIT_ARGUMENT_ERROR);
 		}
-		
+
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
 		{
 			shutdown.set(true);
 			return;
 		}
-		
+
 		final String contentSpec = getContentSpecString(reader, ids.get(0));
-		
+
 		// Good point to check for a shutdown
 		if (isAppShuttingDown())
 		{
 			shutdown.set(true);
 			return;
 		}
-		
+
 		// Validate that the content spec is valid
 		boolean success = validateContentSpec(restManager, elm, user, contentSpec);
 		
@@ -437,7 +455,7 @@ public class BuildCommand extends BaseCommandImpl
 		{
 			shutdown(Constants.EXIT_TOPIC_INVALID);
 		}
-		
+
 		// Pull in the pubsnumber from koji if the option is set
 		if (fetchPubsnum)
 		{
@@ -589,7 +607,7 @@ public class BuildCommand extends BaseCommandImpl
 		final Map<String, String> overrides = this.getOverrides();
 		for (final String key : overrides.keySet())
 		{
-			if (key.equals(Constants.AUTHOR_GROUP_OVERRIDE) || key.equals(Constants.REVISION_HISTORY_OVERRIDE))
+			if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE))
 			{
 				overrides.put(key, ClientUtilities.validateFilePath(overrides.get(key)));
 			}

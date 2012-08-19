@@ -1,11 +1,34 @@
 package com.redhat.contentspec.client.commands;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import org.jboss.pressgangccms.contentspec.ContentSpec;
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.structures.StringToCSNodeCollection;
+import org.jboss.pressgangccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.collections.RESTTopicCollectionV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTStringConstantV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.utils.common.CollectionUtilities;
+import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.HashUtilities;
+import org.jboss.pressgangccms.utils.common.XMLUtilities;
+import org.jboss.pressgangccms.utils.constants.CommonConstants;
+import org.jboss.pressgangccms.utils.structures.Pair;
+import org.jboss.pressgangccms.utils.structures.StringToNodeCollection;
+import org.jboss.pressgangccms.zanata.ZanataConstants;
+import org.jboss.pressgangccms.zanata.ZanataDetails;
+import org.jboss.pressgangccms.zanata.ZanataInterface;
 import org.w3c.dom.Document;
 import org.zanata.common.ContentType;
 import org.zanata.common.LocaleId;
@@ -16,8 +39,7 @@ import org.zanata.rest.dto.resource.TextFlow;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.redhat.contentspec.ContentSpec;
-import com.redhat.contentspec.builder.utils.XMLUtilities;
+import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -25,23 +47,6 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser.ParsingMode;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.ContentSpecUtilities;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonstructures.Pair;
-import com.redhat.ecs.commonstructures.StringToCSNodeCollection;
-import com.redhat.ecs.commonstructures.StringToNodeCollection;
-import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.ecs.commonutils.HashUtilities;
-import com.redhat.ecs.constants.CommonConstants;
-import com.redhat.topicindex.rest.collections.RESTTopicCollectionV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTTranslatedTopicV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
-import com.redhat.topicindex.zanata.ZanataDetails;
-import com.redhat.topicindex.zanata.ZanataInterface;
 
 @Parameters(commandDescription = "Push a Content Specification and it's topics to Zanata for translation.")
 public class PushTranslationCommand extends BaseCommandImpl
@@ -209,11 +214,11 @@ public class PushTranslationCommand extends BaseCommandImpl
 		}
 		
 		// At this point the zanata details are valid, so save the details.
-		System.setProperty(CommonConstants.ZANATA_SERVER_PROPERTY, zanataDetails.getServer());
-		System.setProperty(CommonConstants.ZANATA_PROJECT_PROPERTY, zanataDetails.getProject());
-		System.setProperty(CommonConstants.ZANATA_PROJECT_VERSION_PROPERTY, zanataDetails.getVersion());
-		System.setProperty(CommonConstants.ZANATA_USERNAME_PROPERTY, zanataDetails.getUsername());
-		System.setProperty(CommonConstants.ZANATA_TOKEN_PROPERTY, zanataDetails.getToken());
+		System.setProperty(ZanataConstants.ZANATA_SERVER_PROPERTY, zanataDetails.getServer());
+		System.setProperty(ZanataConstants.ZANATA_PROJECT_PROPERTY, zanataDetails.getProject());
+		System.setProperty(ZanataConstants.ZANATA_PROJECT_VERSION_PROPERTY, zanataDetails.getVersion());
+		System.setProperty(ZanataConstants.ZANATA_USERNAME_PROPERTY, zanataDetails.getUsername());
+		System.setProperty(ZanataConstants.ZANATA_TOKEN_PROPERTY, zanataDetails.getToken());
 		
 		return true;
 	}
@@ -354,6 +359,26 @@ public class PushTranslationCommand extends BaseCommandImpl
 		boolean error = false;
 		final ZanataInterface zanataInterface = new ZanataInterface();
 		
+		/* Build the formatting properties */
+		final Properties prop = new Properties();
+		try
+		{
+			final RESTStringConstantV1 xmlElementProperties = restManager.getRESTClient().getJSONStringConstant(CommonConstants.XML_ELEMENTS_STRING_CONSTANT_ID, "");
+			prop.load(new StringReader(xmlElementProperties.getValue()));
+		}
+		catch (Exception e)
+		{
+			printError(Constants.ERROR_FAILED_LOAD_XML_PROPS_MSG, false);
+			System.exit(Constants.EXIT_FAILURE);
+		}
+		final String verbatimElementsString = prop.getProperty(CommonConstants.VERBATIM_XML_ELEMENTS_PROPERTY_KEY);
+		final String inlineElementsString = prop.getProperty(CommonConstants.INLINE_XML_ELEMENTS_PROPERTY_KEY);
+		final String contentsInlineElementsString = prop.getProperty(CommonConstants.CONTENTS_INLINE_XML_ELEMENTS_PROPERTY_KEY);
+		
+		final List<String> verbatimElements = verbatimElementsString == null ? new ArrayList<String>() : CollectionUtilities.toArrayList(verbatimElementsString.split("[\\s]*,[\\s]*"));
+		final List<String> inlineElements = inlineElementsString == null ? new ArrayList<String>() : CollectionUtilities.toArrayList(inlineElementsString.split("[\\s]*,[\\s]*"));
+		final List<String> contentsInlineElements = contentsInlineElementsString == null ? new ArrayList<String>() : CollectionUtilities.toArrayList(contentsInlineElementsString.split("[\\s]*,[\\s]*"));
+		
 		// Convert all the topics to DOM Documents first so we know if any are invalid
 		for (final RESTTopicV1 topic : topics.getItems())
 		{
@@ -364,7 +389,9 @@ public class PushTranslationCommand extends BaseCommandImpl
 			Document doc = null;
 			try
 			{
-				doc = XMLUtilities.convertStringToDocument(topic.getXml());
+				final Document tempDoc = XMLUtilities.convertStringToDocument(topic.getXml());
+				final String fixedXML = XMLUtilities.convertNodeToString(tempDoc, verbatimElements, inlineElements, contentsInlineElements, true);
+				doc = XMLUtilities.convertStringToDocument(fixedXML);
 			}
 			catch (Exception e)
 			{

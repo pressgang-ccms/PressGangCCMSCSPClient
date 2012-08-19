@@ -1,22 +1,26 @@
 package com.redhat.contentspec.client.commands;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.sort.RevisionSort;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.utils.common.CollectionUtilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Revision;
 import com.redhat.contentspec.client.entities.RevisionList;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.CollectionUtilities;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Get a list of revisions for a specified ID")
 public class RevisionsCommand extends BaseCommandImpl
@@ -147,6 +151,9 @@ public class RevisionsCommand extends BaseCommandImpl
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
+		// Sort the revisions
+		Collections.sort(revisions, new RevisionSort());
+		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {
 			shutdown.set(true);
@@ -159,7 +166,8 @@ public class RevisionsCommand extends BaseCommandImpl
 		{
 			final Number rev = (Number)o[0];
 			final Date revDate = (Date)o[1];
-			list.addRevision(new Revision((Integer) rev, revDate));
+			final String type = (String)o[2];
+			list.addRevision(new Revision((Integer) rev, revDate, type));
 		}
 		
 		// Display the list

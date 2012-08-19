@@ -3,6 +3,14 @@ package com.redhat.contentspec.client.commands;
 import java.io.File;
 import java.io.IOException;
 
+import org.jboss.pressgangccms.contentspec.rest.RESTManager;
+import org.jboss.pressgangccms.contentspec.rest.RESTReader;
+import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.ZipUtilities;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -10,14 +18,7 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.client.utils.ZipUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
-import com.redhat.contentspec.rest.RESTManager;
-import com.redhat.contentspec.rest.RESTReader;
-import com.redhat.contentspec.utils.logging.ErrorLoggerManager;
-import com.redhat.ecs.commonutils.DocBookUtilities;
-import com.redhat.topicindex.rest.entities.interfaces.RESTTopicV1;
-import com.redhat.topicindex.rest.entities.interfaces.RESTUserV1;
 
 @Parameters(commandDescription = "Build, Assemble and then Publish the Content Specification")
 public class PublishCommand extends BuildCommand
@@ -77,16 +78,18 @@ public class PublishCommand extends BuildCommand
 		return hideOutput;
 	}
 
-	public void setHideOutput(Boolean hideOutput)
+	public void setHideOutput(final Boolean hideOutput)
 	{
 		this.hideOutput = hideOutput;
 	}
 
-	public String getMessage() {
+	public String getMessage()
+	{
 		return message;
 	}
 
-	public void setMessage(String message) {
+	public void setMessage(final String message)
+	{
 		this.message = message;
 	}
 
@@ -238,7 +241,7 @@ public class PublishCommand extends BuildCommand
 			
 			// Replace the locale in the build options if the locale has been set
 			if (getLocale() != null)
-				publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--lang=" + getLocale());
+				publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 			
 			try
 			{
@@ -260,7 +263,7 @@ public class PublishCommand extends BuildCommand
 		
 		// Replace the locale in the build options if the locale has been set
 		if (getLocale() != null)
-			publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--lang=" + getLocale());
+			publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 		
 		// Add the message to the script
 		if (message != null)
