@@ -16,6 +16,7 @@ import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
 import org.jboss.pressgangccms.utils.common.CollectionUtilities;
 import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgangccms.utils.common.FileUtilities;
 import org.jboss.pressgangccms.zanata.ZanataDetails;
 
@@ -502,6 +503,7 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		catch (Exception e)
 		{
+		    JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}

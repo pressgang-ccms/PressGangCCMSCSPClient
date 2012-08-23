@@ -39,6 +39,9 @@ public class PullSnapshotCommand extends BaseCommandImpl
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
+	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update an current revisions when pulling down the snapshot.", hidden = true)
+	private Boolean update = false;
+	
 	private ContentSpecProcessor csp = null;
 	
 	public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
@@ -76,7 +79,17 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		this.outputPath = outputPath;
 	}
 
-	@Override
+	public Boolean getUpdate()
+	{
+        return update;
+    }
+
+    public void setUpdate(final Boolean update)
+    {
+        this.update = update;
+    }
+
+    @Override
 	public void printError(final String errorMsg, final boolean displayHelp)
 	{
 		printError(errorMsg, displayHelp, Constants.PULL_SNAPSHOT_COMMAND_NAME);
@@ -152,6 +165,7 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		processingOptions.setValidating(true);
 		processingOptions.setAllowEmptyLevels(true);
 		processingOptions.setAddRevisions(true);
+		processingOptions.setUpdateRevisions(update);
 		processingOptions.setIgnoreChecksum(true);
 		
 		// Process the content spec to make sure the spec is valid, 
