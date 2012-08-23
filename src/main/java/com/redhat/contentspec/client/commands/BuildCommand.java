@@ -12,6 +12,7 @@ import org.jboss.pressgangccms.contentspec.constants.CSConstants;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
 import org.jboss.pressgangccms.contentspec.rest.RESTReader;
 import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
 import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
 import org.jboss.pressgangccms.utils.common.CollectionUtilities;
@@ -314,9 +315,8 @@ public class BuildCommand extends BaseCommandImpl
 		final String contentSpec;
 		if (id.matches("^\\d+$"))
 		{
-			final RESTBaseTopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
-			/*
-			// TODO Use this code once content specs can be pushed to zanata
+			final RESTBaseTopicV1 contentSpecTopic;
+			
 			if (locale == null)
 			{
 				// Get the Content Specification from the server.
@@ -325,8 +325,18 @@ public class BuildCommand extends BaseCommandImpl
 			else
 			{
 				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
-			}*/
+				final RESTTranslatedTopicV1 translatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
+				
+				if (translatedContentSpecTopic != null)
+				{
+				    contentSpecTopic = translatedContentSpecTopic;
+				}
+				else
+				{
+				    // Get the Content Specification from the server.
+                    contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+				}
+			}
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
