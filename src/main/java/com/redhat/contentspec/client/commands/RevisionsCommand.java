@@ -141,7 +141,7 @@ public class RevisionsCommand extends BaseCommandImpl
 		}
 		else
 		{
-			revisions = restManager.getReader().getContentSpecRevisionsById(ids.get(0));
+			revisions = restManager.getReader().getContentSpecRevisionsById(ids.get(0), false);
 		}
 		
 		// Check that the content spec is valid
