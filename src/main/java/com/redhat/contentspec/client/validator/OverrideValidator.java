@@ -9,6 +9,7 @@ import org.jboss.pressgangccms.contentspec.constants.CSConstants;
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
 import com.redhat.contentspec.client.utils.ClientUtilities;
+import com.redhat.contentspec.processor.constants.ProcessorConstants;
 
 public class OverrideValidator implements IParameterValidator
 {
@@ -20,6 +21,7 @@ public class OverrideValidator implements IParameterValidator
 			add(CSConstants.PUBSNUMBER_OVERRIDE);
 			add(CSConstants.AUTHOR_GROUP_OVERRIDE);
 			add(CSConstants.REVISION_HISTORY_OVERRIDE);
+			add(CSConstants.REVNUMBER_OVERRIDE);
 		}
 	};
 	
@@ -56,6 +58,13 @@ public class OverrideValidator implements IParameterValidator
 					{
 						throw new ParameterException("\"" + varName + "\" override is not a valid number.");
 					}
+				}
+				else if (varName.equals(CSConstants.REVNUMBER_OVERRIDE))
+				{
+				    if (!varValue.matches("^(" + ProcessorConstants.VERSION_VALIDATE_REGEX + ")-[0-9]+$"))
+				    {
+				        throw new ParameterException("\"" + varName + "\" override is not a valid revision history number.");
+				    }
 				}
 			}
 			else

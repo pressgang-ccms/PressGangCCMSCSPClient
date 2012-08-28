@@ -447,7 +447,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 					resource.setRevision(1);
 					resource.setType(ResourceType.FILE);
 	
-					final List<StringToNodeCollection> translatableStrings = XMLUtilities.getTranslatableStrings(doc, false);
+					final List<StringToNodeCollection> translatableStrings = XMLUtilities.getTranslatableStringsV2(doc, false);
 
 					for (final StringToNodeCollection translatableStringData : translatableStrings)
 					{
