@@ -246,7 +246,7 @@ public class PublishCommand extends BuildCommand
 			try
 			{
 				JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
-				final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, outputDir, JCommander.getConsole(), !hideOutput);
+				final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, outputDir, JCommander.getConsole(), !hideOutput, true);
 				if (exitValue == null || exitValue != 0)
 				{
 					shutdown(Constants.EXIT_FAILURE);
@@ -272,7 +272,7 @@ public class PublishCommand extends BuildCommand
 		try
 		{
 			JCommander.getConsole().println(Constants.PUBLISH_BUILD_MSG);
-			Integer exitValue = ClientUtilities.runCommand(publishCommand, outputDir, JCommander.getConsole(), !hideOutput);
+			Integer exitValue = ClientUtilities.runCommand(publishCommand, outputDir, JCommander.getConsole(), !hideOutput, false);
 			if (exitValue == null || exitValue != 0)
 			{
 				shutdown(Constants.EXIT_FAILURE);

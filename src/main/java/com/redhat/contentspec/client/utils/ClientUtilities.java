@@ -1,12 +1,12 @@
 package com.redhat.contentspec.client.utils;
 
 import java.awt.Desktop;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -15,9 +15,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.pressgangccms.contentspec.ContentSpec;
 import org.jboss.pressgangccms.contentspec.constants.CSConstants;
+import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
 import org.jboss.pressgangccms.contentspec.rest.RESTReader;
 import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -29,6 +31,7 @@ import org.jboss.pressgangccms.utils.common.StringUtilities;
 import org.jboss.pressgangccms.utils.constants.CommonConstants;
 import org.jboss.pressgangccms.zanata.ZanataDetails;
 
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
@@ -268,12 +271,13 @@ public class ClientUtilities
 	 * @param dir The directory to run the command from.
 	 * @param console The console to print the output to.
 	 * @param displayOutput Whether the output should be displayed or not.
+	 * @param allowInput Whether the process should allow input form stdin.
 	 * @return The exit value of the command
 	 * @throws IOException
 	 */
-	public static Integer runCommand(final String command, final File dir, final Console console, boolean displayOutput) throws IOException
+	public static Integer runCommand(final String command, final File dir, final Console console, boolean displayOutput, boolean allowInput) throws IOException
 	{
-		return runCommand(command, null, dir, console, displayOutput);
+		return runCommand(command, null, dir, console, displayOutput, allowInput);
 	}
 	
 	/**
@@ -284,10 +288,11 @@ public class ClientUtilities
 	 * @param dir The directory to run the command from.
 	 * @param console The console to print the output to.
 	 * @param displayOutput Whether the output should be displayed or not.
+	 * @param allowInput Whether the process should allow input form stdin.
 	 * @return The exit value of the command
 	 * @throws IOException
 	 */
-	public static Integer runCommand(final String command, final String[] envVariables, final File dir, final Console console, boolean displayOutput) throws IOException
+	public static Integer runCommand(final String command, final String[] envVariables, final File dir, final Console console, boolean displayOutput, boolean allowInput) throws IOException
 	{
 		if (!dir.isDirectory()) throw new IOException();
 		
@@ -311,45 +316,37 @@ public class ClientUtilities
 			fixedEnvVariables = envVars.toArray(new String[envVars.size()]);
 			
 			final Process p = Runtime.getRuntime().exec(command, fixedEnvVariables, dir);
-			// Get the output of the command
+			
+			// Create a separate thread to read the stderr stream
+            final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
+            final InputStreamHandler stdOut = new InputStreamHandler(p.getInputStream(), console);
+            final InputStreamHandler stdInPipe = new InputStreamHandler(System.in, p.getOutputStream());
+            
+            // Get the output of the command
 			if (displayOutput)
 			{
-				// Create a separate thread to read the stderr stream
-				final Thread t = new Thread(new Runnable()
-				{
-
-		            @Override
-		            public void run()
-		            {
-		            	BufferedReader br = new BufferedReader( new InputStreamReader(p.getErrorStream()));
-						String line = null;
-						try {
-							while ((line = br.readLine()) != null)
-							{
-								synchronized(console)
-								{
-									console.println(line);
-								}
-							}
-						} catch (IOException e) {
-							// Do nothing
-						}
-
-		            }
-		        } );
-		        t.start();
-				
-		        final BufferedReader br = new BufferedReader( new InputStreamReader(p.getInputStream()));
-				String line = null;
-				while ((line = br.readLine()) != null)
-				{
-					synchronized(console)
-					{
-						console.println(line);
-					}
-				}
+			    stdErr.start();
+		        stdOut.start();
 			}
+			
+			// Pipe stdin to the process
+			if (allowInput)
+			{
+			    stdInPipe.start();
+			}
+			
+			// Wait for the process to finish
 			p.waitFor();
+			
+			// Ensure that the stdin reader gets shutdown
+			stdInPipe.shutdown();
+			
+			// Wait for the output to be printed
+			while (stdOut.isAlive() || stdErr.isAlive())
+			{
+			    Thread.sleep(100);
+			}
+			
 			return p.exitValue();
 		}
 		catch (InterruptedException e)
@@ -575,4 +572,83 @@ public class ClientUtilities
 			return null;
 		}
 	}
+}
+
+class InputStreamHandler extends Thread implements ShutdownAbleApp
+{
+    private final InputStream stream;
+    private final StringBuffer buffer;
+    private final Console console;
+    private final OutputStream outStream;
+    
+    private final AtomicBoolean shutdown = new AtomicBoolean(false);
+    private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
+    
+    public InputStreamHandler(final InputStream stream, final StringBuffer buffer)
+    {
+        this.stream = stream;
+        this.buffer = buffer;
+        this.console = null;
+        this.outStream = null;
+    }
+    
+    public InputStreamHandler(final InputStream stream, final Console console)
+    {
+        this.stream = stream;
+        this.buffer = null;
+        this.console = console;
+        this.outStream = null;
+    }
+    
+    public InputStreamHandler(final InputStream stream, final OutputStream outStream)
+    {
+        this.stream = stream;
+        this.buffer = null;
+        this.console = null;
+        this.outStream = outStream;
+    }
+    
+    @Override
+    public void run()
+    {
+        int nextChar;
+        try {
+            while ((nextChar = stream.read()) != -1 && !isShuttingDown.get())
+            {
+                final char c = (char) nextChar;
+                if (buffer != null)
+                {
+                    buffer.append(c);
+                }
+                else if (outStream != null)
+                {
+                    outStream.write(c);
+                    outStream.flush();
+                }
+                else
+                {
+                    synchronized(console)
+                    {
+                        console.print(c + "");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Do nothing
+            JCommander.getConsole().println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void shutdown()
+    {
+        this.isShuttingDown.set(true);
+    }
+
+    @Override
+    public boolean isShutdown()
+    {
+        return shutdown.get();
+    }
 }
