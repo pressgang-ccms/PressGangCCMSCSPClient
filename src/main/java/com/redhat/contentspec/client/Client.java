@@ -98,6 +98,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		catch (Throwable ex)
 		{
 			JCommander.getConsole().println(ex.getMessage());
+			System.exit(Constants.EXIT_FAILURE);
 		}
 	}
 	

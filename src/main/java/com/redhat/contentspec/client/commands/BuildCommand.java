@@ -19,6 +19,7 @@ import org.jboss.pressgangccms.utils.common.CollectionUtilities;
 import org.jboss.pressgangccms.utils.common.DocBookUtilities;
 import org.jboss.pressgangccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgangccms.utils.common.FileUtilities;
+import org.jboss.pressgangccms.utils.constants.CommonConstants;
 import org.jboss.pressgangccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.DynamicParameter;
@@ -320,7 +321,7 @@ public class BuildCommand extends BaseCommandImpl
 			if (locale == null)
 			{
 				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
 			}
 			else
 			{
@@ -333,8 +334,18 @@ public class BuildCommand extends BaseCommandImpl
 				}
 				else
 				{
-				    // Get the Content Specification from the server.
-                    contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+				    // Try to see if one exists for the default locale
+	                final RESTTranslatedTopicV1 unTranslatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, CommonConstants.DEFAULT_LOCALE);
+	                
+	                if (unTranslatedContentSpecTopic != null)
+	                {
+	                    contentSpecTopic = unTranslatedContentSpecTopic;
+	                }
+	                else
+	                {
+    				    // Get the Content Specification from the server.
+                        contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
+	                }
 				}
 			}
 			
