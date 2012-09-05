@@ -12,11 +12,14 @@ import org.jboss.pressgangccms.contentspec.constants.CSConstants;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
 import org.jboss.pressgangccms.contentspec.rest.RESTReader;
 import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
 import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
 import org.jboss.pressgangccms.utils.common.CollectionUtilities;
 import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgangccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgangccms.utils.common.FileUtilities;
+import org.jboss.pressgangccms.utils.constants.CommonConstants;
 import org.jboss.pressgangccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.DynamicParameter;
@@ -80,7 +83,7 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.", metaVar = "<LOCALE>")
 	private String locale = null;
 	
-	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
+	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".", hidden = true)
 	protected Boolean fetchPubsnum = false;
 	
 	@Parameter(names = Constants.SHOW_REPORT_LONG_PARAM, description = "Show the Report chapter in the output.")
@@ -313,19 +316,38 @@ public class BuildCommand extends BaseCommandImpl
 		final String contentSpec;
 		if (id.matches("^\\d+$"))
 		{
-			final RESTBaseTopicV1 contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
-			/*
-			// TODO Use this code once content specs can be pushed to zanata
+			final RESTBaseTopicV1 contentSpecTopic;
+			
 			if (locale == null)
 			{
 				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getContentSpecById(Integer.parseInt(id), null);
+				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
 			}
 			else
 			{
 				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
-			}*/
+				final RESTTranslatedTopicV1 translatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
+				
+				if (translatedContentSpecTopic != null)
+				{
+				    contentSpecTopic = translatedContentSpecTopic;
+				}
+				else
+				{
+				    // Try to see if one exists for the default locale
+	                final RESTTranslatedTopicV1 unTranslatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, CommonConstants.DEFAULT_LOCALE);
+	                
+	                if (unTranslatedContentSpecTopic != null)
+	                {
+	                    contentSpecTopic = unTranslatedContentSpecTopic;
+	                }
+	                else
+	                {
+    				    // Get the Content Specification from the server.
+                        contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
+	                }
+				}
+			}
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
@@ -502,6 +524,7 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		catch (Exception e)
 		{
+		    JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
 			printError(Constants.ERROR_INTERNAL_ERROR, false);
 			shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
 		}

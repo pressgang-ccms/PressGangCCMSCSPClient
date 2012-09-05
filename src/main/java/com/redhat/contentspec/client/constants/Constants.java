@@ -21,12 +21,12 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.26.4";
+	public static final String BUILD = "0.26.5";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
 	public static final String DEFAULT_PUBLISH_COMMAND = "";
-	public static final String KOJI_NAME = "koji";
+	public static final String KOJI_NAME = "brew";
 	
 	// Publican Common Content Defaults
 	public static final String LINUX_PUBLICAN_COMMON_CONTENT = "/usr/share/publican/Common_Content/";
@@ -259,4 +259,6 @@ public class Constants
 	public static final String SHOW_REPORT_LONG_PARAM = "--show-report";
 
 	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
+	
+	public static final String UPDATE_LONG_PARAM = "--update";
 }
