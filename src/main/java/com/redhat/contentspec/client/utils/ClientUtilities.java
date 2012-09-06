@@ -319,20 +319,39 @@ public class ClientUtilities
 			
 			// Create a separate thread to read the stderr stream
             final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
-            final InputStreamHandler stdOut = new InputStreamHandler(p.getInputStream(), console);
             final InputStreamHandler stdInPipe = new InputStreamHandler(System.in, p.getOutputStream());
+            
+            // Pipe stdin to the process
+            if (allowInput)
+            {
+                stdInPipe.start();
+            }
             
             // Get the output of the command
 			if (displayOutput)
 			{
 			    stdErr.start();
-		        stdOut.start();
-			}
-			
-			// Pipe stdin to the process
-			if (allowInput)
-			{
-			    stdInPipe.start();
+		        
+			    final InputStream stream = p.getInputStream();
+			    
+			    int nextChar;
+		        try
+		        {
+		            while ((nextChar = stream.read()) != -1)
+		            {
+		                final char c = (char) nextChar;
+	                    synchronized(console)
+	                    {
+	                        console.print(c + "");
+	                    }
+		            }
+		        }
+		        catch (Exception e)
+		        {
+		            // Do nothing
+		            JCommander.getConsole().println(e.getMessage());
+		            e.printStackTrace();
+		        }
 			}
 			
 			// Wait for the process to finish
@@ -342,7 +361,7 @@ public class ClientUtilities
 			stdInPipe.shutdown();
 			
 			// Wait for the output to be printed
-			while (stdOut.isAlive() || stdErr.isAlive())
+			while (stdErr.isAlive())
 			{
 			    Thread.sleep(100);
 			}
