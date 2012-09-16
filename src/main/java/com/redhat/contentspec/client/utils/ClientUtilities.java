@@ -1,11 +1,13 @@
 package com.redhat.contentspec.client.utils;
 
 import java.awt.Desktop;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -332,17 +334,16 @@ public class ClientUtilities
 			{
 			    stdErr.start();
 		        
-			    final InputStream stream = p.getInputStream();
+			    final BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			    
-			    int nextChar;
+			    String line;
 		        try
 		        {
-		            while ((nextChar = stream.read()) != -1)
+		            while ((line = br.readLine()) != null)
 		            {
-		                final char c = (char) nextChar;
 	                    synchronized(console)
 	                    {
-	                        console.print(c + "");
+	                        console.println(line);
 	                    }
 		            }
 		        }

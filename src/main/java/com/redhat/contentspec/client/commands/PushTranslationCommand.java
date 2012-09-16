@@ -354,7 +354,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 		final ZanataInterface zanataInterface = new ZanataInterface();
 		
 		// Convert all the topics to DOM Documents first so we know if any are invalid
-		for (final RESTTopicV1 topic : topics.getItems())
+		final List<RESTTopicV1> topicItems = topics.returnItems();
+		for (final RESTTopicV1 topic : topicItems)
 		{
 			/*
 			 * make sure the section title is the same as the

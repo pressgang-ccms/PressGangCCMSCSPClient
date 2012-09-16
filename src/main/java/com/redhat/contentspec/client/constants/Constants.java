@@ -21,7 +21,7 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.26.5";
+	public static final String BUILD = "0.26.6";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
@@ -98,6 +98,7 @@ public class Constants
 	public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG			= "Unable to assemble the Content Specification because the \"%s\" file couldn't be found.";
 	public static final String ERROR_FAILED_TO_ASSEMBLE_MSG 		= "The content specification failed to be assembled.";
 	public static final String ERROR_RUNNING_PUBLICAN_MSG			= "Unable to assemble the Content Specification because an error occured while running Publican.";
+	public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error occured while running Publican. (exit code: %d)";
 	public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG	= "Unable to preview the Content Specification because the \"%s\" file couldn't be found.";
 	public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG		= "Unable to open the \"%s\" file.";
 	public static final String ERROR_UNSUPPORTED_FORMAT				= "\"%s\" is not currently supported as a preview format.";
