@@ -104,7 +104,10 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
-		
+
+	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions, to the latest version when building.", hidden = true)
+    private Boolean update = false;
+
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
 	
@@ -292,12 +295,24 @@ public class BuildCommand extends BaseCommandImpl
 		this.commonContentLocale = commonContentLocale;
 	}
 
-	public Integer getRevision() {
+	public Integer getRevision()
+	{
         return revision;
     }
 
-    public void setRevision(Integer revision) {
+    public void setRevision(final Integer revision)
+    {
         this.revision = revision;
+    }
+
+    public Boolean getUpdate()
+    {
+        return update;
+    }
+
+    public void setUpdate(final Boolean update)
+    {
+        this.update = update;
     }
 
     public CSDocbookBuildingOptions getBuildOptions()
@@ -429,7 +444,8 @@ public class BuildCommand extends BaseCommandImpl
 		}
 	}
 
-	@Override
+	@SuppressWarnings("deprecation")
+    @Override
 	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final long startTime = System.currentTimeMillis();
@@ -590,6 +606,7 @@ public class BuildCommand extends BaseCommandImpl
 		processingOptions.setIgnoreChecksum(true);
 		processingOptions.setAllowNewTopics(false);
 		processingOptions.setRevision(revision);
+		processingOptions.setUpdateRevisions(update);
 		if (revision != null)
 		{
 		    processingOptions.setAddRevisions(true);
