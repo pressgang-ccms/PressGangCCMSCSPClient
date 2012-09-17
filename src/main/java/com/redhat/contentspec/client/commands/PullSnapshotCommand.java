@@ -34,7 +34,7 @@ public class PullSnapshotCommand extends BaseCommandImpl
 	private List<Integer> ids = new ArrayList<Integer>();
 	
 	@Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
-	private Integer revision;
+	private Integer revision = null;
 	
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
@@ -167,6 +167,7 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		processingOptions.setAddRevisions(true);
 		processingOptions.setUpdateRevisions(update);
 		processingOptions.setIgnoreChecksum(true);
+		processingOptions.setRevision(revision);
 		
 		// Process the content spec to make sure the spec is valid, 
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);

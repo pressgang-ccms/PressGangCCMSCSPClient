@@ -101,6 +101,9 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.COMMON_CONTENT_LONG_PARAM, hidden = true)
 	private String commonContentLocale = null;
+	
+	@Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
+    private Integer revision = null;
 		
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
@@ -289,7 +292,15 @@ public class BuildCommand extends BaseCommandImpl
 		this.commonContentLocale = commonContentLocale;
 	}
 
-	public CSDocbookBuildingOptions getBuildOptions()
+	public Integer getRevision() {
+        return revision;
+    }
+
+    public void setRevision(Integer revision) {
+        this.revision = revision;
+    }
+
+    public CSDocbookBuildingOptions getBuildOptions()
 	{
 		// Fix up the values for overrides so file names are expanded
 		fixOverrides();
@@ -322,7 +333,7 @@ public class BuildCommand extends BaseCommandImpl
 			if (locale == null)
 			{
 				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
+				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision);
 			}
 			else
 			{
@@ -578,6 +589,11 @@ public class BuildCommand extends BaseCommandImpl
 		processingOptions.setValidating(true);
 		processingOptions.setIgnoreChecksum(true);
 		processingOptions.setAllowNewTopics(false);
+		processingOptions.setRevision(revision);
+		if (revision != null)
+		{
+		    processingOptions.setAddRevisions(true);
+		}
 		if (allowEmptyLevels)
 			processingOptions.setAllowEmptyLevels(true);
 		

@@ -18,7 +18,6 @@ public class OverrideValidator implements IParameterValidator
 		private static final long serialVersionUID = 8972067339176103456L;
 		
 		{
-			add(CSConstants.PUBSNUMBER_OVERRIDE);
 			add(CSConstants.AUTHOR_GROUP_OVERRIDE);
 			add(CSConstants.REVISION_HISTORY_OVERRIDE);
 			add(CSConstants.REVNUMBER_OVERRIDE);
@@ -42,21 +41,6 @@ public class OverrideValidator implements IParameterValidator
 					if (!(file.exists() && file.isFile()))
 					{
 						throw new ParameterException("\"" + varName + "\" override is not a valid file.");
-					}
-				}
-				else if (varName.equals(CSConstants.PUBSNUMBER_OVERRIDE))
-				{
-					try
-					{
-						final Integer pubsnumber = Integer.parseInt(varValue);
-						if (pubsnumber < 0)
-						{
-							throw new ParameterException("\"" + varName + "\" override is not a valid number.");
-						}
-					}
-					catch (NumberFormatException e)
-					{
-						throw new ParameterException("\"" + varName + "\" override is not a valid number.");
 					}
 				}
 				else if (varName.equals(CSConstants.REVNUMBER_OVERRIDE))
