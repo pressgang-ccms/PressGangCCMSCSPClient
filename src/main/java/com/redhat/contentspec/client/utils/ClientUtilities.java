@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -60,7 +61,7 @@ public class ClientUtilities
 	{
 		if (location == null || location.isEmpty()) return location;
 		
-		String fixedLocation = new String(location);
+		String fixedLocation = location;
 		if (location.startsWith("~"))
 		{
 			fixedLocation = Constants.HOME_LOCATION + location.substring(1);
@@ -102,7 +103,7 @@ public class ClientUtilities
 	{
 		if (location == null || location.isEmpty()) return location;
 		
-		String fixedLocation = new String(location);
+		String fixedLocation = location;
 		if (!location.endsWith(File.separator))
 		{
 			fixedLocation += File.separator;
@@ -135,7 +136,7 @@ public class ClientUtilities
 	{
 		if (host == null || host.isEmpty()) return host;
 		
-		String fixedHost = new String(host);
+		String fixedHost = host;
 		if (!host.endsWith("/"))
 		{
 			fixedHost += "/";
@@ -186,7 +187,7 @@ public class ClientUtilities
 	public static String validateFilePath(final String filePath)
 	{
 		if (filePath == null) return null;
-		String fixedPath = new String(filePath);
+		String fixedPath = filePath;
 		if (filePath.startsWith("~"))
 		{
 			fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
@@ -303,10 +304,11 @@ public class ClientUtilities
 			String[] fixedEnvVariables = envVariables;
 			final Map<String, String> env = System.getenv();
 			final List<String> envVars = new ArrayList<String>();
-			for (final String key : env.keySet())
+			for (final Entry<String, String> entry : env.entrySet())
 			{
+			    final String key = entry.getKey();
 				if (!key.equals("XML_CATALOG_FILES"))
-					envVars.add(key + "=" + env.get(key));
+					envVars.add(key + "=" + entry.getValue());
 			}
 			if (envVariables != null)
 			{

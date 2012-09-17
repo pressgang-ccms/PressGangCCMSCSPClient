@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
 import org.jboss.pressgangccms.contentspec.ContentSpec;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
 import org.jboss.pressgangccms.contentspec.rest.RESTReader;
@@ -333,7 +335,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 		if (!pushCSTopicsToZanata(restManager, topics, contentSpecTopic, csp.getContentSpec()))
 		{
 			printError(Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
-			System.exit(Constants.EXIT_FAILURE);
+			shutdown(Constants.EXIT_FAILURE);
 		}
 		else
 		{
@@ -417,7 +419,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 			JCommander.getConsole().println("Starting to push topics to zanata...");
 			
 			// Loop through each topic and upload it to zanata
-			for (final RESTTopicV1 topic : topicToDoc.keySet())
+			for (final Entry<RESTTopicV1, Document> topicEntry : topicToDoc.entrySet())
 			{
 				++current;
 				final int percent = Math.round(current / total * 100);
@@ -427,7 +429,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 					JCommander.getConsole().println("\tPushing topics to zanata " + percent + "% Done");
 				}
 				
-				final Document doc = topicToDoc.get(topic);
+				final RESTTopicV1 topic = topicEntry.getKey();
+				final Document doc = topicEntry.getValue();
 				final String zanataId = topic.getId() + "-" + topic.getRevision();
 				
 				/*

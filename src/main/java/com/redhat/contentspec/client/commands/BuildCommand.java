@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jboss.pressgangccms.contentspec.constants.CSConstants;
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
@@ -628,11 +629,12 @@ public class BuildCommand extends BaseCommandImpl
 	protected void fixOverrides()
 	{
 		final Map<String, String> overrides = this.getOverrides();
-		for (final String key : overrides.keySet())
+		for (final Entry<String, String> entry : overrides.entrySet())
 		{
+		    final String key = entry.getKey();
 			if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE))
 			{
-				overrides.put(key, ClientUtilities.validateFilePath(overrides.get(key)));
+				overrides.put(key, ClientUtilities.validateFilePath(entry.getValue()));
 			}
 		}
 	}

@@ -78,7 +78,7 @@ public class TemplateCommand extends BaseCommandImpl
 		final String template = commented ? TemplateConstants.FULLY_COMMENTED_TEMPLATE : TemplateConstants.EMPTY_TEMPLATE;
 		
 		// Save or print the data
-		if (output == null || output.equals(""))
+		if (output == null)
 		{
 			JCommander.getConsole().println(template);
 		}

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -417,8 +418,10 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		if (command.getServerUrl() != null)
 		{
 			// Check if the server url is a name defined in csprocessor.ini
-			for (final String serverName: servers.keySet())
+			for (final Entry<String, ServerConfiguration> serversEntry : servers.entrySet())
 			{
+			    final String serverName = serversEntry.getKey();
+			    
 				// Ignore the default server for csprocessor.cfg configuration files
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
 				{
@@ -426,7 +429,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 				}
 				else if (serverName.equals(command.getServerUrl()))
 				{
-					command.setServerUrl(servers.get(serverName).getUrl());
+					command.setServerUrl(serversEntry.getValue().getUrl());
 					break;
 				}
 			}
@@ -435,18 +438,22 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		}
 		else if (cspConfig != null && cspConfig.getServerUrl() != null && command.loadFromCSProcessorCfg())
 		{
-			for (final String serverName: servers.keySet())
+			for (final Entry<String, ServerConfiguration> serversEntry : servers.entrySet())
 			{
+			    final String serverName = serversEntry.getKey();
+			    
 				// Ignore the default server for csprocessor.cfg configuration files
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
 				
 				// Compare the urls
 				try
 				{
-					URI serverUrl = new URI(ClientUtilities.validateHost(servers.get(serverName).getUrl()));
+				    final ServerConfiguration serverConfig = serversEntry.getValue();
+				    
+					URI serverUrl = new URI(ClientUtilities.validateHost(serverConfig.getUrl()));
 					if (serverUrl.equals(new URI(cspConfig.getServerUrl())))
 					{
-						url = servers.get(serverName).getUrl();
+						url = serverConfig.getUrl();
 						break;
 					}
 				}
@@ -486,17 +493,20 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		// Set the username
 		if (command.getUsername() == null)
 		{
-			for (final String serverName: servers.keySet())
+			for (final Entry<String, ServerConfiguration> serversEntry : servers.entrySet())
 			{
+			    final String serverName = serversEntry.getKey();
+			    final ServerConfiguration serverConfig = serversEntry.getValue();
+			    
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME) || servers.get(serverName).getUrl().isEmpty()) 
 					continue;
 				
 				try
 				{
-					URL serverUrl = new URL(servers.get(serverName).getUrl());
+					URL serverUrl = new URL(serverConfig.getUrl());
 					if (serverUrl.equals(new URL(url)))
 					{
-						command.setUsername(servers.get(serverName).getUsername());
+						command.setUsername(serverConfig.getUsername());
 					}
 				}
 				catch (MalformedURLException e)
@@ -527,26 +537,31 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	 */
 	protected void applyZanataSettings()
 	{
+	    if (cspConfig == null) return;
+	    
 		// Setup the zanata details
 		final Map<String, ZanataServerConfiguration> zanataServers = clientConfig.getZanataServers();
 		
 		// Set the zanata details
-		if (cspConfig != null && cspConfig.getZanataDetails() != null && cspConfig.getZanataDetails().getServer() != null 
+		if(cspConfig.getZanataDetails() != null && cspConfig.getZanataDetails().getServer() != null 
 				&& !cspConfig.getZanataDetails().getServer().isEmpty() && command.loadFromCSProcessorCfg())
 		{
 			ZanataServerConfiguration zanataServerConfig = null;
-			for (final String serverName: zanataServers.keySet())
+			for (final Entry<String,ZanataServerConfiguration> serverEntry : zanataServers.entrySet())
 			{
+			    final String serverName = serverEntry.getKey();
+                final ZanataServerConfiguration serverConfig = serverEntry.getValue();
+			    
 				// Ignore the default server for csprocessor.cfg configuration files
 				if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
 				
 				// Compare the urls
 				try
 				{
-					URI serverUrl = new URI(ClientUtilities.validateHost(zanataServers.get(serverName).getUrl()));
+					URI serverUrl = new URI(ClientUtilities.validateHost(serverConfig.getUrl()));
 					if (serverUrl.equals(new URI(cspConfig.getZanataDetails().getServer())))
 					{
-						zanataServerConfig = zanataServers.get(serverName);
+						zanataServerConfig = serverConfig;
 						break;
 					}
 				}

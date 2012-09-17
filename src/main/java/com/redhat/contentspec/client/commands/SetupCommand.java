@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.jboss.pressgangccms.contentspec.rest.RESTManager;
 import org.jboss.pressgangccms.contentspec.rest.RESTReader;
@@ -221,7 +222,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Get the server setup details from the user
 			final Integer numServers = Integer.parseInt(answer);
-			String serverNames = "";
+			final StringBuilder serverNames = new StringBuilder("");
 			for (int i = 1; i <= numServers; i++)
 			{
 				final ServerConfiguration config = new ServerConfiguration();
@@ -240,7 +241,7 @@ public class SetupCommand extends BaseCommandImpl
 				
 				// Add the server configuration and add the name to the list of displayable strings
 				servers.put(config.getName(), config);
-				serverNames += config.getName() + "/";
+				serverNames.append(config.getName() + "/");
 				
 				// Good point to check for a shutdown
 				if (isAppShuttingDown())
@@ -283,9 +284,10 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Add the information to the configuration file
 		configFile.append("[servers]\n");
-		for (final String serverName: servers.keySet())
+		for (final Entry<String, ServerConfiguration> serverEntry : servers.entrySet())
 		{
-			final ServerConfiguration config = servers.get(serverName);
+		    final String serverName = serverEntry.getKey();
+			final ServerConfiguration config = serverEntry.getValue();
 			
 			// Setup the url for the server
 			if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
@@ -416,7 +418,7 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Get the server setup details from the user
 		final Integer numProjects = Integer.parseInt(answer);
-		String serverNames = "";
+		final StringBuilder serverNames = new StringBuilder("");
 		for (int i = 1; i <= numProjects; i++)
 		{
 			final ZanataServerConfiguration config = new ZanataServerConfiguration();
@@ -439,7 +441,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Add the server configuration and add the name to the list of displayable strings
 			servers.put(config.getName(), config);
-			serverNames += config.getName() + "/";
+			serverNames.append(config.getName() + "/");
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown())
@@ -477,9 +479,10 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Add the information to the configuration file
 		configFile.append("[zanata]\n");
-		for (final String serverName: servers.keySet())
+		for (final Entry<String, ZanataServerConfiguration> serverEntry : servers.entrySet())
 		{
-			final ZanataServerConfiguration config = servers.get(serverName);
+		    final String serverName = serverEntry.getKey();
+			final ZanataServerConfiguration config = serverEntry.getValue();
 			
 			// Setup the url for the server
 			if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
