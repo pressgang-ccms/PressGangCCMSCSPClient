@@ -2,8 +2,8 @@ package com.redhat.contentspec.client.commands.base;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;

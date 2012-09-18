@@ -9,19 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.jboss.pressgangccms.contentspec.constants.CSConstants;
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
-import org.jboss.pressgangccms.utils.common.CollectionUtilities;
-import org.jboss.pressgangccms.utils.common.DocBookUtilities;
-import org.jboss.pressgangccms.utils.common.ExceptionUtilities;
-import org.jboss.pressgangccms.utils.common.FileUtilities;
-import org.jboss.pressgangccms.utils.constants.CommonConstants;
-import org.jboss.pressgangccms.zanata.ZanataDetails;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTBaseTopicV1;
+import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
@@ -345,7 +343,8 @@ public class BuildCommand extends BaseCommandImpl
 		{
 			final RESTBaseTopicV1 contentSpecTopic;
 			
-			if (locale == null)
+			contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
+			/*if (locale == null)
 			{
 				// Get the Content Specification from the server.
 				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision);
@@ -374,7 +373,7 @@ public class BuildCommand extends BaseCommandImpl
                         contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
 	                }
 				}
-			}
+			}*/
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
@@ -505,6 +504,8 @@ public class BuildCommand extends BaseCommandImpl
 		{
 			shutdown(Constants.EXIT_TOPIC_INVALID);
 		}
+		
+		String fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 
 		// Pull in the pubsnumber from koji if the option is set
 		if (fetchPubsnum)
@@ -548,7 +549,14 @@ public class BuildCommand extends BaseCommandImpl
 		try
 		{
 			builder = new ContentSpecBuilder(restManager);
-			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions(), cspConfig.getZanataDetails());
+			if (locale == null)
+			{
+			    builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
+			}
+			else
+			{
+			    builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), locale, user, getBuildOptions(), cspConfig.getZanataDetails());
+			}
 		}
 		catch (Exception e)
 		{
@@ -566,7 +574,6 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		
 		// Create the output file
-		String fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 		String outputDir = "";
 		if (buildingFromConfig)
 		{

@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.pressgangccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
