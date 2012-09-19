@@ -105,6 +105,12 @@ public class BuildCommand extends BaseCommandImpl
 
 	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions, to the latest version when building.", hidden = true)
     private Boolean update = false;
+	
+	@Parameter(names = {Constants.DRAFT_LONG_PARAM, Constants.DRAFT_SHORT_PARAM}, description = "Build the book as a draft.")
+	private Boolean draft = false;
+	
+	@Parameter(names = Constants.SHOW_REMARKS_LONG_PARAM, description = "Build the book with remarks visible.")
+    private Boolean showRemarks = false;
 
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
@@ -313,6 +319,26 @@ public class BuildCommand extends BaseCommandImpl
         this.update = update;
     }
 
+    public Boolean getDraft()
+    {
+        return draft;
+    }
+
+    public void setDraft(final Boolean draft)
+    {
+        this.draft = draft;
+    }
+
+    public Boolean getShowRemarks()
+    {
+        return showRemarks;
+    }
+
+    public void setShowRemarks(final Boolean showRemarks)
+    {
+        this.showRemarks = showRemarks;
+    }
+
     public CSDocbookBuildingOptions getBuildOptions()
 	{
 		// Fix up the values for overrides so file names are expanded
@@ -331,6 +357,8 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setShowReportPage(showReport);
 		buildOptions.setCommonContentLocale(commonContentLocale);
 		buildOptions.setCommonContentDirectory(clientConfig.getPublicanCommonContentDirectory());
+		buildOptions.setDraft(draft);
+		buildOptions.setPublicanShowRemarks(showRemarks);
 		
 		return buildOptions;
 	}
@@ -341,39 +369,7 @@ public class BuildCommand extends BaseCommandImpl
 		final String contentSpec;
 		if (id.matches("^\\d+$"))
 		{
-			final RESTBaseTopicV1 contentSpecTopic;
-			
-			contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
-			/*if (locale == null)
-			{
-				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision);
-			}
-			else
-			{
-				// Get the Content Specification from the server.
-				final RESTTranslatedTopicV1 translatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
-				
-				if (translatedContentSpecTopic != null)
-				{
-				    contentSpecTopic = translatedContentSpecTopic;
-				}
-				else
-				{
-				    // Try to see if one exists for the default locale
-	                final RESTTranslatedTopicV1 unTranslatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, CommonConstants.DEFAULT_LOCALE);
-	                
-	                if (unTranslatedContentSpecTopic != null)
-	                {
-	                    contentSpecTopic = unTranslatedContentSpecTopic;
-	                }
-	                else
-	                {
-    				    // Get the Content Specification from the server.
-                        contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
-	                }
-				}
-			}*/
+			final RESTBaseTopicV1 contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{

@@ -38,7 +38,7 @@ public class PushCommand extends BaseCommandImpl
 	@Parameter(names = Constants.EXEC_TIME_LONG_PARAM, description = "Show the execution time of the command.", hidden = true)
 	private Boolean executionTime = false;
 	
-	@Parameter(names = "--push-only", description = "Only push the Content Specification and don't save the Post Processed Content Specification.")
+	@Parameter(names = Constants.PUSH_ONLY_LONG_PARAM, description = "Only push the Content Specification and don't save the Post Processed Content Specification.")
 	private Boolean pushOnly = false; 
 	
 	private ContentSpecProcessor csp = null;

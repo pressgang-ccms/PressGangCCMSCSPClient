@@ -262,4 +262,11 @@ public class Constants
 	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
 	
 	public static final String UPDATE_LONG_PARAM = "--update";
+	
+	public static final String PUSH_ONLY_LONG_PARAM = "--push-only";
+	
+	public static final String DRAFT_LONG_PARAM = "--draft";
+	public static final String DRAFT_SHORT_PARAM = "-d";
+	
+	public static final String SHOW_REMARKS_LONG_PARAM = "--show-remarks";
 }
