@@ -159,7 +159,7 @@ public class CreateCommand extends BaseCommandImpl
 		
 		// Check that the output directory doesn't already exist
 		final File directory = new File(cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(parser.getContentSpec().getTitle()));
-		if (directory.exists() && !force && directory.isDirectory())
+		if (directory.exists() && !force && !noCsprocessorCfg && directory.isDirectory())
 		{
 			printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
 			shutdown(Constants.EXIT_FAILURE);
