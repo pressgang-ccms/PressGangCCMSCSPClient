@@ -40,20 +40,20 @@ public class OverrideValidator implements IParameterValidator
 					final File file = new File(ClientUtilities.validateFilePath(varValue));
 					if (!(file.exists() && file.isFile()))
 					{
-						throw new ParameterException("\"" + varName + "\" override is not a valid file.");
+						throw new ParameterException("The \"" + varName + "\" override is not a valid file.");
 					}
 				}
 				else if (varName.equals(CSConstants.REVNUMBER_OVERRIDE))
 				{
-				    if (!varValue.matches("^(" + ProcessorConstants.VERSION_VALIDATE_REGEX + ")-[0-9]+$"))
+				    if (!varValue.matches("^(" + ProcessorConstants.VERSION_EPOCH_VALIDATE_REGEX + ")-[0-9]+$"))
 				    {
-				        throw new ParameterException("\"" + varName + "\" override is not a valid revision history number.");
+				        throw new ParameterException("The \"" + varName + "\" override is not a valid revision history number.");
 				    }
 				}
 			}
 			else
 			{
-				throw new ParameterException("\"" + varName + "\" is an invalid override parameter");
+				throw new ParameterException("The \"" + varName + "\" override is not a valid override parameter");
 			}
 		}
 		else
