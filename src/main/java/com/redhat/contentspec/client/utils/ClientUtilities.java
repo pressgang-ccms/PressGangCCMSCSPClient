@@ -38,6 +38,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
+import com.redhat.contentspec.builder.utils.DocbookBuildUtilities;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -553,27 +554,14 @@ public class ClientUtilities
 		final String version = contentSpec.getVersion();
 		final String bookTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		final String locale = contentSpec.getLocale() == null ? CommonConstants.DEFAULT_LOCALE : contentSpec.getLocale();
-		final String edition;
-		
-		if (contentSpec.getEdition().matches("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
-        {
-            edition = contentSpec.getEdition();
-        }
-		else if (contentSpec.getEdition().matches("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"))
-		{
-		    edition = contentSpec.getEdition() + ".0";
-		}
-		else
-		{
-		    edition = contentSpec.getEdition() + ".0.0";
-		}
-		
+		final String bookVersion = DocbookBuildUtilities.generateRevision(contentSpec);
+
 		// Connect to the koji hub
 		final KojiConnector connector = new KojiConnector();
 		connector.connectTo(validateHost(kojiHubUrl));
 		
 		// Perform the search using the info from the content spec
-		final String packageName = product + "-" + bookTitle + "-" + version + "-web-" + locale + "-" + edition + "-";
+		final String packageName = product + "-" + bookTitle + "-" + version + "-web-" + locale + "-" + bookVersion + "-";
 		final KojiBuildSearch buildSearch = new KojiBuildSearch(packageName + "*");
 		connector.executeMethod(buildSearch);
 		
