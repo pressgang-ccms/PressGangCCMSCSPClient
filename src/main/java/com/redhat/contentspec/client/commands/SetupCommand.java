@@ -348,9 +348,9 @@ public class SetupCommand extends BaseCommandImpl
 		String publicanFormat = "";
 		
 		// Get the publican options
-		JCommander.getConsole().println("Please enter the publican build command line options. (\"" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\")");
+		JCommander.getConsole().println("Please enter the publican build command line options. [" + Constants.DEFAULT_PUBLICAN_OPTIONS + "]");
 		publicanParams = JCommander.getConsole().readLine();
-		JCommander.getConsole().println("Please enter the preferred publican preview format. (" + Constants.DEFAULT_PUBLICAN_FORMAT + ")");
+		JCommander.getConsole().println("Please enter the preferred publican preview format. [" + Constants.DEFAULT_PUBLICAN_FORMAT + "]");
 		publicanFormat = JCommander.getConsole().readLine();
 		
 		// Create the publican options
@@ -371,15 +371,15 @@ public class SetupCommand extends BaseCommandImpl
 		String publishCommand = "";
 		
 		// Get the publish options
-		JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. (" + Constants.DEFAULT_KOJIHUB_URL + ")");
+		JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. [" + Constants.DEFAULT_KOJIHUB_URL + "]");
 		kojiHubUrl = JCommander.getConsole().readLine();
-		JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("(" + Constants.DEFAULT_PUBLISH_COMMAND + ")")));
+		JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("[" + Constants.DEFAULT_PUBLISH_COMMAND + "]")));
 		publishCommand = JCommander.getConsole().readLine();
 		
 		// Create the Publish Settings
 		configFile.append("[publish]\n");
-		configFile.append("koji.huburl=" + kojiHubUrl + "\n");
-		configFile.append("command=" + publishCommand + "\n\n");
+		configFile.append("koji.huburl=" + (kojiHubUrl.isEmpty() ? Constants.DEFAULT_KOJIHUB_URL : kojiHubUrl) + "\n");
+		configFile.append("command=" + (publishCommand.isEmpty() ? Constants.DEFAULT_PUBLISH_COMMAND : publishCommand) + "\n\n");
 	}
 	
 	/**
