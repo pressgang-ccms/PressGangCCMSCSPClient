@@ -27,6 +27,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.CommaParameterSplitter;
 import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Lists;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
 import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
@@ -82,7 +83,7 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.", metaVar = "<LOCALE>")
 	private String locale = null;
 	
-	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".", hidden = true)
+	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
 	protected Boolean fetchPubsnum = false;
 	
 	@Parameter(names = Constants.SHOW_REPORT_LONG_PARAM, description = "Show the Report chapter in the output.")
@@ -111,6 +112,9 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.SHOW_REMARKS_LONG_PARAM, description = "Build the book with remarks visible.")
     private Boolean showRemarks = false;
+	
+	@Parameter(names = {Constants.REV_MESSAGE_LONG_PARAM, Constants.REV_MESSAGE_SHORT_PARAM}, description = "Add a message for the revision history.")
+	private List<String> messages = Lists.newArrayList();
 
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
@@ -339,6 +343,16 @@ public class BuildCommand extends BaseCommandImpl
         this.showRemarks = showRemarks;
     }
 
+    public List<String> getMessage()
+    {
+        return messages;
+    }
+
+    public void setMessage(final List<String> messages)
+    {
+        this.messages = messages;
+    }
+
     public CSDocbookBuildingOptions getBuildOptions()
 	{
 		// Fix up the values for overrides so file names are expanded
@@ -359,6 +373,7 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setCommonContentDirectory(clientConfig.getPublicanCommonContentDirectory());
 		buildOptions.setDraft(draft);
 		buildOptions.setPublicanShowRemarks(showRemarks);
+		buildOptions.setRevisionMessages(messages);
 		
 		return buildOptions;
 	}
@@ -439,7 +454,6 @@ public class BuildCommand extends BaseCommandImpl
 		}
 	}
 
-	@SuppressWarnings("deprecation")
     @Override
 	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{

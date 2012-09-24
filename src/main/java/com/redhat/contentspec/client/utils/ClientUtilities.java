@@ -553,7 +553,20 @@ public class ClientUtilities
 		final String version = contentSpec.getVersion();
 		final String bookTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		final String locale = contentSpec.getLocale() == null ? CommonConstants.DEFAULT_LOCALE : contentSpec.getLocale();
-		final String edition = contentSpec.getEdition();
+		final String edition;
+		
+		if (contentSpec.getEdition().matches("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+        {
+            edition = contentSpec.getEdition();
+        }
+		else if (contentSpec.getEdition().matches("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"))
+		{
+		    edition = contentSpec.getEdition() + ".0";
+		}
+		else
+		{
+		    edition = contentSpec.getEdition() + ".0.0";
+		}
 		
 		// Connect to the koji hub
 		final KojiConnector connector = new KojiConnector();

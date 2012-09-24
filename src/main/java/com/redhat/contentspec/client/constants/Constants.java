@@ -254,8 +254,7 @@ public class Constants
 
 	public static final String ZANATA_SERVER_LONG_PARAM = "--zanata-server";
 
-	public static final String PUBLISH_MESSAGE_LONG_PARAM = "--message";
-	public static final String PUBLISH_MESSAGE_SHORT_PARAM = "-m";
+	public static final String PUBLISH_MESSAGE_LONG_PARAM = "--pub-message";
 
 	public static final String SHOW_REPORT_LONG_PARAM = "--show-report";
 
@@ -269,4 +268,7 @@ public class Constants
 	public static final String DRAFT_SHORT_PARAM = "-d";
 	
 	public static final String SHOW_REMARKS_LONG_PARAM = "--show-remarks";
+	
+	public static final String REV_MESSAGE_LONG_PARAM = "--rev-message";
+	public static final String REV_MESSAGE_SHORT_PARAM = "-m";
 }
