@@ -21,7 +21,7 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.26.5";
+	public static final String BUILD = "0.27.0";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
@@ -98,6 +98,7 @@ public class Constants
 	public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG			= "Unable to assemble the Content Specification because the \"%s\" file couldn't be found.";
 	public static final String ERROR_FAILED_TO_ASSEMBLE_MSG 		= "The content specification failed to be assembled.";
 	public static final String ERROR_RUNNING_PUBLICAN_MSG			= "Unable to assemble the Content Specification because an error occured while running Publican.";
+	public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error occured while running Publican. (exit code: %d)";
 	public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG	= "Unable to preview the Content Specification because the \"%s\" file couldn't be found.";
 	public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG		= "Unable to open the \"%s\" file.";
 	public static final String ERROR_UNSUPPORTED_FORMAT				= "\"%s\" is not currently supported as a preview format.";
@@ -253,12 +254,21 @@ public class Constants
 
 	public static final String ZANATA_SERVER_LONG_PARAM = "--zanata-server";
 
-	public static final String PUBLISH_MESSAGE_LONG_PARAM = "--message";
-	public static final String PUBLISH_MESSAGE_SHORT_PARAM = "-m";
+	public static final String PUBLISH_MESSAGE_LONG_PARAM = "--pub-message";
 
 	public static final String SHOW_REPORT_LONG_PARAM = "--show-report";
 
 	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
 	
 	public static final String UPDATE_LONG_PARAM = "--update";
+	
+	public static final String PUSH_ONLY_LONG_PARAM = "--push-only";
+	
+	public static final String DRAFT_LONG_PARAM = "--draft";
+	public static final String DRAFT_SHORT_PARAM = "-d";
+	
+	public static final String SHOW_REMARKS_LONG_PARAM = "--show-remarks";
+	
+	public static final String REV_MESSAGE_LONG_PARAM = "--rev-message";
+	public static final String REV_MESSAGE_SHORT_PARAM = "-m";
 }

@@ -1,11 +1,13 @@
 package com.redhat.contentspec.client.utils;
 
 import java.awt.Desktop;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -14,27 +16,29 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.jboss.pressgangccms.contentspec.ContentSpec;
-import org.jboss.pressgangccms.contentspec.constants.CSConstants;
-import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.components.ComponentTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.utils.common.DocBookUtilities;
-import org.jboss.pressgangccms.utils.common.StringUtilities;
-import org.jboss.pressgangccms.utils.constants.CommonConstants;
-import org.jboss.pressgangccms.zanata.ZanataDetails;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.StringUtilities;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
+import com.redhat.contentspec.builder.utils.DocbookBuildUtilities;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -58,7 +62,7 @@ public class ClientUtilities
 	{
 		if (location == null || location.isEmpty()) return location;
 		
-		String fixedLocation = new String(location);
+		String fixedLocation = location;
 		if (location.startsWith("~"))
 		{
 			fixedLocation = Constants.HOME_LOCATION + location.substring(1);
@@ -100,7 +104,7 @@ public class ClientUtilities
 	{
 		if (location == null || location.isEmpty()) return location;
 		
-		String fixedLocation = new String(location);
+		String fixedLocation = location;
 		if (!location.endsWith(File.separator))
 		{
 			fixedLocation += File.separator;
@@ -133,7 +137,7 @@ public class ClientUtilities
 	{
 		if (host == null || host.isEmpty()) return host;
 		
-		String fixedHost = new String(host);
+		String fixedHost = host;
 		if (!host.endsWith("/"))
 		{
 			fixedHost += "/";
@@ -184,7 +188,7 @@ public class ClientUtilities
 	public static String validateFilePath(final String filePath)
 	{
 		if (filePath == null) return null;
-		String fixedPath = new String(filePath);
+		String fixedPath = filePath;
 		if (filePath.startsWith("~"))
 		{
 			fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
@@ -301,10 +305,11 @@ public class ClientUtilities
 			String[] fixedEnvVariables = envVariables;
 			final Map<String, String> env = System.getenv();
 			final List<String> envVars = new ArrayList<String>();
-			for (final String key : env.keySet())
+			for (final Entry<String, String> entry : env.entrySet())
 			{
+			    final String key = entry.getKey();
 				if (!key.equals("XML_CATALOG_FILES"))
-					envVars.add(key + "=" + env.get(key));
+					envVars.add(key + "=" + entry.getValue());
 			}
 			if (envVariables != null)
 			{
@@ -319,20 +324,38 @@ public class ClientUtilities
 			
 			// Create a separate thread to read the stderr stream
             final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
-            final InputStreamHandler stdOut = new InputStreamHandler(p.getInputStream(), console);
             final InputStreamHandler stdInPipe = new InputStreamHandler(System.in, p.getOutputStream());
+            
+            // Pipe stdin to the process
+            if (allowInput)
+            {
+                stdInPipe.start();
+            }
             
             // Get the output of the command
 			if (displayOutput)
 			{
 			    stdErr.start();
-		        stdOut.start();
-			}
-			
-			// Pipe stdin to the process
-			if (allowInput)
-			{
-			    stdInPipe.start();
+		        
+			    final BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			    
+			    String line;
+		        try
+		        {
+		            while ((line = br.readLine()) != null)
+		            {
+	                    synchronized(console)
+	                    {
+	                        console.println(line);
+	                    }
+		            }
+		        }
+		        catch (Exception e)
+		        {
+		            // Do nothing
+		            JCommander.getConsole().println(e.getMessage());
+		            e.printStackTrace();
+		        }
 			}
 			
 			// Wait for the process to finish
@@ -342,7 +365,7 @@ public class ClientUtilities
 			stdInPipe.shutdown();
 			
 			// Wait for the output to be printed
-			while (stdOut.isAlive() || stdErr.isAlive())
+			while (stdErr.isAlive())
 			{
 			    Thread.sleep(100);
 			}
@@ -531,14 +554,14 @@ public class ClientUtilities
 		final String version = contentSpec.getVersion();
 		final String bookTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 		final String locale = contentSpec.getLocale() == null ? CommonConstants.DEFAULT_LOCALE : contentSpec.getLocale();
-		final String edition = contentSpec.getEdition();
-		
+		final String bookVersion = DocbookBuildUtilities.generateRevision(contentSpec);
+
 		// Connect to the koji hub
 		final KojiConnector connector = new KojiConnector();
 		connector.connectTo(validateHost(kojiHubUrl));
 		
 		// Perform the search using the info from the content spec
-		final String packageName = product + "-" + bookTitle + "-" + version + "-web-" + locale + "-" + edition + "-";
+		final String packageName = product + "-" + bookTitle + "-" + version + "-web-" + locale + "-" + bookVersion + "-";
 		final KojiBuildSearch buildSearch = new KojiBuildSearch(packageName + "*");
 		connector.executeMethod(buildSearch);
 		

@@ -5,24 +5,26 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jboss.pressgangccms.contentspec.ContentSpec;
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.structures.StringToCSNodeCollection;
-import org.jboss.pressgangccms.contentspec.utils.ContentSpecUtilities;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.collections.RESTTopicCollectionV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.utils.common.CollectionUtilities;
-import org.jboss.pressgangccms.utils.common.HashUtilities;
-import org.jboss.pressgangccms.utils.common.XMLUtilities;
-import org.jboss.pressgangccms.utils.structures.Pair;
-import org.jboss.pressgangccms.utils.structures.StringToNodeCollection;
-import org.jboss.pressgangccms.zanata.ZanataConstants;
-import org.jboss.pressgangccms.zanata.ZanataDetails;
-import org.jboss.pressgangccms.zanata.ZanataInterface;
+import java.util.Map.Entry;
+
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.collections.RESTTopicCollectionV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTranslatedTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
+import org.jboss.pressgang.ccms.utils.common.HashUtilities;
+import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
+import org.jboss.pressgang.ccms.utils.structures.Pair;
+import org.jboss.pressgang.ccms.utils.structures.StringToNodeCollection;
+import org.jboss.pressgang.ccms.zanata.ZanataConstants;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
+import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.w3c.dom.Document;
 import org.zanata.common.ContentType;
 import org.zanata.common.LocaleId;
@@ -333,7 +335,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 		if (!pushCSTopicsToZanata(restManager, topics, contentSpecTopic, csp.getContentSpec()))
 		{
 			printError(Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
-			System.exit(Constants.EXIT_FAILURE);
+			shutdown(Constants.EXIT_FAILURE);
 		}
 		else
 		{
@@ -354,7 +356,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 		final ZanataInterface zanataInterface = new ZanataInterface();
 		
 		// Convert all the topics to DOM Documents first so we know if any are invalid
-		for (final RESTTopicV1 topic : topics.getItems())
+		final List<RESTTopicV1> topicItems = topics.returnItems();
+		for (final RESTTopicV1 topic : topicItems)
 		{
 			/*
 			 * make sure the section title is the same as the
@@ -416,7 +419,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 			JCommander.getConsole().println("Starting to push topics to zanata...");
 			
 			// Loop through each topic and upload it to zanata
-			for (final RESTTopicV1 topic : topicToDoc.keySet())
+			for (final Entry<RESTTopicV1, Document> topicEntry : topicToDoc.entrySet())
 			{
 				++current;
 				final int percent = Math.round(current / total * 100);
@@ -426,7 +429,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 					JCommander.getConsole().println("\tPushing topics to zanata " + percent + "% Done");
 				}
 				
-				final Document doc = topicToDoc.get(topic);
+				final RESTTopicV1 topic = topicEntry.getKey();
+				final Document doc = topicEntry.getValue();
 				final String zanataId = topic.getId() + "-" + topic.getRevision();
 				
 				/*

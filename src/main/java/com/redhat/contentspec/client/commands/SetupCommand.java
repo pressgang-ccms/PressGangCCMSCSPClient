@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
@@ -221,7 +222,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Get the server setup details from the user
 			final Integer numServers = Integer.parseInt(answer);
-			String serverNames = "";
+			final StringBuilder serverNames = new StringBuilder("");
 			for (int i = 1; i <= numServers; i++)
 			{
 				final ServerConfiguration config = new ServerConfiguration();
@@ -240,7 +241,7 @@ public class SetupCommand extends BaseCommandImpl
 				
 				// Add the server configuration and add the name to the list of displayable strings
 				servers.put(config.getName(), config);
-				serverNames += config.getName() + "/";
+				serverNames.append(config.getName() + "/");
 				
 				// Good point to check for a shutdown
 				if (isAppShuttingDown())
@@ -283,9 +284,10 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Add the information to the configuration file
 		configFile.append("[servers]\n");
-		for (final String serverName: servers.keySet())
+		for (final Entry<String, ServerConfiguration> serverEntry : servers.entrySet())
 		{
-			final ServerConfiguration config = servers.get(serverName);
+		    final String serverName = serverEntry.getKey();
+			final ServerConfiguration config = serverEntry.getValue();
 			
 			// Setup the url for the server
 			if (serverName.equals(Constants.DEFAULT_SERVER_NAME))
@@ -346,9 +348,9 @@ public class SetupCommand extends BaseCommandImpl
 		String publicanFormat = "";
 		
 		// Get the publican options
-		JCommander.getConsole().println("Please enter the publican build command line options. (\"" + Constants.DEFAULT_PUBLICAN_OPTIONS + "\")");
+		JCommander.getConsole().println("Please enter the publican build command line options. [" + Constants.DEFAULT_PUBLICAN_OPTIONS + "]");
 		publicanParams = JCommander.getConsole().readLine();
-		JCommander.getConsole().println("Please enter the preferred publican preview format. (" + Constants.DEFAULT_PUBLICAN_FORMAT + ")");
+		JCommander.getConsole().println("Please enter the preferred publican preview format. [" + Constants.DEFAULT_PUBLICAN_FORMAT + "]");
 		publicanFormat = JCommander.getConsole().readLine();
 		
 		// Create the publican options
@@ -369,15 +371,15 @@ public class SetupCommand extends BaseCommandImpl
 		String publishCommand = "";
 		
 		// Get the publish options
-		JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. (" + Constants.DEFAULT_KOJIHUB_URL + ")");
+		JCommander.getConsole().println("Please enter the URL of the " + Constants.KOJI_NAME + "hub. [" + Constants.DEFAULT_KOJIHUB_URL + "]");
 		kojiHubUrl = JCommander.getConsole().readLine();
-		JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("(" + Constants.DEFAULT_PUBLISH_COMMAND + ")")));
+		JCommander.getConsole().println("Please enter the default command to publish Content Specifications." + (Constants.DEFAULT_PUBLISH_COMMAND.isEmpty() ? "" : ("[" + Constants.DEFAULT_PUBLISH_COMMAND + "]")));
 		publishCommand = JCommander.getConsole().readLine();
 		
 		// Create the Publish Settings
 		configFile.append("[publish]\n");
-		configFile.append("koji.huburl=" + kojiHubUrl + "\n");
-		configFile.append("command=" + publishCommand + "\n\n");
+		configFile.append("koji.huburl=" + (kojiHubUrl.isEmpty() ? Constants.DEFAULT_KOJIHUB_URL : kojiHubUrl) + "\n");
+		configFile.append("command=" + (publishCommand.isEmpty() ? Constants.DEFAULT_PUBLISH_COMMAND : publishCommand) + "\n\n");
 	}
 	
 	/**
@@ -416,7 +418,7 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Get the server setup details from the user
 		final Integer numProjects = Integer.parseInt(answer);
-		String serverNames = "";
+		final StringBuilder serverNames = new StringBuilder("");
 		for (int i = 1; i <= numProjects; i++)
 		{
 			final ZanataServerConfiguration config = new ZanataServerConfiguration();
@@ -439,7 +441,7 @@ public class SetupCommand extends BaseCommandImpl
 			
 			// Add the server configuration and add the name to the list of displayable strings
 			servers.put(config.getName(), config);
-			serverNames += config.getName() + "/";
+			serverNames.append(config.getName() + "/");
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown())
@@ -477,9 +479,10 @@ public class SetupCommand extends BaseCommandImpl
 		
 		// Add the information to the configuration file
 		configFile.append("[zanata]\n");
-		for (final String serverName: servers.keySet())
+		for (final Entry<String, ZanataServerConfiguration> serverEntry : servers.entrySet())
 		{
-			final ZanataServerConfiguration config = servers.get(serverName);
+		    final String serverName = serverEntry.getKey();
+			final ZanataServerConfiguration config = serverEntry.getValue();
 			
 			// Setup the url for the server
 			if (serverName.equals(Constants.DEFAULT_SERVER_NAME))

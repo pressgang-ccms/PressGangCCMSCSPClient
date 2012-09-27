@@ -45,10 +45,10 @@ public class SnapshotList {
 	}
 	
 	public String toString() {
-		String output = "Number of Snapshots: " + count + "\n";
-		for (Snap snapshot: snapshots) {
-			output += snapshot.toString() + "\n";
+		final StringBuilder output = new StringBuilder("Number of Snapshots: " + count + "\n");
+		for (final Snap snapshot: snapshots) {
+			output.append(snapshot.toString() + "\n");
 		}
-		return output;
+		return output.toString();
 	}
 }

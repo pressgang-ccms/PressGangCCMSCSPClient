@@ -3,14 +3,13 @@ package com.redhat.contentspec.client.commands;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.collections.RESTTopicCollectionV1;
-import org.jboss.pressgangccms.rest.v1.collections.base.BaseRestCollectionV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.utils.common.CollectionUtilities;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.collections.RESTTopicCollectionV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -137,10 +136,11 @@ public class InfoCommand extends BaseCommandImpl
 		// Calculate the percentage complete
 		final int numTopics = csp.getReferencedTopicIds().size();
 		int numTopicsComplete = 0;
-		final BaseRestCollectionV1<RESTTopicV1, RESTTopicCollectionV1> topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds(), false);
+		final RESTTopicCollectionV1 topics = restManager.getReader().getTopicsByIds(csp.getReferencedTopicIds(), false);
 		if (topics != null && topics.getItems() != null)
 		{
-			for (final RESTTopicV1 topic: topics.getItems())
+		    final List<RESTTopicV1> topicItems = topics.returnItems();
+			for (final RESTTopicV1 topic: topicItems)
 			{
 				if (topic.getXml() != null && !topic.getXml().isEmpty())
 				{

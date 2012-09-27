@@ -6,13 +6,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.utils.common.DocBookUtilities;
-import org.jboss.pressgangccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -37,6 +37,9 @@ public class PushCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.EXEC_TIME_LONG_PARAM, description = "Show the execution time of the command.", hidden = true)
 	private Boolean executionTime = false;
+	
+	@Parameter(names = Constants.PUSH_ONLY_LONG_PARAM, description = "Only push the Content Specification and don't save the Post Processed Content Specification.")
+	private Boolean pushOnly = false; 
 	
 	private ContentSpecProcessor csp = null;
 	
@@ -75,7 +78,17 @@ public class PushCommand extends BaseCommandImpl
 		this.executionTime = executionTime;
 	}
 
-	@Override
+	public Boolean getPushOnly()
+	{
+        return pushOnly;
+    }
+
+    public void setPushOnly(final boolean pushOnly)
+    {
+        this.pushOnly = pushOnly;
+    }
+
+    @Override
 	public void printError(final String errorMsg, final boolean displayHelp)
 	{
 		printError(errorMsg, displayHelp, Constants.PUSH_COMMAND_NAME);
@@ -209,12 +222,20 @@ public class PushCommand extends BaseCommandImpl
 			return;
 		}
 		
-		if (success && pushingFromConfig)
+		if (success && !pushOnly)
 		{
 			// Save the post spec to file if the push was successful
-			final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
-			final RESTTopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
-			final File outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
+		    final RESTTopicV1 contentSpecTopic = restManager.getReader().getContentSpecById(csp.getContentSpec().getId(), null);
+			final File outputSpec;
+			if (pushingFromConfig)
+			{
+			    final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+			    outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + escapedTitle + File.separator)) + escapedTitle + "-post." + Constants.FILENAME_EXTENSION);
+			}
+			else
+			{
+			    outputSpec = files.get(0);
+			}
 			
 			// Create the directory
 			if (outputSpec.getParentFile() != null)

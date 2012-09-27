@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.pressgangccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
@@ -18,7 +18,6 @@ public class OverrideValidator implements IParameterValidator
 		private static final long serialVersionUID = 8972067339176103456L;
 		
 		{
-			add(CSConstants.PUBSNUMBER_OVERRIDE);
 			add(CSConstants.AUTHOR_GROUP_OVERRIDE);
 			add(CSConstants.REVISION_HISTORY_OVERRIDE);
 			add(CSConstants.REVNUMBER_OVERRIDE);
@@ -41,35 +40,20 @@ public class OverrideValidator implements IParameterValidator
 					final File file = new File(ClientUtilities.validateFilePath(varValue));
 					if (!(file.exists() && file.isFile()))
 					{
-						throw new ParameterException("\"" + varName + "\" override is not a valid file.");
-					}
-				}
-				else if (varName.equals(CSConstants.PUBSNUMBER_OVERRIDE))
-				{
-					try
-					{
-						final Integer pubsnumber = Integer.parseInt(varValue);
-						if (pubsnumber < 0)
-						{
-							throw new ParameterException("\"" + varName + "\" override is not a valid number.");
-						}
-					}
-					catch (NumberFormatException e)
-					{
-						throw new ParameterException("\"" + varName + "\" override is not a valid number.");
+						throw new ParameterException("The \"" + varName + "\" override is not a valid file.");
 					}
 				}
 				else if (varName.equals(CSConstants.REVNUMBER_OVERRIDE))
 				{
-				    if (!varValue.matches("^(" + ProcessorConstants.VERSION_VALIDATE_REGEX + ")-[0-9]+$"))
+				    if (!varValue.matches("^(" + ProcessorConstants.VERSION_EPOCH_VALIDATE_REGEX + ")-[0-9]+$"))
 				    {
-				        throw new ParameterException("\"" + varName + "\" override is not a valid revision history number.");
+				        throw new ParameterException("The \"" + varName + "\" override is not a valid revision history number.");
 				    }
 				}
 			}
 			else
 			{
-				throw new ParameterException("\"" + varName + "\" is an invalid override parameter");
+				throw new ParameterException("The \"" + varName + "\" override is not a valid override parameter");
 			}
 		}
 		else

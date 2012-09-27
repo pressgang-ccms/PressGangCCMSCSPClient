@@ -8,12 +8,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -34,12 +34,12 @@ public class PullSnapshotCommand extends BaseCommandImpl
 	private List<Integer> ids = new ArrayList<Integer>();
 	
 	@Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
-	private Integer revision;
+	private Integer revision = null;
 	
 	@Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
 	private String outputPath;
 	
-	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update an current revisions when pulling down the snapshot.", hidden = true)
+	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.", hidden = true)
 	private Boolean update = false;
 	
 	private ContentSpecProcessor csp = null;
@@ -167,6 +167,7 @@ public class PullSnapshotCommand extends BaseCommandImpl
 		processingOptions.setAddRevisions(true);
 		processingOptions.setUpdateRevisions(update);
 		processingOptions.setIgnoreChecksum(true);
+		processingOptions.setRevision(revision);
 		
 		// Process the content spec to make sure the spec is valid, 
 		csp = new ContentSpecProcessor(restManager, elm, processingOptions);

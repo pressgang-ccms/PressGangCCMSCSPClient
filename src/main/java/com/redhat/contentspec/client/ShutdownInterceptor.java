@@ -1,6 +1,6 @@
 package com.redhat.contentspec.client;
 
-import org.jboss.pressgangccms.contentspec.interfaces.ShutdownAbleApp;
+import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 
 /**
  * A class that allows a Shutdown able Application to have the shutdown intercepted and then shutdown using the applications shutdown method();

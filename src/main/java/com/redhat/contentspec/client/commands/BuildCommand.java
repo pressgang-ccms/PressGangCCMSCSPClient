@@ -7,20 +7,19 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import org.jboss.pressgangccms.contentspec.constants.CSConstants;
-import org.jboss.pressgangccms.contentspec.rest.RESTManager;
-import org.jboss.pressgangccms.contentspec.rest.RESTReader;
-import org.jboss.pressgangccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgangccms.rest.v1.entities.RESTTranslatedTopicV1;
-import org.jboss.pressgangccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgangccms.rest.v1.entities.base.RESTBaseTopicV1;
-import org.jboss.pressgangccms.utils.common.CollectionUtilities;
-import org.jboss.pressgangccms.utils.common.DocBookUtilities;
-import org.jboss.pressgangccms.utils.common.ExceptionUtilities;
-import org.jboss.pressgangccms.utils.common.FileUtilities;
-import org.jboss.pressgangccms.utils.constants.CommonConstants;
-import org.jboss.pressgangccms.zanata.ZanataDetails;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTBaseTopicV1;
+import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
@@ -28,6 +27,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.CommaParameterSplitter;
 import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Lists;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
 import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
@@ -83,7 +83,7 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.LOCALE_LONG_PARAM, description = "What locale to build the content spec for.", metaVar = "<LOCALE>")
 	private String locale = null;
 	
-	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".", hidden = true)
+	@Parameter(names = Constants.FETCH_PUBSNUM_LONG_PARAM, description = "Fetch the pubsnumber directly from " + Constants.KOJI_NAME + ".")
 	protected Boolean fetchPubsnum = false;
 	
 	@Parameter(names = Constants.SHOW_REPORT_LONG_PARAM, description = "Show the Report chapter in the output.")
@@ -100,7 +100,22 @@ public class BuildCommand extends BaseCommandImpl
 	
 	@Parameter(names = Constants.COMMON_CONTENT_LONG_PARAM, hidden = true)
 	private String commonContentLocale = null;
-		
+	
+	@Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
+    private Integer revision = null;
+
+	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions, to the latest version when building.", hidden = true)
+    private Boolean update = false;
+	
+	@Parameter(names = {Constants.DRAFT_LONG_PARAM, Constants.DRAFT_SHORT_PARAM}, description = "Build the book as a draft.")
+	private Boolean draft = false;
+	
+	@Parameter(names = Constants.SHOW_REMARKS_LONG_PARAM, description = "Build the book with remarks visible.")
+    private Boolean showRemarks = false;
+	
+	@Parameter(names = {Constants.REV_MESSAGE_LONG_PARAM, Constants.REV_MESSAGE_SHORT_PARAM}, description = "Add a message for the revision history.")
+	private List<String> messages = Lists.newArrayList();
+
 	private ContentSpecProcessor csp = null;
 	private ContentSpecBuilder builder = null;
 	
@@ -288,7 +303,57 @@ public class BuildCommand extends BaseCommandImpl
 		this.commonContentLocale = commonContentLocale;
 	}
 
-	public CSDocbookBuildingOptions getBuildOptions()
+	public Integer getRevision()
+	{
+        return revision;
+    }
+
+    public void setRevision(final Integer revision)
+    {
+        this.revision = revision;
+    }
+
+    public Boolean getUpdate()
+    {
+        return update;
+    }
+
+    public void setUpdate(final Boolean update)
+    {
+        this.update = update;
+    }
+
+    public Boolean getDraft()
+    {
+        return draft;
+    }
+
+    public void setDraft(final Boolean draft)
+    {
+        this.draft = draft;
+    }
+
+    public Boolean getShowRemarks()
+    {
+        return showRemarks;
+    }
+
+    public void setShowRemarks(final Boolean showRemarks)
+    {
+        this.showRemarks = showRemarks;
+    }
+
+    public List<String> getMessage()
+    {
+        return messages;
+    }
+
+    public void setMessage(final List<String> messages)
+    {
+        this.messages = messages;
+    }
+
+    public CSDocbookBuildingOptions getBuildOptions()
 	{
 		// Fix up the values for overrides so file names are expanded
 		fixOverrides();
@@ -306,6 +371,9 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setShowReportPage(showReport);
 		buildOptions.setCommonContentLocale(commonContentLocale);
 		buildOptions.setCommonContentDirectory(clientConfig.getPublicanCommonContentDirectory());
+		buildOptions.setDraft(draft);
+		buildOptions.setPublicanShowRemarks(showRemarks);
+		buildOptions.setRevisionMessages(messages);
 		
 		return buildOptions;
 	}
@@ -316,38 +384,7 @@ public class BuildCommand extends BaseCommandImpl
 		final String contentSpec;
 		if (id.matches("^\\d+$"))
 		{
-			final RESTBaseTopicV1 contentSpecTopic;
-			
-			if (locale == null)
-			{
-				// Get the Content Specification from the server.
-				contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
-			}
-			else
-			{
-				// Get the Content Specification from the server.
-				final RESTTranslatedTopicV1 translatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, locale);
-				
-				if (translatedContentSpecTopic != null)
-				{
-				    contentSpecTopic = translatedContentSpecTopic;
-				}
-				else
-				{
-				    // Try to see if one exists for the default locale
-	                final RESTTranslatedTopicV1 unTranslatedContentSpecTopic = reader.getTranslatedContentSpecById(Integer.parseInt(id), null, CommonConstants.DEFAULT_LOCALE);
-	                
-	                if (unTranslatedContentSpecTopic != null)
-	                {
-	                    contentSpecTopic = unTranslatedContentSpecTopic;
-	                }
-	                else
-	                {
-    				    // Get the Content Specification from the server.
-                        contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), null);
-	                }
-				}
-			}
+			final RESTBaseTopicV1 contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
 			
 			if (contentSpecTopic == null || contentSpecTopic.getXml() == null)
 			{
@@ -417,7 +454,7 @@ public class BuildCommand extends BaseCommandImpl
 		}
 	}
 
-	@Override
+    @Override
 	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
 	{
 		final long startTime = System.currentTimeMillis();
@@ -477,6 +514,8 @@ public class BuildCommand extends BaseCommandImpl
 		{
 			shutdown(Constants.EXIT_TOPIC_INVALID);
 		}
+		
+		String fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 
 		// Pull in the pubsnumber from koji if the option is set
 		if (fetchPubsnum)
@@ -520,7 +559,14 @@ public class BuildCommand extends BaseCommandImpl
 		try
 		{
 			builder = new ContentSpecBuilder(restManager);
-			builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions(), cspConfig.getZanataDetails());
+			if (locale == null)
+			{
+			    builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
+			}
+			else
+			{
+			    builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), locale, user, getBuildOptions(), cspConfig.getZanataDetails());
+			}
 		}
 		catch (Exception e)
 		{
@@ -538,7 +584,6 @@ public class BuildCommand extends BaseCommandImpl
 		}
 		
 		// Create the output file
-		String fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
 		String outputDir = "";
 		if (buildingFromConfig)
 		{
@@ -577,6 +622,12 @@ public class BuildCommand extends BaseCommandImpl
 		processingOptions.setValidating(true);
 		processingOptions.setIgnoreChecksum(true);
 		processingOptions.setAllowNewTopics(false);
+		processingOptions.setRevision(revision);
+		processingOptions.setUpdateRevisions(update);
+		if (revision != null)
+		{
+		    processingOptions.setAddRevisions(true);
+		}
 		if (allowEmptyLevels)
 			processingOptions.setAllowEmptyLevels(true);
 		
@@ -628,11 +679,12 @@ public class BuildCommand extends BaseCommandImpl
 	protected void fixOverrides()
 	{
 		final Map<String, String> overrides = this.getOverrides();
-		for (final String key : overrides.keySet())
+		for (final Entry<String, String> entry : overrides.entrySet())
 		{
+		    final String key = entry.getKey();
 			if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE))
 			{
-				overrides.put(key, ClientUtilities.validateFilePath(overrides.get(key)));
+				overrides.put(key, ClientUtilities.validateFilePath(entry.getValue()));
 			}
 		}
 	}
