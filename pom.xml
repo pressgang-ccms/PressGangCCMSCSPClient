@@ -61,7 +61,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.redhat.contentspec</groupId>
+			<groupId>org.jboss.pressgang.ccms</groupId>
 			<artifactId>csprocessor</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
