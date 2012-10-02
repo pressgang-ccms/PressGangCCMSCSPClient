@@ -73,7 +73,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.beust</groupId>
+			<groupId>corg.jboss.pressgang.ccms</groupId>
 			<artifactId>jcommander-extended</artifactId>
 			<version>1.24-SNAPSHOT</version>
 		</dependency>
