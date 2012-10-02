@@ -55,7 +55,7 @@
 
 		<!-- Custom classes from internal repo -->
 		<dependency>
-			<groupId>com.redhat.contentspec</groupId>
+			<groupId>org.jboss.pressgang.ccms</groupId>
 			<artifactId>csbuilder</artifactId>
 			<version>0.1.7-SNAPSHOT</version>
 		</dependency>
