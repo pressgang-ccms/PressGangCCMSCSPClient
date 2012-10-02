@@ -1,0 +1,11 @@
+[csprocessor-dev]
+name=Content Specification Processor Developer Repository
+baseurl=http://csprocessor.cloud.lab.eng.bne.redhat.com/dev/yum/base
+enabled=1
+gpgcheck=0
+
+[csprocessor-dev-updates]
+name=Content Specification Processor Developer Update Repository
+baseurl=http://csprocessor.cloud.lab.eng.bne.redhat.com/dev/yum/updates                                
+enabled=1
+gpgcheck=0

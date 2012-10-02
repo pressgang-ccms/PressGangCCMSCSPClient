@@ -1,0 +1,11 @@
+[csprocessor]
+name=Content Specification Processor Repository
+baseurl=http://csprocessor.cloud.lab.eng.bne.redhat.com/yum/base
+enabled=1
+gpgcheck=0
+
+[csprocessor-updates]
+name=Content Specification Processor Update Repository
+baseurl=http://csprocessor.cloud.lab.eng.bne.redhat.com/yum/updates                                
+enabled=1
+gpgcheck=0
