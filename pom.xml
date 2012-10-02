@@ -23,6 +23,7 @@
 
 	<build>
 		<plugins>
+
 			<!-- build standalone exe jar -->
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -48,8 +49,17 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			
 		</plugins>
 	</build>
+	
+		<pluginRepositories>
+        <pluginRepository>
+            <id>onejar-maven-plugin.googlecode.com</id>
+            <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 	<dependencies>
 
