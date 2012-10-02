@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>contentspec</artifactId>
-		<groupId>com.redhat</groupId>
+		<groupId>org.jboss.pressgang.ccms</groupId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
