@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# The projects need a higher version of maven than is available 
+# as an RPM in RHEL, so allow an override 
+MAVEN_BIN=/opt/apache-maven-3.0.4/bin/mvn
+
+# Get the directory hosting the script. This is important if the script is called from 
+# another working directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 function error()
 {
   echo "An Error occured("$1"). Exiting..."
@@ -7,7 +15,7 @@ function error()
   exit $1
 }
 
-pushd ~/
+pushd ${DIR}
 # Build the common libraries first
 ./compile-commons.sh
 ERROR_CODE=$?
@@ -20,7 +28,7 @@ pushd ~/git
 
 # Build the csp components and client
 cd ./csprocessor
-mvn clean package
+${MAVEN_BIN} clean package
 ERROR_CODE=$?
 if [[ $ERROR_CODE != 0 ]]; then
   error $ERROR_CODE

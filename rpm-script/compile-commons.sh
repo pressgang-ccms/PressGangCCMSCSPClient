@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# The projects need a higher version of maven than is available 
+# as an RPM in RHEL, so allow an override 
+MAVEN_BIN=/opt/apache-maven-3.0.4/bin/mvn
+
+# Get the directory hosting the script. This is important if the script is called from 
+# another working directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 function error()
 {
   echo "An Error occured. Exiting..."
@@ -12,35 +20,35 @@ pushd ~/git
 
 # Build the common utilities first
 cd ./PressGangCCMSCommonUtilities
-mvn clean install
+${MAVEN_BIN} clean install
 if [[ $? != 0 ]]; then
   error
 fi
 
 # Build the zanata interface
 cd ../PressGangCCMSZanataInterface
-mvn clean install
+${MAVEN_BIN} clean install
 if [[ $? != 0 ]]; then
   error
 fi
 
 # Build the REST Commons library 
 cd ../PressGangCCMSRESTCommon            
-mvn clean install
+${MAVEN_BIN} clean install
 if [[ $? != 0 ]]; then
   error
 fi
 
 # Build the rest commons
 cd ../PressGangCCMSRESTv1Common
-mvn clean install
+${MAVEN_BIN} clean install
 if [[ $? != 0 ]]; then
   error
 fi 
 
 # Build the content spec commons
 cd ../PressGangCCMSContentSpec
-mvn clean install
+${MAVEN_BIN} clean install
 if [[ $? != 0 ]]; then
   error
 fi
