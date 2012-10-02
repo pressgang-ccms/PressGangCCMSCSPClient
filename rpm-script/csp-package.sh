@@ -61,4 +61,4 @@ popd
 
 echo Run the following commands on the YUM server
 echo cp ~/${FILE_NAME} /var/www/html/yum/updates/noarch/ 
-ehco createrepo --no-database /var/www/html/yum/updates/
+echo createrepo --no-database /var/www/html/yum/updates/
