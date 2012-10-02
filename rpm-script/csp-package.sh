@@ -58,3 +58,7 @@ echo "Finished making the RPM package"
 scp ${DIR}/rpm/RPMS/noarch/"$FILE_NAME"-1.noarch.rpm root@csprocessor.cloud.lab.eng.bne.redhat.com:/root/
 
 popd
+
+echo Run the following commands on the YUM server
+echo cp ~/${FILE_NAME} /var/www/html/yum/updates/noarch/ 
+ehco createrepo --no-database /var/www/html/yum/updates/
