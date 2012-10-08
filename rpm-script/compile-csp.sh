@@ -2,7 +2,11 @@
 
 # The projects need a higher version of maven than is available 
 # as an RPM in RHEL, so allow an override 
-MAVEN_BIN=/opt/apache-maven-3.0.4/bin/mvn
+if [ -z "$MAVEN_BIN" ] && [ -z "$MAVEN_HOME" ]; then
+	MAVEN_BIN=/opt/apache-maven-3.0.4/bin/mvn
+elif [ -z "$MAVEN_BIN" ]; then
+	MAVEN_BIN="$MAVEN_HOME"/bin/mvn
+fi
 
 # Get the directory hosting the script. This is important if the script is called from 
 # another working directory
