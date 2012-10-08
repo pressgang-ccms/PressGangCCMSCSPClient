@@ -13,6 +13,7 @@ import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -289,6 +290,13 @@ public class PullCommand extends BaseCommandImpl
 					if (revision == null)
 					{
 						fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+						
+						/*
+						 * If the revision is null then we want to get the latest version, however the version may have been updated
+						 * via the GUI. So we need to recalculate the checksum so that when the changes are pushed the CHECKSUM will be
+						 * valid.
+						 */
+						data = fixContentSpecChecksum(data);
 					}
 					else
 					{
@@ -372,6 +380,14 @@ public class PullCommand extends BaseCommandImpl
 				shutdown(Constants.EXIT_FAILURE);
 			}
 		}
+	}
+	
+	protected String fixContentSpecChecksum(final String contentSpec)
+	{
+	    String contentSpecData = contentSpec.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
+        final String checksum = HashUtilities.generateMD5(contentSpecData);
+        
+        return "CHECKSUM=" + checksum + "\n" + contentSpecData;
 	}
 	
 	@Override
