@@ -461,7 +461,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 							final TextFlow textFlow = new TextFlow();
 							textFlow.setContent(translatableString);
 							textFlow.setLang(LocaleId.fromJavaName(topic.getLocale()));
-							textFlow.setId(createZanataUniqueId(topic, translatableString));
+							textFlow.setId(HashUtilities.generateMD5(translatableString));
 							textFlow.setRevision(1);
 
 							resource.getTextFlows().add(textFlow);
@@ -474,7 +474,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 					}
 					else if (!translatedTopicExists)
 					{
-						final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
+						final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(topic);
 						try
 						{
 							restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic);
@@ -519,7 +519,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 						final TextFlow textFlow = new TextFlow();
 						textFlow.setContent(translatableString);
 						textFlow.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
-						textFlow.setId(createZanataUniqueId(contentSpecTopic, translatableString));
+						textFlow.setId(HashUtilities.generateMD5(translatableString));
 						textFlow.setRevision(1);
 
 						resource.getTextFlows().add(textFlow);
@@ -564,13 +564,6 @@ public class PushTranslationCommand extends BaseCommandImpl
 		}
 
 		return !error;
-	}
-	
-	private static String createZanataUniqueId(final RESTTopicV1 topic, final String text)
-	{
-		final String sep = "\u0000";
-		final String hashBase = text + sep + topic.getId() + sep + topic.getRevision();
-		return HashUtilities.generateMD5(hashBase);
 	}
 	
 	/**
