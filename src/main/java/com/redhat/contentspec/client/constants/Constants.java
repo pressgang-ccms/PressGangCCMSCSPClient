@@ -21,7 +21,7 @@ public class Constants
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.27.2";
+	public static final String BUILD = "0.27.3";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
