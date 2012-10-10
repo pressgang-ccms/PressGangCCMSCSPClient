@@ -21,6 +21,7 @@ public class OverrideValidator implements IParameterValidator
 			add(CSConstants.AUTHOR_GROUP_OVERRIDE);
 			add(CSConstants.REVISION_HISTORY_OVERRIDE);
 			add(CSConstants.REVNUMBER_OVERRIDE);
+			add(CSConstants.BRAND_OVERRIDE);
 		}
 	};
 	
