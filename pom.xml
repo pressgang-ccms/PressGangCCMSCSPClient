@@ -2,32 +2,27 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<artifactId>contentspec</artifactId>
-		<groupId>org.jboss.pressgang.ccms</groupId>
+		<artifactId>contentspec-parent</artifactId>
+		<groupId>org.jboss.pressgang.ccms.contentspec</groupId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 
-	<groupId>com.redhat.contentspec</groupId>
 	<artifactId>csprocessor-client</artifactId>
 	<version>0.27.4-SNAPSHOT</version>
 	<name>Content Specification Processor Client</name>
-
 	<url>http://www.github.com/lnewson/csprocessor</url>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<distribution>repo</distribution>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-		</license>
-	</licenses>
+
+	<properties>
+		<commonsconfiguration.version>1.7</commonsconfiguration.version>
+	</properties>
 
 	<build>
 		<plugins>
-
 			<!-- build standalone exe jar -->
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
+				<version>${shadeplugin.version}</version>
 				<configuration>
 					<transformers>
 						<transformer
@@ -50,17 +45,8 @@
 					</execution>
 				</executions>
 			</plugin>
-
-
 		</plugins>
 	</build>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>onejar-maven-plugin.googlecode.com</id>
-			<url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 	<dependencies>
 
@@ -70,19 +56,16 @@
 			<artifactId>csbuilder</artifactId>
 			<version>0.1.7-SNAPSHOT</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.pressgang.ccms</groupId>
 			<artifactId>csprocessor</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.pressgang.ccms</groupId>
 			<artifactId>j2koji</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jboss.pressgang.ccms</groupId>
 			<artifactId>jcommander-extended</artifactId>
@@ -93,47 +76,29 @@
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-atom-provider</artifactId>
-			<version>2.3.4.Final</version>
+			<version>${resteasy.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jackson-provider</artifactId>
-			<version>2.3.4.Final</version>
+			<version>${resteasy.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-jaxrs</artifactId>
-			<version>2.3.4.Final</version>
+			<version>${resteasy.version}</version>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 			<groupId>javax.ws.rs</groupId>
 			<artifactId>javax.ws.rs-api</artifactId>
 			<version>2.0-m04</version>
-		</dependency>
+		</dependency>-->
 
 		<!-- Apache Commons Libraries -->
 		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.6</version>
-		</dependency>
-
-		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
-			<version>1.7</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.ibm.icu</groupId>
-			<artifactId>icu4j</artifactId>
-			<version>4.8.1.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.16</version>
+			<version>${commonsconfiguration.version}</version>
 		</dependency>
 	</dependencies>
 </project>
