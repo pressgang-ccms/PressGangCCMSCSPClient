@@ -349,7 +349,8 @@ public class PushTranslationCommand extends BaseCommandImpl
 		return ids.size() == 0;
 	}
 	
-	protected boolean pushCSTopicsToZanata(final RESTManager restManager, final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)
+	@SuppressWarnings("deprecation")
+    protected boolean pushCSTopicsToZanata(final RESTManager restManager, final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)
 	{
 		final Map<RESTTopicV1, Document> topicToDoc = new HashMap<RESTTopicV1, Document>();
 		boolean error = false;
