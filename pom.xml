@@ -52,12 +52,12 @@
 
 		<!-- Custom classes from internal repo -->
 		<dependency>
-			<groupId>org.jboss.pressgang.ccms</groupId>
+			<groupId>org.jboss.pressgang.ccms.contentspec</groupId>
 			<artifactId>csbuilder</artifactId>
 			<version>0.1.7-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.pressgang.ccms</groupId>
+			<groupId>org.jboss.pressgang.ccms.contentspec</groupId>
 			<artifactId>csprocessor</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
