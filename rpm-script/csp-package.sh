@@ -61,4 +61,4 @@ popd
 
 echo Run the following commands on the YUM server
 echo "cp ~/${FILE_NAME}-1.noarch.rpm /var/www/html/yum/updates/noarch/" 
-echo createrepo --no-database /var/www/html/yum/updates/
+echo createrepo --update --no-database /var/www/html/yum/updates/
