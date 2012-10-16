@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
-import org.jboss.pressgang.ccms.contentspec.sort.RevisionSort;
+import org.jboss.pressgang.ccms.contentspec.sort.EnversRevisionSort;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
@@ -152,7 +152,7 @@ public class RevisionsCommand extends BaseCommandImpl
 		}
 		
 		// Sort the revisions
-		Collections.sort(revisions, new RevisionSort());
+		Collections.sort(revisions, new EnversRevisionSort());
 		
 		// Good point to check for a shutdown
 		if (isAppShuttingDown()) {

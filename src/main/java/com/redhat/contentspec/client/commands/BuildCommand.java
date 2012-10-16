@@ -641,6 +641,7 @@ public class BuildCommand extends BaseCommandImpl
 		catch (Exception e)
 		{
 			JCommander.getConsole().println(elm.generateLogs());
+			JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
 			shutdown(Constants.EXIT_FAILURE);
 		}
 		
