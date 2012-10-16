@@ -32,7 +32,7 @@ pushd ~/git
 
 # Build the csp components and client
 cd ./csprocessor
-${MAVEN_BIN} clean package
+${MAVEN_BIN} clean package -DskipTests
 ERROR_CODE=$?
 if [[ $ERROR_CODE != 0 ]]; then
   error $ERROR_CODE

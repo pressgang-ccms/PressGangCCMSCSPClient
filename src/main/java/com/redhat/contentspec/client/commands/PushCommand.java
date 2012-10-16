@@ -214,6 +214,12 @@ public class PushCommand extends BaseCommandImpl
 			JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
 		}
 		
+		// if we failed validation then exit
+		if (!success)
+		{
+		    shutdown(Constants.EXIT_TOPIC_INVALID);
+		}
+		
 		// Good point to check for a shutdown
 		// Doesn't matter if the latest copy doesn't get downloaded just so long as the push goes through
 		if (isAppShuttingDown())
