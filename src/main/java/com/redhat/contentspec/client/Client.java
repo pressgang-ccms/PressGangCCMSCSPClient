@@ -1,38 +1,28 @@
 package com.redhat.contentspec.client;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DataConfiguration;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.tree.DefaultConfigurationNode;
 import org.apache.log4j.Logger;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
-import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -48,7 +38,6 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
 
-@SuppressWarnings("unused")
 public class Client implements BaseCommand, ShutdownAbleApp
 {	
 	private final JCommander parser = new JCommander(this);
@@ -89,9 +78,9 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	
 	public static void main(String[] args)
 	{
+	    Client client = new Client();
 		try
 		{
-			Client client = new Client();
 			Runtime.getRuntime().addShutdownHook(new ShutdownInterceptor(client));
 			client.setup();
 			client.processArgs(args);
@@ -99,7 +88,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		catch (Throwable ex)
 		{
 			JCommander.getConsole().println(ex.getMessage());
-			System.exit(Constants.EXIT_FAILURE);
+			client.shutdown(Constants.EXIT_FAILURE);
 		}
 	}
 	
@@ -172,7 +161,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		else if (command.isShowVersion() || isShowVersion())
 		{
 			// Print the version details
-			printVersionDetails(Constants.BUILD_MSG, Constants.BUILD, false);
+			printVersionDetails(Constants.BUILD_MSG, VersionUtilities.getVersionInfo(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
 		}
 		else if (command instanceof SetupCommand)
 		{
@@ -181,7 +170,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		else
 		{
 			// Print the version details
-			printVersionDetails(Constants.BUILD_MSG, Constants.BUILD, false);
+			printVersionDetails(Constants.BUILD_MSG, VersionUtilities.getVersionInfo(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown())
@@ -262,7 +251,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			// Add a newline just to separate the output
 			JCommander.getConsole().println("");
 		}
-		shutdown(Constants.EXIT_SUCCESS);
+		//shutdown(Constants.EXIT_SUCCESS);
 	}
 	
 	/**

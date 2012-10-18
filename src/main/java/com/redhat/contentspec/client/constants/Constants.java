@@ -20,8 +20,11 @@ public class Constants
 	public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
 	public static final String FILENAME_EXTENSION = "contentspec";
 	
+	// Version Constants
+	public static final String VERSION_PROPERTIES_FILENAME = "version.properties";
+	public static final String VERSION_PROPERTY_NAME = "cspclient.version";
+	
 	// Options that need configuring for a build
-	public static final String BUILD = "0.27.5";
 	public static final String DEFAULT_PROD_SERVER = "";
 	public static final String DEFAULT_TEST_SERVER = "";
 	public static final String DEFAULT_KOJIHUB_URL = "";
