@@ -23,6 +23,7 @@ public class Constants
 	// Version Constants
 	public static final String VERSION_PROPERTIES_FILENAME = "version.properties";
 	public static final String VERSION_PROPERTY_NAME = "cspclient.version";
+	public static final String BUILDDATE_PROPERTY_NAME = "cspclient.builddate";
 	
 	// Options that need configuring for a build
 	public static final String DEFAULT_PROD_SERVER = "";

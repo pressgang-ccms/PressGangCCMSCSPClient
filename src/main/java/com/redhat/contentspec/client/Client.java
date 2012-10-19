@@ -161,7 +161,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		else if (command.isShowVersion() || isShowVersion())
 		{
 			// Print the version details
-			printVersionDetails(Constants.BUILD_MSG, VersionUtilities.getVersionInfo(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
+			printVersionDetails(Constants.BUILD_MSG, VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
 		}
 		else if (command instanceof SetupCommand)
 		{
@@ -170,7 +170,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		else
 		{
 			// Print the version details
-			printVersionDetails(Constants.BUILD_MSG, VersionUtilities.getVersionInfo(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
+			printVersionDetails(Constants.BUILD_MSG, VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
 			
 			// Good point to check for a shutdown
 			if (isAppShuttingDown())
@@ -938,7 +938,19 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	 */
 	private void printVersionDetails(final String msg, final String version, final boolean printNL)
 	{
-		JCommander.getConsole().println(String.format(msg, version) + (printNL ? "\n" : ""));
+		if (version.contains("-SNAPSHOT"))
+		{
+		    final String buildDate = VersionUtilities.getAPIBuildTimestamp(Constants.VERSION_PROPERTIES_FILENAME, Constants.BUILDDATE_PROPERTY_NAME);
+		    JCommander.getConsole().println(String.format(msg + ", Build %s", version, buildDate));
+		}
+		else
+		{
+		    JCommander.getConsole().println(String.format(msg, version));
+		}
+		if (printNL)
+		{
+		    JCommander.getConsole().println("");
+		}
 	}
 
 	@Override
