@@ -264,7 +264,7 @@ public class Constants
 
 	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
 	
-	public static final String UPDATE_LONG_PARAM = "--update";
+	public static final String UPDATE_LONG_PARAM = "--latest";
 	
 	public static final String PUSH_ONLY_LONG_PARAM = "--push-only";
 	

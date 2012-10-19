@@ -374,6 +374,7 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setDraft(draft);
 		buildOptions.setPublicanShowRemarks(showRemarks);
 		buildOptions.setRevisionMessages(messages);
+		buildOptions.setUseLatestVersions(update);
 		
 		return buildOptions;
 	}
