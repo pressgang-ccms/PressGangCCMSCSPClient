@@ -273,12 +273,13 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		final PreviewCommand preview = new PreviewCommand(parser, cspConfig, clientConfig);
 		final PublishCommand publish = new PublishCommand(parser, cspConfig, clientConfig);
 		final PullCommand pull = new PullCommand(parser, cspConfig, clientConfig);
-		final PullSnapshotCommand snapshot = new PullSnapshotCommand(parser, cspConfig, clientConfig);
+		final PullSnapshotCommand pullSnapshot = new PullSnapshotCommand(parser, cspConfig, clientConfig);
 		final PushCommand push = new PushCommand(parser, cspConfig, clientConfig);
 		final PushTranslationCommand pushTranslation = new PushTranslationCommand(parser, cspConfig, clientConfig);
 		final RevisionsCommand revisions = new RevisionsCommand(parser, cspConfig, clientConfig);
 		final SearchCommand search = new SearchCommand(parser, cspConfig, clientConfig);
 		final SetupCommand setup = new SetupCommand(parser, cspConfig, clientConfig);
+		final SnapshotCommand snapshot = new SnapshotCommand(parser, cspConfig, clientConfig);
 		final StatusCommand status = new StatusCommand(parser, cspConfig, clientConfig);
 		final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
 		final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
@@ -313,8 +314,8 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		parser.addCommand(Constants.PULL_COMMAND_NAME, pull);
 		commands.put(Constants.PULL_COMMAND_NAME, pull);
 		
-		parser.addCommand(Constants.PULL_SNAPSHOT_COMMAND_NAME, snapshot);
-		commands.put(Constants.PULL_SNAPSHOT_COMMAND_NAME, snapshot);
+		parser.addCommand(Constants.PULL_SNAPSHOT_COMMAND_NAME, pullSnapshot);
+		commands.put(Constants.PULL_SNAPSHOT_COMMAND_NAME, pullSnapshot);
 		
 		parser.addCommand(Constants.PUSH_COMMAND_NAME, push);
 		commands.put(Constants.PUSH_COMMAND_NAME, push);
@@ -330,6 +331,9 @@ public class Client implements BaseCommand, ShutdownAbleApp
 		
 		parser.addCommand(Constants.SETUP_COMMAND_NAME, setup);
 		commands.put(Constants.SETUP_COMMAND_NAME, setup);
+		
+		parser.addCommand(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
+        commands.put(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
 		
 		parser.addCommand(Constants.STATUS_COMMAND_NAME, status);
 		commands.put(Constants.STATUS_COMMAND_NAME, status);

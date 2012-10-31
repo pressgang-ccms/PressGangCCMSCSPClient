@@ -69,6 +69,7 @@ public class Constants
 	public static final String REVISIONS_COMMAND_NAME = "revisions";
 	public static final String SEARCH_COMMAND_NAME = "search";
 	public static final String SETUP_COMMAND_NAME = "setup";
+	public static final String SNAPSHOT_COMMAND_NAME = "snapshot";
 	public static final String STATUS_COMMAND_NAME = "status";
 	public static final String TEMPLATE_COMMAND_NAME = "template";
 	public static final String VALIDATE_COMMAND_NAME = "validate";
@@ -147,6 +148,7 @@ public class Constants
 	public static final String CSP_COMPLETION_MSG			= "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %.2f%%";
 	public static final String SUCCESSFUL_PUBLISH_MSG		= "Content Specification successfully published.";
 	public static final String SUCCESSFUL_ZANATA_PUSH_MSG	= "Topics successfully pushed to Zanata for translation.";
+	public static final String SUCCESSFUL_PUSH_SNAPSHOT_MSG = "Snapshot successfully created.";
 	
 	// Start Messages
 	public static final String STARTING_ASSEMBLE_MSG		= "Starting to assemble...";
