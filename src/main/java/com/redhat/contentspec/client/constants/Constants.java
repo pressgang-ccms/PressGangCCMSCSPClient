@@ -275,4 +275,6 @@ public class Constants
 	
 	public static final String REV_MESSAGE_LONG_PARAM = "--rev-message";
 	public static final String REV_MESSAGE_SHORT_PARAM = "-m";
+	
+	public static final String TOPICS_ONLY_LONG_PARAM = "--topics-only";
 }

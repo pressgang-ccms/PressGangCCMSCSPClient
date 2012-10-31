@@ -50,14 +50,17 @@ public class PushTranslationCommand extends BaseCommandImpl
 	@Parameter(metaVar = "[ID]")
 	private List<Integer> ids = new ArrayList<Integer>();
 	
-	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The zanata server to be associated with the Content Specification.")
+	@Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, description = "The Zanata server to be associated with the Content Specification.")
 	private String zanataUrl = null;
 	
-	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The zanata project name to be associated with the Content Specification.")
+	@Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, description = "The Zanata project name to be associated with the Content Specification.")
 	private String zanataProject = null;
 	
-	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The zanata project version to be associated with the Content Specification.")
+	@Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "The Zanata project version to be associated with the Content Specification.")
 	private String zanataVersion = null;
+	
+	@Parameter(names = Constants.TOPICS_ONLY_LONG_PARAM, description = "Only push the topics in the content specification to Zanata.")
+	private Boolean topicsOnly = false;
 	
 	private ContentSpecProcessor csp;
 	
@@ -349,8 +352,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 		return ids.size() == 0;
 	}
 	
-	@SuppressWarnings("deprecation")
-    protected boolean pushCSTopicsToZanata(final RESTManager restManager, final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)
+	protected boolean pushCSTopicsToZanata(final RESTManager restManager, final RESTTopicCollectionV1 topics, final RESTTopicV1 contentSpecTopic, final ContentSpec contentSpec)
 	{
 		final Map<RESTTopicV1, Document> topicToDoc = new HashMap<RESTTopicV1, Document>();
 		boolean error = false;
@@ -405,7 +407,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 			return false;
 		}
 		
-		final float total = topics.getItems().size() + 1;
+		final float total = topics.getItems().size() + (topicsOnly ? 0 : 1);
 		float current = 0;
 		final int showPercent = 5;
 		int lastPercent = 0;
@@ -434,13 +436,9 @@ public class PushTranslationCommand extends BaseCommandImpl
 				final Document doc = topicEntry.getValue();
 				final String zanataId = topic.getId() + "-" + topic.getRevision();
 				
-				/*
-				 * deleting existing resources is useful for debugging,
-				 * but not for production
-				 */
-				final boolean zanataFileExists = zanataInterface.getZanataResourceExists(zanataId);
+				final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
 
-				if (!zanataFileExists)
+				if (zanataFile == null)
 				{
 					final boolean translatedTopicExists = restManager.getReader().getTranslatedTopicByTopicId(topic.getId(), topic.getRevision(), topic.getLocale()) != null;
 					
@@ -460,7 +458,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 						if (!translatableString.trim().isEmpty())
 						{										
 							final TextFlow textFlow = new TextFlow();
-							textFlow.setContent(translatableString);
+							textFlow.setContents(translatableString);
 							textFlow.setLang(LocaleId.fromJavaName(topic.getLocale()));
 							textFlow.setId(HashUtilities.generateMD5(translatableString));
 							textFlow.setRevision(1);
@@ -478,7 +476,9 @@ public class PushTranslationCommand extends BaseCommandImpl
 						final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(topic);
 						try
 						{
-							restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic);
+							if (restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic) == null) {
+							    messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Skynet.");
+							}
 						}
 						catch (Exception e)
 						{
@@ -486,6 +486,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 							 * Do nothing here as it shouldn't fail. If it does then it'll be created 
 							 * by the sync service anyways.
 							 */
+						    messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Skynet.");
 						}
 					}
 				}
@@ -495,63 +496,69 @@ public class PushTranslationCommand extends BaseCommandImpl
 				}
 			}
 			// Upload the content specification to zanata
-			final String zanataId = contentSpecTopic.getId() + "-" + contentSpecTopic.getRevision();
-			final boolean zanataFileExists = zanataInterface.getZanataResourceExists(zanataId);
-
-			if (!zanataFileExists)
+			if (!topicsOnly)
 			{
-				final boolean translatedTopicExists = restManager.getReader().getTranslatedContentSpecById(contentSpecTopic.getId(), contentSpecTopic.getRevision(), contentSpecTopic.getLocale()) != null;
-				
-				final Resource resource = new Resource();
-	
-				resource.setContentType(ContentType.TextPlain);
-				resource.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
-				resource.setName(contentSpecTopic.getId() + "-" + contentSpecTopic.getRevision());
-				resource.setRevision(1);
-				resource.setType(ResourceType.FILE);
-	
-				final List<StringToCSNodeCollection> translatableStrings = ContentSpecUtilities.getTranslatableStrings(contentSpec, false);
-	
-				for (final StringToCSNodeCollection translatableStringData : translatableStrings)
-				{
-					final String translatableString = translatableStringData.getTranslationString();
-					if (!translatableString.trim().isEmpty())
-					{										
-						final TextFlow textFlow = new TextFlow();
-						textFlow.setContent(translatableString);
-						textFlow.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
-						textFlow.setId(HashUtilities.generateMD5(translatableString));
-						textFlow.setRevision(1);
-
-						resource.getTextFlows().add(textFlow);
-					}
-				}
-
-				if (!zanataInterface.createFile(resource))
-				{
-					messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Zanata.");
-				}
-				else if (!translatedTopicExists)
-				{
-					// Save the translated topic
-					final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
-					try
-					{
-						restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic);
-					}
-					catch (Exception e)
-					{
-						/*
-						 * Do nothing here as it shouldn't fail. If it does then it'll be created 
-						 * by the sync service anyways.
-						 */
-					}
-				}
-			}
-			else
-			{
-				messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " already exists - Skipping.");
-			}
+    			final String zanataId = contentSpecTopic.getId() + "-" + contentSpecTopic.getRevision();
+    			final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
+    
+    			if (zanataFile == null)
+    			{
+    				final boolean translatedTopicExists = restManager.getReader().getTranslatedContentSpecById(contentSpecTopic.getId(), contentSpecTopic.getRevision(), contentSpecTopic.getLocale()) != null;
+    				
+    				final Resource resource = new Resource();
+    	
+    				resource.setContentType(ContentType.TextPlain);
+    				resource.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
+    				resource.setName(contentSpecTopic.getId() + "-" + contentSpecTopic.getRevision());
+    				resource.setRevision(1);
+    				resource.setType(ResourceType.FILE);
+    	
+    				final List<StringToCSNodeCollection> translatableStrings = ContentSpecUtilities.getTranslatableStrings(contentSpec, false);
+    	
+    				for (final StringToCSNodeCollection translatableStringData : translatableStrings)
+    				{
+    					final String translatableString = translatableStringData.getTranslationString();
+    					if (!translatableString.trim().isEmpty())
+    					{										
+    						final TextFlow textFlow = new TextFlow();
+    						textFlow.setContents(translatableString);
+    						textFlow.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
+    						textFlow.setId(HashUtilities.generateMD5(translatableString));
+    						textFlow.setRevision(1);
+    
+    						resource.getTextFlows().add(textFlow);
+    					}
+    				}
+    
+    				if (!zanataInterface.createFile(resource))
+    				{
+    					messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Zanata.");
+    				}
+    				else if (!translatedTopicExists)
+    				{
+    					// Save the translated topic
+    					final RESTTranslatedTopicV1 translatedTopic = createTranslatedTopic(contentSpecTopic);
+    					try
+    					{
+    						if (restManager.getRESTClient().createJSONTranslatedTopic("", translatedTopic) == null) {
+    						    messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Skynet.");
+    						}
+    					}
+    					catch (Exception e)
+    					{
+    						/*
+    						 * Do nothing here as it shouldn't fail. If it does then it'll be created 
+    						 * by the sync service anyways.
+    						 */
+    					    messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed to be created in Skynet.");
+    					}
+    				}
+    			}
+    			else
+    			{
+    				messages.add("Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " already exists - Skipping.");
+    			}
+    		}
 		}
 		
 		// Print the info/error messages
