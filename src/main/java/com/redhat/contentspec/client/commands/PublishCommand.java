@@ -275,6 +275,7 @@ public class PublishCommand extends BuildCommand
 			Integer exitValue = ClientUtilities.runCommand(publishCommand, outputDir, JCommander.getConsole(), !hideOutput, true);
 			if (exitValue == null || exitValue != 0)
 			{
+			    printError(Constants.ERROR_RUNNING_PUBLISH_MSG, false);
 				shutdown(Constants.EXIT_FAILURE);
 			}
 		}
