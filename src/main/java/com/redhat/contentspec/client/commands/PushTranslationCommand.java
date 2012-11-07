@@ -356,7 +356,7 @@ public class PushTranslationCommand extends BaseCommandImpl
 	{
 		final Map<RESTTopicV1, Document> topicToDoc = new HashMap<RESTTopicV1, Document>();
 		boolean error = false;
-		final ZanataInterface zanataInterface = new ZanataInterface();
+		final ZanataInterface zanataInterface = new ZanataInterface(0.2);
 		
 		// Convert all the topics to DOM Documents first so we know if any are invalid
 		final List<RESTTopicV1> topicItems = topics.returnItems();

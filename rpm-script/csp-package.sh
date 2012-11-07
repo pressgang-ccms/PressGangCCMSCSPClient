@@ -48,7 +48,7 @@ cd ${DIR}
 echo "Making the RPM Package"
 
 mkdir $FILE_NAME
-cp ${DIR}/../target/csprocessor-client-"$VERSION"-SNAPSHOT.jar "$FILE_NAME"/csprocessor.jar
+cp ${DIR}/../target/csprocessor-client-"$VERSION".jar "$FILE_NAME"/csprocessor.jar
 tar -czf ${DIR}/rpm/SOURCES/"$FILE_NAME".tar.gz "$FILE_NAME"/
 rpmbuild --define "_topdir ${DIR}/rpm" -bb ${DIR}/rpm/SPECS/"$FILE_NAME".spec
 rm -r $FILE_NAME
