@@ -101,6 +101,9 @@ public class BuildCommand extends BaseCommandImpl
 	@Parameter(names = Constants.COMMON_CONTENT_LONG_PARAM, hidden = true)
 	private String commonContentLocale = null;
 	
+	@Parameter(names = Constants.OUTPUT_LANG_LONG_PARAM, hidden = true)
+    private String outputLocale = null;
+	
 	@Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
@@ -303,7 +306,15 @@ public class BuildCommand extends BaseCommandImpl
 		this.commonContentLocale = commonContentLocale;
 	}
 
-	public Integer getRevision()
+	public String getOutputLocale() {
+        return outputLocale;
+    }
+
+    public void setOutputLocale(final String outputLocale) {
+        this.outputLocale = outputLocale;
+    }
+
+    public Integer getRevision()
 	{
         return revision;
     }
@@ -369,8 +380,10 @@ public class BuildCommand extends BaseCommandImpl
 		buildOptions.setSuppressContentSpecPage(hideContentSpec);
 		buildOptions.setInsertEditorLinks(insertEditorLinks);
 		buildOptions.setShowReportPage(showReport);
+		buildOptions.setLocale(locale);
 		buildOptions.setCommonContentLocale(commonContentLocale);
 		buildOptions.setCommonContentDirectory(clientConfig.getPublicanCommonContentDirectory());
+		buildOptions.setOutputLocale(outputLocale);
 		buildOptions.setDraft(draft);
 		buildOptions.setPublicanShowRemarks(showRemarks);
 		buildOptions.setRevisionMessages(messages);
@@ -566,7 +579,7 @@ public class BuildCommand extends BaseCommandImpl
 			}
 			else
 			{
-			    builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), locale, user, getBuildOptions(), cspConfig.getZanataDetails());
+			    builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), user, getBuildOptions(), cspConfig.getZanataDetails());
 			}
 		}
 		catch (Exception e)

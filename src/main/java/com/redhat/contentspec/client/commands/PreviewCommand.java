@@ -105,9 +105,12 @@ public class PreviewCommand extends AssembleCommand
 			}
 			
 			final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals("") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()) + File.separator));
-			final String locale = getLocale() == null ? 
-					(csp.getContentSpec().getLocale() == null ? CommonConstants.DEFAULT_LOCALE :  csp.getContentSpec().getLocale())
-					: getLocale();
+			final String locale = getOutputLocale() == null ? 
+	                (getLocale() == null ? 
+	                    (csp.getContentSpec().getLocale() == null ? CommonConstants.DEFAULT_LOCALE
+	                    : csp.getContentSpec().getLocale())
+	                    : getLocale())
+	                : getOutputLocale();
 			
 			if (previewFormat.equals("pdf"))
 			{
@@ -148,9 +151,12 @@ public class PreviewCommand extends AssembleCommand
 					fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
 			}
 			
-			final String locale = getLocale() == null ? 
-					(csp.getContentSpec().getLocale() == null ? CommonConstants.DEFAULT_LOCALE :  csp.getContentSpec().getLocale())
-					: getLocale();
+			final String locale = getOutputLocale() == null ? 
+	                (getLocale() == null ? 
+	                    (csp.getContentSpec().getLocale() == null ? CommonConstants.DEFAULT_LOCALE
+	                    : csp.getContentSpec().getLocale())
+	                    : getLocale())
+	                : getOutputLocale();
 			
 			if (previewFormat.equals("pdf"))
 			{

@@ -406,6 +406,33 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	{
 		final Map<String, ServerConfiguration> servers = clientConfig.getServers();
 		
+		// If there is no server specified and no server in the csprocessor.cfg then make sure a default server exists
+		if (command.getServerUrl() == null && ((cspConfig == null || cspConfig.getServerUrl() == null) && command.loadFromCSProcessorCfg() || !command.loadFromCSProcessorCfg())) {
+    		// Check that a default exists in the configuration files or via command line arguments
+            if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null)
+            {
+                final File configFile = new File(ClientUtilities.validateConfigLocation(command.getConfigLocation()));
+                command.printError(String.format(Constants.NO_DEFAULT_SERVER_FOUND, configFile.getAbsolutePath()), false);
+                shutdown(Constants.EXIT_CONFIG_ERROR);
+            }
+            else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches("^(http://|https://).*"))
+            {
+                if (!servers.containsKey(servers.get(Constants.DEFAULT_SERVER_NAME).getUrl()))
+                {
+                    command.printError(Constants.NO_SERVER_FOUND_FOR_DEFAULT_SERVER, false);
+                    shutdown(Constants.EXIT_CONFIG_ERROR);
+                }
+                else
+                {
+                    final ServerConfiguration defaultConfig = servers.get(Constants.DEFAULT_SERVER_NAME);
+                    final ServerConfiguration config = servers.get(defaultConfig.getUrl());
+                    defaultConfig.setUrl(config.getUrl());
+                    if (config.getUsername() != null && !config.getUsername().equals(""))
+                        defaultConfig.setUsername(config.getUsername());
+                }
+            }
+		}
+		
 		// Set the URL
 		String url = null;
 		if (command.getServerUrl() != null)
@@ -599,7 +626,7 @@ public class Client implements BaseCommand, ShutdownAbleApp
 	/**
 	 * Sets the configuration options from the csprocessor.ini configuration file
 	 * 
-	 * @param location The location of the csprocessor.ini file (eg. /home/.config/)
+	 * @param location The location of the csprocessor.ini file (eg. /home/{@code<USERNAME>}/.config/)
 	 * @return Returns false if an error occurs otherwise true
 	 */
 	protected boolean setConfigOptions(final String location)
@@ -684,6 +711,12 @@ public class Client implements BaseCommand, ShutdownAbleApp
 			{
 				clientConfig.setRootDirectory(ClientUtilities.validateDirLocation(configReader.getProperty("directory.root").toString()));
 			}
+			
+			// Load the install directory
+            if (configReader.getProperty("directory.install") != null && !configReader.getProperty("directory.install").equals(""))
+            {
+                clientConfig.setInstallPath(ClientUtilities.validateDirLocation(configReader.getProperty("directory.install").toString()));
+            }
 		}
 		
 		// Read in the publican build options
@@ -794,29 +827,6 @@ public class Client implements BaseCommand, ShutdownAbleApp
 					serverConfig.setUsername(serversNode.getString(key + "..username"));
 					
 					servers.put(Constants.DEFAULT_SERVER_NAME, serverConfig);
-				}
-			}
-
-			// Check that a default exists in the configuration files or via command line arguments
-			if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null)
-			{
-				command.printError(String.format(Constants.NO_DEFAULT_SERVER_FOUND, configReader.getFile().getAbsolutePath()), false);
-				return false;
-			}
-			else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches("^(http://|https://).*"))
-			{
-				if (!servers.containsKey(servers.get(Constants.DEFAULT_SERVER_NAME).getUrl()))
-				{
-					command.printError(Constants.NO_SERVER_FOUND_FOR_DEFAULT_SERVER, false);
-					return false;
-				}
-				else
-				{
-					final ServerConfiguration defaultConfig = servers.get(Constants.DEFAULT_SERVER_NAME);
-					final ServerConfiguration config = servers.get(defaultConfig.getUrl());
-					defaultConfig.setUrl(config.getUrl());
-					if (config.getUsername() != null && !config.getUsername().equals(""))
-						defaultConfig.setUsername(config.getUsername());
 				}
 			}
 		}

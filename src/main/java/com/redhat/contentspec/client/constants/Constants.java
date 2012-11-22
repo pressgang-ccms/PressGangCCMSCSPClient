@@ -59,6 +59,7 @@ public class Constants
 	public static final String CREATE_COMMAND_NAME = "create";
 	public static final String CHECKSUM_COMMAND_NAME = "checksum";
 	public static final String INFO_COMMAND_NAME = "info";
+	public static final String INSTALL_COMMAND_NAME = "install";
 	public static final String LIST_COMMAND_NAME = "list";
 	public static final String PREVIEW_COMMAND_NAME = "preview";
 	public static final String PUBLISH_COMMAND_NAME = "publish";
@@ -266,6 +267,8 @@ public class Constants
 
 	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
 	
+	public static final String OUTPUT_LANG_LONG_PARAM = "--output-lang";
+	
 	public static final String UPDATE_LONG_PARAM = "--latest";
 	
 	public static final String PUSH_ONLY_LONG_PARAM = "--push-only";
@@ -279,4 +282,6 @@ public class Constants
 	public static final String REV_MESSAGE_SHORT_PARAM = "-m";
 	
 	public static final String TOPICS_ONLY_LONG_PARAM = "--topics-only";
+	
+	public static final String PATH_LONG_PARAM = "--path";
 }

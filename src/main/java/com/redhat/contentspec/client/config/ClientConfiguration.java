@@ -17,6 +17,8 @@ public class ClientConfiguration
 	
 	private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
 	private Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
+	
+	private String installPath = null;
 
 	public Map<String, ServerConfiguration> getServers()
 	{
@@ -117,4 +119,12 @@ public class ClientConfiguration
 	{
 		this.publicanCommonContentDirectory = publicanCommonContentDirectory;
 	}
+
+    public String getInstallPath() {
+        return installPath;
+    }
+
+    public void setInstallPath(String installPath) {
+        this.installPath = installPath;
+    }
 }
