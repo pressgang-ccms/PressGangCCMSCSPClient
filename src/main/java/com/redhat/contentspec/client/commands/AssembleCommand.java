@@ -190,7 +190,9 @@ public class AssembleCommand extends BuildCommand {
 		String publicanOptions = clientConfig.getPublicanBuildOptions();
 		
 		// Replace the locale in the build options if the locale has been set
-		if (getLocale() != null)
+		if (getOutputLocale() != null)
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
+		else if (getLocale() != null)
 			publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 		
 		try

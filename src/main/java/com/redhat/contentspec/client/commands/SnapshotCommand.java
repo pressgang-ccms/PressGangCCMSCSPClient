@@ -32,6 +32,9 @@ public class SnapshotCommand extends BaseCommandImpl
 	@Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.", hidden = true)
 	private Boolean update = false;
 	
+	@Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new content specification")
+	private Boolean createNew = false;
+	
 	private ContentSpecProcessor csp = null;
 	
 	public SnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
@@ -67,6 +70,14 @@ public class SnapshotCommand extends BaseCommandImpl
     public void setUpdate(final Boolean update)
     {
         this.update = update;
+    }
+
+    public Boolean getCreateNew() {
+        return createNew;
+    }
+
+    public void setCreateNew(Boolean createNew) {
+        this.createNew = createNew;
     }
 
     @Override
@@ -139,7 +150,14 @@ public class SnapshotCommand extends BaseCommandImpl
 			return;
 		}
 		
-		final String fixedContentSpec = contentSpec.getXml().replaceAll("CHECKSUM\\s*=.*?(\r)?\nID\\s*=.*?(\r)?\n", "");
+		final String fixedContentSpec;
+		
+		// If we want to create it as a new spec then remove the checksum and id
+		if (createNew) {
+		    fixedContentSpec = contentSpec.getXml().replaceAll("CHECKSUM\\s*=.*?(\r)?\nID\\s*=.*?(\r)?\n", "");
+		} else {
+		    fixedContentSpec = contentSpec.getXml();
+		}
 		
 		// Setup the processing options
 		final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -156,7 +174,11 @@ public class SnapshotCommand extends BaseCommandImpl
 		Integer revision = null;
         try
         {
-            success = csp.processContentSpec(fixedContentSpec, user, ContentSpecParser.ParsingMode.NEW);
+            if (createNew) {
+                success = csp.processContentSpec(fixedContentSpec, user, ContentSpecParser.ParsingMode.NEW);
+            } else {
+                success = csp.processContentSpec(fixedContentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+            }
             if (success)
             {
                 revision = restManager.getReader().getLatestCSRevById(csp.getContentSpec().getId());
