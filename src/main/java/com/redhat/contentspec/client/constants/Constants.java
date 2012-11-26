@@ -267,7 +267,7 @@ public class Constants
 
 	public static final String COMMON_CONTENT_LONG_PARAM = "--common-content";
 	
-	public static final String OUTPUT_LANG_LONG_PARAM = "--output-lang";
+	public static final String TARGET_LANG_LONG_PARAM = "--target-lang";
 	
 	public static final String UPDATE_LONG_PARAM = "--latest";
 	
