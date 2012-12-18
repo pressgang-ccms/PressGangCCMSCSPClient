@@ -206,8 +206,8 @@ public class ClientUtilities {
         final Properties prop = new Properties();
         prop.load(new FileInputStream(csprocessorcfg));
         cspConfig.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
-        cspConfig.setServerUrl(prop.getProperty("SERVER_URL"));
-        cspConfig.getZanataDetails().setServer(prop.getProperty("ZANATA_URL"));
+        cspConfig.setServerUrl(validateHost(prop.getProperty("SERVER_URL")));
+        cspConfig.getZanataDetails().setServer(validateHost(prop.getProperty("ZANATA_URL")));
         cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
         cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
         cspConfig.setKojiHubUrl(validateHost(prop.getProperty("KOJI_HUB_URL")));
