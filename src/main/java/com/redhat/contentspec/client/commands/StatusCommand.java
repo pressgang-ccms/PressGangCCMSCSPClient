@@ -14,6 +14,8 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
@@ -79,7 +81,8 @@ public class StatusCommand extends BaseCommandImpl {
         }
 
         // Get the content specification from the server
-        final TopicWrapper contentSpec = reader.getPostContentSpecById(ids.get(0), null);
+        final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(providerFactory.getProvider(TopicProvider.class),
+                ids.get(0), null);
         if (contentSpec == null) {
             printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);

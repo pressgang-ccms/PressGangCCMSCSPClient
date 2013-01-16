@@ -14,8 +14,12 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.rest.v1.constants.CommonFilterConstants;
 import org.jboss.pressgang.ccms.utils.common.StringUtilities;
 
 @Parameters(commandDescription = "Search for a Content Specification")
@@ -84,9 +88,10 @@ public class SearchCommand extends BaseCommandImpl {
         }
 
         // Search the database for content specs that match the query parameters
-        final List<TopicWrapper> contentSpecs = restManager.getReader().getContentSpecs(null, null);
+        final CollectionWrapper<TopicWrapper> contentSpecs = providerFactory.getProvider(TopicProvider.class).getTopicsWithQuery("query;" +
+                CommonFilterConstants.MATCH_TAG + CSConstants.CONTENT_SPEC_TAG_ID + "=" + CommonFilterConstants.MATCH_TAG_STATE);
         if (contentSpecs != null) {
-            for (final TopicWrapper contentSpec : contentSpecs) {
+            for (final TopicWrapper contentSpec : contentSpecs.getItems()) {
 
                 // Good point to check for a shutdown
                 if (isAppShuttingDown()) {
@@ -94,7 +99,7 @@ public class SearchCommand extends BaseCommandImpl {
                     return;
                 }
 
-                final ContentSpecParser csp = new ContentSpecParser(providerFactory);
+                final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
                 try {
                     csp.parse(contentSpec.getXml());
                 } catch (Exception e) {
@@ -147,8 +152,8 @@ public class SearchCommand extends BaseCommandImpl {
     @Override
     public boolean loadFromCSProcessorCfg() {        /*
          * Searching involves looking for a String so
-		 * there's no point in loading from the csprocessor.cfg
-		 */
+         * there's no point in loading from the csprocessor.cfg
+         */
         return false;
     }
 }

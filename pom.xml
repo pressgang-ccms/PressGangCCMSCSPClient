@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>0.28.3</version>
+    <version>0.29.0</version>
     <name>Content Specification Processor Client</name>
     <url>http://www.github.com/lnewson/csprocessor</url>
 

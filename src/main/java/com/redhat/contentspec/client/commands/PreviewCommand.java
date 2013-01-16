@@ -12,6 +12,7 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -67,6 +68,7 @@ public class PreviewCommand extends AssembleCommand {
 
         // Create the file object that will be opened
         String previewFileName = null;
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         if (previewFromConfig) {
             final TopicWrapper contentSpec = topicProvider.getTopic(cspConfig.getContentSpecId(), null);
 
@@ -77,7 +79,7 @@ public class PreviewCommand extends AssembleCommand {
             }
 
             // Parse the content specification to get the product and versions
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory);
+            final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
             try {
                 csp.parse(contentSpec.getXml());
             } catch (Exception e) {
@@ -106,7 +108,7 @@ public class PreviewCommand extends AssembleCommand {
             // Create the file based on an ID passed from the command line
             final String contentSpec = this.getContentSpecString(topicProvider, getIds().get(0));
 
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory);
+            final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
             try {
                 csp.parse(contentSpec);
             } catch (Exception e) {

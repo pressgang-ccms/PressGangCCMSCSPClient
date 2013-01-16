@@ -19,7 +19,7 @@ import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -164,7 +164,8 @@ public class PushCommand extends BaseCommandImpl {
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setAllowEmptyLevels(true);
 
-        csp = new ContentSpecProcessor(providerFactory, processingOptions);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         Integer revision = null;
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
@@ -178,7 +179,7 @@ public class PushCommand extends BaseCommandImpl {
 
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(LoggerManager.generateLogs());
+        JCommander.getConsole().println(loggerManager.generateLogs());
         if (success) {
             JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, csp.getContentSpec().getId(), revision));
         }

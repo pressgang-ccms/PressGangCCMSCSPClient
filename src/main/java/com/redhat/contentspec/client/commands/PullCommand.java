@@ -16,10 +16,9 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
@@ -152,7 +151,8 @@ public class PullCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final DataProviderFactory providerFactory, final RESTUserV1 user) {
+    public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
+        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
         boolean pullForConfig = false;
 
         // Load the data from the config data if no ids were specified
@@ -206,7 +206,7 @@ public class PullCommand extends BaseCommandImpl {
             // Content Specification
         } else {
             if (usePre) {
-                final RESTTopicV1 contentSpec = reader.getPreContentSpecById(ids.get(0), revision);
+                final TopicWrapper contentSpec = ContentSpecUtilities.getPreContentSpecById(topicProvider, ids.get(0), revision);
                 if (contentSpec == null) {
                     printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
                     shutdown(Constants.EXIT_FAILURE);
@@ -225,7 +225,7 @@ public class PullCommand extends BaseCommandImpl {
                     }
                 }
             } else {
-                final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
+                final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(topicProvider, ids.get(0), revision);
                 if (contentSpec == null) {
                     printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
                     shutdown(Constants.EXIT_FAILURE);
@@ -234,11 +234,11 @@ public class PullCommand extends BaseCommandImpl {
                     if (revision == null) {
                         fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
 
-						/*
+                        /*
                          * If the revision is null then we want to get the latest version, however the version may have been updated
-						 * via the GUI. So we need to recalculate the checksum so that when the changes are pushed the CHECKSUM will be
-						 * valid.
-						 */
+                         * via the GUI. So we need to recalculate the checksum so that when the changes are pushed the CHECKSUM will be
+                         * valid.
+                         */
                         data = fixContentSpecChecksum(data);
                     } else {
                         fileName = DocBookUtilities.escapeTitle(
