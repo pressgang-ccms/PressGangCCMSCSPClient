@@ -31,7 +31,8 @@ import com.redhat.j2koji.exceptions.KojiException;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
@@ -354,7 +355,8 @@ public class BuildCommand extends BaseCommandImpl {
     protected String getContentSpecString(final TopicProvider topicProvider, final String id) {
         final String contentSpec;
         if (id.matches("^\\d+$")) {
-            final TopicWrapper contentSpecTopic = topicProvider.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
+            final TopicWrapper contentSpecTopic = ContentSpecUtilities.getPostContentSpecById(topicProvider, Integer.parseInt(id),
+                    revision);
 
             if (contentSpecTopic == null || contentSpecTopic.getXml() == null) {
                 printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
@@ -453,10 +455,11 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Validate that the content spec is valid
-        boolean success = validateContentSpec(providerFactory, user, contentSpec);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        boolean success = validateContentSpec(providerFactory, loggerManager, user, contentSpec);
 
         // Print the error/warning messages
-        JCommander.getConsole().println(LoggerManager.generateLogs());
+        JCommander.getConsole().println(loggerManager.generateLogs());
 
         // Check that everything validated fine
         if (!success) {
@@ -541,7 +544,8 @@ public class BuildCommand extends BaseCommandImpl {
         saveBuildToFile(builderOutput, outputFile, buildingFromConfig);
     }
 
-    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final UserWrapper user, final String contentSpec) {
+    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final UserWrapper user, final String contentSpec) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
@@ -556,13 +560,12 @@ public class BuildCommand extends BaseCommandImpl {
         if (allowEmptyLevels) processingOptions.setAllowEmptyLevels(true);
 
         // Validate and parse the Content Specification
-        csp = new ContentSpecProcessor(providerFactory, processingOptions);
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         boolean success = false;
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
         } catch (Exception e) {
-            JCommander.getConsole().println(LoggerManager.generateLogs());
-            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
+            JCommander.getConsole().println(loggerManager.generateLogs());
             shutdown(Constants.EXIT_FAILURE);
         }
 

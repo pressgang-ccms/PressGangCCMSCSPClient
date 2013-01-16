@@ -20,7 +20,7 @@ import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -131,7 +131,8 @@ public class CreateCommand extends BaseCommandImpl {
         }
 
         // Parse the spec to get the title
-        final ContentSpecParser parser = new ContentSpecParser(providerFactory);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        final ContentSpecParser parser = new ContentSpecParser(providerFactory, loggerManager);
         try {
             parser.parse(contentSpec);
         } catch (Exception e) {
@@ -157,7 +158,7 @@ public class CreateCommand extends BaseCommandImpl {
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
 
-        csp = new ContentSpecProcessor(providerFactory, processingOptions);
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         Integer revision = null;
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
@@ -171,7 +172,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(LoggerManager.generateLogs());
+        JCommander.getConsole().println(loggerManager.generateLogs());
         if (success) {
             JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, csp.getContentSpec().getId(), revision));
         }
@@ -207,8 +208,7 @@ public class CreateCommand extends BaseCommandImpl {
                     cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                             .FILENAME_EXTENSION);
             final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), clientConfig,
-                    zanataDetails);
+            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), zanataDetails);
 
             // Create the directory
             if (outputConfig.getParentFile() != null) outputConfig.getParentFile().mkdirs();

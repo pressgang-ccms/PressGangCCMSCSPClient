@@ -15,9 +15,10 @@ import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 
 @Parameters(
         commandDescription = "Pull a revision of a content specification that represents a snapshot in time and push it back to the " +
@@ -120,7 +121,7 @@ public class SnapshotCommand extends BaseCommandImpl {
         boolean success = false;
 
         // Get the topic from the rest interface
-        final RESTTopicV1 contentSpec = reader.getPostContentSpecById(ids.get(0), revision);
+        final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(topicProvider, ids.get(0), revision);
         if (contentSpec == null) {
             printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
@@ -152,7 +153,8 @@ public class SnapshotCommand extends BaseCommandImpl {
         processingOptions.setRevision(revision);
 
         // Process the content spec to make sure the spec is valid,
-        csp = new ContentSpecProcessor(providerFactory, processingOptions);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         Integer revision = null;
         try {
             if (createNew) {
@@ -170,7 +172,7 @@ public class SnapshotCommand extends BaseCommandImpl {
         }
 
         if (!success) {
-            JCommander.getConsole().println(LoggerManager.generateLogs());
+            JCommander.getConsole().println(loggerManager.generateLogs());
             JCommander.getConsole().println(Constants.ERROR_PULL_SNAPSHOT_INVALID);
             JCommander.getConsole().println("");
             shutdown(Constants.EXIT_TOPIC_INVALID);

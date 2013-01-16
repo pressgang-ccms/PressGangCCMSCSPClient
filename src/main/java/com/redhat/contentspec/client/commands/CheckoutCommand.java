@@ -15,6 +15,8 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -112,7 +114,8 @@ public class CheckoutCommand extends BaseCommandImpl {
         }
 
         // Get the content spec from the server
-        final TopicWrapper contentSpec = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+        final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(providerFactory.getProvider(TopicProvider.class),
+                ids.get(0), null);
         if (contentSpec == null || contentSpec.getXml() == null) {
             printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
@@ -154,7 +157,7 @@ public class CheckoutCommand extends BaseCommandImpl {
                 cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                         .FILENAME_EXTENSION);
         final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-        final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, getServerUrl(), clientConfig, zanataDetails);
+        final String config = ClientUtilities.generateCsprocessorCfg(contentSpec, getServerUrl(), zanataDetails);
 
         // Create the directory
         if (outputConfig.getParentFile() != null) outputConfig.getParentFile().mkdirs();

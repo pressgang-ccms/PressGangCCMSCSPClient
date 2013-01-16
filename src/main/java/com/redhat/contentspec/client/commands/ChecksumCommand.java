@@ -11,6 +11,8 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
@@ -79,7 +81,8 @@ public class ChecksumCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 
-        final TopicWrapper cs = restManager.getReader().getPostContentSpecById(ids.get(0), null);
+        final TopicWrapper cs = ContentSpecUtilities.getPostContentSpecById(providerFactory.getProvider(TopicProvider.class), ids.get(0),
+                null);
 
         // Check that that content specification was found
         if (cs == null || cs.getXml() == null) {

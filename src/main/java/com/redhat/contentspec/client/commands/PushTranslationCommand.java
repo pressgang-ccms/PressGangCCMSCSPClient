@@ -25,7 +25,7 @@ import org.jboss.pressgang.ccms.contentspec.provider.TranslatedTopicProvider;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TranslatedTopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -250,17 +250,18 @@ public class PushTranslationCommand extends BaseCommandImpl {
         processingOptions.setAllowNewTopics(false);
 
         // Validate and parse the Content Specification
-        csp = new ContentSpecProcessor(providerFactory, processingOptions);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         boolean success = false;
         try {
             success = csp.processContentSpec(contentSpecTopic.getXml(), user, ParsingMode.EITHER);
         } catch (Exception e) {
-            JCommander.getConsole().println(LoggerManager.generateLogs());
+            JCommander.getConsole().println(loggerManager.generateLogs());
             shutdown(Constants.EXIT_FAILURE);
         }
 
         // Print the error/warning messages
-        JCommander.getConsole().println(LoggerManager.generateLogs());
+        JCommander.getConsole().println(loggerManager.generateLogs());
 
         // Check that everything validated fine
         if (!success) {
@@ -521,12 +522,12 @@ public class PushTranslationCommand extends BaseCommandImpl {
     protected TranslatedTopicWrapper createTranslatedTopic(final DataProviderFactory providerFactory, final TopicWrapper topic) {
         final TranslatedTopicWrapper translatedTopic = providerFactory.getProvider(TranslatedTopicProvider.class).newTranslatedTopic();
         translatedTopic.setLocale(topic.getLocale());
-        translatedTopic.explicitSetTranslationPercentage(100);
+        translatedTopic.setTranslationPercentage(100);
         translatedTopic.setTopicId(topic.getId());
         translatedTopic.setTopicRevision(topic.getRevision());
         translatedTopic.setXml(topic.getXml());
         translatedTopic.setHtml(topic.getHtml());
-        translatedTopic.explicitSetHtmlUpdated(new Date());
+        translatedTopic.setHtmlUpdated(new Date());
         return translatedTopic;
     }
 }

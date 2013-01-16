@@ -13,6 +13,7 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -87,8 +88,8 @@ public class AssembleCommand extends BuildCommand {
         } else if (getIds() != null && getIds().size() == 1) {
             final String contentSpec = getContentSpecString(topicProvider, getIds().get(0));
 
-			/* parse the spec to get the main details */
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory);
+            /* parse the spec to get the main details */
+            final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
             try {
                 csp.parse(contentSpec);
             } catch (Exception e) {

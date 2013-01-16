@@ -13,7 +13,7 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
@@ -99,11 +99,12 @@ public class InfoCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Starting to calculate the statistics...");
 
         // Parse the spec to get the ids
-        final ContentSpecParser csp = new ContentSpecParser(providerFactory);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
         try {
             csp.parse(contentSpec.getXml());
         } catch (Exception e) {
-            JCommander.getConsole().println(LoggerManager.generateLogs());
+            JCommander.getConsole().println(loggerManager.generateLogs());
             shutdown(Constants.EXIT_FAILURE);
         }
 

@@ -17,7 +17,7 @@ import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -136,7 +136,8 @@ public class ValidateCommand extends BaseCommandImpl {
         processingOptions.setAllowEmptyLevels(true);
 
         // Process the content spec to see if its valid
-        csp = new ContentSpecProcessor(providerFactory, processingOptions);
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
         } catch (Exception e) {
@@ -151,7 +152,7 @@ public class ValidateCommand extends BaseCommandImpl {
         }
 
         // Print the logs
-        JCommander.getConsole().println(LoggerManager.generateLogs());
+        JCommander.getConsole().println(loggerManager.generateLogs());
         if (success) {
             JCommander.getConsole().println("VALID");
         } else {

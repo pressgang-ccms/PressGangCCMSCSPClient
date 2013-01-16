@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -27,7 +28,6 @@ import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.NamedMatcher;
 import com.google.code.regexp.NamedPattern;
 import com.redhat.contentspec.builder.utils.DocbookBuildUtilities;
-import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Spec;
@@ -42,6 +42,7 @@ import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTUserProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
@@ -199,8 +200,8 @@ public class ClientUtilities {
         final Properties prop = new Properties();
         prop.load(new FileInputStream(csprocessorcfg));
         cspConfig.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
-        cspConfig.setServerUrl(validateHost(prop.getProperty("SERVER_URL")));
-        cspConfig.getZanataDetails().setServer(validateHost(prop.getProperty("ZANATA_URL")));
+        cspConfig.setServerUrl(ClientUtilities.validateHost(prop.getProperty("SERVER_URL")));
+        cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(prop.getProperty("ZANATA_URL")));
         cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
         cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
         cspConfig.setKojiHubUrl(validateHost(prop.getProperty("KOJI_HUB_URL")));
@@ -210,13 +211,11 @@ public class ClientUtilities {
     /**
      * Generates the contents of a csprocessor.cfg file from the passed arguments.
      *
-     * @param contentSpec  The content specification object the csprocessor.cfg will be used for.
-     * @param serverUrl    The server URL that the content specification exists on.
-     * @param clientConfig TODO
+     * @param contentSpec The content specification object the csprocessor.cfg will be used for.
+     * @param serverUrl   The server URL that the content specification exists on.
      * @return The generated contents of the csprocessor.cfg file.
      */
-    public static String generateCsprocessorCfg(final TopicWrapper contentSpec, final String serverUrl,
-            final ClientConfiguration clientConfig, final ZanataDetails zanataDetails) {
+    public static String generateCsprocessorCfg(final TopicWrapper contentSpec, final String serverUrl, final ZanataDetails zanataDetails) {
         final StringBuilder output = new StringBuilder();
         output.append("# SPEC_TITLE=").append(DocBookUtilities.escapeTitle(contentSpec.getTitle())).append("\n");
         output.append("SPEC_ID=").append(contentSpec.getId()).append("\n");
@@ -262,7 +261,7 @@ public class ClientUtilities {
         if (!dir.isDirectory()) throw new IOException();
 
         try {
-            String[] fixedEnvVariables = envVariables.clone();
+            String[] fixedEnvVariables = envVariables == null ? null : envVariables.clone();
             final Map<String, String> env = System.getenv();
             final List<String> envVars = new ArrayList<String>();
             for (final Entry<String, String> entry : env.entrySet()) {
@@ -363,11 +362,11 @@ public class ClientUtilities {
                     creator = users.getItems().get(0);
                 }
             }
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory);
+            final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
             csp.parse(cs.getXml());
             final ContentSpec contentSpec = csp.getContentSpec();
             specs.add(new Spec(cs.getId(), cs.getTitle(), contentSpec.getProduct(), contentSpec.getVersion(),
-                    creator != null ? creator.getUsername() : null));
+                    creator != null ? creator.getUsername() : null, cs.getLastModified()));
         }
         return new SpecList(specs, specs.size());
     }
@@ -388,6 +387,7 @@ public class ClientUtilities {
         sizes.put("PRODUCT", 7);
         sizes.put("VERSION", 7);
         sizes.put("CREATED BY", 10);
+        sizes.put("LAST MODIFIED", 13);
         if (contentSpecs != null && contentSpecs.getSpecs() != null && !contentSpecs.getSpecs().isEmpty()) {
             for (final Spec spec : contentSpecs.getSpecs()) {
                 if (spec.getId().toString().length() > sizes.get("ID")) {
@@ -411,13 +411,17 @@ public class ClientUtilities {
                 }
             }
 
-            final String format = "%" + (sizes.get("ID") + 2) + "s" + "%" + (sizes.get("TITLE") + 2) + "s" + "%" + (sizes.get(
-                    "PRODUCT") + 2) + "s" + "%" + (sizes.get("VERSION") + 2) + "s" + "%" + (sizes.get("CREATED BY") + 2) + "s";
+            final String format = "%" + (sizes.get("ID") + 2) + "s%" + (sizes.get("TITLE") + 2) + "s%" + (sizes.get(
+                    "PRODUCT") + 2) + "s%" + (sizes.get("VERSION") + 2) + "s%" + (sizes.get("CREATED BY") + 2) + "s%" + (sizes.get(
+                    "LAST MODIFIED") + 2) + "s";
 
-            final StringBuilder output = new StringBuilder(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY") + "\n");
+            final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy");
+            final StringBuilder output = new StringBuilder(
+                    String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
             for (final Spec spec : contentSpecs.getSpecs()) {
                 output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(),
-                        spec.getCreator()) + "\n");
+                        spec.getCreator(),
+                        spec.getLastModified() == null ? "Unknown" : dateFormatter.format(spec.getLastModified())) + "\n");
             }
             return output.toString();
         }

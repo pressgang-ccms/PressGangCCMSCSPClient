@@ -52,9 +52,9 @@ import org.apache.log4j.Logger;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
+import org.slf4j.LoggerFactory;
 
 public class Client implements BaseCommand, ShutdownAbleApp {
     private final JCommander parser = new JCommander(this);
@@ -99,6 +99,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             client.setup();
             client.processArgs(args);
         } catch (Throwable ex) {
+            LoggerFactory.getLogger(Client.class).debug("", ex);
             JCommander.getConsole().println(ex.getMessage());
             client.shutdown(Constants.EXIT_FAILURE);
         }
@@ -214,7 +215,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             JCommander.getConsole().println("");
 
             // Create the REST Manager
-            providerFactory = RESTProviderFactory.create(new RESTManager(command.getPressGangServerUrl()));
+            providerFactory = RESTProviderFactory.create(command.getPressGangServerUrl());
 
             // Good point to check for a shutdown
             if (isAppShuttingDown()) {

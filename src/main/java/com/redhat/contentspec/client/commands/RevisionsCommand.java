@@ -15,11 +15,11 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Revision;
 import com.redhat.contentspec.client.entities.RevisionList;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.sort.EnversRevisionSort;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.LoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 
 @Parameters(commandDescription = "Get a list of revisions for a specified ID")
@@ -83,7 +83,7 @@ public class RevisionsCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final RESTManager restManager, final LoggerManager elm, final RESTUserV1 user) {
+    public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
         // If there are no ids then use the csprocessor.cfg file
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
@@ -116,9 +116,9 @@ public class RevisionsCommand extends BaseCommandImpl {
         // Get the list of revisions
         List<Object[]> revisions = null;
         if (topic) {
-            revisions = restManager.getReader().getTopicRevisionsById(ids.get(0));
+            revisions = EntityUtilities.getTopicRevisionsById(providerFactory.getProvider(TopicProvider.class), ids.get(0));
         } else {
-            revisions = restManager.getReader().getContentSpecRevisionsById(ids.get(0), null, null);
+            revisions = ContentSpecUtilities.getContentSpecRevisionsById(providerFactory.getProvider(TopicProvider.class), ids.get(0));
         }
 
         // Check that the content spec is valid
