@@ -32,7 +32,6 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Spec;
 import com.redhat.contentspec.client.entities.SpecList;
-import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.j2koji.base.KojiConnector;
 import com.redhat.j2koji.entities.KojiBuild;
 import com.redhat.j2koji.exceptions.KojiException;
@@ -42,8 +41,7 @@ import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTUserProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -215,7 +213,8 @@ public class ClientUtilities {
      * @param serverUrl   The server URL that the content specification exists on.
      * @return The generated contents of the csprocessor.cfg file.
      */
-    public static String generateCsprocessorCfg(final TopicWrapper contentSpec, final String serverUrl, final ZanataDetails zanataDetails) {
+    public static String generateCsprocessorCfg(final ContentSpecWrapper contentSpec, final String serverUrl,
+            final ZanataDetails zanataDetails) {
         final StringBuilder output = new StringBuilder();
         output.append("# SPEC_TITLE=").append(DocBookUtilities.escapeTitle(contentSpec.getTitle())).append("\n");
         output.append("SPEC_ID=").append(contentSpec.getId()).append("\n");
@@ -351,9 +350,10 @@ public class ClientUtilities {
     /**
      * Builds a Content Specification list for a list of content specifications.
      */
-    public static SpecList buildSpecList(final List<TopicWrapper> specList, final DataProviderFactory providerFactory) throws Exception {
+    public static SpecList buildSpecList(final List<ContentSpecWrapper> specList,
+            final DataProviderFactory providerFactory) throws Exception {
         final List<Spec> specs = new ArrayList<Spec>();
-        for (final TopicWrapper cs : specList) {
+        for (final ContentSpecWrapper cs : specList) {
             UserWrapper creator = null;
             if (cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
                 final CollectionWrapper<UserWrapper> users = providerFactory.getProvider(RESTUserProvider.class).getUsersByName(
@@ -362,11 +362,8 @@ public class ClientUtilities {
                     creator = users.getItems().get(0);
                 }
             }
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
-            csp.parse(cs.getXml());
-            final ContentSpec contentSpec = csp.getContentSpec();
-            specs.add(new Spec(cs.getId(), cs.getTitle(), contentSpec.getProduct(), contentSpec.getVersion(),
-                    creator != null ? creator.getUsername() : null, cs.getLastModified()));
+            specs.add(new Spec(cs.getId(), cs.getTitle(), cs.getProduct(), cs.getVersion(), creator != null ? creator.getUsername() : null,
+                    cs.getLastModified()));
         }
         return new SpecList(specs, specs.size());
     }

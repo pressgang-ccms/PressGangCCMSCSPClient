@@ -18,10 +18,11 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -39,7 +40,7 @@ public class CreateCommand extends BaseCommandImpl {
     private Boolean executionTime = false;
 
     @Parameter(names = Constants.NO_CREATE_CSPROCESSOR_CFG_LONG_PARAM, description = "Don't create the csprocessor.cfg and other files.")
-    private Boolean noCsprocessorCfg = false;
+    private Boolean createCsprocessorCfg = true;
 
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM},
             description = "Force the Content Specification directories to be created.")
@@ -76,11 +77,11 @@ public class CreateCommand extends BaseCommandImpl {
     }
 
     public Boolean getCreateCsprocessorCfg() {
-        return noCsprocessorCfg;
+        return createCsprocessorCfg;
     }
 
     public void setCreateCsprocessorCfg(final Boolean createCsprocessorCfg) {
-        this.noCsprocessorCfg = createCsprocessorCfg;
+        this.createCsprocessorCfg = createCsprocessorCfg;
     }
 
     public Boolean getForce() {
@@ -106,7 +107,7 @@ public class CreateCommand extends BaseCommandImpl {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
 
         if (!isValid()) {
             printError(Constants.ERROR_NO_FILE_MSG, true);
@@ -117,9 +118,9 @@ public class CreateCommand extends BaseCommandImpl {
         boolean success = false;
 
         // Read in the file contents
-        final String contentSpec = FileUtilities.readFileContents(files.get(0));
+        final String contentSpecString = FileUtilities.readFileContents(files.get(0));
 
-        if (contentSpec == null || contentSpec.equals("")) {
+        if (contentSpecString == null || contentSpecString.equals("")) {
             printError(Constants.ERROR_EMPTY_FILE_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
@@ -134,7 +135,7 @@ public class CreateCommand extends BaseCommandImpl {
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         final ContentSpecParser parser = new ContentSpecParser(providerFactory, loggerManager);
         try {
-            parser.parse(contentSpec);
+            parser.parse(contentSpecString);
         } catch (Exception e) {
             printError(Constants.ERROR_INTERNAL_ERROR, false);
             shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
@@ -143,7 +144,7 @@ public class CreateCommand extends BaseCommandImpl {
         // Check that the output directory doesn't already exist
         final File directory = new File(
                 cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(parser.getContentSpec().getTitle()));
-        if (directory.exists() && !force && !noCsprocessorCfg && directory.isDirectory()) {
+        if (directory.exists() && !force && createCsprocessorCfg && directory.isDirectory()) {
             printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
             shutdown(Constants.EXIT_FAILURE);
         }
@@ -159,11 +160,12 @@ public class CreateCommand extends BaseCommandImpl {
         processingOptions.setPermissiveMode(permissive);
 
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
+        final ContentSpec contentSpec = parser.getContentSpec();
         Integer revision = null;
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
             if (success) {
-                revision = topicProvider.getTopic(csp.getContentSpec().getId()).getRevision();
+                revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
             }
         } catch (Exception e) {
             printError(Constants.ERROR_INTERNAL_ERROR, false);
@@ -174,7 +176,7 @@ public class CreateCommand extends BaseCommandImpl {
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(loggerManager.generateLogs());
         if (success) {
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, csp.getContentSpec().getId(), revision));
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
         }
         if (executionTime) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
@@ -187,7 +189,7 @@ public class CreateCommand extends BaseCommandImpl {
             return;
         }
 
-        if (success && !noCsprocessorCfg) {
+        if (success && createCsprocessorCfg) {
             // If the output directory exists and force is enabled delete the directory contents
             if (directory.exists() && directory.isDirectory()) {
                 ClientUtilities.deleteDir(directory);
@@ -202,13 +204,13 @@ public class CreateCommand extends BaseCommandImpl {
             boolean error = false;
 
             // Save the csprocessor.cfg and post spec to file if the create was successful
-            final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
-            final TopicWrapper contentSpecTopic = topicProvider.getTopic(csp.getContentSpec().getId(), null);
+            final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpec.getId(), null);
             final File outputSpec = new File(
                     cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                             .FILENAME_EXTENSION);
             final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecTopic, cspConfig.getServerUrl(), zanataDetails);
+            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecEntity, cspConfig.getServerUrl(), zanataDetails);
 
             // Create the directory
             if (outputConfig.getParentFile() != null) outputConfig.getParentFile().mkdirs();
@@ -228,7 +230,7 @@ public class CreateCommand extends BaseCommandImpl {
             // Save the Post Processed spec
             try {
                 final FileOutputStream fos = new FileOutputStream(outputSpec);
-                fos.write(contentSpecTopic.getXml().getBytes("UTF-8"));
+                fos.write(contentSpec.toString().getBytes("UTF-8"));
                 fos.flush();
                 fos.close();
                 JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));

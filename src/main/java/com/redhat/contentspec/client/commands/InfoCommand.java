@@ -10,10 +10,13 @@ import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
-import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.SpecTopic;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
@@ -53,7 +56,9 @@ public class InfoCommand extends BaseCommandImpl {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+
         // Add the details for the csprocessor.cfg if no ids are specified
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
@@ -78,16 +83,16 @@ public class InfoCommand extends BaseCommandImpl {
         }
 
         // Get the Content Specification from the server.
-        final TopicWrapper contentSpec = topicProvider.getTopic(ids.get(0), null);
-        if (contentSpec == null || contentSpec.getXml() == null) {
+        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), null);
+        if (contentSpecEntity == null) {
             printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
 
         // Print the initial CSP ID & Title message
         JCommander.getConsole().println(String.format(Constants.CSP_ID_MSG, ids.get(0)));
-        JCommander.getConsole().println(String.format(Constants.CSP_REVISION_MSG, contentSpec.getRevision()));
-        JCommander.getConsole().println(String.format(Constants.CSP_TITLE_MSG, contentSpec.getTitle()));
+        JCommander.getConsole().println(String.format(Constants.CSP_REVISION_MSG, contentSpecEntity.getRevision()));
+        JCommander.getConsole().println(String.format(Constants.CSP_TITLE_MSG, contentSpecEntity.getTitle()));
         JCommander.getConsole().println("");
 
         // Good point to check for a shutdown
@@ -98,15 +103,9 @@ public class InfoCommand extends BaseCommandImpl {
 
         JCommander.getConsole().println("Starting to calculate the statistics...");
 
-        // Parse the spec to get the ids
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
-        try {
-            csp.parse(contentSpec.getXml());
-        } catch (Exception e) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
-            shutdown(Constants.EXIT_FAILURE);
-        }
+        // Transform the content spec
+        final CSTransformer transformer = new CSTransformer();
+        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
@@ -114,10 +113,19 @@ public class InfoCommand extends BaseCommandImpl {
             return;
         }
 
+        // Create the list of referenced topics
+        final List<Integer> referencedTopicIds = new ArrayList<Integer>();
+        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
+        for (final SpecTopic specTopic : specTopics) {
+            if (specTopic.getDBId() > 0) {
+                referencedTopicIds.add(specTopic.getDBId());
+            }
+        }
+
         // Calculate the percentage complete
-        final int numTopics = csp.getReferencedTopicIds().size();
+        final int numTopics = referencedTopicIds.size();
         int numTopicsComplete = 0;
-        final CollectionWrapper<TopicWrapper> topics = topicProvider.getTopics(csp.getReferencedTopicIds());
+        final CollectionWrapper<TopicWrapper> topics = topicProvider.getTopics(referencedTopicIds);
         if (topics != null && topics.getItems() != null) {
             final List<TopicWrapper> topicItems = topics.getItems();
             for (final TopicWrapper topic : topicItems) {

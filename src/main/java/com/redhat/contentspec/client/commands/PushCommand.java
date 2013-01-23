@@ -17,10 +17,11 @@ import com.redhat.contentspec.client.converter.FileConverter;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -108,18 +109,19 @@ public class PushCommand extends BaseCommandImpl {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         boolean pushingFromConfig = false;
         // If files is empty then we must be using a csprocessor.cfg file
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
             if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                final TopicWrapper contentSpec = topicProvider.getTopic(cspConfig.getContentSpecId(), null);
-                final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+                final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(cspConfig.getContentSpecId(), null);
+                final String fileName = DocBookUtilities.escapeTitle(
+                        contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 File file = new File(fileName);
                 if (!file.exists()) {
                     // Backwards compatibility check for files ending with .txt
-                    file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+                    file = new File(DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post.txt");
                     if (!file.exists()) {
                         printError(String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
                         shutdown(Constants.EXIT_FAILURE);
@@ -146,12 +148,23 @@ public class PushCommand extends BaseCommandImpl {
         boolean success = false;
 
         // Read in the file contents
-        String contentSpec = FileUtilities.readFileContents(files.get(0));
+        String contentSpecString = FileUtilities.readFileContents(files.get(0));
 
-        if (contentSpec == null || contentSpec.equals("")) {
+        if (contentSpecString == null || contentSpecString.equals("")) {
             printError(Constants.ERROR_EMPTY_FILE_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
+
+        // Parse the spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        final ContentSpecParser parser = new ContentSpecParser(providerFactory, loggerManager);
+        try {
+            parser.parse(contentSpecString);
+        } catch (Exception e) {
+            printError(Constants.ERROR_INTERNAL_ERROR, false);
+            shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
+        }
+        final ContentSpec contentSpec = parser.getContentSpec();
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
@@ -164,13 +177,12 @@ public class PushCommand extends BaseCommandImpl {
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setAllowEmptyLevels(true);
 
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         Integer revision = null;
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
             if (success) {
-                revision = topicProvider.getTopic(csp.getContentSpec().getId()).getRevision();
+                revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
             }
         } catch (Exception e) {
             printError(Constants.ERROR_INTERNAL_ERROR, false);
@@ -181,7 +193,7 @@ public class PushCommand extends BaseCommandImpl {
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(loggerManager.generateLogs());
         if (success) {
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, csp.getContentSpec().getId(), revision));
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
         }
         if (executionTime) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
@@ -201,10 +213,10 @@ public class PushCommand extends BaseCommandImpl {
 
         if (success && !pushOnly) {
             // Save the post spec to file if the push was successful
-            final TopicWrapper contentSpecTopic = topicProvider.getTopic(csp.getContentSpec().getId(), null);
+            final ContentSpecWrapper contentSpecTopic = contentSpecProvider.getContentSpec(contentSpec.getId(), null);
             final File outputSpec;
             if (pushingFromConfig) {
-                final String escapedTitle = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+                final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
                 outputSpec = new File((cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
                         "") ? "" : (cspConfig.getRootOutputDirectory() + escapedTitle + File.separator)) + escapedTitle + "-post." +
                         Constants.FILENAME_EXTENSION);
@@ -218,7 +230,7 @@ public class PushCommand extends BaseCommandImpl {
             // Save the Post Processed spec
             try {
                 final FileOutputStream fos = new FileOutputStream(outputSpec);
-                fos.write(contentSpecTopic.getXml().getBytes("UTF-8"));
+                fos.write(contentSpec.toString().getBytes("UTF-8"));
                 fos.flush();
                 fos.close();
             } catch (IOException e) {

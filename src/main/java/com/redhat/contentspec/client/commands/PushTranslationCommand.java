@@ -19,13 +19,17 @@ import com.redhat.contentspec.processor.ContentSpecParser.ParsingMode;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.SpecTopic;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.TranslatedTopicProvider;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TranslatedTopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -204,6 +208,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
 
         // Add the details for the csprocessor.cfg if no ids are specified
@@ -235,12 +240,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
             return;
         }
 
-        final TopicWrapper contentSpecTopic = topicProvider.getTopic(ids.get(0), null);
+        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), null);
 
-        if (contentSpecTopic == null || contentSpecTopic.getXml() == null) {
+        if (contentSpecEntity == null) {
             printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
+
+        // Transform the content spec
+        final CSTransformer transformer = new CSTransformer();
+        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -254,7 +263,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         boolean success = false;
         try {
-            success = csp.processContentSpec(contentSpecTopic.getXml(), user, ParsingMode.EITHER);
+            success = csp.processContentSpec(contentSpec, user, ParsingMode.EITHER);
         } catch (Exception e) {
             JCommander.getConsole().println(loggerManager.generateLogs());
             shutdown(Constants.EXIT_FAILURE);
@@ -274,8 +283,17 @@ public class PushTranslationCommand extends BaseCommandImpl {
             return;
         }
 
+        // Create the list of referenced topics
+        final List<Integer> referencedLatestTopicIds = new ArrayList<Integer>();
+        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
+        for (final SpecTopic specTopic : specTopics) {
+            if (specTopic.getDBId() > 0 && specTopic.getRevision() == null) {
+                referencedLatestTopicIds.add(specTopic.getDBId());
+            }
+        }
+
         // Get the topics that were processed by the ContentSpecProcessor. (They should be stored in cache)
-        CollectionWrapper<TopicWrapper> topics = topicProvider.getTopics(csp.getParser().getReferencedLatestTopicIds());
+        CollectionWrapper<TopicWrapper> topics = topicProvider.getTopics(referencedLatestTopicIds);
 
         if (topics == null) {
             topics = topicProvider.newTopicCollection();
@@ -287,8 +305,15 @@ public class PushTranslationCommand extends BaseCommandImpl {
             return;
         }
 
+        // Create the list of referenced revision topics
+        final List<Pair<Integer, Integer>> referencedRevisionTopicIds = new ArrayList<Pair<Integer, Integer>>();
+        for (final SpecTopic specTopic : specTopics) {
+            if (specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
+                referencedRevisionTopicIds.add(new Pair(specTopic.getDBId(), specTopic.getRevision()));
+            }
+        }
+
         // Get the revision topics that were processed by the ContentSpecProcessor. (They should be stored in cache)
-        final List<Pair<Integer, Integer>> referencedRevisionTopicIds = csp.getParser().getReferencedRevisionTopicIds();
         for (final Pair<Integer, Integer> referencedRevisionTopic : referencedRevisionTopicIds) {
             final TopicWrapper revisionTopic = topicProvider.getTopic(referencedRevisionTopic.getFirst(),
                     referencedRevisionTopic.getSecond());
@@ -301,7 +326,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             return;
         }
 
-        if (!pushCSTopicsToZanata(providerFactory, topics, contentSpecTopic, csp.getContentSpec())) {
+        if (!pushCSTopicsToZanata(providerFactory, topics, contentSpecEntity, contentSpec)) {
             printError(Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         } else {
@@ -315,7 +340,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     protected boolean pushCSTopicsToZanata(final DataProviderFactory providerFactory, final CollectionWrapper<TopicWrapper> topics,
-            final TopicWrapper contentSpecTopic, final ContentSpec contentSpec) {
+            final ContentSpecWrapper contentSpecEntity, final ContentSpec contentSpec) {
         final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
         final Map<TopicWrapper, Document> topicToDoc = new HashMap<TopicWrapper, Document>();
         boolean error = false;
@@ -418,20 +443,24 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     if (!zanataInterface.createFile(resource)) {
                         messages.add(
                                 "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+                        error = true;
                     } else if (!translatedTopicExists) {
                         final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, topic);
                         try {
                             if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
                                 messages.add(
                                         "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
-                                                "Skynet.");
+                                                "PressGang.");
+                                error = true;
                             }
-                        } catch (Exception e) {                            /*
+                        } catch (Exception e) {
+                            /*
                              * Do nothing here as it shouldn't fail. If it does then it'll be created
-                        	 * by the sync service anyways.
-                        	 */
-                            messages.add(
-                                    "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Skynet.");
+                             * by the sync service anyways.
+                             */
+                            messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
+                                    "PressGang.");
+                            error = true;
                         }
                     }
                 } else {
@@ -440,18 +469,18 @@ public class PushTranslationCommand extends BaseCommandImpl {
             }
             // Upload the content specification to zanata
             if (!topicsOnly) {
-                final String zanataId = contentSpecTopic.getId() + "-" + contentSpecTopic.getRevision();
+                final String zanataId = contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
                 final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
 
                 if (zanataFile == null) {
                     final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory,
-                            contentSpecTopic.getId(), contentSpecTopic.getRevision(), contentSpecTopic.getLocale()) != null;
+                            contentSpecEntity.getId(), contentSpecEntity.getRevision(), contentSpecEntity.getLocale()) != null;
 
                     final Resource resource = new Resource();
 
                     resource.setContentType(ContentType.TextPlain);
-                    resource.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
-                    resource.setName(contentSpecTopic.getId() + "-" + contentSpecTopic.getRevision());
+                    resource.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
+                    resource.setName(contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision());
                     resource.setRevision(1);
                     resource.setType(ResourceType.FILE);
 
@@ -463,7 +492,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                         if (!translatableString.trim().isEmpty()) {
                             final TextFlow textFlow = new TextFlow();
                             textFlow.setContents(translatableString);
-                            textFlow.setLang(LocaleId.fromJavaName(contentSpecTopic.getLocale()));
+                            textFlow.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
                             textFlow.setId(HashUtilities.generateMD5(translatableString));
                             textFlow.setRevision(1);
 
@@ -473,30 +502,35 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
                     if (!zanataInterface.createFile(resource)) {
                         messages.add(
-                                "Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " failed" +
+                                "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
+                                        "failed" +
                                         " to be created in Zanata.");
+                        error = true;
                     } else if (!translatedTopicExists) {
                         // Save the translated topic
-                        final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, contentSpecTopic);
+                        // TODO Content Spec Translations
+                        /*final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, contentSpecEntity);
                         try {
                             if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
                                 messages.add(
-                                        "Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() +
-                                                " failed to be created in Skynet.");
+                                        "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() +
+                                                " failed to be created in PressGang.");
+                                error = true;
                             }
                         } catch (Exception e) {
                             /*
                              * Do nothing here as it shouldn't fail. If it does then it'll be created 
                              * by the sync service anyways.
                              */
-                            messages.add(
-                                    "Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " " +
-                                            "failed to be created in Skynet.");
-                        }
+                            /*messages.add(
+                                    "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
+                                            "failed to be created in PressGang.");
+                            error = true;
+                        }*/
                     }
                 } else {
                     messages.add(
-                            "Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " already " +
+                            "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " already " +
                                     "exists - Skipping.");
                 }
             }

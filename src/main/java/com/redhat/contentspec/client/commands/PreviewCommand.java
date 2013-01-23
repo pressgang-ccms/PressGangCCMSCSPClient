@@ -10,10 +10,10 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
@@ -44,7 +44,7 @@ public class PreviewCommand extends AssembleCommand {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final boolean previewFromConfig = loadFromCSProcessorCfg();
         final String previewFormat = clientConfig.getPublicanPreviewFormat();
 
@@ -70,35 +70,25 @@ public class PreviewCommand extends AssembleCommand {
         String previewFileName = null;
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         if (previewFromConfig) {
-            final TopicWrapper contentSpec = topicProvider.getTopic(cspConfig.getContentSpecId(), null);
+            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(cspConfig.getContentSpecId(), null);
 
             // Check that that content specification was found
-            if (contentSpec == null || contentSpec.getXml() == null) {
+            if (contentSpec == null) {
                 printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
                 shutdown(Constants.EXIT_FAILURE);
-            }
-
-            // Parse the content specification to get the product and versions
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
-            try {
-                csp.parse(contentSpec.getXml());
-            } catch (Exception e) {
-                printError(Constants.ERROR_INTERNAL_ERROR, false);
-                shutdown(Constants.EXIT_ARGUMENT_ERROR);
             }
 
             final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
                     "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
                     contentSpec.getTitle()) + File.separator));
-            final String locale = getOutputLocale() == null ? (getLocale() == null ? (csp.getContentSpec().getLocale() == null ?
-                    CommonConstants.DEFAULT_LOCALE : csp.getContentSpec().getLocale()) : getLocale()) : getOutputLocale();
+            final String locale = getOutputLocale() == null ? (getLocale() == null ? CommonConstants.DEFAULT_LOCALE : getLocale()) :
+                    getOutputLocale();
 
             if (previewFormat.equals("pdf")) {
                 // Create the file
                 previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
                         DocBookUtilities.escapeTitle(
-                                csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities
-                        .escapeTitle(
+                                contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
                         contentSpec.getTitle()) + "-en-US.pdf";
             } else {
                 previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index" +
@@ -106,7 +96,7 @@ public class PreviewCommand extends AssembleCommand {
             }
         } else if (getIds() != null && getIds().size() == 1) {
             // Create the file based on an ID passed from the command line
-            final String contentSpec = this.getContentSpecString(topicProvider, getIds().get(0));
+            final String contentSpec = getContentSpecFromFile(getIds().get(0));
 
             final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
             try {
@@ -119,9 +109,9 @@ public class PreviewCommand extends AssembleCommand {
             // Create the fully qualified output path
             String fileDirectory = "";
             if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-                fileDirectory = ClientUtilities.validateDirLocation(this.getOutputPath());
-            } else if (this.getOutputPath() != null) {
-                final File file = new File(ClientUtilities.validateFilePath(this.getOutputPath()));
+                fileDirectory = ClientUtilities.validateDirLocation(getOutputPath());
+            } else if (getOutputPath() != null) {
+                final File file = new File(ClientUtilities.validateFilePath(getOutputPath()));
                 if (file.getParent() != null) fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
             }
 
