@@ -11,10 +11,10 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
@@ -50,7 +50,7 @@ public class AssembleCommand extends BuildCommand {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final boolean assembleFromConfig = loadFromCSProcessorCfg();
 
         // Good point to check for a shutdown
@@ -70,10 +70,10 @@ public class AssembleCommand extends BuildCommand {
         String outputDirectory = "";
         String fileName = null;
         if (assembleFromConfig) {
-            final TopicWrapper contentSpec = topicProvider.getTopic(cspConfig.getContentSpecId(), null);
+            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(cspConfig.getContentSpecId(), null);
 
             // Check that that content specification was found
-            if (contentSpec == null || contentSpec.getXml() == null) {
+            if (contentSpec == null) {
                 printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
                 shutdown(Constants.EXIT_FAILURE);
             }
@@ -86,7 +86,7 @@ public class AssembleCommand extends BuildCommand {
             outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
             fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
         } else if (getIds() != null && getIds().size() == 1) {
-            final String contentSpec = getContentSpecString(topicProvider, getIds().get(0));
+            final String contentSpec = getContentSpecFromFile(getIds().get(0));
 
             /* parse the spec to get the main details */
             final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
@@ -99,12 +99,12 @@ public class AssembleCommand extends BuildCommand {
 
             // Create the fully qualified output path
             if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-                fileDirectory = this.getOutputPath();
+                fileDirectory = getOutputPath();
                 fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
             } else if (getOutputPath() == null) {
                 fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
             } else {
-                fileName = this.getOutputPath();
+                fileName = getOutputPath();
             }
 
             // Add the full file path to the output path

@@ -14,14 +14,16 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
-import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 
 @Parameters(commandDescription = "Pull a Content Specification from the server")
 public class PullCommand extends BaseCommandImpl {
@@ -40,12 +42,6 @@ public class PullCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.HTML_LONG_PARAM, Constants.HTML_SHORT_PARAM})
     private Boolean useHtml = false;
 
-    @Parameter(names = Constants.PRE_LONG_PARAM)
-    private Boolean usePre = false;
-
-    @Parameter(names = Constants.POST_LONG_PARAM)
-    private Boolean usePost = false;
-
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision;
 
@@ -62,7 +58,7 @@ public class PullCommand extends BaseCommandImpl {
     }
 
     public void setContentSpec(final Boolean contentSpec) {
-        this.pullContentSpec = contentSpec;
+        pullContentSpec = contentSpec;
     }
 
     public Boolean useTopic() {
@@ -70,7 +66,7 @@ public class PullCommand extends BaseCommandImpl {
     }
 
     public void setTopic(final Boolean topic) {
-        this.pullTopic = topic;
+        pullTopic = topic;
     }
 
     public Boolean isUseXml() {
@@ -87,22 +83,6 @@ public class PullCommand extends BaseCommandImpl {
 
     public void setUseHtml(final Boolean useHtml) {
         this.useHtml = useHtml;
-    }
-
-    public Boolean isUsePre() {
-        return usePre;
-    }
-
-    public void setUsePre(final Boolean usePre) {
-        this.usePre = usePre;
-    }
-
-    public Boolean isUsePost() {
-        return usePost;
-    }
-
-    public void setUsePost(final Boolean usePost) {
-        this.usePost = usePost;
     }
 
     public Integer getRevision() {
@@ -134,13 +114,8 @@ public class PullCommand extends BaseCommandImpl {
             if (useXml && useHtml) {
                 return false;
             }
-            if (usePre || usePost) {
-                return false;
-            }
+
         } else if (!pullTopic) {
-            if (usePre && usePost) {
-                return false;
-            }
             if (useXml || useHtml) {
                 return false;
             }
@@ -152,7 +127,7 @@ public class PullCommand extends BaseCommandImpl {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         boolean pullForConfig = false;
 
         // Load the data from the config data if no ids were specified
@@ -205,50 +180,26 @@ public class PullCommand extends BaseCommandImpl {
             }
             // Content Specification
         } else {
-            if (usePre) {
-                final TopicWrapper contentSpec = ContentSpecUtilities.getPreContentSpecById(topicProvider, ids.get(0), revision);
-                if (contentSpec == null) {
-                    printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
-                    shutdown(Constants.EXIT_FAILURE);
-                } else {
-                    data = contentSpec.getXml();
-                    if (revision == null) {
-                        fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-pre." + Constants.FILENAME_EXTENSION;
-                    } else {
-                        fileName = DocBookUtilities.escapeTitle(
-                                contentSpec.getTitle()) + "-pre-r" + revision + "." + Constants.FILENAME_EXTENSION;
-                    }
-                    if (pullForConfig) {
-                        outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                                "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                                contentSpec.getTitle() + File.separator)));
-                    }
-                }
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), revision);
+            if (contentSpecEntity == null) {
+                printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                shutdown(Constants.EXIT_FAILURE);
             } else {
-                final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(topicProvider, ids.get(0), revision);
-                if (contentSpec == null) {
-                    printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
-                    shutdown(Constants.EXIT_FAILURE);
-                } else {
-                    data = contentSpec.getXml();
-                    if (revision == null) {
-                        fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+                // Transform the content spec
+                final CSTransformer transformer = new CSTransformer();
+                final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
 
-                        /*
-                         * If the revision is null then we want to get the latest version, however the version may have been updated
-                         * via the GUI. So we need to recalculate the checksum so that when the changes are pushed the CHECKSUM will be
-                         * valid.
-                         */
-                        data = fixContentSpecChecksum(data);
-                    } else {
-                        fileName = DocBookUtilities.escapeTitle(
-                                contentSpec.getTitle()) + "-post-r" + revision + "." + Constants.FILENAME_EXTENSION;
-                    }
-                    if (pullForConfig) {
-                        outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                                "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                                contentSpec.getTitle() + File.separator)));
-                    }
+                data = contentSpec.toString();
+                if (revision == null) {
+                    fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+                } else {
+                    fileName = DocBookUtilities.escapeTitle(
+                            contentSpecEntity.getTitle()) + "-post-r" + revision + "." + Constants.FILENAME_EXTENSION;
+                }
+                if (pullForConfig) {
+                    outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
+                            "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
+                            contentSpecEntity.getTitle() + File.separator)));
                 }
             }
         }
@@ -305,13 +256,6 @@ public class PullCommand extends BaseCommandImpl {
                 shutdown(Constants.EXIT_FAILURE);
             }
         }
-    }
-
-    protected String fixContentSpecChecksum(final String contentSpec) {
-        String contentSpecData = contentSpec.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
-        final String checksum = HashUtilities.generateMD5(contentSpecData);
-
-        return "CHECKSUM=" + checksum + "\n" + contentSpecData;
     }
 
     @Override

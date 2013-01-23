@@ -25,15 +25,17 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.validator.OverrideValidator;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
+import com.redhat.contentspec.processor.constants.ProcessorConstants;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
 import com.redhat.j2koji.exceptions.KojiException;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -351,35 +353,17 @@ public class BuildCommand extends BaseCommandImpl {
         return buildOptions;
     }
 
-    @SuppressWarnings("rawtypes")
-    protected String getContentSpecString(final TopicProvider topicProvider, final String id) {
-        final String contentSpec;
-        if (id.matches("^\\d+$")) {
-            final TopicWrapper contentSpecTopic = ContentSpecUtilities.getPostContentSpecById(topicProvider, Integer.parseInt(id),
-                    revision);
+    protected String getContentSpecFromFile(final String file) {
+        // Get the content spec from the file
+        final String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.validateFilePath(file)));
 
-            if (contentSpecTopic == null || contentSpecTopic.getXml() == null) {
-                printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
-                shutdown(Constants.EXIT_FAILURE);
-            }
+        if (contentSpec == null || contentSpec.equals("")) {
+            printError(Constants.ERROR_EMPTY_FILE_MSG, false);
+            shutdown(Constants.EXIT_FAILURE);
+        }
 
-            contentSpec = contentSpecTopic.getXml();
-
-            if (permissive == null) {
-                permissive = true;
-            }
-        } else {
-            // Get the content spec from the file
-            contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.validateFilePath(id)));
-
-            if (contentSpec == null || contentSpec.equals("")) {
-                printError(Constants.ERROR_EMPTY_FILE_MSG, false);
-                shutdown(Constants.EXIT_FAILURE);
-            }
-
-            if (permissive == null) {
-                permissive = false;
-            }
+        if (permissive == null) {
+            permissive = false;
         }
 
         return contentSpec;
@@ -417,7 +401,7 @@ public class BuildCommand extends BaseCommandImpl {
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
         final long startTime = System.currentTimeMillis();
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         boolean buildingFromConfig = false;
 
         // Add the details for the csprocessor.cfg if no ids are specified
@@ -446,7 +430,28 @@ public class BuildCommand extends BaseCommandImpl {
             return;
         }
 
-        final String contentSpec = getContentSpecString(topicProvider, ids.get(0));
+        final ContentSpec contentSpec;
+        final String id = ids.get(0);
+        boolean success = false;
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        if (id.matches("^\\d+$")) {
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(Integer.parseInt(id), revision);
+            final CSTransformer transformer = new CSTransformer();
+
+            contentSpec = transformer.transform(contentSpecEntity);
+        } else {
+            // Get the content spec from the file
+            final String contentSpecString = getContentSpecFromFile(id);
+
+            // Good point to check for a shutdown
+            if (isAppShuttingDown()) {
+                shutdown.set(true);
+                return;
+            }
+
+            // Parse the content spec
+            contentSpec = parseContentSpec(providerFactory, loggerManager, user, contentSpecString);
+        }
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
@@ -455,8 +460,7 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Validate that the content spec is valid
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        boolean success = validateContentSpec(providerFactory, loggerManager, user, contentSpec);
+        success = validateContentSpec(providerFactory, loggerManager, user, contentSpec);
 
         // Print the error/warning messages
         JCommander.getConsole().println(loggerManager.generateLogs());
@@ -466,16 +470,16 @@ public class BuildCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_TOPIC_INVALID);
         }
 
-        String fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+        String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
 
         // Pull in the pubsnumber from koji if the option is set
         if (fetchPubsnum) {
             JCommander.getConsole().println(Constants.FETCHING_PUBSNUMBER_MSG);
 
             try {
-                final Integer pubsnumber = ClientUtilities.getPubsnumberFromKoji(csp.getContentSpec(), cspConfig.getKojiHubUrl());
+                final Integer pubsnumber = ClientUtilities.getPubsnumberFromKoji(contentSpec, cspConfig.getKojiHubUrl());
                 if (pubsnumber != null) {
-                    csp.getContentSpec().setPubsNumber(pubsnumber);
+                    contentSpec.setPubsNumber(pubsnumber);
                 }
             } catch (MalformedURLException e) {
                 printError(Constants.ERROR_INVALID_KOJIHUB_URL, false);
@@ -502,9 +506,9 @@ public class BuildCommand extends BaseCommandImpl {
         try {
             builder = new ContentSpecBuilder(providerFactory);
             if (locale == null) {
-                builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
+                builderOutput = builder.buildBook(contentSpec, user, getBuildOptions());
             } else {
-                builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), user, getBuildOptions(), cspConfig.getZanataDetails());
+                builderOutput = builder.buildTranslatedBook(contentSpec, user, getBuildOptions(), cspConfig.getZanataDetails());
             }
         } catch (Exception e) {
             JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
@@ -544,8 +548,26 @@ public class BuildCommand extends BaseCommandImpl {
         saveBuildToFile(builderOutput, outputFile, buildingFromConfig);
     }
 
-    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+    protected ContentSpec parseContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
             final UserWrapper user, final String contentSpec) {
+        JCommander.getConsole().println("Starting to parse...");
+        final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
+        try {
+            if (!csp.parse(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, true)) {
+                JCommander.getConsole().println(loggerManager.generateLogs());
+                JCommander.getConsole().println(ProcessorConstants.ERROR_INVALID_CS_MSG);
+                shutdown(Constants.EXIT_FAILURE);
+            }
+        } catch (Exception e) {
+            JCommander.getConsole().println(loggerManager.generateLogs());
+            shutdown(Constants.EXIT_FAILURE);
+        }
+
+        return csp.getContentSpec();
+    }
+
+    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final UserWrapper user, final ContentSpec contentSpec) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
@@ -559,7 +581,7 @@ public class BuildCommand extends BaseCommandImpl {
         }
         if (allowEmptyLevels) processingOptions.setAllowEmptyLevels(true);
 
-        // Validate and parse the Content Specification
+        // Validate the Content Specification
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         boolean success = false;
         try {

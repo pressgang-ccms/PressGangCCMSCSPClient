@@ -11,10 +11,9 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 
@@ -108,7 +107,7 @@ public class ListCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
 
         // Get the number of results to display
         Integer numResults = 0;
@@ -121,8 +120,7 @@ public class ListCommand extends BaseCommandImpl {
         if (snapshot) {
             // TODO implement snapshot listing
         } else {
-            final CollectionWrapper<TopicWrapper> contentSpecs = topicProvider.getTopicsWithQuery(
-                    "query;tag" + CSConstants.CONTENT_SPEC_TAG_ID + "=1");
+            final CollectionWrapper<ContentSpecWrapper> contentSpecs = contentSpecProvider.getContentSpecsWithQuery("query;");
             // Get the number of content specs in the database
             long noSpecs = contentSpecs.size();
 
@@ -137,7 +135,7 @@ public class ListCommand extends BaseCommandImpl {
                 printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
                 shutdown(Constants.EXIT_FAILURE);
             } else {
-                final List<TopicWrapper> csList = contentSpecs.getItems().subList(0, numResults);
+                final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);
 
                 // Good point to check for a shutdown
                 if (isAppShuttingDown()) {
@@ -161,11 +159,12 @@ public class ListCommand extends BaseCommandImpl {
     }
 
     @Override
-    public boolean loadFromCSProcessorCfg() {        /*
+    public boolean loadFromCSProcessorCfg() {
+        /*
          * We shouldn't use a csprocessor.cfg file for the
-		 * list URL as it should be specified or read from the
-		 * csprocessor.ini
-		 */
+         * list URL as it should be specified or read from the
+         * csprocessor.ini
+         */
         return false;
     }
 }

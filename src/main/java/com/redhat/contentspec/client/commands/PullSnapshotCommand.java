@@ -19,11 +19,12 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 
@@ -126,9 +127,9 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         boolean success = false;
 
         // Get the topic from the rest interface
-        final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(providerFactory.getProvider(TopicProvider.class),
-                ids.get(0), revision);
-        if (contentSpec == null) {
+        final ContentSpecWrapper contentSpecEntity = providerFactory.getProvider(ContentSpecProvider.class).getContentSpec(ids.get(0),
+                revision);
+        if (contentSpecEntity == null) {
             printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
@@ -149,11 +150,15 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setRevision(revision);
 
+        // Transform the content spec
+        final CSTransformer transformer = new CSTransformer();
+        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
+
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         try {
-            success = csp.processContentSpec(contentSpec.getXml(), user, ContentSpecParser.ParsingMode.EITHER);
+            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
         } catch (Exception e) {
             e.printStackTrace();
             printError(Constants.ERROR_INTERNAL_ERROR, false);
@@ -170,14 +175,14 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         if (pullForConfig) {
             outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
                     "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                    contentSpec.getTitle()) + File.separator)) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator;
+                    contentSpecEntity.getTitle()) + File.separator)) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator;
         }
 
         // Save or print the data
         final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
-        final String data = csp.getContentSpec().toString();
-        final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-snapshot-" + dateFormatter.format(
-                contentSpec.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
+        final String data = contentSpec.toString();
+        final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-snapshot-" + dateFormatter.format(
+                contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
         if (outputPath == null) {
             JCommander.getConsole().println(data);
         } else {
