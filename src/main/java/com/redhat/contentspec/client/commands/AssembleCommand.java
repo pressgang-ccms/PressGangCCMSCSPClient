@@ -10,13 +10,13 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 
 @Parameters(commandDescription = "Builds and Assembles a Content Specification so that it is ready to be previewed")
@@ -30,6 +30,11 @@ public class AssembleCommand extends BuildCommand {
 
     public AssembleCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.ASSEMBLE_COMMAND_NAME;
     }
 
     public Boolean getNoBuild() {
@@ -54,14 +59,10 @@ public class AssembleCommand extends BuildCommand {
         final boolean assembleFromConfig = loadFromCSProcessorCfg();
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         if (!noBuild) {
             super.process(providerFactory, user);
-            if (isShutdown()) return;
         }
 
         JCommander.getConsole().println(Constants.STARTING_ASSEMBLE_MSG);
@@ -70,7 +71,7 @@ public class AssembleCommand extends BuildCommand {
         String outputDirectory = "";
         String fileName = null;
         if (assembleFromConfig) {
-            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(cspConfig.getContentSpecId(), null);
+            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
 
             // Check that that content specification was found
             if (contentSpec == null) {
@@ -78,31 +79,27 @@ public class AssembleCommand extends BuildCommand {
                 shutdown(Constants.EXIT_FAILURE);
             }
 
-            final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                    "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                    contentSpec.getTitle()) + File.separator));
+            /*
+             * If we are assembling from a CSP Project directory then we need to get the location of the ZIP and the assembly directory
+             * relative to the current working directory, or the CSP root project directory.
+             */
+            final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
 
             fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
             outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
             fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
         } else if (getIds() != null && getIds().size() == 1) {
-            final String contentSpec = getContentSpecFromFile(getIds().get(0));
+            final String contentSpecString = getContentSpecFromFile(getIds().get(0));
 
-            /* parse the spec to get the main details */
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
-            try {
-                csp.parse(contentSpec);
-            } catch (Exception e) {
-                printError(Constants.ERROR_INTERNAL_ERROR, false);
-                shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
-            }
+            // Parse the spec to get the main details
+            final ContentSpec contentSpec = parseContentSpec(providerFactory, contentSpecString, user, false);
 
             // Create the fully qualified output path
             if (getOutputPath() != null && getOutputPath().endsWith("/")) {
                 fileDirectory = getOutputPath();
-                fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
+                fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
             } else if (getOutputPath() == null) {
-                fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
+                fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
             } else {
                 fileName = getOutputPath();
             }
@@ -110,9 +107,9 @@ public class AssembleCommand extends BuildCommand {
             // Add the full file path to the output path
             final File file = new File(ClientUtilities.validateFilePath(fileDirectory + fileName));
             if (file.getParent() != null) {
-                outputDirectory = file.getParent() + File.separator + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+                outputDirectory = file.getParent() + File.separator + DocBookUtilities.escapeTitle(contentSpec.getTitle());
             } else {
-                outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
+                outputDirectory = DocBookUtilities.escapeTitle(contentSpec.getTitle());
             }
         } else if (getIds().size() == 0) {
             printError(Constants.ERROR_NO_ID_MSG, false);
@@ -123,10 +120,7 @@ public class AssembleCommand extends BuildCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         final File file = new File(ClientUtilities.validateFilePath(fileDirectory + fileName));
         if (!file.exists()) {
@@ -139,7 +133,7 @@ public class AssembleCommand extends BuildCommand {
         outputDir.mkdirs();
 
         // Ensure that the directory is empty
-        ClientUtilities.deleteDirContents(outputDir);
+        FileUtilities.deleteDirContents(outputDir);
 
         // Unzip the file
         if (!ZipUtilities.unzipFileIntoDirectory(file, outputDirectory)) {
@@ -150,16 +144,13 @@ public class AssembleCommand extends BuildCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
-        String publicanOptions = clientConfig.getPublicanBuildOptions();
+        String publicanOptions = getClientConfig().getPublicanBuildOptions();
 
         // Replace the locale in the build options if the locale has been set
-        if (getOutputLocale() != null)
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
+        if (getTargetLocale() != null)
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
         else if (getLocale() != null) publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 
         try {
@@ -171,20 +162,9 @@ public class AssembleCommand extends BuildCommand {
                 shutdown(Constants.EXIT_FAILURE);
             }
         } catch (IOException e) {
-            printError(Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
-            shutdown(Constants.EXIT_FAILURE);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
         }
         JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, outputDir.getAbsolutePath()));
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.ASSEMBLE_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.ASSEMBLE_COMMAND_NAME);
     }
 
     @Override

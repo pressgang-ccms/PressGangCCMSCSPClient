@@ -12,9 +12,11 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.converter.FileConverter;
+import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -37,6 +39,11 @@ public class ValidateCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    @Override
+    public String getCommandName() {
+        return Constants.VALIDATE_COMMAND_NAME;
+    }
+
     public List<File> getFiles() {
         return files;
     }
@@ -51,16 +58,6 @@ public class ValidateCommand extends BaseCommandImpl {
 
     public void setPermissive(final Boolean permissive) {
         this.permissive = permissive;
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.VALIDATE_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.VALIDATE_COMMAND_NAME);
     }
 
     @Override
@@ -84,8 +81,8 @@ public class ValidateCommand extends BaseCommandImpl {
         // If files is empty then we must be using a csprocessor.cfg file
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                final TopicWrapper contentSpec = providerFactory.getProvider(TopicProvider.class).getTopic(cspConfig.getContentSpecId(),
+            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
+                final TopicWrapper contentSpec = providerFactory.getProvider(TopicProvider.class).getTopic(getCspConfig().getContentSpecId(),
                         null);
                 final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 File file = new File(fileName);
@@ -108,26 +105,30 @@ public class ValidateCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         boolean success = false;
 
         // Read in the file contents
-        final String contentSpec = FileUtilities.readFileContents(files.get(0));
+        final String contentSpecString = FileUtilities.readFileContents(files.get(0));
 
-        if (contentSpec == null || contentSpec.equals("")) {
+        if (contentSpecString == null || contentSpecString.equals("")) {
             printError(Constants.ERROR_EMPTY_FILE_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
 
-        // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
+        // Parse the spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        ContentSpec contentSpec = null;
+        try {
+            contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString);
+        } catch (Exception e) {
+            printError(Constants.ERROR_INTERNAL_ERROR, false);
+            shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
         }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -136,7 +137,6 @@ public class ValidateCommand extends BaseCommandImpl {
         processingOptions.setAllowEmptyLevels(true);
 
         // Process the content spec to see if its valid
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
@@ -146,10 +146,7 @@ public class ValidateCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Print the logs
         JCommander.getConsole().println(loggerManager.generateLogs());

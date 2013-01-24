@@ -17,10 +17,10 @@ import com.redhat.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Checkout an existing Content Specification from the server")
@@ -46,6 +46,11 @@ public class CheckoutCommand extends BaseCommandImpl {
 
     public CheckoutCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.CHECKOUT_COMMAND_NAME;
     }
 
     public List<Integer> getIds() {
@@ -89,16 +94,6 @@ public class CheckoutCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printHelp() {
-        printHelp(Constants.CHECKOUT_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.CHECKOUT_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return null;
     }
@@ -123,29 +118,27 @@ public class CheckoutCommand extends BaseCommandImpl {
         }
 
         // Transform the content spec
-        final CSTransformer transformer = new CSTransformer();
-        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // Check that the output directory doesn't already exist
-        final File directory = new File(cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()));
+        final File directory = new File(
+                getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()));
         if (directory.exists() && !force) {
             printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
             shutdown(Constants.EXIT_FAILURE);
             // If it exists and force is enabled delete the directory contents
         } else if (directory.exists()) {
-            ClientUtilities.deleteDir(directory);
+            // TODO Handle failing to delete the directory contents
+            FileUtilities.deleteDir(directory);
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Find the zanata server if the url is a reference to the zanata server name
-        for (final String serverName : clientConfig.getZanataServers().keySet()) {
+        for (final String serverName : getClientConfig().getZanataServers().keySet()) {
             if (serverName.equals(zanataUrl)) {
-                zanataUrl = clientConfig.getZanataServers().get(serverName).getUrl();
+                zanataUrl = getClientConfig().getZanataServers().get(serverName).getUrl();
                 break;
             }
         }
@@ -159,13 +152,16 @@ public class CheckoutCommand extends BaseCommandImpl {
         // Save the csprocessor.cfg and post spec to file if the create was successful
         final String escapedTitle = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle());
         final File outputSpec = new File(
-                cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
+                getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                         .FILENAME_EXTENSION);
-        final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
+        final File outputConfig = new File(getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
         final String config = ClientUtilities.generateCsprocessorCfg(contentSpecEntity, getServerUrl(), zanataDetails);
 
         // Create the directory
-        if (outputConfig.getParentFile() != null) outputConfig.getParentFile().mkdirs();
+        if (outputConfig.getParentFile() != null) {
+            // TODO make sure that the directory was created
+            outputConfig.getParentFile().mkdirs();
+        }
 
         boolean error = false;
 
@@ -183,14 +179,11 @@ public class CheckoutCommand extends BaseCommandImpl {
 
         // Save the Post Processed spec
         try {
-            final FileOutputStream fos = new FileOutputStream(outputSpec);
-            fos.write(contentSpec.toString().getBytes("UTF-8"));
-            fos.flush();
-            fos.close();
+            FileUtilities.saveFile(outputSpec, contentSpec.toString(), Constants.FILE_ENCODING);
             JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
         } catch (IOException e) {
             printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
-            error = false;
+            error = true;
         }
 
         if (error) {
@@ -200,7 +193,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        /* Never load from a cspconfig when checking out */
+        // Never load from a cspconfig when checking out
         return false;
     }
 }

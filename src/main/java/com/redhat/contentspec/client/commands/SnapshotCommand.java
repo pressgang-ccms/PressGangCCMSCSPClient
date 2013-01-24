@@ -10,14 +10,15 @@ import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 
 @Parameters(
@@ -41,6 +42,11 @@ public class SnapshotCommand extends BaseCommandImpl {
 
     public SnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.SNAPSHOT_COMMAND_NAME;
     }
 
     public List<Integer> getIds() {
@@ -76,30 +82,20 @@ public class SnapshotCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PULL_SNAPSHOT_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.PULL_SNAPSHOT_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return authenticate(getUsername(), providerFactory);
     }
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final boolean pullForConfig = loadFromCSProcessorCfg();
 
         // If files is empty then we must be using a csprocessor.cfg file
         if (pullForConfig) {
             // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                ids.add(cspConfig.getContentSpecId());
+            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
+                ids.add(getCspConfig().getContentSpecId());
             }
         }
 
@@ -113,16 +109,13 @@ public class SnapshotCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         boolean success = false;
 
         // Get the topic from the rest interface
-        final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(topicProvider, ids.get(0), revision);
-        if (contentSpec == null) {
+        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), revision);
+        if (contentSpecEntity == null) {
             printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
@@ -133,13 +126,12 @@ public class SnapshotCommand extends BaseCommandImpl {
             return;
         }
 
-        final String fixedContentSpec;
+        // Transform the content spec
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // If we want to create it as a new spec then remove the checksum and id
         if (createNew) {
-            fixedContentSpec = contentSpec.getXml().replaceAll("CHECKSUM\\s*=.*?(\r)?\nID\\s*=.*?(\r)?\n", "");
-        } else {
-            fixedContentSpec = contentSpec.getXml();
+            contentSpec.setId(0);
         }
 
         // Setup the processing options
@@ -158,12 +150,12 @@ public class SnapshotCommand extends BaseCommandImpl {
         Integer revision = null;
         try {
             if (createNew) {
-                success = csp.processContentSpec(fixedContentSpec, user, ContentSpecParser.ParsingMode.NEW);
+                success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
             } else {
-                success = csp.processContentSpec(fixedContentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+                success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
             }
             if (success) {
-                revision = topicProvider.getTopic(csp.getContentSpec().getId()).getRevision();
+                revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,7 +170,7 @@ public class SnapshotCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_TOPIC_INVALID);
         } else {
             JCommander.getConsole().println(Constants.SUCCESSFUL_PUSH_SNAPSHOT_MSG);
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, csp.getContentSpec().getId(), revision));
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
         }
 
     }

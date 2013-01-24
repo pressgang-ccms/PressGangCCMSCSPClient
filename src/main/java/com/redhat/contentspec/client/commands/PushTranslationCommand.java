@@ -25,7 +25,6 @@ import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.TranslatedTopicProvider;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -76,6 +75,11 @@ public class PushTranslationCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    @Override
+    public String getCommandName() {
+        return Constants.PUSH_TRANSLATION_COMMAND_NAME;
+    }
+
     public List<Integer> getIds() {
         return ids;
     }
@@ -109,16 +113,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printHelp() {
-        printHelp(Constants.PUSH_TRANSLATION_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PUSH_TRANSLATION_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return authenticate(getUsername(), providerFactory);
     }
@@ -137,7 +131,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_NO_SERVER);
         }
 
-        final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Print the zanata server url
         JCommander.getConsole().println(String.format(Constants.ZANATA_WEBSERVICE_MSG, zanataDetails.getServer()));
@@ -160,30 +154,30 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Set the zanata url
         if (this.zanataUrl != null) {
             // Find the zanata server if the url is a reference to the zanata server name
-            for (final String serverName : clientConfig.getZanataServers().keySet()) {
+            for (final String serverName : getClientConfig().getZanataServers().keySet()) {
                 if (serverName.equals(zanataUrl)) {
-                    zanataUrl = clientConfig.getZanataServers().get(serverName).getUrl();
+                    zanataUrl = getClientConfig().getZanataServers().get(serverName).getUrl();
                     break;
                 }
             }
 
-            cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
+            getCspConfig().getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
         }
 
         // Set the zanata project
         if (this.zanataProject != null) {
-            cspConfig.getZanataDetails().setProject(zanataProject);
+            getCspConfig().getZanataDetails().setProject(zanataProject);
         }
 
         // Set the zanata version
         if (this.zanataVersion != null) {
-            cspConfig.getZanataDetails().setVersion(zanataVersion);
+            getCspConfig().getZanataDetails().setVersion(zanataVersion);
         }
     }
 
     protected boolean isValid() {
         setupZanataOptions();
-        final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Check that we even have some zanata details.
         if (zanataDetails == null) return false;
@@ -214,8 +208,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Add the details for the csprocessor.cfg if no ids are specified
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
+                setIds(CollectionUtilities.toArrayList(getCspConfig().getContentSpecId()));
             }
         }
 
@@ -235,10 +229,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), null);
 
@@ -248,8 +239,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Transform the content spec
-        final CSTransformer transformer = new CSTransformer();
-        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -278,10 +268,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Create the list of referenced topics
         final List<Integer> referencedLatestTopicIds = new ArrayList<Integer>();
@@ -300,10 +287,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Create the list of referenced revision topics
         final List<Pair<Integer, Integer>> referencedRevisionTopicIds = new ArrayList<Pair<Integer, Integer>>();
@@ -321,10 +305,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         if (!pushCSTopicsToZanata(providerFactory, topics, contentSpecEntity, contentSpec)) {
             printError(Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);

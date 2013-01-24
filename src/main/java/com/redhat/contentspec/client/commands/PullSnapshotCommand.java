@@ -1,7 +1,6 @@
 package com.redhat.contentspec.client.commands;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -22,11 +21,11 @@ import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
 @Parameters(commandDescription = "Pull a revision of a content specification that represents a snapshot in time.")
 public class PullSnapshotCommand extends BaseCommandImpl {
@@ -48,6 +47,11 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
     public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.PULL_SNAPSHOT_COMMAND_NAME;
     }
 
     public List<Integer> getIds() {
@@ -83,16 +87,6 @@ public class PullSnapshotCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PULL_SNAPSHOT_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.PULL_SNAPSHOT_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return authenticate(getUsername(), providerFactory);
     }
@@ -104,8 +98,8 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         // If files is empty then we must be using a csprocessor.cfg file
         if (pullForConfig) {
             // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                ids.add(cspConfig.getContentSpecId());
+            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
+                ids.add(getCspConfig().getContentSpecId());
             }
         }
 
@@ -151,8 +145,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         processingOptions.setRevision(revision);
 
         // Transform the content spec
-        final CSTransformer transformer = new CSTransformer();
-        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
@@ -173,18 +166,17 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         }
 
         if (pullForConfig) {
-            outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                    "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                    contentSpecEntity.getTitle()) + File.separator)) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator;
+            outputPath = ClientUtilities.getOutputRootDirectory(getCspConfig(),
+                    contentSpec) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator;
         }
 
         // Save or print the data
         final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
-        final String data = contentSpec.toString();
+        final String contentSpecString = contentSpec.toString();
         final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-snapshot-" + dateFormatter.format(
                 contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
         if (outputPath == null) {
-            JCommander.getConsole().println(data);
+            JCommander.getConsole().println(contentSpecString);
         } else {
             // Create the output file
             File output;
@@ -218,10 +210,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
             // Create and write to the file
             try {
-                final FileOutputStream fos = new FileOutputStream(output);
-                fos.write(data.getBytes("UTF-8"));
-                fos.flush();
-                fos.close();
+                FileUtilities.saveFile(output, contentSpecString, Constants.FILE_ENCODING);
                 JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
             } catch (IOException e) {
                 printError(Constants.ERROR_FAILED_SAVING, false);

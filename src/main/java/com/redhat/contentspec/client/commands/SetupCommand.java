@@ -1,7 +1,6 @@
 package com.redhat.contentspec.client.commands;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -17,6 +16,7 @@ import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
 @Parameters(commandDescription = "Setup the Content Specification Processor configuration files")
 public class SetupCommand extends BaseCommandImpl {
@@ -26,13 +26,8 @@ public class SetupCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printHelp() {
-        printHelp(Constants.SETUP_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.SEARCH_COMMAND_NAME);
+    public String getCommandName() {
+        return Constants.SETUP_COMMAND_NAME;
     }
 
     @Override
@@ -44,36 +39,31 @@ public class SetupCommand extends BaseCommandImpl {
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
         final StringBuilder configFile = new StringBuilder();
 
+        // Setup the servers that the client can connect to
         setupServers(configFile);
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
+        // Setup the Root csprocessor project directory
         setupRootDirectory(configFile);
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         configFile.append("\n");
 
+        // Setup the default publican options
         setupPublican(configFile);
 
         // Get the publishing options
         JCommander.getConsole().println("Setup the publishing options? (Yes/No)");
         String answer = JCommander.getConsole().readLine();
 
+        // Setup the publishing settings if required
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
 
             configFile.append("\n");
 
@@ -83,12 +73,10 @@ public class SetupCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Setup zanata configuration? (Yes/No)");
         answer = JCommander.getConsole().readLine();
 
+        // Setup the Zanata Settings if required
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
 
             configFile.append("\n");
 
@@ -96,10 +84,7 @@ public class SetupCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Save the configuration file
         final File file = new File(System.getProperty("user.home") + "/.config/csprocessor.ini");
@@ -111,14 +96,12 @@ public class SetupCommand extends BaseCommandImpl {
 
             // Make a backup of any existing csprocessor.ini
             if (file.exists()) {
+                // TODO check that the rename worked
                 file.renameTo(new File(file.getAbsolutePath() + ".backup"));
             }
 
             // Save the config
-            final FileOutputStream fos = new FileOutputStream(file);
-            fos.write(configFile.toString().getBytes("UTF-8"));
-            fos.flush();
-            fos.close();
+            FileUtilities.saveFile(file, configFile.toString(), Constants.FILE_ENCODING);
         } catch (IOException e) {
             printError(Constants.ERROR_FAILED_CREATING_CONFIG_MSG, false);
             shutdown(Constants.EXIT_CONFIG_ERROR);
@@ -128,10 +111,11 @@ public class SetupCommand extends BaseCommandImpl {
     }
 
     @Override
-    public boolean loadFromCSProcessorCfg() {        /*
+    public boolean loadFromCSProcessorCfg() {
+        /*
          * No need to load from csprocessor.cfg as this
-		 * command configures the client before use.
-		 */
+         * command configures the client before use.
+         */
         return false;
     }
 
@@ -151,7 +135,7 @@ public class SetupCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Use the default server configuration? (Yes/No)");
         String answer = JCommander.getConsole().readLine();
 
-		/* We are using the default setup so we only need to get the default server and a username */
+        /* We are using the default setup so we only need to get the default server and a username */
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Get which server they want to connect to by default
             while (!defaultServerName.equalsIgnoreCase("test") && !defaultServerName.equalsIgnoreCase("production")) {
@@ -159,10 +143,7 @@ public class SetupCommand extends BaseCommandImpl {
                 defaultServerName = JCommander.getConsole().readLine().toLowerCase();
 
                 // Good point to check for a shutdown
-                if (isAppShuttingDown()) {
-                    shutdown.set(true);
-                    return;
-                }
+                allowShutdownToContinueIfRequested();
             }
 
             // Get the users username
@@ -183,10 +164,7 @@ public class SetupCommand extends BaseCommandImpl {
                 answer = JCommander.getConsole().readLine();
 
                 // Good point to check for a shutdown
-                if (isAppShuttingDown()) {
-                    shutdown.set(true);
-                    return;
-                }
+                allowShutdownToContinueIfRequested();
             }
 
             // Get the server setup details from the user
@@ -212,13 +190,10 @@ public class SetupCommand extends BaseCommandImpl {
                 serverNames.append(config.getName() + "/");
 
                 // Good point to check for a shutdown
-                if (isAppShuttingDown()) {
-                    shutdown.set(true);
-                    return;
-                }
+                allowShutdownToContinueIfRequested();
             }
-			
-			/* Only ask for the default when there are multiple servers */
+
+            /* Only ask for the default when there are multiple servers */
             if (servers.size() > 1) {
                 // Get which server they want to connect to
                 while (!servers.containsKey(defaultServerName)) {
@@ -227,10 +202,7 @@ public class SetupCommand extends BaseCommandImpl {
                     defaultServerName = JCommander.getConsole().readLine().toLowerCase();
 
                     // Good point to check for a shutdown
-                    if (isAppShuttingDown()) {
-                        shutdown.set(true);
-                        return;
-                    }
+                    allowShutdownToContinueIfRequested();
                 }
             } else {
                 defaultServerName = serverNames.substring(0, serverNames.length() - 1);
@@ -265,10 +237,7 @@ public class SetupCommand extends BaseCommandImpl {
             configFile.append("\n");
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
         }
     }
 
@@ -363,10 +332,7 @@ public class SetupCommand extends BaseCommandImpl {
             answer = JCommander.getConsole().readLine();
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
         }
 
         // Get the server setup details from the user
@@ -396,13 +362,10 @@ public class SetupCommand extends BaseCommandImpl {
             serverNames.append(config.getName() + "/");
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
         }
-		
-		/* Only ask for the default when there are multiple servers */
+
+        /* Only ask for the default when there are multiple servers */
         String defaultZanataServerName = "";
         if (servers.size() > 1) {
             // Get which server they want to connect to
@@ -412,10 +375,7 @@ public class SetupCommand extends BaseCommandImpl {
                 defaultZanataServerName = JCommander.getConsole().readLine().toLowerCase();
 
                 // Good point to check for a shutdown
-                if (isAppShuttingDown()) {
-                    shutdown.set(true);
-                    return;
-                }
+                allowShutdownToContinueIfRequested();
             }
         } else {
             defaultZanataServerName = serverNames.substring(0, serverNames.length() - 1);
@@ -453,10 +413,7 @@ public class SetupCommand extends BaseCommandImpl {
             configFile.append("\n");
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
         }
     }
 }

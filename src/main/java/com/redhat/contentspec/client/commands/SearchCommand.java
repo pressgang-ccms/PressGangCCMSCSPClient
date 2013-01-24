@@ -11,15 +11,14 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.rest.v1.constants.CommonFilterConstants;
+import org.jboss.pressgang.ccms.rest.v1.query.RESTContentSpecQueryBuilderV1;
 import org.jboss.pressgang.ccms.utils.common.StringUtilities;
 
 @Parameters(commandDescription = "Search for a Content Specification")
@@ -35,6 +34,11 @@ public class SearchCommand extends BaseCommandImpl {
 
     public SearchCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.SEARCH_COMMAND_NAME;
     }
 
     public List<String> getQueries() {
@@ -62,23 +66,12 @@ public class SearchCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.SEARCH_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.SEARCH_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return null;
     }
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        final List<TopicWrapper> csList = new ArrayList<TopicWrapper>();
         final String searchText = StringUtilities.buildString(queries.toArray(new String[queries.size()]), " ");
 
         // Good point to check for a shutdown
@@ -87,53 +80,26 @@ public class SearchCommand extends BaseCommandImpl {
             return;
         }
 
+        // Create the query
+        final RESTContentSpecQueryBuilderV1 queryBuilder = new RESTContentSpecQueryBuilderV1();
+        queryBuilder.setQueryLogic(CommonFilterConstants.OR_LOGIC);
+        queryBuilder.setContentSpecTitle(searchText);
+        queryBuilder.setContentSpecProduct(searchText);
+        queryBuilder.setContentSpecVersion(searchText);
+        queryBuilder.setPropertyTag(CSConstants.ADDED_BY_PROPERTY_TAG_ID, searchText);
+
         // Search the database for content specs that match the query parameters
-        final CollectionWrapper<TopicWrapper> contentSpecs = providerFactory.getProvider(TopicProvider.class).getTopicsWithQuery("query;" +
-                CommonFilterConstants.MATCH_TAG + CSConstants.CONTENT_SPEC_TAG_ID + "=" + CommonFilterConstants.MATCH_TAG_STATE);
+        final CollectionWrapper<ContentSpecWrapper> contentSpecs = providerFactory.getProvider(ContentSpecProvider.class)
+                .getContentSpecsWithQuery(queryBuilder.getQuery());
+        final List<ContentSpecWrapper> csList;
         if (contentSpecs != null) {
-            for (final TopicWrapper contentSpec : contentSpecs.getItems()) {
-
-                // Good point to check for a shutdown
-                if (isAppShuttingDown()) {
-                    shutdown.set(true);
-                    return;
-                }
-
-                final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
-                try {
-                    csp.parse(contentSpec.getXml());
-                } catch (Exception e) {
-                    printError(Constants.ERROR_INTERNAL_ERROR, false);
-                    shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
-                }
-
-                // Search on title
-                if (contentSpec.getTitle().matches(".*" + searchText + ".*")) {
-                    csList.add(contentSpec);
-                }
-                // Search on Product title
-                else if (csp.getContentSpec().getProduct().matches(".*" + searchText + ".*")) {
-                    csList.add(contentSpec);
-                }
-                // Search on Version
-                else if (csp.getContentSpec().getVersion().matches(".*" + searchText + ".*")) {
-                    csList.add(contentSpec);
-                }
-                // Search on created by
-                else if (contentSpec.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null && contentSpec.getProperty(
-                        CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue() != null) {
-                    if (contentSpec.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue().matches(".*" + searchText + ".*")) {
-                        csList.add(contentSpec);
-                    }
-                }
-            }
+            csList = contentSpecs.getItems();
+        } else {
+            csList = new ArrayList<ContentSpecWrapper>();
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Display the search results
         if (csList.isEmpty()) {

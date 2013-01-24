@@ -9,13 +9,13 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 
 @Parameters(commandDescription = "Build, Assemble and then open the preview of the Content Specification")
@@ -25,6 +25,11 @@ public class PreviewCommand extends AssembleCommand {
 
     public PreviewCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.PREVIEW_COMMAND_NAME;
     }
 
     public Boolean getNoAssemble() {
@@ -46,7 +51,7 @@ public class PreviewCommand extends AssembleCommand {
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
         final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final boolean previewFromConfig = loadFromCSProcessorCfg();
-        final String previewFormat = clientConfig.getPublicanPreviewFormat();
+        final String previewFormat = getClientConfig().getPublicanPreviewFormat();
 
         // Check that the format can be previewed
         if (!validateFormat(previewFormat)) {
@@ -55,22 +60,17 @@ public class PreviewCommand extends AssembleCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         if (!noAssemble) {
             // Assemble the content specification
             super.process(providerFactory, user);
-            if (isShutdown()) return;
         }
 
         // Create the file object that will be opened
         String previewFileName = null;
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         if (previewFromConfig) {
-            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(cspConfig.getContentSpecId(), null);
+            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
 
             // Check that that content specification was found
             if (contentSpec == null) {
@@ -78,11 +78,8 @@ public class PreviewCommand extends AssembleCommand {
                 shutdown(Constants.EXIT_FAILURE);
             }
 
-            final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                    "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                    contentSpec.getTitle()) + File.separator));
-            final String locale = getOutputLocale() == null ? (getLocale() == null ? CommonConstants.DEFAULT_LOCALE : getLocale()) :
-                    getOutputLocale();
+            final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
+            final String locale = generateOutputLocale();
 
             if (previewFormat.equals("pdf")) {
                 // Create the file
@@ -96,15 +93,10 @@ public class PreviewCommand extends AssembleCommand {
             }
         } else if (getIds() != null && getIds().size() == 1) {
             // Create the file based on an ID passed from the command line
-            final String contentSpec = getContentSpecFromFile(getIds().get(0));
+            final String contentSpecString = getContentSpecFromFile(getIds().get(0));
 
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
-            try {
-                csp.parse(contentSpec);
-            } catch (Exception e) {
-                printError(Constants.ERROR_INTERNAL_ERROR, false);
-                shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
-            }
+            // Parse the spec to get the main details
+            final ContentSpec contentSpec = parseContentSpec(providerFactory, contentSpecString, user, false);
 
             // Create the fully qualified output path
             String fileDirectory = "";
@@ -112,20 +104,21 @@ public class PreviewCommand extends AssembleCommand {
                 fileDirectory = ClientUtilities.validateDirLocation(getOutputPath());
             } else if (getOutputPath() != null) {
                 final File file = new File(ClientUtilities.validateFilePath(getOutputPath()));
-                if (file.getParent() != null) fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
+                if (file.getParent() != null) {
+                    fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
+                }
             }
 
-            final String locale = getOutputLocale() == null ? (getLocale() == null ? (csp.getContentSpec().getLocale() == null ?
-                    CommonConstants.DEFAULT_LOCALE : csp.getContentSpec().getLocale()) : getLocale()) : getOutputLocale();
+            final String locale = generateOutputLocale();
 
             if (previewFormat.equals("pdf")) {
                 previewFileName = fileDirectory + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getTitle()) + "-en-US.pdf";
+                        contentSpec.getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
+                        contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
+                        contentSpec.getTitle()) + "-en-US.pdf";
             } else {
                 previewFileName = fileDirectory + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
+                        contentSpec.getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
             }
         } else if (getIds().size() == 0) {
             printError(Constants.ERROR_NO_ID_MSG, false);
@@ -136,10 +129,7 @@ public class PreviewCommand extends AssembleCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         final File previewFile = new File(previewFileName);
 
@@ -150,14 +140,11 @@ public class PreviewCommand extends AssembleCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Open the file
         try {
-            ClientUtilities.openFile(previewFile);
+            FileUtilities.openFile(previewFile);
         } catch (Exception e) {
             printError(String.format(Constants.ERROR_UNABLE_TO_OPEN_FILE_MSG, previewFile.getAbsolutePath()), false);
             shutdown(Constants.EXIT_FAILURE);
@@ -165,17 +152,16 @@ public class PreviewCommand extends AssembleCommand {
     }
 
     @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PREVIEW_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.PREVIEW_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return noAssemble || getNoBuild() ? null : authenticate(getUsername(), providerFactory);
+    }
+
+    /**
+     * Gets the Locale for the publican build, which can be used to find the location of files to preview.
+     *
+     * @return The locale that the publican files were created as.
+     */
+    protected String generateOutputLocale() {
+        return getTargetLocale() == null ? (getLocale() == null ? CommonConstants.DEFAULT_LOCALE : getLocale()) : getTargetLocale();
     }
 }

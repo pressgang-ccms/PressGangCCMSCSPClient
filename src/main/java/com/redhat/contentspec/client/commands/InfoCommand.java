@@ -6,24 +6,23 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
+import com.redhat.contentspec.client.commands.base.BaseCommandImplWithIds;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
-import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 
 @Parameters(commandDescription = "Get some basic information and metrics about a project.")
-public class InfoCommand extends BaseCommandImpl {
+public class InfoCommand extends BaseCommandImplWithIds {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
@@ -31,22 +30,19 @@ public class InfoCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    @Override
+    public String getCommandName() {
+        return Constants.INFO_COMMAND_NAME;
+    }
+
+    @Override
     public List<Integer> getIds() {
         return ids;
     }
 
+    @Override
     public void setIds(final List<Integer> ids) {
         this.ids = ids;
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.INFO_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.INFO_COMMAND_NAME);
     }
 
     @Override
@@ -59,28 +55,11 @@ public class InfoCommand extends BaseCommandImpl {
         final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
 
-        // Add the details for the csprocessor.cfg if no ids are specified
-        if (loadFromCSProcessorCfg()) {
-            // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
-            }
-        }
-
-        // Check that an id was entered
-        if (ids.size() == 0) {
-            printError(Constants.ERROR_NO_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        } else if (ids.size() > 1) {
-            printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        }
+        // Initialise the basic data and perform basic checks
+        prepare();
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Get the Content Specification from the server.
         final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), null);
@@ -96,16 +75,12 @@ public class InfoCommand extends BaseCommandImpl {
         JCommander.getConsole().println("");
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         JCommander.getConsole().println("Starting to calculate the statistics...");
 
         // Transform the content spec
-        final CSTransformer transformer = new CSTransformer();
-        final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {

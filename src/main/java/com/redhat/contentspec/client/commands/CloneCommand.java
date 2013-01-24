@@ -23,13 +23,8 @@ public class CloneCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printHelp() {
-        printHelp(Constants.CLONE_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(String errorMsg, boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.CLONE_COMMAND_NAME);
+    public String getCommandName() {
+        return Constants.CLONE_COMMAND_NAME;
     }
 
     @Override

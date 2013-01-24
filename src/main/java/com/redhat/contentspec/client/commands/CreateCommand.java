@@ -52,6 +52,11 @@ public class CreateCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    @Override
+    public String getCommandName() {
+        return Constants.CREATE_COMMAND_NAME;
+    }
+
     public List<File> getFiles() {
         return files;
     }
@@ -126,41 +131,40 @@ public class CreateCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Parse the spec to get the title
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        final ContentSpecParser parser = new ContentSpecParser(providerFactory, loggerManager);
+        ContentSpec contentSpec = null;
         try {
-            parser.parse(contentSpecString);
+            contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString, user,
+                    ContentSpecParser.ParsingMode.NEW, true);
         } catch (Exception e) {
             printError(Constants.ERROR_INTERNAL_ERROR, false);
             shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
         }
 
+        // Check that that content specification was parsed successfully
+        if (contentSpec == null) {
+            JCommander.getConsole().println(loggerManager.generateLogs());
+            shutdown(Constants.EXIT_FAILURE);
+        }
+
         // Check that the output directory doesn't already exist
-        final File directory = new File(
-                cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(parser.getContentSpec().getTitle()));
+        final File directory = new File(getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
         if (directory.exists() && !force && createCsprocessorCfg && directory.isDirectory()) {
             printError(String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
             shutdown(Constants.EXIT_FAILURE);
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
 
         csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
-        final ContentSpec contentSpec = parser.getContentSpec();
         Integer revision = null;
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
@@ -183,16 +187,13 @@ public class CreateCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        // It doesn't matter if the directory and files aren't created just so long as the spec finished saving
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         if (success && createCsprocessorCfg) {
             // If the output directory exists and force is enabled delete the directory contents
             if (directory.exists() && directory.isDirectory()) {
-                ClientUtilities.deleteDir(directory);
+                // TODO Check that the directory was successfully deleted
+                FileUtilities.deleteDir(directory);
             }
 
             // Create the blank zanata details as we shouldn't have a zanata setup at creation time
@@ -207,13 +208,16 @@ public class CreateCommand extends BaseCommandImpl {
             final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
             final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpec.getId(), null);
             final File outputSpec = new File(
-                    cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
+                    getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                             .FILENAME_EXTENSION);
-            final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecEntity, cspConfig.getServerUrl(), zanataDetails);
+            final File outputConfig = new File(getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
+            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecEntity, getCspConfig().getServerUrl(), zanataDetails);
 
             // Create the directory
-            if (outputConfig.getParentFile() != null) outputConfig.getParentFile().mkdirs();
+            if (outputConfig.getParentFile() != null && !outputConfig.getParentFile().exists()) {
+                // TODO Check that the directory was successfully created
+                outputConfig.getParentFile().mkdirs();
+            }
 
             // Save the csprocessor.cfg
             try {
@@ -236,23 +240,13 @@ public class CreateCommand extends BaseCommandImpl {
                 JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
             } catch (IOException e) {
                 printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
-                error = false;
+                error = true;
             }
 
             if (error) {
                 shutdown(Constants.EXIT_FAILURE);
             }
         }
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.CREATE_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.CREATE_COMMAND_NAME);
     }
 
     @Override
@@ -269,7 +263,8 @@ public class CreateCommand extends BaseCommandImpl {
     }
 
     @Override
-    public boolean loadFromCSProcessorCfg() {        /* Never use the csprocessor.cfg for creating files */
+    public boolean loadFromCSProcessorCfg() {
+        // Never use the csprocessor.cfg for creating files
         return false;
     }
 }

@@ -1,7 +1,6 @@
 package com.redhat.contentspec.client.commands;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +8,7 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
+import com.redhat.contentspec.client.commands.base.BaseCommandImplWithIds;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -18,15 +17,14 @@ import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
 @Parameters(commandDescription = "Pull a Content Specification from the server")
-public class PullCommand extends BaseCommandImpl {
+public class PullCommand extends BaseCommandImplWithIds {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
@@ -51,6 +49,11 @@ public class PullCommand extends BaseCommandImpl {
 
     public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.PULL_COMMAND_NAME;
     }
 
     public Boolean useContentSpec() {
@@ -130,51 +133,38 @@ public class PullCommand extends BaseCommandImpl {
         final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
         boolean pullForConfig = false;
 
+        // Initialise the basic data and perform basic input checks
+        prepare();
+
         // Load the data from the config data if no ids were specified
         if (loadFromCSProcessorCfg()) {
-            // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
-            }
             pullForConfig = true;
             revision = null;
         }
 
-        // Check that the options are valid
+        // Check that the additional options are valid
         if (!isValid()) {
             printError(Constants.INVALID_ARG_MSG, true);
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 
-        // Check that only one ID exists
-        if (ids.size() == 0) {
-            printError(Constants.ERROR_NO_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        } else if (ids.size() > 1) {
-            printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        }
-
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
-        String data = "";
+        String contentSpecString = "";
         String fileName = "";
         // Topic
         if (pullTopic) {
             final TopicWrapper topic = providerFactory.getProvider(TopicProvider.class).getTopic(ids.get(0), revision);
             if (topic == null) {
-                printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
-                shutdown(Constants.EXIT_FAILURE);
+                printErrorAndShutdown(Constants.EXIT_FAILURE,
+                        revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
                 if (useXml) {
-                    data = topic.getXml();
+                    contentSpecString = topic.getXml();
                     fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
                 } else if (useHtml) {
-                    data = topic.getHtml();
+                    contentSpecString = topic.getHtml();
                     fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".html";
                 }
             }
@@ -182,14 +172,14 @@ public class PullCommand extends BaseCommandImpl {
         } else {
             final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), revision);
             if (contentSpecEntity == null) {
-                printError(revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
-                shutdown(Constants.EXIT_FAILURE);
+                printErrorAndShutdown(Constants.EXIT_FAILURE,
+                        revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
                 // Transform the content spec
-                final CSTransformer transformer = new CSTransformer();
-                final ContentSpec contentSpec = transformer.transform(contentSpecEntity);
+                final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+                contentSpecString = contentSpec.toString();
 
-                data = contentSpec.toString();
+                // Calculate the filenames and output directory.
                 if (revision == null) {
                     fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 } else {
@@ -197,22 +187,17 @@ public class PullCommand extends BaseCommandImpl {
                             contentSpecEntity.getTitle()) + "-post-r" + revision + "." + Constants.FILENAME_EXTENSION;
                 }
                 if (pullForConfig) {
-                    outputPath = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                            "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                            contentSpecEntity.getTitle() + File.separator)));
+                    outputPath = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
                 }
             }
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Save or print the data
         if (outputPath == null) {
-            JCommander.getConsole().println(data);
+            JCommander.getConsole().println(contentSpecString);
         } else {
             // Create the output file
             File output;
@@ -230,14 +215,13 @@ public class PullCommand extends BaseCommandImpl {
                 output.mkdirs();
                 output = new File(output.getAbsolutePath() + File.separator + fileName);
             } else {
-                if (output.getParentFile() != null) output.getParentFile().mkdirs();
+                if (output.getParentFile() != null) {
+                    output.getParentFile().mkdirs();
+                }
             }
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
 
             // If the file exists then create a backup file
             if (output.exists()) {
@@ -246,10 +230,7 @@ public class PullCommand extends BaseCommandImpl {
 
             // Create and write to the file
             try {
-                final FileOutputStream fos = new FileOutputStream(output);
-                fos.write(data.getBytes("UTF-8"));
-                fos.flush();
-                fos.close();
+                FileUtilities.saveFile(output, contentSpecString, Constants.FILE_ENCODING);
                 JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
             } catch (IOException e) {
                 printError(Constants.ERROR_FAILED_SAVING, false);
@@ -261,16 +242,6 @@ public class PullCommand extends BaseCommandImpl {
     @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return null;
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PULL_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.PULL_COMMAND_NAME);
     }
 
     @Override

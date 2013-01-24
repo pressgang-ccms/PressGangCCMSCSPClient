@@ -228,12 +228,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             command.process(providerFactory, user);
 
             // Check if the program was shutdown
-            if (isShutdown()) return;
+            if (isShutdown()) {
+                return;
+            }
 
             // Add a newline just to separate the output
             JCommander.getConsole().println("");
         }
-        //shutdown(Constants.EXIT_SUCCESS);
     }
 
     /**
@@ -266,65 +267,65 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
         final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
 
-        parser.addCommand(Constants.ASSEMBLE_COMMAND_NAME, assemble);
-        commands.put(Constants.ASSEMBLE_COMMAND_NAME, assemble);
+        parser.addCommand(assemble.getCommandName(), assemble);
+        commands.put(assemble.getCommandName(), assemble);
 
-        parser.addCommand(Constants.BUILD_COMMAND_NAME, build);
-        commands.put(Constants.BUILD_COMMAND_NAME, build);
+        parser.addCommand(build.getCommandName(), build);
+        commands.put(build.getCommandName(), build);
 
-        parser.addCommand(Constants.CHECKOUT_COMMAND_NAME, checkout);
-        commands.put(Constants.CHECKOUT_COMMAND_NAME, checkout);
+        parser.addCommand(checkout.getCommandName(), checkout);
+        commands.put(checkout.getCommandName(), checkout);
 
-        parser.addCommand(Constants.CREATE_COMMAND_NAME, create);
-        commands.put(Constants.CREATE_COMMAND_NAME, create);
+        parser.addCommand(create.getCommandName(), create);
+        commands.put(create.getCommandName(), create);
 
-        parser.addCommand(Constants.CHECKSUM_COMMAND_NAME, checksum);
-        commands.put(Constants.CHECKSUM_COMMAND_NAME, checksum);
+        parser.addCommand(checksum.getCommandName(), checksum);
+        commands.put(checksum.getCommandName(), checksum);
 
-        parser.addCommand(Constants.INFO_COMMAND_NAME, info);
-        commands.put(Constants.INFO_COMMAND_NAME, info);
+        parser.addCommand(info.getCommandName(), info);
+        commands.put(info.getCommandName(), info);
 
-        parser.addCommand(Constants.LIST_COMMAND_NAME, list);
-        commands.put(Constants.LIST_COMMAND_NAME, list);
+        parser.addCommand(list.getCommandName(), list);
+        commands.put(list.getCommandName(), list);
 
-        parser.addCommand(Constants.PREVIEW_COMMAND_NAME, preview);
-        commands.put(Constants.PREVIEW_COMMAND_NAME, preview);
+        parser.addCommand(preview.getCommandName(), preview);
+        commands.put(preview.getCommandName(), preview);
 
-        parser.addCommand(Constants.PUBLISH_COMMAND_NAME, publish);
-        commands.put(Constants.PUBLISH_COMMAND_NAME, publish);
+        parser.addCommand(publish.getCommandName(), publish);
+        commands.put(publish.getCommandName(), publish);
 
-        parser.addCommand(Constants.PULL_COMMAND_NAME, pull);
-        commands.put(Constants.PULL_COMMAND_NAME, pull);
+        parser.addCommand(pull.getCommandName(), pull);
+        commands.put(pull.getCommandName(), pull);
 
-        parser.addCommand(Constants.PULL_SNAPSHOT_COMMAND_NAME, pullSnapshot);
-        commands.put(Constants.PULL_SNAPSHOT_COMMAND_NAME, pullSnapshot);
+        parser.addCommand(pullSnapshot.getCommandName(), pullSnapshot);
+        commands.put(pullSnapshot.getCommandName(), pullSnapshot);
 
-        parser.addCommand(Constants.PUSH_COMMAND_NAME, push);
-        commands.put(Constants.PUSH_COMMAND_NAME, push);
+        parser.addCommand(push.getCommandName(), push);
+        commands.put(push.getCommandName(), push);
 
-        parser.addCommand(Constants.PUSH_TRANSLATION_COMMAND_NAME, pushTranslation);
-        commands.put(Constants.PUSH_TRANSLATION_COMMAND_NAME, pushTranslation);
+        parser.addCommand(pushTranslation.getCommandName(), pushTranslation);
+        commands.put(pushTranslation.getCommandName(), pushTranslation);
 
-        parser.addCommand(Constants.REVISIONS_COMMAND_NAME, revisions);
-        commands.put(Constants.REVISIONS_COMMAND_NAME, revisions);
+        parser.addCommand(revisions.getCommandName(), revisions);
+        commands.put(revisions.getCommandName(), revisions);
 
-        parser.addCommand(Constants.SEARCH_COMMAND_NAME, search);
-        commands.put(Constants.SEARCH_COMMAND_NAME, search);
+        parser.addCommand(search.getCommandName(), search);
+        commands.put(search.getCommandName(), search);
 
-        parser.addCommand(Constants.SETUP_COMMAND_NAME, setup);
-        commands.put(Constants.SETUP_COMMAND_NAME, setup);
+        parser.addCommand(setup.getCommandName(), setup);
+        commands.put(setup.getCommandName(), setup);
 
-        parser.addCommand(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
-        commands.put(Constants.SNAPSHOT_COMMAND_NAME, snapshot);
+        parser.addCommand(snapshot.getCommandName(), snapshot);
+        commands.put(snapshot.getCommandName(), snapshot);
 
-        parser.addCommand(Constants.STATUS_COMMAND_NAME, status);
-        commands.put(Constants.STATUS_COMMAND_NAME, status);
+        parser.addCommand(status.getCommandName(), status);
+        commands.put(status.getCommandName(), status);
 
-        parser.addCommand(Constants.TEMPLATE_COMMAND_NAME, template);
-        commands.put(Constants.TEMPLATE_COMMAND_NAME, template);
+        parser.addCommand(template.getCommandName(), template);
+        commands.put(template.getCommandName(), template);
 
-        parser.addCommand(Constants.VALIDATE_COMMAND_NAME, validate);
-        commands.put(Constants.VALIDATE_COMMAND_NAME, validate);
+        parser.addCommand(validate.getCommandName(), validate);
+        commands.put(validate.getCommandName(), validate);
     }
 
     /**
@@ -922,12 +923,17 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     @Override
     public void shutdown() {
         this.isShuttingDown.set(true);
-        if (command != null && command != this) command.shutdown();
+        if (command != null && command != this) {
+            command.shutdown();
+        }
     }
 
     public void shutdown(int exitStatus) {
         shutdown.set(true);
-        if (command != null) command.setShutdown(true);
+        if (command != null) {
+            command.setAppShuttingDown(true);
+            command.setShutdown(true);
+        }
         System.exit(exitStatus);
     }
 

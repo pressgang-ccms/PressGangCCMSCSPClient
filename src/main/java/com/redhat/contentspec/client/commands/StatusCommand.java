@@ -8,23 +8,23 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.code.regexp.NamedMatcher;
-import com.google.code.regexp.NamedPattern;
-import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
+import com.redhat.contentspec.client.commands.base.BaseCommandImplWithIds;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
-import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 
 @Parameters(commandDescription = "Check the status of a local copy of a Content Specification compared to the server")
-public class StatusCommand extends BaseCommandImpl {
+public class StatusCommand extends BaseCommandImplWithIds {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
@@ -32,22 +32,19 @@ public class StatusCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    @Override
+    public String getCommandName() {
+        return Constants.STATUS_COMMAND_NAME;
+    }
+
+    @Override
     public List<Integer> getIds() {
         return ids;
     }
 
+    @Override
     public void setIds(final List<Integer> ids) {
         this.ids = ids;
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.STATUS_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.STATUS_COMMAND_NAME);
     }
 
     @Override
@@ -57,45 +54,28 @@ public class StatusCommand extends BaseCommandImpl {
 
     @Override
     public void process(final DataProviderFactory providerFactory, final UserWrapper user) {
-        // Load the data from the config data if no ids were specified
-        if (loadFromCSProcessorCfg()) {
-            // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
-            }
-        }
-
-        // Check that only one ID exists
-        if (ids.size() == 0) {
-            printError(Constants.ERROR_NO_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        } else if (ids.size() > 1) {
-            printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        }
+        // Initialise the basic data and perform basic checks
+        prepare();
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Get the content specification from the server
-        final TopicWrapper contentSpec = ContentSpecUtilities.getPostContentSpecById(providerFactory.getProvider(TopicProvider.class),
-                ids.get(0), null);
-        if (contentSpec == null) {
+        final ContentSpecWrapper contentSpecEntity = providerFactory.getProvider(ContentSpecProvider
+                .class).getContentSpec(ids.get(0), null);
+        if (contentSpecEntity == null) {
             printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         }
 
         // Create the local file
-        final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+        final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
         File file = new File(fileName);
 
         // Check that the file exists
         if (!file.exists()) {
             // Backwards compatibility check for files ending with .txt
-            file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+            file = new File(DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post.txt");
             if (!file.exists()) {
                 printError(String.format(Constants.ERROR_NO_FILE_OUT_OF_DATE_MSG, file.getName()), false);
                 shutdown(Constants.EXIT_FAILURE);
@@ -103,10 +83,7 @@ public class StatusCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Read in the file contents
         String contentSpecData = FileUtilities.readFileContents(file);
@@ -117,18 +94,16 @@ public class StatusCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
+
+        // Transform the content spec
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // Calculate the server checksum value
-        final String serverContentSpecData = contentSpec.getXml().replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
-        final String serverChecksum = HashUtilities.generateMD5(serverContentSpecData);
+        final String serverChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpec);
 
-        // Get the local checksum value
-        final NamedPattern pattern = NamedPattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
-        final NamedMatcher matcher = pattern.matcher(contentSpecData);
+        // Read the local checksum value
+        final NamedMatcher matcher = ContentSpecUtilities.CS_CHECKSUM_PATTERN.matcher(contentSpecData);
         String localStringChecksum = "";
         while (matcher.find()) {
             final String temp = matcher.group();

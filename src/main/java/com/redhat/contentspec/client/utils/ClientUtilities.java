@@ -1,11 +1,9 @@
 package com.redhat.contentspec.client.utils;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +30,7 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Spec;
 import com.redhat.contentspec.client.entities.SpecList;
+import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.j2koji.base.KojiConnector;
 import com.redhat.j2koji.entities.KojiBuild;
 import com.redhat.j2koji.exceptions.KojiException;
@@ -41,6 +40,8 @@ import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTUserProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
@@ -322,32 +323,6 @@ public class ClientUtilities {
     }
 
     /**
-     * Opens a file using the Java Desktop API.
-     *
-     * @param file The file to be opened.
-     * @throws Exception
-     */
-    public static void openFile(final File file) throws Exception {
-        // Check that the file is a file
-        if (!file.isFile()) throw new Exception("Passed file is not a file.");
-
-        // Check that the Desktop API is supported
-        if (!Desktop.isDesktopSupported()) {
-            throw new Exception("Desktop is not supported");
-        }
-
-        final Desktop desktop = Desktop.getDesktop();
-
-        // Check that the open functionality is supported
-        if (!desktop.isSupported(Desktop.Action.OPEN)) {
-            throw new Exception("Desktop doesn't support the open action");
-        }
-
-        // Open the file
-        desktop.open(file);
-    }
-
-    /**
      * Builds a Content Specification list for a list of content specifications.
      */
     public static SpecList buildSpecList(final List<ContentSpecWrapper> specList,
@@ -426,38 +401,6 @@ public class ClientUtilities {
     }
 
     /**
-     * Delete a directory and all of its sub directories/files
-     *
-     * @param dir The directory to be deleted.
-     * @return True if the directory was deleted otherwise false if an error occurred.
-     */
-    public static boolean deleteDir(final File dir) {
-        // Delete the contents of the directory first
-        if (!deleteDirContents(dir)) return false;
-
-        // The directory is now empty so delete it
-        return dir.delete();
-    }
-
-    /**
-     * Delete the contents of a directory and all of its sub directories/files
-     *
-     * @param dir The directory whose content is to be deleted.
-     * @return True if the directories contents were deleted otherwise false if an error occurred.
-     */
-    public static boolean deleteDirContents(final File dir) {
-        if (dir.isDirectory()) {
-            final String[] children = dir.list();
-            for (final String aChildren : children) {
-                if (!deleteDir(new File(dir, aChildren))) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
      * Get the next pubsnumber from koji for the content spec that will be built.
      *
      * @param contentSpec The contentspec to be built.
@@ -514,41 +457,100 @@ public class ClientUtilities {
         }
     }
 
-    public static void copyFile(final File src, final File dest) throws IOException {
-        if (src.isDirectory()) {
-            // if the directory does not exist, create it
-            if (!dest.exists()) {
-                dest.mkdir();
-            }
+    /**
+     * Transforms a Content Specification wrapped entity into a POJO Content Spec object,
+     *
+     * @param contentSpec The Content Spec entity to be transformed.
+     * @return The POJO ContentSpec object created from the Content Spec entity.
+     */
+    public static ContentSpec transformContentSpec(final ContentSpecWrapper contentSpec) {
+        final CSTransformer transformer = new CSTransformer();
+        return transformer.transform(contentSpec);
+    }
 
-            // get all the directory contents
-            final String files[] = src.list();
+    /**
+     * @param providerFactory   The Entity Provider Factory to create Providers to get Entities from a Datasource.
+     * @param loggerManager     The Logging manager that keeps tracks of error logs.
+     * @param contentSpecString The Content Spec String representation to be parsed.
+     * @return The parsed content spec if no errors occurred otherwise null.
+     * @throws Exception Thrown if a fatal error occurs while parsing.
+     */
+    public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final String contentSpecString) throws Exception {
+        return parseContentSpecString(providerFactory, loggerManager, contentSpecString, null, ContentSpecParser.ParsingMode.EITHER);
+    }
 
-            // Copy all the folders/files in the directory
-            for (final String file : files) {
-                // construct the src and dest file structure
-                final File srcFile = new File(src, file);
-                final File destFile = new File(dest, file);
-                // recursive copy
-                copyFile(srcFile, destFile);
-            }
+    /**
+     * @param providerFactory   The Entity Provider Factory to create Providers to get Entities from a Datasource.
+     * @param loggerManager     The Logging manager that keeps tracks of error logs.
+     * @param contentSpecString The Content Spec String representation to be parsed.
+     * @param parsingMode       The mode that the content spec should be parsed as.
+     * @param user              The user who requested the parse.
+     * @return The parsed content spec if no errors occurred otherwise null.
+     * @throws Exception Thrown if a fatal error occurs while parsing.
+     */
+    public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final String contentSpecString, final UserWrapper user, final ContentSpecParser.ParsingMode parsingMode) throws Exception {
+        return parseContentSpecString(providerFactory, loggerManager, contentSpecString, user, parsingMode, false);
+    }
+
+    /**
+     * @param providerFactory   The Entity Provider Factory to create Providers to get Entities from a Datasource.
+     * @param loggerManager     The Logging manager that keeps tracks of error logs.
+     * @param contentSpecString The Content Spec String representation to be parsed.
+     * @param parsingMode       The mode that the content spec should be parsed as.
+     * @param user              The user who requested the parse.
+     * @param processProcesses  If processes should be processed to setup their relationships (makes external calls)
+     * @return The parsed content spec if no errors occurred otherwise null.
+     * @throws Exception Thrown if a fatal error occurs while parsing.
+     */
+    public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final String contentSpecString, final UserWrapper user, final ContentSpecParser.ParsingMode parsingMode,
+            boolean processProcesses) throws Exception {
+        final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
+        if (csp.parse(contentSpecString, user, parsingMode, processProcesses)) {
+            return csp.getContentSpec();
         } else {
-            // if its a file, then copy it
-            final InputStream in = new FileInputStream(src);
-            final OutputStream out = new FileOutputStream(dest);
-
-            byte[] buffer = new byte[1024];
-
-            int length;
-            // copy the file contents
-            while ((length = in.read(buffer)) > 0) {
-                out.write(buffer, 0, length);
-            }
-
-            // Clean up
-            in.close();
-            out.close();
+            return null;
         }
+    }
+
+    /**
+     * Gets the output root directory based on the configuration files and ContentSpec object.
+     *
+     * @param cspConfig The content spec configuration settings.
+     * @param contentSpec The content spec object to get details from for the output directory.
+     * @return A string that represents where the root folder is for content to be saved.
+     */
+    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final ContentSpec contentSpec) {
+        return getOutputRootDirectory(cspConfig, contentSpec.getTitle());
+    }
+
+    /**
+     * Gets the output root directory based on the configuration files and ContentSpec entity object.
+     *
+     * @param cspConfig The content spec configuration settings.
+     * @param contentSpec The content spec object to get details from for the output directory.
+     * @return A string that represents where the root folder is for content to be saved.
+     */
+    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final ContentSpecWrapper contentSpec) {
+        return getOutputRootDirectory(cspConfig, contentSpec.getTitle());
+    }
+
+    /**
+     * Gets the output root directory based on the configuration files and ContentSpec entity object.
+     *
+     * @param cspConfig The content spec configuration settings.
+     * @param contentSpecTitle The title of the content specification for the output directory.
+     * @return A string that represents where the root folder is for content to be saved.
+     */
+    private static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final String contentSpecTitle) {
+        assert contentSpecTitle != null;
+        assert cspConfig != null;
+
+        final String fileName = DocBookUtilities.escapeTitle(contentSpecTitle);
+        return (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
+                "") ? "" : (cspConfig.getRootOutputDirectory() + fileName + File.separator));
     }
 }
 

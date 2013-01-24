@@ -1,7 +1,6 @@
 package com.redhat.contentspec.client.commands;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.beust.jcommander.JCommander;
@@ -15,6 +14,7 @@ import com.redhat.contentspec.client.converter.FileConverter;
 import org.jboss.pressgang.ccms.contentspec.constants.TemplateConstants;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
 @Parameters(commandDescription = "Get a basic Content Specification template.")
 public class TemplateCommand extends BaseCommandImpl {
@@ -28,6 +28,11 @@ public class TemplateCommand extends BaseCommandImpl {
 
     public TemplateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.TEMPLATE_COMMAND_NAME;
     }
 
     public Boolean getCommented() {
@@ -47,16 +52,6 @@ public class TemplateCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printHelp() {
-        printHelp(Constants.TEMPLATE_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.TEMPLATE_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return null;
     }
@@ -71,24 +66,20 @@ public class TemplateCommand extends BaseCommandImpl {
         } else {
             // Make sure the directories exist
             if (output.isDirectory()) {
+                // TODO check that the directory was created
                 output.mkdirs();
                 output = new File(output.getAbsolutePath() + File.separator + "template." + Constants.FILENAME_EXTENSION);
-            } else {
-                if (output.getParentFile() != null) output.getParentFile().mkdirs();
+            } else if (output.getParentFile() != null) {
+                // TODO check that the directory was created
+                output.getParentFile().mkdirs();
             }
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
 
             // Create and write to the file
             try {
-                final FileOutputStream fos = new FileOutputStream(output);
-                fos.write(template.getBytes("UTF-8"));
-                fos.flush();
-                fos.close();
+                FileUtilities.saveFile(output, template, Constants.FILE_ENCODING);
                 JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getAbsolutePath()));
             } catch (IOException e) {
                 printError(Constants.ERROR_FAILED_SAVING, false);

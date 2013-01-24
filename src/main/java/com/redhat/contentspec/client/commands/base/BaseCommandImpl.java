@@ -12,9 +12,9 @@ import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 
 public abstract class BaseCommandImpl implements BaseCommand {
-    protected final JCommander parser;
-    protected final ContentSpecConfiguration cspConfig;
-    protected final ClientConfiguration clientConfig;
+    private final JCommander parser;
+    private final ContentSpecConfiguration cspConfig;
+    private final ClientConfiguration clientConfig;
 
     @Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, hidden = true)
     private String serverUrl;
@@ -42,6 +42,16 @@ public abstract class BaseCommandImpl implements BaseCommand {
         this.cspConfig = cspConfig;
         this.clientConfig = clientConfig;
     }
+
+    protected ContentSpecConfiguration getCspConfig() {
+        return cspConfig;
+    }
+
+    protected ClientConfiguration getClientConfig() {
+        return clientConfig;
+    }
+
+    public abstract String getCommandName();
 
     @Override
     public String getUsername() {
@@ -130,7 +140,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
      * @param errorMsg    The error message to be displayed.
      * @param displayHelp Whether help should be displayed for the error.
      */
-    protected void printError(final String errorMsg, final boolean displayHelp, final String commandName) {
+    public void printError(final String errorMsg, final boolean displayHelp) {
         JCommander.getConsole().println("ERROR: " + errorMsg);
         if (displayHelp) {
             JCommander.getConsole().println("");
@@ -151,6 +161,14 @@ public abstract class BaseCommandImpl implements BaseCommand {
         } else {
             parser.usage(true, new String[]{commandName});
         }
+    }
+
+    /**
+     * Prints the Help output
+     */
+    public void printHelp() {
+        final String commandName = getCommandName();
+        printHelp(commandName);
     }
 
     /**
@@ -185,20 +203,29 @@ public abstract class BaseCommandImpl implements BaseCommand {
     }
 
     /**
-     * Shutdown the application with a specific exit
-     * status.
+     * Shutdown the application with a specific exit status.
      *
-     * @param exitStatus The exit status to shut the
-     *                   application down with.
+     * @param exitStatus The exit status to shut the application down with.
      */
-    public void shutdown(final int exitStatus) {
+    public void shutdown(int exitStatus) {
         shutdown.set(true);
         System.exit(exitStatus);
     }
 
     /**
-     * Validate that any servers connected to with this
-     * command exist. If they don't then print an error
+     * Print an error and then shutdown the application.
+     *
+     * @param exitStatus  The exit status to shut the application down with.
+     * @param errorMsg    The error message to be displayed.
+     * @param displayHelp Whether help should be displayed for the error.
+     */
+    public void printErrorAndShutdown(int exitStatus, final String errorMsg, boolean displayHelp) {
+        printError(errorMsg, displayHelp);
+        shutdown(exitStatus);
+    }
+
+    /**
+     * Validate that any servers connected to with this command exist. If they don't then print an error
      * message and stop the program.
      */
     @Override
@@ -213,6 +240,19 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
             printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
             shutdown(Constants.EXIT_NO_SERVER);
+        }
+    }
+
+    /**
+     * Allows a shutdown to continue if requested. If the application is shutting down then this method will create a loop to stop
+     * further execution of code.
+     */
+    protected void allowShutdownToContinueIfRequested() {
+        if (isAppShuttingDown()) {
+            shutdown.set(true);
+            while (true) {
+                // Just loop until the application shuts down
+            }
         }
     }
 }

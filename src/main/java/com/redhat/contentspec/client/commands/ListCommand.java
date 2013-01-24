@@ -1,6 +1,5 @@
 package com.redhat.contentspec.client.commands;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
@@ -19,9 +18,6 @@ import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
 public class ListCommand extends BaseCommandImpl {
-    @Parameter(metaVar = "[ID]")
-    private List<Integer> ids = new ArrayList<Integer>();
-
     @Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
     private Boolean contentSpec = false;
 
@@ -36,6 +32,11 @@ public class ListCommand extends BaseCommandImpl {
 
     public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.INFO_COMMAND_NAME;
     }
 
     public Boolean useContentSpec() {
@@ -54,14 +55,6 @@ public class ListCommand extends BaseCommandImpl {
         this.snapshot = snapshot;
     }
 
-    public List<Integer> getIds() {
-        return ids;
-    }
-
-    public void setIds(final List<Integer> ids) {
-        this.ids = ids;
-    }
-
     public Boolean isForce() {
         return force;
     }
@@ -76,16 +69,6 @@ public class ListCommand extends BaseCommandImpl {
 
     public void setLimit(final Integer limit) {
         this.limit = limit;
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.LIST_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.LIST_COMMAND_NAME);
     }
 
     @Override
@@ -117,42 +100,32 @@ public class ListCommand extends BaseCommandImpl {
             numResults = Constants.MAX_LIST_RESULT;
         }
 
-        if (snapshot) {
-            // TODO implement snapshot listing
+        final CollectionWrapper<ContentSpecWrapper> contentSpecs = contentSpecProvider.getContentSpecsWithQuery("query;");
+        // Get the number of content specs in the database
+        long noSpecs = contentSpecs.size();
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // If there are too many content specs & force isn't set then send back an error message
+        if (noSpecs > Constants.MAX_LIST_RESULT && limit == null && !force) {
+            printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
+            shutdown(Constants.EXIT_FAILURE);
         } else {
-            final CollectionWrapper<ContentSpecWrapper> contentSpecs = contentSpecProvider.getContentSpecsWithQuery("query;");
-            // Get the number of content specs in the database
-            long noSpecs = contentSpecs.size();
+            final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);
 
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
 
-            // If there are too many content specs & force isn't set then send back an error message
-            if (noSpecs > Constants.MAX_LIST_RESULT && limit == null && !force) {
-                printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
-                shutdown(Constants.EXIT_FAILURE);
+            if (csList.isEmpty()) {
+                JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
             } else {
-                final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);
-
-                // Good point to check for a shutdown
-                if (isAppShuttingDown()) {
-                    shutdown.set(true);
-                    return;
-                }
-
-                if (csList.isEmpty()) {
-                    JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
-                } else {
-                    try {
-                        JCommander.getConsole().println(
-                                ClientUtilities.generateContentSpecListResponse(ClientUtilities.buildSpecList(csList, providerFactory)));
-                    } catch (Exception e) {
-                        printError(Constants.ERROR_INTERNAL_ERROR, false);
-                        shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
-                    }
+                try {
+                    JCommander.getConsole().println(
+                            ClientUtilities.generateContentSpecListResponse(ClientUtilities.buildSpecList(csList, providerFactory)));
+                } catch (Exception e) {
+                    printError(Constants.ERROR_INTERNAL_ERROR, false);
+                    shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
                 }
             }
         }

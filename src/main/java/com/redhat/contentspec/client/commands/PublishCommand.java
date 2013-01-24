@@ -10,13 +10,14 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 
 @Parameters(commandDescription = "Build, Assemble and then Publish the Content Specification")
@@ -41,6 +42,11 @@ public class PublishCommand extends BuildCommand {
 
     public PublishCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.PUBLISH_COMMAND_NAME;
     }
 
     public Boolean getNoBuild() {
@@ -84,22 +90,12 @@ public class PublishCommand extends BuildCommand {
     }
 
     @Override
-    public void printHelp() {
-        printHelp(Constants.PUBLISH_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PUBLISH_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return noAssemble || noBuild ? null : authenticate(getUsername(), providerFactory);
     }
 
     private boolean isValid() {
-        if (cspConfig.getPublishCommand() == null || cspConfig.getPublishCommand().isEmpty()) return false;
+        if (getCspConfig().getPublishCommand() == null || getCspConfig().getPublishCommand().isEmpty()) return false;
 
         return true;
     }
@@ -127,7 +123,7 @@ public class PublishCommand extends BuildCommand {
         String outputDirectory = "";
         String fileName = null;
         if (publishFromConfig) {
-            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(cspConfig.getContentSpecId(), null);
+            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
 
             // Check that that content specification was found
             if (contentSpec == null) {
@@ -135,27 +131,32 @@ public class PublishCommand extends BuildCommand {
                 shutdown(Constants.EXIT_FAILURE);
             }
 
-            final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                    "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                    contentSpec.getTitle()) + File.separator));
+            final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
 
             fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
             outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
             fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
         } else if (getIds() != null && getIds().size() == 1) {
-            final String contentSpec = getContentSpecFromFile(getIds().get(0));
+            final String contentSpecString = getContentSpecFromFile(getIds().get(0));
 
-            /* parse the spec to get the main details */
-            final ContentSpecParser csp = new ContentSpecParser(providerFactory, new ErrorLoggerManager());
+            // parse the spec to get the main details
+            final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+            ContentSpec contentSpec = null;
             try {
-                csp.parse(contentSpec);
+                contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString);
             } catch (Exception e) {
                 printError(Constants.ERROR_INTERNAL_ERROR, false);
                 shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
             }
 
-            outputDirectory = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle());
-            fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
+            // Check that that content specification was parsed successfully
+            if (contentSpec == null) {
+                JCommander.getConsole().println(loggerManager.generateLogs());
+                shutdown(Constants.EXIT_FAILURE);
+            }
+
+            outputDirectory = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+            fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
         } else if (getIds().size() == 0) {
             printError(Constants.ERROR_NO_ID_MSG, false);
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
@@ -165,10 +166,7 @@ public class PublishCommand extends BuildCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Make sure the output directories exist
         final File outputDir = new File(outputDirectory);
@@ -180,10 +178,14 @@ public class PublishCommand extends BuildCommand {
                 shutdown(Constants.EXIT_FAILURE);
             }
 
-            outputDir.mkdirs();
-
-            // Ensure that the directory is empty
-            ClientUtilities.deleteDirContents(outputDir);
+            // TODO Check that the directory is actually created/cleared
+            if (outputDir.exists()) {
+                // Ensure that the directory is empty
+                FileUtilities.deleteDirContents(outputDir);
+            } else {
+                // Create the directory and it's parent directories
+                outputDir.mkdirs();
+            }
 
             // Unzip the file
             if (!ZipUtilities.unzipFileIntoDirectory(file, outputDirectory)) {
@@ -195,17 +197,14 @@ public class PublishCommand extends BuildCommand {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         if (publicanBuild) {
-            String publicanOptions = clientConfig.getPublicanBuildOptions();
+            String publicanOptions = getClientConfig().getPublicanBuildOptions();
 
             // Replace the locale in the build options if the locale has been set
-            if (getOutputLocale() != null)
-                publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
+            if (getTargetLocale() != null)
+                publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
             else if (getLocale() != null)
                 publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
 
@@ -222,15 +221,19 @@ public class PublishCommand extends BuildCommand {
             }
         }
 
-        String publishCommand = cspConfig.getPublishCommand();
+        String publishCommand = getCspConfig().getPublishCommand();
 
         // Replace the locale in the build options if the locale has been set
-        if (getOutputLocale() != null)
-            publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
-        else if (getLocale() != null) publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+        if (getTargetLocale() != null) {
+            publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
+        } else if (getLocale() != null) {
+            publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+        }
 
         // Add the message to the script
-        if (message != null) publishCommand += " -m \"" + message + "\"";
+        if (message != null) {
+            publishCommand += " -m \"" + message + "\"";
+        }
 
         try {
             JCommander.getConsole().println(Constants.PUBLISH_BUILD_MSG);

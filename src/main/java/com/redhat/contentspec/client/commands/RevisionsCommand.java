@@ -14,6 +14,7 @@ import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.entities.Revision;
 import com.redhat.contentspec.client.entities.RevisionList;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.sort.EnversRevisionSort;
@@ -35,6 +36,11 @@ public class RevisionsCommand extends BaseCommandImpl {
 
     public RevisionsCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.REVISIONS_COMMAND_NAME;
     }
 
     public Boolean isUseContentSpec() {
@@ -62,16 +68,6 @@ public class RevisionsCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.REVISIONS_COMMAND_NAME);
-    }
-
-    @Override
-    public void printHelp() {
-        printHelp(Constants.REVISIONS_COMMAND_NAME);
-    }
-
-    @Override
     public UserWrapper authenticate(final DataProviderFactory providerFactory) {
         return null;
     }
@@ -87,8 +83,8 @@ public class RevisionsCommand extends BaseCommandImpl {
         // If there are no ids then use the csprocessor.cfg file
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
+                setIds(CollectionUtilities.toArrayList(getCspConfig().getContentSpecId()));
             }
         }
 
@@ -108,17 +104,14 @@ public class RevisionsCommand extends BaseCommandImpl {
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Get the list of revisions
         List<Object[]> revisions = null;
         if (topic) {
             revisions = EntityUtilities.getTopicRevisionsById(providerFactory.getProvider(TopicProvider.class), ids.get(0));
         } else {
-            revisions = ContentSpecUtilities.getContentSpecRevisionsById(providerFactory.getProvider(TopicProvider.class), ids.get(0));
+            revisions = ContentSpecUtilities.getContentSpecRevisionsById(providerFactory.getProvider(ContentSpecProvider.class), ids.get(0));
         }
 
         // Check that the content spec is valid
@@ -131,10 +124,7 @@ public class RevisionsCommand extends BaseCommandImpl {
         Collections.sort(revisions, new EnversRevisionSort());
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Create the revision list
         final RevisionList list = new RevisionList(ids.get(0), topic ? "Topic" : "Content Specification");
