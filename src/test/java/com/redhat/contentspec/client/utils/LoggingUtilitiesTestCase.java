@@ -1,4 +1,4 @@
-package com.redhat.contentspec.client.tests;
+package com.redhat.contentspec.client.utils;
 
 import static org.junit.Assert.*;
 
@@ -9,8 +9,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.SimpleLayout;
 import org.apache.log4j.WriterAppender;
 import org.junit.Test;
-
-import com.redhat.contentspec.client.utils.LoggingUtilities;
 
 public class LoggingUtilitiesTestCase
 {
