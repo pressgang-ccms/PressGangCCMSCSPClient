@@ -53,6 +53,8 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
     ChecksumCommand command;
 
+    private final String systemExitError = "Program did not call System.exit()";
+
     @Before
     public void setUp() {
         when(restManager.getReader()).thenReturn(restReader);
@@ -70,7 +72,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         try {
             command.process(restManager, elm, user);
         // Then an error is printed and the program is shut down
-            fail("Program did not call System.exit()");
+            fail(systemExitError);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(5));
         }
@@ -87,7 +89,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         try {
             command.process(restManager, elm, user);
         // Then an error is printed and the program is shut down
-            fail("Program did not call System.exit()");
+            fail(systemExitError);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(5));
         }
@@ -123,7 +125,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         try {
             command.process(restManager, elm, user);
             // Then an error is printed and the program is shut down
-            fail("Program did not call System.exit()");
+            fail(systemExitError);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -143,7 +145,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         try {
             command.process(restManager, elm, user);
             // Then an error is printed and the program is shut down
-            fail("Program did not call System.exit()");
+            fail(systemExitError);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
