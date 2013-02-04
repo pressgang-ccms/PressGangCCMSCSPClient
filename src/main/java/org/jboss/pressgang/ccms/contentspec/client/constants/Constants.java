@@ -318,4 +318,6 @@ public class Constants {
     public static final String PATH_LONG_PARAM = "--path";
 
     public static final String NEW_LONG_PARAM = "--new";
+
+    public static final String FLATTEN_TOPICS_LONG_PARAM = "--flatten-topics";
 }

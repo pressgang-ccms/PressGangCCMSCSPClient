@@ -66,7 +66,7 @@ public class BuildCommand extends BaseCommandImpl {
     @DynamicParameter(names = Constants.OVERRIDE_LONG_PARAM, metaVar = "<variable>=<value>", validateWith = OverrideValidator.class)
     private Map<String, String> overrides = Maps.newHashMap();
 
-    @Parameter(names = Constants.BUG_REPORTING_LONG_PARM, description = "Hide the error reporting links in the output.")
+    @Parameter(names = Constants.BUG_REPORTING_LONG_PARM, description = "Hide the bug reporting links in the output.")
     private Boolean hideBugLinks = false;
 
     @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM},
@@ -112,7 +112,7 @@ public class BuildCommand extends BaseCommandImpl {
 
     @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions, to the latest version when building.",
             hidden = true)
-    private Boolean update = false;
+    private Boolean useLatestVersions = false;
 
     @Parameter(names = {Constants.DRAFT_LONG_PARAM, Constants.DRAFT_SHORT_PARAM}, description = "Build the book as a draft.")
     private Boolean draft = false;
@@ -123,6 +123,9 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REV_MESSAGE_LONG_PARAM, Constants.REV_MESSAGE_SHORT_PARAM},
             description = "Add a message for the revision history.")
     private List<String> messages = Lists.newArrayList();
+
+    @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM}, description = "Flatten the topics folder when building.")
+    private Boolean flattenTopics = false;
 
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
@@ -177,7 +180,7 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     public Boolean getHideContentSpecPage() {
-        return hideErrors;
+        return hideContentSpec;
     }
 
     public void setHideContentSpecPage(final Boolean hideContentSpecPage) {
@@ -312,12 +315,12 @@ public class BuildCommand extends BaseCommandImpl {
         this.revision = revision;
     }
 
-    public Boolean getUpdate() {
-        return update;
+    public Boolean getUseLatestVersions() {
+        return useLatestVersions;
     }
 
-    public void setUpdate(final Boolean update) {
-        this.update = update;
+    public void setUseLatestVersions(final Boolean useLatestVersion) {
+        this.useLatestVersions = useLatestVersion;
     }
 
     public Boolean getDraft() {
@@ -344,29 +347,45 @@ public class BuildCommand extends BaseCommandImpl {
         this.messages = messages;
     }
 
+    public Boolean getFlattenTopics() {
+        return flattenTopics;
+    }
+
+    public void setFlattenTopics(Boolean flattenTopics) {
+        this.flattenTopics = flattenTopics;
+    }
+
+    public Boolean getHideBugLinks() {
+        return hideBugLinks;
+    }
+
+    public void setHideBugLinks(Boolean hideBugLinks) {
+        this.hideBugLinks = hideBugLinks;
+    }
+
     public CSDocbookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
 
         final CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
-        buildOptions.setInjection(inlineInjection);
-        buildOptions.setInjectionTypes(injectionTypes);
-        buildOptions.setIgnoreMissingCustomInjections(hideErrors);
-        buildOptions.setSuppressErrorsPage(hideErrors);
-        buildOptions.setInsertSurveyLink(true);
-        buildOptions.setInsertBugzillaLinks(!hideBugLinks);
-        buildOptions.setOverrides(overrides);
-        buildOptions.setSuppressContentSpecPage(hideContentSpec);
-        buildOptions.setInsertEditorLinks(insertEditorLinks);
-        buildOptions.setShowReportPage(showReport);
-        buildOptions.setLocale(locale);
-        buildOptions.setCommonContentLocale(commonContentLocale);
+        buildOptions.setInjection(getInlineInjection());
+        buildOptions.setInjectionTypes(getInjectionTypes());
+        buildOptions.setIgnoreMissingCustomInjections(getHideErrors());
+        buildOptions.setSuppressErrorsPage(getHideErrors());
+        buildOptions.setInsertBugzillaLinks(!getHideErrors());
+        buildOptions.setOverrides(getOverrides());
+        buildOptions.setSuppressContentSpecPage(getHideContentSpecPage());
+        buildOptions.setInsertEditorLinks(getInsertEditorLinks());
+        buildOptions.setShowReportPage(getShowReport());
+        buildOptions.setLocale(getLocale());
+        buildOptions.setCommonContentLocale(getCommonContentLocale());
         buildOptions.setCommonContentDirectory(getClientConfig().getPublicanCommonContentDirectory());
-        buildOptions.setOutputLocale(targetLocale);
-        buildOptions.setDraft(draft);
-        buildOptions.setPublicanShowRemarks(showRemarks);
-        buildOptions.setRevisionMessages(messages);
-        buildOptions.setUseLatestVersions(update);
+        buildOptions.setOutputLocale(getTargetLocale());
+        buildOptions.setDraft(getDraft());
+        buildOptions.setPublicanShowRemarks(getShowRemarks());
+        buildOptions.setRevisionMessages(getMessage());
+        buildOptions.setUseLatestVersions(getUseLatestVersions());
+        buildOptions.setFlattenTopics(getFlattenTopics());
 
         return buildOptions;
     }
@@ -576,7 +595,7 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);
         processingOptions.setRevision(revision);
-        processingOptions.setUpdateRevisions(update);
+        processingOptions.setUpdateRevisions(useLatestVersions);
         if (revision != null) {
             processingOptions.setAddRevisions(true);
         }
