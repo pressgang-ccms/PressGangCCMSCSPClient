@@ -5,11 +5,11 @@ import java.io.File;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -62,13 +62,46 @@ public class PreviewCommand extends AssembleCommand {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        if (!noAssemble) {
+        if (!getNoAssemble()) {
             // Assemble the content specification
             super.process();
         }
 
-        // Create the file object that will be opened
-        String previewFileName = null;
+        // Find the preview file to be opened.
+        String previewFileName = findFileToPreview(contentSpecProvider, previewFromConfig, previewFormat);
+        final File previewFile = new File(previewFileName);
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Check that the file exists
+        if (!previewFile.exists()) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE,
+                    String.format(Constants.ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG, previewFile.getAbsolutePath()), false);
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Open the file
+        try {
+            FileUtilities.openFile(previewFile);
+        } catch (Exception e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE,
+                    String.format(Constants.ERROR_UNABLE_TO_OPEN_FILE_MSG, previewFile.getAbsolutePath()), false);
+        }
+    }
+
+    /**
+     * Find the name/location of the file to be opened for previewing.
+     *
+     * @param contentSpecProvider The Content Spec provider that can be used to get information about a content spec.
+     * @param previewFromConfig   Whether or not the command is executing from a csprocessor.cfg directory or not.
+     * @param previewFormat       The format of the file that should be previewed.
+     * @return The filename and location of the file to be opened to be previewed, or null if it can't be found.
+     */
+    protected String findFileToPreview(final ContentSpecProvider contentSpecProvider, boolean previewFromConfig,
+            final String previewFormat) {
         if (previewFromConfig) {
             final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
 
@@ -81,14 +114,12 @@ public class PreviewCommand extends AssembleCommand {
             final String locale = generateOutputLocale();
 
             if (previewFormat.equals("pdf")) {
-                // Create the file
-                previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
+                return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
                         DocBookUtilities.escapeTitle(
                                 contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
-                        contentSpec.getTitle()) + "-en-US.pdf";
+                        contentSpec.getTitle()) + "-" + locale + ".pdf";
             } else {
-                previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index" +
-                        ".html";
+                return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index.html";
             }
         } else if (getIds() != null && getIds().size() == 1) {
             // Create the file based on an ID passed from the command line
@@ -111,36 +142,16 @@ public class PreviewCommand extends AssembleCommand {
             final String locale = generateOutputLocale();
 
             if (previewFormat.equals("pdf")) {
-                previewFileName = fileDirectory + DocBookUtilities.escapeTitle(
+                return fileDirectory + DocBookUtilities.escapeTitle(
                         contentSpec.getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
                         contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
                         contentSpec.getTitle()) + "-en-US.pdf";
             } else {
-                previewFileName = fileDirectory + DocBookUtilities.escapeTitle(
+                return fileDirectory + DocBookUtilities.escapeTitle(
                         contentSpec.getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
             }
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        final File previewFile = new File(previewFileName);
-
-        // Check that the file exists
-        if (!previewFile.exists()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    String.format(Constants.ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG, previewFile.getAbsolutePath()), false);
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        // Open the file
-        try {
-            FileUtilities.openFile(previewFile);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_UNABLE_TO_OPEN_FILE_MSG,
-                    previewFile.getAbsolutePath()), false);
+        } else {
+            return null;
         }
     }
 

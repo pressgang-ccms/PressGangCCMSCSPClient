@@ -22,11 +22,11 @@ import java.util.Collections;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
+import net.sf.ipsedixit.annotation.Arbitrary;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import net.sf.ipsedixit.annotation.Arbitrary;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -43,7 +43,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @PrepareForTest({ClientUtilities.class})
-public class BaseCommandUnitTest extends BaseUnitTest {
+public class BaseCommandImplUnitTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 

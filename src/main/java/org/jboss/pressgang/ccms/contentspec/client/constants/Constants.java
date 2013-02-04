@@ -19,6 +19,7 @@ public class Constants {
     public static final String DEFAULT_PUBLICAN_FORMAT = "html-single";
     public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
     public static final String FILENAME_EXTENSION = "contentspec";
+    public static final String DEFAULT_CONFIG_BUILD_POSTFIX = "-publican";
 
     // Version Constants
     public static final String VERSION_PROPERTIES_FILENAME = "version.properties";
@@ -284,7 +285,7 @@ public class Constants {
 
     public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
 
-    public static final String PUBLICAN_BUILD_LONG_PARAM = "--publican-build";
+    public static final String NO_PUBLICAN_BUILD_LONG_PARAM = "--no-publican-build";
 
     public static final String ZANATA_PROJECT_LONG_PARAM = "--zanata-project";
 

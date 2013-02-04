@@ -6,11 +6,11 @@ import java.io.IOException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -26,8 +26,49 @@ public class AssembleCommand extends BuildCommand {
     @Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, description = "Hide the output from assembling the Content Specification.")
     private Boolean hideOutput = false;
 
+    @Parameter(names = Constants.NO_PUBLICAN_BUILD_LONG_PARAM,
+            description = "Build the Content Specification with publican after unzipping.",
+            hidden = true)
+    private Boolean noPublicanBuild = true;
+
+    private String buildFileDirectory = "";
+    String buildFileName = null;
+    String outputDirectory = "";
+
     public AssembleCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    public Boolean isNoPublicanBuild() {
+        return noPublicanBuild;
+    }
+
+    public void setNoPublicanBuild(Boolean noPublicanBuild) {
+        this.noPublicanBuild = noPublicanBuild;
+    }
+
+    protected String getBuildFileDirectory() {
+        return buildFileDirectory;
+    }
+
+    protected void setBuildFileDirectory(String buildFileDirectory) {
+        this.buildFileDirectory = buildFileDirectory;
+    }
+
+    protected String getBuildFileName() {
+        return buildFileName;
+    }
+
+    protected void setBuildFileName(String buildFileName) {
+        this.buildFileName = buildFileName;
+    }
+
+    protected String getOutputDirectory() {
+        return outputDirectory;
+    }
+
+    protected void setOutputDirectory(String outputDirectory) {
+        this.outputDirectory = outputDirectory;
     }
 
     @Override
@@ -62,15 +103,54 @@ public class AssembleCommand extends BuildCommand {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        if (!noBuild) {
+        if (!getNoBuild()) {
             super.process();
         }
 
         JCommander.getConsole().println(Constants.STARTING_ASSEMBLE_MSG);
 
-        String buildFileDirectory = "";
-        String buildFileName = null;
-        String outputDirectory = "";
+        // Find the build directory and required files
+        findBuildDirectoryAndFiles(contentSpecProvider, assembleFromConfig);
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        final File buildFile = new File(ClientUtilities.validateFilePath(getBuildFileDirectory() + getBuildFileName()));
+        if (!buildFile.exists()) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, getBuildFileName()), false);
+        }
+
+        // Make sure the output directories exist
+        final File buildOutputDirectory = new File(ClientUtilities.validateDirLocation(getOutputDirectory()));
+        buildOutputDirectory.mkdirs();
+
+        // Ensure that the directory is empty
+        FileUtilities.deleteDirContents(buildOutputDirectory);
+
+        // Unzip the file
+        if (!ZipUtilities.unzipFileIntoDirectory(buildFile, getOutputDirectory())) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_TO_ASSEMBLE_MSG, false);
+        } else {
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_UNZIP_MSG, buildOutputDirectory.getAbsolutePath()));
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Run publican to assemble the book into the output format(s)
+        if (!isNoPublicanBuild()) {
+            runPublican(buildOutputDirectory);
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, buildOutputDirectory.getAbsolutePath()));
+        }
+    }
+
+    /**
+     * Find the Build Directory and output files.
+     *
+     * @param contentSpecProvider The Content Spec provider that can be used to get information about a content spec.
+     * @param assembleFromConfig  Whether or not the command is assembling from a csprocessor.cfg directory or not.
+     */
+    protected void findBuildDirectoryAndFiles(final ContentSpecProvider contentSpecProvider, boolean assembleFromConfig) {
         if (assembleFromConfig) {
             final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
 
@@ -85,9 +165,9 @@ public class AssembleCommand extends BuildCommand {
              */
             final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
 
-            buildFileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
-            outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
-            buildFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
+            setBuildFileDirectory(rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION);
+            setOutputDirectory(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION);
+            setBuildFileName(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + Constants.DEFAULT_CONFIG_BUILD_POSTFIX + ".zip");
         } else if (getIds() != null && getIds().size() == 1) {
             final String contentSpecString = getContentSpecFromFile(getIds().get(0));
 
@@ -96,48 +176,30 @@ public class AssembleCommand extends BuildCommand {
 
             // Create the fully qualified output path
             if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-                buildFileDirectory = getOutputPath();
-                buildFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
+                setBuildFileDirectory(getOutputPath());
+                setBuildFileName(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip");
             } else if (getOutputPath() == null) {
-                buildFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip";
+                setBuildFileName(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + ".zip");
             } else {
-                buildFileName = getOutputPath();
+                setBuildFileName(getOutputPath());
             }
 
             // Add the full file path to the output path
-            final File file = new File(ClientUtilities.validateFilePath(buildFileDirectory + buildFileName));
+            final File file = new File(ClientUtilities.validateFilePath(getBuildFileDirectory() + getBuildFileName()));
             if (file.getParent() != null) {
-                outputDirectory = file.getParent() + File.separator + DocBookUtilities.escapeTitle(contentSpec.getTitle());
+                setOutputDirectory(file.getParent() + File.separator + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
             } else {
-                outputDirectory = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+                setOutputDirectory(DocBookUtilities.escapeTitle(contentSpec.getTitle()));
             }
         }
+    }
 
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        final File buildFile = new File(ClientUtilities.validateFilePath(buildFileDirectory + buildFileName));
-        if (!buildFile.exists()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, buildFileName), false);
-        }
-
-        // Make sure the output directories exist
-        final File outputDir = new File(ClientUtilities.validateDirLocation(outputDirectory));
-        outputDir.mkdirs();
-
-        // Ensure that the directory is empty
-        FileUtilities.deleteDirContents(outputDir);
-
-        // Unzip the file
-        if (!ZipUtilities.unzipFileIntoDirectory(buildFile, outputDirectory)) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_TO_ASSEMBLE_MSG, false);
-        } else {
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_UNZIP_MSG, outputDir.getAbsolutePath()));
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
+    /**
+     * Run Publican to assemble the book from Docbook XML markup to the required format.
+     *
+     * @param publicanFilesDirectory The directory location that hosts the publican files.
+     */
+    protected void runPublican(final File publicanFilesDirectory) {
         String publicanOptions = getClientConfig().getPublicanBuildOptions();
 
         // Replace the locale in the build options if the locale has been set
@@ -147,7 +209,7 @@ public class AssembleCommand extends BuildCommand {
 
         try {
             JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
-            final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, null, outputDir,
+            final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, null, publicanFilesDirectory,
                     JCommander.getConsole(), !hideOutput, false);
             if (exitValue == null || exitValue != 0) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
@@ -156,7 +218,6 @@ public class AssembleCommand extends BuildCommand {
         } catch (IOException e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
         }
-        JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, outputDir.getAbsolutePath()));
     }
 
     @Override

@@ -131,6 +131,22 @@ public class BuildCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    protected ContentSpecProcessor getCsp() {
+        return csp;
+    }
+
+    protected void setCsp(ContentSpecProcessor csp) {
+        this.csp = csp;
+    }
+
+    protected ContentSpecBuilder getBuilder() {
+        return builder;
+    }
+
+    protected void setBuilder(ContentSpecBuilder builder) {
+        this.builder = builder;
+    }
+
     @Override
     public String getCommandName() {
         return Constants.BUILD_COMMAND_NAME;
@@ -355,6 +371,12 @@ public class BuildCommand extends BaseCommandImpl {
         return buildOptions;
     }
 
+    /**
+     * Gets the content spec as a String from a file.
+     *
+     * @param file The file to load and read the content from.
+     * @return A String representation of the file,
+     */
     protected String getContentSpecFromFile(final String file) {
         // Get the content spec from the file
         final String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.validateFilePath(file)));
@@ -363,8 +385,9 @@ public class BuildCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 
-        if (permissive == null) {
-            permissive = false;
+        // Set permissive to false as when loading from file we don't know if the content was ever valid.
+        if (getPermissive() == null) {
+            setPermissive(false);
         }
 
         return contentSpec;
@@ -376,11 +399,11 @@ public class BuildCommand extends BaseCommandImpl {
      */
     protected void setupZanataOptions() {
         // Set the zanata url
-        if (this.zanataUrl != null) {
+        if (getZanataUrl() != null) {
             // Find the zanata server if the url is a reference to the zanata server name
             for (final String serverName : getClientConfig().getZanataServers().keySet()) {
-                if (serverName.equals(zanataUrl)) {
-                    zanataUrl = getClientConfig().getZanataServers().get(serverName).getUrl();
+                if (serverName.equals(getZanataUrl())) {
+                    setZanataUrl(getClientConfig().getZanataServers().get(serverName).getUrl());
                     break;
                 }
             }
@@ -389,13 +412,13 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Set the zanata project
-        if (this.zanataProject != null) {
-            getCspConfig().getZanataDetails().setProject(zanataProject);
+        if (getZanataProject() != null) {
+            getCspConfig().getZanataDetails().setProject(getZanataProject());
         }
 
         // Set the zanata version
-        if (this.zanataVersion != null) {
-            getCspConfig().getZanataDetails().setVersion(zanataVersion);
+        if (getZanataVersion() != null) {
+            getCspConfig().getZanataDetails().setVersion(getZanataVersion());
         }
     }
 
@@ -438,7 +461,7 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Pull in the pubsnumber from koji if the option is set
         if (getFetchPubsnum()) {
-            final Integer pubsnumber = getContentSpecPubsNumberFromKoji(contentSpec, getCspConfig());
+            final Integer pubsnumber = getContentSpecPubsNumberFromKoji(contentSpec);
             if (pubsnumber != null) {
                 contentSpec.setPubsNumber(pubsnumber);
             }
@@ -457,8 +480,9 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Print the success messages
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, builder.getNumErrors(),
-                builder.getNumWarnings()) + (builder.getNumErrors() == 0 && builder.getNumWarnings() == 0 ? " - Flawless Victory!" : ""));
+        JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, getBuilder().getNumErrors(),
+                getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
+                + "Victory!" : ""));
         if (executionTime) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
         }
@@ -470,10 +494,9 @@ public class BuildCommand extends BaseCommandImpl {
         String outputDir = "";
         if (buildingFromConfig) {
             outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
-            fileName += "-publican.zip";
-        } else {
-            fileName += ".zip";
+            fileName += Constants.DEFAULT_CONFIG_BUILD_POSTFIX;
         }
+        fileName += ".zip";
 
         // Create the output file based on the command line params and content spec
         final File outputFile = getOutputFile(outputDir, fileName);
@@ -492,17 +515,17 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     /**
-     * TODO
+     * Gets the Pubsnumber for a Content Specification from Koji/Brew, using the content spec product/version/edition to perform the
+     * search.
      *
-     * @param contentSpec
-     * @param cspConfig
-     * @return
+     * @param contentSpec The content spec to look up the pubsnumber for.
+     * @return The pubsnumber for the content spec if it could be found, otherwise null.
      */
-    protected Integer getContentSpecPubsNumberFromKoji(final ContentSpec contentSpec, final ContentSpecConfiguration cspConfig) {
+    protected Integer getContentSpecPubsNumberFromKoji(final ContentSpec contentSpec) {
         JCommander.getConsole().println(Constants.FETCHING_PUBSNUMBER_MSG);
 
         try {
-            return ClientUtilities.getPubsnumberFromKoji(contentSpec, cspConfig.getKojiHubUrl());
+            return ClientUtilities.getPubsnumberFromKoji(contentSpec, getCspConfig().getKojiHubUrl());
         } catch (MalformedURLException e) {
             printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_INVALID_KOJIHUB_URL, false);
         } catch (KojiException e) {
@@ -522,11 +545,11 @@ public class BuildCommand extends BaseCommandImpl {
     protected byte[] buildContentSpec(final ContentSpec contentSpec, final UserWrapper user) {
         byte[] builderOutput = null;
         try {
-            builder = new ContentSpecBuilder(getProviderFactory());
+            setBuilder(new ContentSpecBuilder(getProviderFactory()));
             if (locale == null) {
-                builderOutput = builder.buildBook(contentSpec, user, getBuildOptions());
+                builderOutput = getBuilder().buildBook(contentSpec, user, getBuildOptions());
             } else {
-                builderOutput = builder.buildTranslatedBook(contentSpec, user, getBuildOptions(), getCspConfig().getZanataDetails());
+                builderOutput = getBuilder().buildTranslatedBook(contentSpec, user, getBuildOptions(), getCspConfig().getZanataDetails());
             }
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
@@ -536,13 +559,13 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     /**
-     * TODO
+     * Validates that a content specification object and it's contents are valid.
      *
-     * @param providerFactory
-     * @param loggerManager
-     * @param user
-     * @param contentSpec
-     * @return
+     * @param providerFactory The provider factory that can create providers to lookup various entities from a datasource.
+     * @param loggerManager   The logging manager that handles output.
+     * @param user            The user who requested the build/validation.
+     * @param contentSpec     The content spec object to be validated.
+     * @return True if the content spec is valid, otherwise false.
      */
     protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
             final UserWrapper user, final ContentSpec contentSpec) {
@@ -562,10 +585,10 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Validate the Content Specification
-        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
+        setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
         boolean success = false;
         try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
+            success = getCsp().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
         } catch (Exception e) {
             JCommander.getConsole().println(loggerManager.generateLogs());
             shutdown(Constants.EXIT_FAILURE);
@@ -634,7 +657,7 @@ public class BuildCommand extends BaseCommandImpl {
      * Fixes the Override variables that point to File locations to change relative paths to absolute paths.
      */
     protected void fixOverrides() {
-        final Map<String, String> overrides = this.getOverrides();
+        final Map<String, String> overrides = getOverrides();
         for (final Entry<String, String> entry : overrides.entrySet()) {
             final String key = entry.getKey();
             if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE)) {
@@ -686,12 +709,12 @@ public class BuildCommand extends BaseCommandImpl {
     public void shutdown() {
         // No need to wait as the ShutdownInterceptor is waiting
         // on the whole program.
-        if (csp != null) {
-            csp.shutdown();
+        if (getCsp() != null) {
+            getCsp().shutdown();
         }
 
-        if (builder != null) {
-            builder.shutdown();
+        if (getBuilder() != null) {
+            getBuilder().shutdown();
         }
 
         super.shutdown();
