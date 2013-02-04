@@ -1,7 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -12,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -30,11 +30,13 @@ import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,7 +48,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
 public class CheckoutCommandTest extends BaseUnitTest {
     private static final String BOOK_TITLE = "Test";
     private static final String EMPTY_FILE_NAME = "empty.txt";
@@ -201,52 +203,16 @@ public class CheckoutCommandTest extends BaseUnitTest {
         // and the title of the book is empty so that the root directory is used
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpecWrapper.getId()).willReturn(id);
+        // and the ClientUtilities create method is mocked
+        PowerMockito.mockStatic(ClientUtilities.class);
 
         // When the command is processing
         command.process();
 
-        // Then check that only the csprocessor.cfg and <TITLE>-post.contentspec exists
-        assertArrayEquals(bookDir.list(), new String[]{"csprocessor.cfg", BOOK_TITLE + "-post.contentspec"});
-        // and check that the file contents is correct
-        assertThat(FileUtilities.readFileContents(new File(bookDir, "csprocessor.cfg")), containsString("SPEC_ID=" + id));
-        assertThat(FileUtilities.readFileContents(new File(bookDir, BOOK_TITLE + "-post.contentspec")), is(randomString));
-    }
-
-    @Test
-    public void shouldShutdownWhenSaveFails() throws IOException {
-        // Given a command called with an an ID
-        command.setIds(Arrays.asList(id));
-        // and a new folder should be created
-        command.setForce(true);
-        // And a matching content spec
-        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
-        given(contentSpecProvider.getContentSpecAsString(anyInt(), anyInt())).willReturn(randomString);
-        // and the title of the book is empty so that the root directory is used
-        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
-        given(contentSpecWrapper.getId()).willReturn(id);
-        // and the saving should fail
-        PowerMockito.mockStatic(FileUtilities.class);
-        PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
-        FileUtilities.saveFile(any(File.class), anyString(), anyString());
-
-        // When the command is processing
-        try {
-            command.process();
-            // Then an error is printed and the program is shut down
-            fail(systemExitError);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(-1));
-        }
-
-        // Then the command should be shutdown and an error message printed
-        verify(command, times(2)).printError(anyString(), anyBoolean());
-        verify(command, times(1)).shutdown(anyInt());
-        assertThat(getStdoutLogs(),
-                containsString("An error occurred while trying to save " + bookDir.getAbsolutePath() + File.separator + "csprocessor.cfg" +
-                        "."));
-        assertThat(getStdoutLogs(),
-                containsString("An error occurred while trying to save " + bookDir.getAbsolutePath() + File.separator + BOOK_TITLE +
-                        "-post.contentspec"));
+        // Then check that the create method was called
+        PowerMockito.verifyStatic();
+        ClientUtilities.createContentSpecProject(eq(command), eq(cspConfig), any(File.class), anyString(), eq(contentSpecWrapper),
+                any(ZanataDetails.class));
     }
 
     @Test

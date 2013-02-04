@@ -1,7 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,43 +133,8 @@ public class CheckoutCommand extends BaseCommandImpl {
         zanataDetails.setProject(zanataProject);
         zanataDetails.setVersion(zanataVersion);
 
-        // Save the csprocessor.cfg and post spec to file if the create was successful
-        final String escapedTitle = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle());
-        final File outputSpec = new File(
-                getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
-                        .FILENAME_EXTENSION);
-        final File outputConfig = new File(getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-        final String config = ClientUtilities.generateCsprocessorCfg(contentSpecEntity, getServerUrl(), zanataDetails);
-
-        // Create the directory
-        if (outputConfig.getParentFile() != null) {
-            // TODO make sure that the directory was created
-            outputConfig.getParentFile().mkdirs();
-        }
-
-        boolean error = false;
-
-        // Save the csprocessor.cfg
-        try {
-            FileUtilities.saveFile(outputConfig, config, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputConfig.getAbsolutePath()));
-        } catch (IOException e) {
-            printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputConfig.getAbsolutePath()), false);
-            error = true;
-        }
-
-        // Save the Post Processed spec
-        try {
-            FileUtilities.saveFile(outputSpec, contentSpecString, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
-        } catch (IOException e) {
-            printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
-            error = true;
-        }
-
-        if (error) {
-            shutdown(Constants.EXIT_FAILURE);
-        }
+        // Create the content spec project directory and files.
+        ClientUtilities.createContentSpecProject(this, getCspConfig(), directory, contentSpecString, contentSpecEntity, zanataDetails);
     }
 
     @Override

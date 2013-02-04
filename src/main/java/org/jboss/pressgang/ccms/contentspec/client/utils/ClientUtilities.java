@@ -47,6 +47,7 @@ import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
@@ -625,6 +626,63 @@ public class ClientUtilities {
             command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_MULTIPLE_ID_MSG, false);
         }
 
+    }
+
+    /**
+     * Creates the Content Spec Project directory and adds the csprocessor.cfg and Content Spec file to the directory.
+     *
+     * @param command           The command the details are being created from.
+     * @param cspConfig         The csprocessor.cfg configuration settings.
+     * @param directory         The project directory.
+     * @param contentSpecString The content spec string representation.
+     * @param contentSpec       The content spec object from a datasource.
+     * @param zanataDetails     The Connection details for zanata.
+     */
+    public static void createContentSpecProject(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig,
+            final File directory, final String contentSpecString, final ContentSpecWrapper contentSpec, ZanataDetails zanataDetails) {
+        // If the output directory exists and force is enabled delete the directory contents
+        if (directory.exists() && directory.isDirectory()) {
+            // TODO Check that the directory was successfully deleted
+            FileUtilities.deleteDir(directory);
+        }
+
+        boolean error = false;
+
+        // Save the csprocessor.cfg and post spec to file if the create was successful
+        final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+        final File outputSpec = new File(
+                cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
+                        .FILENAME_EXTENSION);
+        final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
+        final String config = generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl(), zanataDetails);
+
+        // Create the directory
+        if (outputConfig.getParentFile() != null && !outputConfig.getParentFile().exists()) {
+            // TODO Check that the directory was successfully created
+            outputConfig.getParentFile().mkdirs();
+        }
+
+        // Save the csprocessor.cfg
+        try {
+            FileUtilities.saveFile(outputConfig, config, Constants.FILE_ENCODING);
+            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputConfig.getAbsolutePath()));
+        } catch (IOException e) {
+            command.printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputConfig.getAbsolutePath()), false);
+            error = true;
+        }
+
+        // Save the Post Processed spec
+        try {
+            FileUtilities.saveFile(outputSpec, contentSpecString, Constants.FILE_ENCODING);
+            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
+        } catch (IOException e) {
+            command.printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
+            error = true;
+        }
+
+        if (error) {
+            command.shutdown(Constants.EXIT_FAILURE);
+        }
     }
 }
 

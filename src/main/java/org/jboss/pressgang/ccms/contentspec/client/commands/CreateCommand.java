@@ -1,7 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,6 +54,14 @@ public class CreateCommand extends BaseCommandImpl {
         return Constants.CREATE_COMMAND_NAME;
     }
 
+    protected ContentSpecProcessor getContentSpecProcessor() {
+        return csp;
+    }
+
+    protected void setContentSpecProcessor(final ContentSpecProcessor csp) {
+        this.csp = csp;
+    }
+
     public List<File> getFiles() {
         return files;
     }
@@ -97,10 +104,10 @@ public class CreateCommand extends BaseCommandImpl {
 
     public boolean isValid() {
         // We should have only one file
-        if (files.size() != 1) return false;
+        if (getFiles().size() != 1) return false;
 
         // Check that the file exists
-        final File file = files.get(0);
+        final File file = getFiles().get(0);
         if (file.isDirectory()) return false;
         if (!file.exists()) return false;
         if (!file.isFile()) return false;
@@ -121,11 +128,9 @@ public class CreateCommand extends BaseCommandImpl {
         }
 
         long startTime = System.currentTimeMillis();
-        boolean success = false;
 
         // Read in the file contents
         final String contentSpecString = FileUtilities.readFileContents(files.get(0));
-
         if (contentSpecString == null || contentSpecString.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
@@ -151,7 +156,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Check that the output directory doesn't already exist
         final File directory = new File(getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
-        if (directory.exists() && !force && createCsprocessorCfg && directory.isDirectory()) {
+        if (directory.exists() && !getForce() && getCreateCsprocessorCfg() && directory.isDirectory()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
         }
@@ -159,27 +164,20 @@ public class CreateCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Setup the processing options
-        final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(permissive);
-
-        csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
-        Integer revision = null;
-        try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
-            if (success) {
-                revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
-            }
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
-        }
+        // Process/Save the content spec
+        boolean success = processContentSpec(contentSpec, loggerManager, user);
 
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(loggerManager.generateLogs());
         if (success) {
+            Integer revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
             JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
+        } else {
+            shutdown(Constants.EXIT_FAILURE);
         }
+
+        // Print the command execution time as saving files shouldn't be included
         if (executionTime) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
         }
@@ -188,57 +186,42 @@ public class CreateCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         if (success && createCsprocessorCfg) {
-            // If the output directory exists and force is enabled delete the directory contents
-            if (directory.exists() && directory.isDirectory()) {
-                // TODO Check that the directory was successfully deleted
-                FileUtilities.deleteDir(directory);
-            }
-
             // Create the blank zanata details as we shouldn't have a zanata setup at creation time
             final ZanataDetails zanataDetails = new ZanataDetails();
             zanataDetails.setServer(null);
             zanataDetails.setProject(null);
             zanataDetails.setVersion(null);
 
-            boolean error = false;
-
-            // Save the csprocessor.cfg and post spec to file if the create was successful
-            final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+            // Get the content spec entity
             final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpec.getId(), null);
-            final File outputSpec = new File(
-                    getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
-                            .FILENAME_EXTENSION);
-            final File outputConfig = new File(getCspConfig().getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-            final String config = ClientUtilities.generateCsprocessorCfg(contentSpecEntity, getCspConfig().getServerUrl(), zanataDetails);
 
-            // Create the directory
-            if (outputConfig.getParentFile() != null && !outputConfig.getParentFile().exists()) {
-                // TODO Check that the directory was successfully created
-                outputConfig.getParentFile().mkdirs();
-            }
-
-            // Save the csprocessor.cfg
-            try {
-                FileUtilities.saveFile(outputConfig, config, Constants.FILE_ENCODING);
-                JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputConfig.getAbsolutePath()));
-            } catch (IOException e) {
-                printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputConfig.getAbsolutePath()), false);
-                error = true;
-            }
-
-            // Save the Post Processed spec
-            try {
-                FileUtilities.saveFile(outputSpec, contentSpec.toString(), Constants.FILE_ENCODING);
-                JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
-            } catch (IOException e) {
-                printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
-                error = true;
-            }
-
-            if (error) {
-                shutdown(Constants.EXIT_FAILURE);
-            }
+            // Create the project directory and files
+            ClientUtilities.createContentSpecProject(this, getCspConfig(), directory, contentSpec.toString(), contentSpecEntity,
+                    zanataDetails);
         }
+    }
+
+    /**
+     * Process and save a content specification to the server.
+     *
+     * @param contentSpec   The content spec to be saved.
+     * @param loggerManager The logging manager to handle logs from processing.
+     * @param user          The user who requested the content spec be saved.
+     * @return True if the content spec was processed and saved successfully, otherwise false.
+     */
+    protected boolean processContentSpec(final ContentSpec contentSpec, final ErrorLoggerManager loggerManager, final UserWrapper user) {
+        // Setup the processing options
+        final ProcessingOptions processingOptions = new ProcessingOptions();
+        processingOptions.setPermissiveMode(permissive);
+
+        setContentSpecProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
+        try {
+            return getContentSpecProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
+        } catch (Exception e) {
+            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
+        }
+
+        return false;
     }
 
     @Override
