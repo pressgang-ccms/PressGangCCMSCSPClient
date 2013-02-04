@@ -9,6 +9,7 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
@@ -16,12 +17,6 @@ import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
 public class ListCommand extends BaseCommandImpl {
-    @Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
-    private Boolean contentSpec = false;
-
-    @Parameter(names = {Constants.SNAPSHOT_LONG_PARAM, Constants.SNAPSHOT_SHORT_PARAM}, hidden = true)
-    private Boolean snapshot = false;
-
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, hidden = true)
     private Boolean force = false;
 
@@ -34,23 +29,7 @@ public class ListCommand extends BaseCommandImpl {
 
     @Override
     public String getCommandName() {
-        return Constants.INFO_COMMAND_NAME;
-    }
-
-    public Boolean useContentSpec() {
-        return contentSpec;
-    }
-
-    public void setContentSpec(final Boolean contentSpec) {
-        this.contentSpec = contentSpec;
-    }
-
-    public Boolean useSnapshot() {
-        return snapshot;
-    }
-
-    public void setSnapshot(final Boolean snapshot) {
-        this.snapshot = snapshot;
+        return Constants.LIST_COMMAND_NAME;
     }
 
     public Boolean isForce() {
@@ -69,52 +48,43 @@ public class ListCommand extends BaseCommandImpl {
         this.limit = limit;
     }
 
-    public boolean isValid() {
-        if (contentSpec && snapshot) {
-            return false;
-        }
-        return true;
-    }
-
     @Override
     public void process() {
-        // Check if the options entered ae valid
-        if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.INVALID_ARG_MSG, true);
-        }
-
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
 
-        // Get the number of results to display
-        Integer numResults = 0;
-        if (limit != null && !force) {
-            numResults = limit;
-        } else if (!force) {
-            numResults = Constants.MAX_LIST_RESULT;
-        }
-
+        // Get the content specs from the database
         final CollectionWrapper<ContentSpecWrapper> contentSpecs = contentSpecProvider.getContentSpecsWithQuery("query;");
-        // Get the number of content specs in the database
-        long noSpecs = contentSpecs.size();
+        int noSpecs = contentSpecs.size();
+
+        // Get the number of results to display
+        final Integer limit = getLimit() == null ? Constants.MAX_LIST_RESULT : (getLimit() > 0 ? getLimit() : 0);
+        final Integer numResults;
+        if (limit > noSpecs) {
+            numResults = noSpecs;
+        } else if (!isForce()) {
+            numResults = limit;
+        } else {
+            numResults = noSpecs;
+        }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
         // If there are too many content specs & force isn't set then send back an error message
-        if (noSpecs > Constants.MAX_LIST_RESULT && limit == null && !force) {
+        if (noSpecs > Constants.MAX_LIST_RESULT && getLimit() == null && !isForce()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
+        } else if (noSpecs == 0) {
+            JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
         } else {
+            // Get the sublist of results to display
             final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);
 
             // Good point to check for a shutdown
             allowShutdownToContinueIfRequested();
 
-            if (csList.isEmpty()) {
-                JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
-            } else {
-                JCommander.getConsole().println(
-                        ClientUtilities.generateContentSpecListResponse(ClientUtilities.buildSpecList(csList, getProviderFactory())));
-            }
+            // Generate and then print the list of content specs
+            final SpecList specList = ClientUtilities.buildSpecList(csList, getProviderFactory());
+            JCommander.getConsole().println(ClientUtilities.generateContentSpecListResponse(specList));
         }
     }
 

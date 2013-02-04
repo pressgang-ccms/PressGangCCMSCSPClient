@@ -97,11 +97,11 @@ public class Constants {
     public static final String ERROR_FAILED_SAVING_FILE = "An error occurred while trying to save %s.";
     public static final String LIST_ERROR_MSG = "There are %s Content Specs on this server. You should probably use \"csprocessor " +
             "search\" if you have an idea what you are looking for. Otherwise, rerun the list command, " +
-            "and this time use the --limit <NUMBER>";
+            "and this time use --limit <NUMBER>";
     public static final String NO_SNAPSHOT_NAME_MSG = "No snapshot name was specified. A name must be specified for a snapshot.";
     public static final String LIST_SNAPSHOT_ERROR_MSG = "There are %s Snapshots on this server. You should probably use \"csprocessor " +
             "search -s\" if you have an idea what you are looking for. Otherwise, rerun the list command, " +
-            "and this time use the --limit<NUMBER>";
+            "and this time use --limit<NUMBER>";
     public static final String NO_FILE_FOUND_FOR_CONFIG = "The file \"%s\" was not found in the current directory.";
 
     public static final String ERROR_UNAUTHORISED = "Unauthorised Request! Please check your username and the server URL is correct.";

@@ -25,13 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
+import net.sf.ipsedixit.annotation.Arbitrary;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import net.sf.ipsedixit.annotation.Arbitrary;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
@@ -75,7 +75,6 @@ public class InfoCommandUnitTest extends BaseUnitTest {
 
     InfoCommand command;
     private final String systemExitError = "Program did not call System.exit()";
-
 
     @Before
     public void setUp() throws UnsupportedEncodingException {
