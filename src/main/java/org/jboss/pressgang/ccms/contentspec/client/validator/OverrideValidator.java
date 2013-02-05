@@ -31,7 +31,7 @@ public class OverrideValidator implements IParameterValidator {
 
             if (validNames.contains(varName)) {
                 if (varName.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || varName.equals(CSConstants.REVISION_HISTORY_OVERRIDE)) {
-                    final File file = new File(ClientUtilities.validateFilePath(varValue));
+                    final File file = new File(ClientUtilities.fixFilePath(varValue));
                     if (!(file.exists() && file.isFile())) {
                         throw new ParameterException("The \"" + varName + "\" override is not a valid file.");
                     }

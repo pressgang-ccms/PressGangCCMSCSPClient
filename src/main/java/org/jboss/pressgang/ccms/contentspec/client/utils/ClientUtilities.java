@@ -58,26 +58,22 @@ public class ClientUtilities {
      * @param location The path location to be checked
      * @return The fixed path location string
      */
-    public static String validateConfigLocation(final String location) {
+    public static String fixConfigLocation(final String location) {
         if (location == null || location.isEmpty()) return location;
 
-        String fixedLocation = location;
-        if (location.startsWith("~")) {
-            fixedLocation = Constants.HOME_LOCATION + location.substring(1);
-        } else if (location.startsWith("./") || location.startsWith("../")) {
-            try {
-                fixedLocation = new File(location).getCanonicalPath();
-            } catch (IOException e) {
-                // Do nothing
-            }
-        }
+        String fixedLocation = fixFilePath(location);
+
         final File file = new File(fixedLocation);
+        // If the file exists then return
         if (file.exists() && file.isFile()) {
             return fixedLocation;
         }
+        // The file doesn't exist so check if the location is a directory and if so fix it
         if (!location.endsWith(File.separator) && !location.endsWith(".ini")) {
-            fixedLocation += File.separator;
+            fixedLocation = fixDirectoryPath(fixedLocation);
         }
+
+        // The location is a directory so add the default config file name to search for that
         if (!location.endsWith(".ini")) {
             fixedLocation += Constants.CONFIG_FILENAME;
         }
@@ -87,25 +83,17 @@ public class ClientUtilities {
     /**
      * Checks if the directory location is in the correct format then corrects it if not.
      *
-     * @param location The path location to be checked
-     * @return The fixed path location string
+     * @param location The directory path to be checked
+     * @return The fixed directory location string
      */
-    public static String validateDirLocation(final String location) {
+    public static String fixDirectoryPath(final String location) {
         if (location == null || location.isEmpty()) return location;
 
-        String fixedLocation = location;
-        if (!location.endsWith(File.separator)) {
+        String fixedLocation = fixFilePath(location);
+        if (!fixedLocation.endsWith(File.separator)) {
             fixedLocation += File.separator;
         }
-        if (location.startsWith("~")) {
-            fixedLocation = Constants.HOME_LOCATION + fixedLocation.substring(1);
-        } else if (location.startsWith("./") || location.startsWith("../")) {
-            try {
-                fixedLocation = new File(fixedLocation).getCanonicalPath();
-            } catch (IOException e) {
-                // Do nothing
-            }
-        }
+
         return fixedLocation;
     }
 
@@ -115,7 +103,7 @@ public class ClientUtilities {
      * @param host The host address of the server to be checked
      * @return The fixed host address string
      */
-    public static String validateHost(final String host) {
+    public static String fixHostURL(final String host) {
         if (host == null || host.isEmpty()) return host;
 
         String fixedHost = host;
@@ -152,21 +140,29 @@ public class ClientUtilities {
     }
 
     /**
-     * Checks if the file path is in the correct format then corrects it if not.
+     * Checks if the file path is in the correct format then corrects it if not. Ie is a relative path, has the home (tilde) symbol, etc...
      *
-     * @param filePath The path location to be checked
-     * @return The fixed path location string
+     * @param path The path to be checked and fixed.
+     * @return The fixed file path location string
      */
-    public static String validateFilePath(final String filePath) {
-        if (filePath == null) return null;
-        String fixedPath = filePath;
-        if (filePath.startsWith("~")) {
+    public static String fixFilePath(final String path) {
+        if (path == null) return null;
+
+        String fixedPath = path;
+        if (path.startsWith("~")) {
             fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
-        } else if (filePath.startsWith("./") || filePath.startsWith("../")) {
+        } else if (path.startsWith("./") || path.startsWith("../")) {
             try {
                 fixedPath = new File(fixedPath).getCanonicalPath();
             } catch (IOException e) {
                 // Do nothing
+            }
+
+            // getCanonicalPath will remove any trailing slashes so re-add it if needed.
+            if (path.endsWith("\\") && !fixedPath.endsWith("\\")) {
+                fixedPath += "\\";
+            } else if (path.endsWith("/") && !fixedPath.endsWith("/")) {
+                fixedPath += "/";
             }
         }
         return fixedPath;
@@ -184,11 +180,11 @@ public class ClientUtilities {
         final Properties prop = new Properties();
         prop.load(new FileInputStream(csprocessorcfg));
         cspConfig.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
-        cspConfig.setServerUrl(ClientUtilities.validateHost(prop.getProperty("SERVER_URL")));
-        cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(prop.getProperty("ZANATA_URL")));
+        cspConfig.setServerUrl(fixHostURL(prop.getProperty("SERVER_URL")));
+        cspConfig.getZanataDetails().setServer(fixHostURL(prop.getProperty("ZANATA_URL")));
         cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
         cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
-        cspConfig.setKojiHubUrl(validateHost(prop.getProperty("KOJI_HUB_URL")));
+        cspConfig.setKojiHubUrl(fixHostURL(prop.getProperty("KOJI_HUB_URL")));
         cspConfig.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
     }
 
@@ -331,7 +327,7 @@ public class ClientUtilities {
      * Generates the response output for a list of content specifications
      *
      * @param contentSpecs The SpecList that contains the processed Content Specifications
-     * @return The generated response ouput.
+     * @return The generated response output.
      */
     public static String generateContentSpecListResponse(final SpecList contentSpecs) {
         final LinkedHashMap<String, Integer> sizes = new LinkedHashMap<String, Integer>();
@@ -409,7 +405,7 @@ public class ClientUtilities {
 
         // Connect to the koji hub
         final KojiConnector connector = new KojiConnector();
-        connector.connectTo(validateHost(kojiHubUrl));
+        connector.connectTo(fixHostURL(kojiHubUrl));
 
         // Perform the search using the info from the content spec
         final String packageName = product + "-" + bookTitle + "-" + version + "-web-" + locale + "-" + bookVersion + "-";
@@ -585,11 +581,12 @@ public class ClientUtilities {
     }
 
     /**
-     * TODO
+     * Prepares a commands ids using configuration files if required.
      *
-     * @param command
-     * @param cspConfig
-     * @param ids
+     * @param command   The command to prepare the ids for.
+     * @param cspConfig The csprocessor.cfg information for the command execution.
+     * @param ids       The list of ids that should be populated.
+     * @return True if the command prepared the ids from a csprocessor.cfg, otherwise false.
      */
     public static boolean prepareStringIds(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig,
             final List<String> ids) {
@@ -608,11 +605,12 @@ public class ClientUtilities {
     }
 
     /**
-     * TODO
+     * Validates that a list of ids or files has one and only one id/file set. If not then the commands {@link
+     * BaseCommandImpl#printErrorAndShutdown(int, String, boolean)} method is called.
      *
-     * @param command
-     * @param ids
-     * @param canLoadFromCsprocessorCfg
+     * @param command                   The command that the validation is happening for.
+     * @param ids                       The list of ids or files to validate.
+     * @param canLoadFromCsprocessorCfg Whether or not the command is allowed to load from the csprocessor.cfg file.
      */
     public static void validateIdsOrFiles(BaseCommandImpl command, final List<?> ids, boolean canLoadFromCsprocessorCfg) {
         // Check that one and only one ID exists

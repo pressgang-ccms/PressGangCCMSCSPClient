@@ -44,7 +44,6 @@ public class TemplateCommandTest extends BaseUnitTest {
 
     TemplateCommand command;
     File rootTestDirectory;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() {
@@ -69,7 +68,7 @@ public class TemplateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }

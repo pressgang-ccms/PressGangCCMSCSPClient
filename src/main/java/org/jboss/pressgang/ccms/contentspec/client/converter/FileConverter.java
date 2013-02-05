@@ -8,7 +8,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 public class FileConverter implements IStringConverter<File> {
     @Override
     public File convert(final String value) {
-        return new File(ClientUtilities.validateFilePath(value));
+        return new File(ClientUtilities.fixFilePath(value));
     }
 
 }

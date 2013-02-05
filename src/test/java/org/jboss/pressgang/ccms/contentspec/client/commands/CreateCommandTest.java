@@ -20,8 +20,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
@@ -53,6 +53,7 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class})
 public class CreateCommandTest extends BaseUnitTest {
+    private static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
     private static final String BOOK_TITLE = "Test";
 
     @Rule public PowerMockRule rule = new PowerMockRule();
@@ -75,7 +76,6 @@ public class CreateCommandTest extends BaseUnitTest {
     CreateCommand command;
     File rootTestDirectory;
     File bookDir;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() {
@@ -100,12 +100,12 @@ public class CreateCommandTest extends BaseUnitTest {
     @Test
     public void shouldShutdownWhenNoFileArgument() {
         // Given a command with invalid arguments
-        command.setFiles(Collections.EMPTY_LIST);
+        command.setFiles(new ArrayList<File>());
 
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -124,7 +124,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -143,7 +143,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -166,7 +166,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -193,7 +193,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -225,7 +225,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -261,7 +261,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             // Then the command should exit from the given above.
             assertThat(e.getStatus(), is(-2));
@@ -293,7 +293,7 @@ public class CreateCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }

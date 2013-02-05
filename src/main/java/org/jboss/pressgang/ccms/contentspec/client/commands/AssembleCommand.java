@@ -115,13 +115,13 @@ public class AssembleCommand extends BuildCommand {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        final File buildFile = new File(ClientUtilities.validateDirLocation(getBuildFileDirectory()) + getBuildFileName());
+        final File buildFile = new File(ClientUtilities.fixDirectoryPath(getBuildFileDirectory()) + getBuildFileName());
         if (!buildFile.exists()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, getBuildFileName()), false);
         }
 
         // Make sure the output directories exist
-        final File buildOutputDirectory = new File(ClientUtilities.validateDirLocation(getOutputDirectory()));
+        final File buildOutputDirectory = new File(ClientUtilities.fixDirectoryPath(getOutputDirectory()));
         buildOutputDirectory.mkdirs();
 
         // Ensure that the directory is empty
@@ -216,7 +216,7 @@ public class AssembleCommand extends BuildCommand {
         }
 
         // Add the full file path to the output path
-        final File file = new File(ClientUtilities.validateFilePath(getBuildFileDirectory() + getBuildFileName()));
+        final File file = new File(ClientUtilities.fixFilePath(getBuildFileDirectory() + getBuildFileName()));
         if (file.getParent() != null) {
             setOutputDirectory(file.getParent() + File.separator + DocBookUtilities.escapeTitle(contentSpecTitle));
         } else {

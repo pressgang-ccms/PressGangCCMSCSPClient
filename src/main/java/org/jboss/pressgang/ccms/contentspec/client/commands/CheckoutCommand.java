@@ -129,7 +129,7 @@ public class CheckoutCommand extends BaseCommandImpl {
 
         // Create the zanata details from the command line options
         final ZanataDetails zanataDetails = new ZanataDetails();
-        zanataDetails.setServer(ClientUtilities.validateHost(zanataUrl));
+        zanataDetails.setServer(ClientUtilities.fixHostURL(zanataUrl));
         zanataDetails.setProject(zanataProject);
         zanataDetails.setVersion(zanataVersion);
 

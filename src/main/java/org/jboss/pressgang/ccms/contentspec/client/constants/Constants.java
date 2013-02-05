@@ -117,8 +117,8 @@ public class Constants {
             "while" + " running Publican.";
     public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
             "occurred while running Publican. (exit code: %d)";
-    public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG = "Unable to preview the Content Specification because the \"%s\" " +
-            "file couldn't be found.";
+    public static final String ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG = "Unable to preview the Content Specification because the \"%s\" "
+            + "file couldn't be found.";
     public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG = "Unable to open the \"%s\" file.";
     public static final String ERROR_UNSUPPORTED_FORMAT = "\"%s\" is not currently supported as a preview format.";
     public static final String ERROR_INVALID_CSPROCESSOR_CFG_MSG = "The csprocessor.cfg file doesn't have an ID specified.";

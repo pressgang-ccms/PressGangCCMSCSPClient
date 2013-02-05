@@ -71,7 +71,6 @@ public class CheckoutCommandTest extends BaseUnitTest {
     File rootTestDirectory;
     File bookDir;
     File emptyFile;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() throws IOException {
@@ -103,7 +102,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(5));
         }
@@ -125,7 +124,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -149,7 +148,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -180,7 +179,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-2));
         }

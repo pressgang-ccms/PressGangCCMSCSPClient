@@ -74,7 +74,6 @@ public class InfoCommandUnitTest extends BaseUnitTest {
     @Mock TopicWrapper topicWrapper;
 
     InfoCommand command;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() throws UnsupportedEncodingException {
@@ -97,7 +96,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }

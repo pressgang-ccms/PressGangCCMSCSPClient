@@ -15,6 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalINIConfiguration;
+import org.apache.commons.configuration.SubnodeConfiguration;
+import org.apache.log4j.Logger;
 import org.jboss.pressgang.ccms.contentspec.client.commands.AssembleCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.BuildCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.CheckoutCommand;
@@ -44,10 +48,6 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.ConfigConstants;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalINIConfiguration;
-import org.apache.commons.configuration.SubnodeConfiguration;
-import org.apache.log4j.Logger;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -343,7 +343,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
         // Set the publish options
         if ((cspConfig.getKojiHubUrl() == null || cspConfig.getKojiHubUrl().isEmpty()) && clientConfig.getKojiHubUrl() != null) {
-            cspConfig.setKojiHubUrl(ClientUtilities.validateHost(clientConfig.getKojiHubUrl()));
+            cspConfig.setKojiHubUrl(ClientUtilities.fixHostURL(clientConfig.getKojiHubUrl()));
         }
         if ((cspConfig.getPublishCommand() == null || cspConfig.getPublishCommand().isEmpty()) && clientConfig.getPublishCommand() !=
                 null) {
@@ -363,7 +363,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 () || !command.loadFromCSProcessorCfg())) {
             // Check that a default exists in the configuration files or via command line arguments
             if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null) {
-                final File configFile = new File(ClientUtilities.validateConfigLocation(command.getConfigLocation()));
+                final File configFile = new File(ClientUtilities.fixConfigLocation(command.getConfigLocation()));
                 command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
                         String.format(Constants.NO_DEFAULT_SERVER_FOUND, configFile.getAbsolutePath()), false);
             } else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches(
@@ -393,7 +393,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 }
             }
 
-            url = ClientUtilities.validateHost(command.getServerUrl());
+            url = ClientUtilities.fixHostURL(command.getServerUrl());
         } else if (cspConfig != null && cspConfig.getServerUrl() != null && command.loadFromCSProcessorCfg()) {
             for (final Entry<String, ServerConfiguration> serversEntry : servers.entrySet()) {
                 final String serverName = serversEntry.getKey();
@@ -405,8 +405,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 try {
                     final ServerConfiguration serverConfig = serversEntry.getValue();
 
-                    URI serverUrl = new URI(ClientUtilities.validateHost(serverConfig.getUrl()));
-                    if (serverUrl.equals(new URI(ClientUtilities.validateHost(cspConfig.getServerUrl())))) {
+                    URI serverUrl = new URI(ClientUtilities.fixHostURL(serverConfig.getUrl()));
+                    if (serverUrl.equals(new URI(ClientUtilities.fixHostURL(cspConfig.getServerUrl())))) {
                         url = serverConfig.getUrl();
                         break;
                     }
@@ -486,7 +486,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                 // Compare the urls
                 try {
-                    URI serverUrl = new URI(ClientUtilities.validateHost(serverConfig.getUrl()));
+                    URI serverUrl = new URI(ClientUtilities.fixHostURL(serverConfig.getUrl()));
                     if (serverUrl.equals(new URI(cspConfig.getZanataDetails().getServer()))) {
                         zanataServerConfig = serverConfig;
                         break;
@@ -507,7 +507,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             }
         } else if (clientConfig.getZanataServers().containsKey(Constants.DEFAULT_SERVER_NAME)) {
             final ZanataServerConfiguration zanataServerConfig = clientConfig.getZanataServers().get(Constants.DEFAULT_SERVER_NAME);
-            cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(zanataServerConfig.getUrl()));
+            cspConfig.getZanataDetails().setServer(ClientUtilities.fixHostURL(zanataServerConfig.getUrl()));
             cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
             cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
         }
@@ -528,7 +528,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
      * @return Returns false if an error occurs otherwise true
      */
     protected boolean setConfigOptions(final String location) {
-        final String fixedLocation = ClientUtilities.validateConfigLocation(location);
+        final String fixedLocation = ClientUtilities.fixConfigLocation(location);
         final HierarchicalINIConfiguration configReader;
 
         // Good point to check for a shutdown
@@ -581,14 +581,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (!configReader.getRootNode().getChildren("directory").isEmpty()) {
             // Load the root content specs directory
             if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals("")) {
-                clientConfig.setRootDirectory(
-                        ClientUtilities.validateDirLocation(configReader.getProperty("directory" + ".root").toString()));
+                clientConfig.setRootDirectory(ClientUtilities.fixDirectoryPath(configReader.getProperty("directory" + ".root").toString()));
             }
 
             // Load the install directory
             if (configReader.getProperty("directory.install") != null && !configReader.getProperty("directory" + ".install").equals("")) {
                 clientConfig.setInstallPath(
-                        ClientUtilities.validateDirLocation(configReader.getProperty("directory" + ".install").toString()));
+                        ClientUtilities.fixDirectoryPath(configReader.getProperty("directory" + ".install").toString()));
             }
         }
 
@@ -606,7 +605,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (configReader.getProperty("publican.common_content") != null && !configReader.getProperty(
                     "publican" + ".common_content").equals("")) {
                 clientConfig.setPublicanCommonContentDirectory(
-                        ClientUtilities.validateDirLocation(configReader.getProperty("publican.common_content").toString()));
+                        ClientUtilities.fixDirectoryPath(configReader.getProperty("publican.common_content").toString()));
             } else {
                 clientConfig.setPublicanCommonContentDirectory(Constants.LINUX_PUBLICAN_COMMON_CONTENT);
             }

@@ -149,8 +149,8 @@ public class SetupCommand extends BaseCommandImpl {
             servers.put("test", new ServerConfiguration("test", Constants.DEFAULT_TEST_SERVER));
             servers.put("production", new ServerConfiguration("production", Constants.DEFAULT_PROD_SERVER));
 
-        }        /* We need to read in a list of servers and then get the default server */
-        else if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
+        }        /* We need to read in a list of servers and then get the default server */ else if (answer.equalsIgnoreCase(
+                "no") || answer.equalsIgnoreCase("n")) {
             while (!answer.matches("^[0-9]+$")) {
                 JCommander.getConsole().print("How many servers are to be configured? ");
                 answer = JCommander.getConsole().readLine();
@@ -171,7 +171,7 @@ public class SetupCommand extends BaseCommandImpl {
 
                 // Get the url of the server
                 JCommander.getConsole().println("Please enter the URL of server no. " + i + ": ");
-                config.setUrl(ClientUtilities.validateHost(JCommander.getConsole().readLine()));
+                config.setUrl(ClientUtilities.fixHostURL(JCommander.getConsole().readLine()));
 
                 // Get the username for the server
                 JCommander.getConsole().println("Please enter the username of server no. " + i + ": ");
@@ -247,7 +247,7 @@ public class SetupCommand extends BaseCommandImpl {
 
         // Create the Root Directory
         configFile.append("[directory]\n");
-        configFile.append("root=" + ClientUtilities.validateDirLocation(rootDir) + "\n");
+        configFile.append("root=" + ClientUtilities.fixDirectoryPath(rootDir) + "\n");
     }
 
     /**
@@ -338,7 +338,7 @@ public class SetupCommand extends BaseCommandImpl {
 
             // Get the url of the server
             JCommander.getConsole().println("Please enter the URL of server no. " + i + ": ");
-            config.setUrl(ClientUtilities.validateHost(JCommander.getConsole().readLine()));
+            config.setUrl(ClientUtilities.fixHostURL(JCommander.getConsole().readLine()));
 
             // Get the username for the server
             JCommander.getConsole().println("Please enter the username of server no. " + i + ": ");

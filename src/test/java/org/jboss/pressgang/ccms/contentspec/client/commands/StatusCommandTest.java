@@ -21,12 +21,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import com.beust.jcommander.JCommander;
+import net.sf.ipsedixit.annotation.Arbitrary;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import net.sf.ipsedixit.annotation.Arbitrary;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
@@ -45,6 +45,8 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
 public class StatusCommandTest extends BaseUnitTest {
+    private static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
+
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
@@ -60,7 +62,6 @@ public class StatusCommandTest extends BaseUnitTest {
     @Mock ContentSpec contentSpec;
 
     StatusCommand command;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() throws UnsupportedEncodingException {
@@ -82,7 +83,7 @@ public class StatusCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -123,7 +124,7 @@ public class StatusCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -158,7 +159,7 @@ public class StatusCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -189,7 +190,7 @@ public class StatusCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(9));
         }
@@ -226,7 +227,7 @@ public class StatusCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(9));
         }
@@ -264,7 +265,7 @@ public class StatusCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(9));
         }
@@ -272,7 +273,8 @@ public class StatusCommandTest extends BaseUnitTest {
         // Then make sure an error message is printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdoutLogs(), containsString(
-                "The local copy of the Content Specification is out of date. Please use \"csprocessor pull\" to download the latest copy."));
+                "The local copy of the Content Specification is out of date. Please use \"csprocessor pull\" to download the latest copy" +
+                        "."));
     }
 
     @Test

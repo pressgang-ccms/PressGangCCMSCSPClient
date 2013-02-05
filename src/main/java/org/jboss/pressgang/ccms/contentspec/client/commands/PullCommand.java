@@ -193,7 +193,7 @@ public class PullCommand extends BaseCommandImpl {
         } else {
             // Create the output file
             File output;
-            outputPath = ClientUtilities.validateFilePath(outputPath);
+            outputPath = ClientUtilities.fixFilePath(outputPath);
             if (outputPath != null && outputPath.endsWith(File.separator)) {
                 output = new File(outputPath + fileName);
             } else if (outputPath == null || outputPath.equals("")) {

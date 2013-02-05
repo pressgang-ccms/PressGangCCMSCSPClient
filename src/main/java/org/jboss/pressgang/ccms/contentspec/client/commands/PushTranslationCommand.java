@@ -146,7 +146,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 }
             }
 
-            getCspConfig().getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
+            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(zanataUrl));
         }
 
         // Set the zanata project

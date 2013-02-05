@@ -56,7 +56,6 @@ public class ListCommandTest extends BaseUnitTest {
     @Mock ContentSpecProvider contentSpecProvider;
 
     ListCommand command;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() {
@@ -81,7 +80,7 @@ public class ListCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -98,7 +97,7 @@ public class ListCommandTest extends BaseUnitTest {
         final CollectionWrapper<ContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
         // Given a command that will return a collection of content specs
         given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
-        // and there are too many content spec
+        // and there are no content specs
         given(contentSpecCollection.size()).willReturn(0);
         // and we aren't forcing the list
         command.setForce(false);
@@ -117,8 +116,8 @@ public class ListCommandTest extends BaseUnitTest {
         final SpecList specList = mock(SpecList.class);
         // Given a command that will return a collection of content specs
         given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
-        // and there are too many content spec
-        given(contentSpecCollection.size()).willReturn(randomNumber);
+        // and there are some content specs
+        given(contentSpecCollection.size()).willReturn(5);
         // and the collection contains items
         given(contentSpecCollection.getItems()).willReturn(contentSpecs);
         given(contentSpecs.subList(anyInt(), anyInt())).willReturn(contentSpecs);
@@ -133,7 +132,7 @@ public class ListCommandTest extends BaseUnitTest {
 
         // Then the output should contain the random string and the ClientUtilities methods should have been called
         verify(contentSpecs, times(1)).subList(anyInt(), numResults.capture());
-        assertThat(numResults.getValue(), is(randomNumber));
+        assertThat(numResults.getValue(), is(5));
         PowerMockito.verifyStatic(times(1));
         ClientUtilities.buildSpecList(anyList(), eq(providerFactory));
         PowerMockito.verifyStatic(times(1));
@@ -164,7 +163,7 @@ public class ListCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then the program is shut down due to the above throw condition
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-2));
         }
@@ -197,7 +196,7 @@ public class ListCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then the program is shut down due to the above throw condition
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-2));
         }

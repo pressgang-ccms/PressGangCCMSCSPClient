@@ -75,9 +75,9 @@ public class PreviewCommand extends AssembleCommand {
         allowShutdownToContinueIfRequested();
 
         // Check that the file exists
-        if (!previewFile.exists()) {
+        if (!previewFile.exists() || previewFile.isDirectory()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    String.format(Constants.ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG, previewFile.getAbsolutePath()), false);
+                    String.format(Constants.ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG, previewFile.getAbsolutePath()), false);
         }
 
         // Good point to check for a shutdown
@@ -166,11 +166,11 @@ public class PreviewCommand extends AssembleCommand {
         // Create the fully qualified output path
         String fileDirectory = "";
         if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-            fileDirectory = ClientUtilities.validateDirLocation(getOutputPath());
+            fileDirectory = ClientUtilities.fixDirectoryPath(getOutputPath());
         } else if (getOutputPath() != null) {
-            final File file = new File(ClientUtilities.validateFilePath(getOutputPath()));
+            final File file = new File(ClientUtilities.fixFilePath(getOutputPath()));
             if (file.getParent() != null) {
-                fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
+                fileDirectory = ClientUtilities.fixDirectoryPath(file.getParent());
             }
         }
 

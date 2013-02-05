@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.beust.jcommander.JCommander;
+import net.sf.ipsedixit.annotation.Arbitrary;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
-import net.sf.ipsedixit.annotation.Arbitrary;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
@@ -56,7 +56,6 @@ public class ChecksumCommandTest extends BaseUnitTest {
     @Mock UserWrapper user;
 
     ChecksumCommand command;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() {
@@ -78,7 +77,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }

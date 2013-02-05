@@ -20,8 +20,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
@@ -66,7 +66,6 @@ public class AssembleCommandTest extends BaseUnitTest {
 
     AssembleCommand command;
     File rootTestDirectory;
-    private final String systemExitError = "Program did not call System.exit()";
 
     @Before
     public void setUp() {
@@ -86,13 +85,15 @@ public class AssembleCommandTest extends BaseUnitTest {
     @Test
     public void shouldFailWithNoIds() {
         // Given a command with no ids
-        command.setIds(Collections.EMPTY_LIST);
+        command.setIds(new ArrayList<String>());
+        // and no csprocessor.cfg data
+        given(cspConfig.getContentSpecId()).willReturn(null);
 
         // When it is processed
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(5));
         }
@@ -115,7 +116,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -143,7 +144,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         try {
             command.process();
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -178,7 +179,7 @@ public class AssembleCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldPrintSuccessAndRUnPublican() {
+    public void shouldPrintSuccessAndRunPublican() {
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
@@ -214,7 +215,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         try {
             command.findBuildDirectoryAndFiles(contentSpecProvider, false);
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -236,7 +237,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         try {
             command.findBuildDirectoryAndFiles(contentSpecProvider, false);
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
@@ -249,7 +250,7 @@ public class AssembleCommandTest extends BaseUnitTest {
     @Test
     public void shouldSetBuildFileLocationsWhenLoadingFromCsprocessorCfg() {
         // Given a command with no ids
-        command.setIds(Collections.EMPTY_LIST);
+        command.setIds(new ArrayList<String>());
         given(cspConfig.getContentSpecId()).willReturn(id);
         // and the provider will return a wrapper
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
@@ -268,7 +269,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldSetBuildFileLocationsWhenFileSpecifiedAndNoOutputPath() {
-        // Given a command with ids
+        // Given a command with a file
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
         // and the file will be found
         doReturn("").when(command).getContentSpecFromFile(anyString());
@@ -348,7 +349,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         try {
             command.runPublican(rootTestDirectory);
             // Then an error is printed and the program is shut down
-            fail(systemExitError);
+            fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }

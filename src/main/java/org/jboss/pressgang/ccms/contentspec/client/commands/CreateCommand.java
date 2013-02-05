@@ -193,7 +193,7 @@ public class CreateCommand extends BaseCommandImpl {
             zanataDetails.setVersion(null);
 
             // Get the content spec entity
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpec.getId(), null);
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpec.getId());
 
             // Create the project directory and files
             ClientUtilities.createContentSpecProject(this, getCspConfig(), directory, contentSpec.toString(), contentSpecEntity,

@@ -16,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 @RunWith(JUnit4IpsedixitTestRunner.class)
 @Ignore // We don't expect any tests on this class
 public class BaseUnitTest {
+    protected static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
     @Before

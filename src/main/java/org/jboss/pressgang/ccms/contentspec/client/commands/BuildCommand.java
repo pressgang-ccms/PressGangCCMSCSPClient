@@ -398,7 +398,7 @@ public class BuildCommand extends BaseCommandImpl {
      */
     protected String getContentSpecFromFile(final String file) {
         // Get the content spec from the file
-        final String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.validateFilePath(file)));
+        final String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
 
         if (contentSpec == null || contentSpec.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
@@ -427,7 +427,7 @@ public class BuildCommand extends BaseCommandImpl {
                 }
             }
 
-            getCspConfig().getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
+            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(zanataUrl));
         }
 
         // Set the zanata project
@@ -669,7 +669,7 @@ public class BuildCommand extends BaseCommandImpl {
             output = getOutputPath();
         }
 
-        return new File(ClientUtilities.validateFilePath(output));
+        return new File(ClientUtilities.fixFilePath(output));
     }
 
     /**
@@ -680,7 +680,7 @@ public class BuildCommand extends BaseCommandImpl {
         for (final Entry<String, String> entry : overrides.entrySet()) {
             final String key = entry.getKey();
             if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE)) {
-                overrides.put(key, ClientUtilities.validateFilePath(entry.getValue()));
+                overrides.put(key, ClientUtilities.fixFilePath(entry.getValue()));
             }
         }
     }

@@ -86,6 +86,71 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldAppendTrailingSlashToDirectoryLocation() {
+        // Given a string that represents a directory
+        String dir = "/example/dir";
+
+        // When validating the directory location
+        String fixedDir = ClientUtilities.fixDirectoryPath(dir);
+
+        // Then verify that the directory ends with a slash
+        assertTrue(fixedDir.endsWith(File.separator));
+    }
+
+    @Test
+    public void shouldReplaceTildeInFilePath() {
+        // Given a string that represents a directory
+        String dir = "~/example/dir/";
+
+        // When fixing the file path
+        String fixedDir = ClientUtilities.fixFilePath(dir);
+
+        // Then verify that the paths tilde is replaced by the users home directory
+        assertThat(fixedDir, is(System.getProperty("user.home") + "/example/dir/"));
+    }
+
+    @Test
+    public void shouldFixRelativePathInFilePath() {
+        final File currentDirectory = new File(System.getProperty("user.dir"));
+        // Given a string that represents a directory
+        String dir = "./example/dir/";
+        String secondDir = "../example/dir/";
+
+        // When fixing the file path
+        String fixedDir = ClientUtilities.fixFilePath(dir);
+        String secondFixedDir = ClientUtilities.fixFilePath(secondDir);
+
+        // Then verify that the file path has the relative url's replaced with absolute paths
+        assertThat(fixedDir, is(currentDirectory.getAbsolutePath() + "/example/dir/"));
+        final String currentParentDirectory = currentDirectory.getParentFile().getAbsolutePath();
+        assertThat(secondFixedDir, is(currentParentDirectory + "/example/dir/"));
+    }
+
+    @Test
+    public void shouldAppendTrailingSlashToHostURL() {
+        // Given a string that represents a URL with no trailing slash
+        String url = "https://www.example.com";
+
+        // When fixing a host url
+        String fixedUrl = ClientUtilities.fixHostURL(url);
+
+        // Then verify that the url now ends with a slash
+        assertThat(fixedUrl, is("https://www.example.com/"));
+    }
+
+    @Test
+    public void shouldPrefixHttpProtocolToHostURL() {
+        // Given a string that represents a URL with no HTTP protocol
+        String url = "www.example.com";
+
+        // When fixing a host url
+        String fixedUrl = ClientUtilities.fixHostURL(url);
+
+        // Then verify that the url now has the protocol included
+        assertThat(fixedUrl, is("http://www.example.com/"));
+    }
+
+    @Test
     public void shouldPrintErrorAndShutdownOnProcessWhenNoId() {
         // Given a command called with no ID
         List<Integer> ids = Collections.EMPTY_LIST;
