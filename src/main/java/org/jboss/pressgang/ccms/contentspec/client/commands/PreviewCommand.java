@@ -102,56 +102,86 @@ public class PreviewCommand extends AssembleCommand {
      */
     protected String findFileToPreview(final ContentSpecProvider contentSpecProvider, boolean previewFromConfig,
             final String previewFormat) {
-        if (previewFromConfig) {
-            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
+        boolean previewFromId = true;
+        Integer id = null;
+        // Find if we are assembling from a file or ID
+        if (!previewFromConfig) {
+            assert getIds() != null && getIds().size() == 1;
+
+            if (!getIds().get(0).matches("^\\d+")) {
+                previewFromId = false;
+            } else {
+                id = Integer.parseInt(getIds().get(0));
+            }
+        } else {
+            id = getCspConfig().getContentSpecId();
+        }
+
+        if (previewFromId) {
+            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(id, null);
 
             // Check that that content specification was found
             if (contentSpec == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
-            final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
-            final String locale = generateOutputLocale();
+            // If using a content spec project directory the file names/locations are static based on the root directory
+            if (previewFromConfig) {
+                final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
+                final String locale = generateOutputLocale();
 
-            if (previewFormat.equals("pdf")) {
-                return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
-                        DocBookUtilities.escapeTitle(
-                                contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
-                        contentSpec.getTitle()) + "-" + locale + ".pdf";
+                if (previewFormat.equals("pdf")) {
+                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
+                            DocBookUtilities.escapeTitle(
+                                    contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
+                            contentSpec.getTitle()) + "-" + locale + ".pdf";
+                } else {
+                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index.html";
+                }
             } else {
-                return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index.html";
+                return findFileToPreview(contentSpec.getTitle(), contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
             }
-        } else if (getIds() != null && getIds().size() == 1) {
+        } else {
             // Create the file based on an ID passed from the command line
             final String contentSpecString = getContentSpecFromFile(getIds().get(0));
 
             // Parse the spec to get the main details
             final ContentSpec contentSpec = parseContentSpec(getProviderFactory(), contentSpecString, false);
 
-            // Create the fully qualified output path
-            String fileDirectory = "";
-            if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-                fileDirectory = ClientUtilities.validateDirLocation(getOutputPath());
-            } else if (getOutputPath() != null) {
-                final File file = new File(ClientUtilities.validateFilePath(getOutputPath()));
-                if (file.getParent() != null) {
-                    fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
-                }
-            }
+            return findFileToPreview(contentSpec.getTitle(), contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
+        }
+    }
 
-            final String locale = generateOutputLocale();
-
-            if (previewFormat.equals("pdf")) {
-                return fileDirectory + DocBookUtilities.escapeTitle(
-                        contentSpec.getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
-                        contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
-                        contentSpec.getTitle()) + "-en-US.pdf";
-            } else {
-                return fileDirectory + DocBookUtilities.escapeTitle(
-                        contentSpec.getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
+    /**
+     * Find the file to preview when previewing from a file or id passed via the command line, for a content specification.
+     *
+     * @param contentSpecTitle   The title of the content spec.
+     * @param contentSpecVersion The version of the content specs product.
+     * @param contentSpecProduct The product that content spec is for.
+     * @param previewFormat      The file format to be previewed (html, html-single, pdf, etc...).
+     * @return The filename and location of the file to be opened to be previewed, or null if it can't be found.
+     */
+    protected String findFileToPreview(final String contentSpecTitle, final String contentSpecVersion, final String contentSpecProduct,
+            final String previewFormat) {
+        // Create the fully qualified output path
+        String fileDirectory = "";
+        if (getOutputPath() != null && getOutputPath().endsWith("/")) {
+            fileDirectory = ClientUtilities.validateDirLocation(getOutputPath());
+        } else if (getOutputPath() != null) {
+            final File file = new File(ClientUtilities.validateFilePath(getOutputPath()));
+            if (file.getParent() != null) {
+                fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
             }
+        }
+
+        final String locale = generateOutputLocale();
+
+        if (previewFormat.equals("pdf")) {
+            return fileDirectory + DocBookUtilities.escapeTitle(
+                    contentSpecTitle) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
+                    contentSpecProduct) + "-" + contentSpecVersion + "-" + DocBookUtilities.escapeTitle(contentSpecTitle) + "-en-US.pdf";
         } else {
-            return null;
+            return fileDirectory + DocBookUtilities.escapeTitle(contentSpecTitle) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
         }
     }
 

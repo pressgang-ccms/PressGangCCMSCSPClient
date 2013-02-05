@@ -116,7 +116,7 @@ public class Constants {
     public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred " +
             "while" + " running Publican.";
     public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
-            "occured while running Publican. (exit code: %d)";
+            "occurred while running Publican. (exit code: %d)";
     public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG = "Unable to preview the Content Specification because the \"%s\" " +
             "file couldn't be found.";
     public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG = "Unable to open the \"%s\" file.";
@@ -149,7 +149,7 @@ public class Constants {
             ".";
     public static final String ERROR_INVALID_KOJIHUB_URL = "The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure" +
             " that the URL is valid.";
-    public static final String ERROR_RUNNING_PUBLISH_MSG = "Unable to publish the Content Specification because an error occured while "
+    public static final String ERROR_RUNNING_PUBLISH_MSG = "Unable to publish the Content Specification because an error occurred while "
             + "running the publish command.";
     public static final String ERROR_NO_PUBLISH_COMMAND = "No publish command or options were found. Please configure these options via "
             + "the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
