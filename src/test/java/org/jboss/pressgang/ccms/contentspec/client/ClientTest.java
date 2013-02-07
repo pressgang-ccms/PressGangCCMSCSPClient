@@ -9,6 +9,7 @@ import net.sf.ipsedixit.integration.junit.JUnit4IpsedixitTestRunner;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.constants.TemplateConstants;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
@@ -17,6 +18,7 @@ import org.junit.runner.RunWith;
 
 // TODO Integration tests
 @RunWith(JUnit4IpsedixitTestRunner.class)
+@Ignore
 public class ClientTest {
 
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();

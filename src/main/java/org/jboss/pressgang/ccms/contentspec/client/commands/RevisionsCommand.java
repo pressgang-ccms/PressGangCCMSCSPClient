@@ -62,9 +62,7 @@ public class RevisionsCommand extends BaseCommandImpl {
     }
 
     public boolean isValid() {
-        if (contentSpec && topic) return false;
-
-        return true;
+        return !(contentSpec && topic);
     }
 
     @Override
