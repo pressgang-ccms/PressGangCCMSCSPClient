@@ -220,10 +220,10 @@ public class PushCommand extends BaseCommandImpl {
 
     @Override
     public void shutdown() {
-        super.shutdown();
         if (csp != null) {
             csp.shutdown();
         }
+        super.shutdown();
     }
 
     @Override

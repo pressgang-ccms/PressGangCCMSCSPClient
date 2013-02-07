@@ -682,6 +682,48 @@ public class ClientUtilities {
             command.shutdown(Constants.EXIT_FAILURE);
         }
     }
+
+    /**
+     * Saves some content to a file. The method will also determine the correct directory to save to using the filename and output
+     * path.
+     *
+     * @param command    The command that the file is being saved for.
+     * @param fileName   The name that the file should be saved as.
+     * @param outputPath The location that the file should be saved to.
+     * @param content    The content to be saved to the file.
+     */
+    public static void saveOutputFile(final BaseCommandImpl command, String fileName, String outputPath, String content) {
+        // Create the output file
+        File output;
+        String fixedOutputPath = ClientUtilities.fixFilePath(outputPath);
+        if (fixedOutputPath != null && fixedOutputPath.endsWith(File.separator)) {
+            output = new File(fixedOutputPath + fileName);
+        } else if (fixedOutputPath == null || fixedOutputPath.equals("")) {
+            output = new File(fileName);
+        } else {
+            output = new File(fixedOutputPath);
+        }
+
+        // Make sure the directories exist
+        if (output.isDirectory()) {
+            output = new File(output.getAbsolutePath() + File.separator + fileName);
+        } else if (output.getParentFile() != null) {
+            output.getParentFile().mkdirs();
+        }
+
+        // If the file exists then create a backup file
+        if (output.exists()) {
+            output.renameTo(new File(output.getAbsolutePath() + ".backup"));
+        }
+
+        // Create and write to the file
+        try {
+            FileUtilities.saveFile(output, content, Constants.FILE_ENCODING);
+            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
+        } catch (IOException e) {
+            command.printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
+        }
+    }
 }
 
 class InputStreamHandler extends Thread implements ShutdownAbleApp {

@@ -10,14 +10,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -27,13 +26,12 @@ import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
-import org.jboss.pressgang.ccms.utils.common.FileUtilities;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,11 +43,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class})
+@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
 public class PullCommandTest extends BaseUnitTest {
     private static final String CONTENTSPEC_TITLE = "ContentSpec";
     private static final String TOPIC_TITLE = "Topic";
-    private static final String EMPTY_FILE_NAME = "empty.txt";
 
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -68,11 +65,9 @@ public class PullCommandTest extends BaseUnitTest {
 
     PullCommand command;
     File rootTestDirectory;
-    File bookDir;
-    File emptyFile;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() {
         bindStdout();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
@@ -82,14 +77,6 @@ public class PullCommandTest extends BaseUnitTest {
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
-
-        // Make the book title directory
-        bookDir = new File(rootTestDirectory, CONTENTSPEC_TITLE);
-        bookDir.mkdir();
-
-        // Make a empty file in that directory
-        emptyFile = new File(bookDir, EMPTY_FILE_NAME);
-        emptyFile.createNewFile();
     }
 
     @Test
@@ -193,7 +180,9 @@ public class PullCommandTest extends BaseUnitTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // And we don't actually want to save anything
-        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.doNothing().when(ClientUtilities.class);
+        ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -201,7 +190,8 @@ public class PullCommandTest extends BaseUnitTest {
         command.process();
 
         // Then verify that the filename and path are valid
-        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        PowerMockito.verifyStatic(times(1));
+        ClientUtilities.saveOutputFile(eq(command), fileName.capture(), outputPath.capture(), anyString());
         assertThat(fileName.getValue(), is(CONTENTSPEC_TITLE + "-post.contentspec"));
         assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
     }
@@ -219,7 +209,9 @@ public class PullCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getTitle()).willReturn(CONTENTSPEC_TITLE);
         given(contentSpecWrapper.getId()).willReturn(id);
         // And we don't actually want to save anything
-        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.doNothing().when(ClientUtilities.class);
+        ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -227,7 +219,8 @@ public class PullCommandTest extends BaseUnitTest {
         command.process();
 
         // Then verify that the filename and path are valid
-        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        PowerMockito.verifyStatic(times(1));
+        ClientUtilities.saveOutputFile(eq(command), fileName.capture(), outputPath.capture(), anyString());
         assertThat(fileName.getValue(), is(CONTENTSPEC_TITLE + "-post.contentspec"));
         assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath() + File.separator + CONTENTSPEC_TITLE + File.separator));
     }
@@ -248,7 +241,9 @@ public class PullCommandTest extends BaseUnitTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // And we don't actually want to save anything
-        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.doNothing().when(ClientUtilities.class);
+        ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -256,7 +251,8 @@ public class PullCommandTest extends BaseUnitTest {
         command.process();
 
         // Then verify that the filename and path are valid
-        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        PowerMockito.verifyStatic(times(1));
+        ClientUtilities.saveOutputFile(eq(command), fileName.capture(), outputPath.capture(), anyString());
         assertThat(fileName.getValue(), is(TOPIC_TITLE + ".xml"));
         assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
     }
@@ -277,7 +273,9 @@ public class PullCommandTest extends BaseUnitTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // And we don't actually want to save anything
-        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.doNothing().when(ClientUtilities.class);
+        ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -285,43 +283,10 @@ public class PullCommandTest extends BaseUnitTest {
         command.process();
 
         // Then verify that the filename and path are valid
-        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        PowerMockito.verifyStatic(times(1));
+        ClientUtilities.saveOutputFile(eq(command), fileName.capture(), outputPath.capture(), anyString());
         assertThat(fileName.getValue(), is(TOPIC_TITLE + ".html"));
         assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
-    }
-
-    @Test
-    public void shouldSaveFileWhenOutputPathIsDirectory() {
-        // Given a filename
-        String filename = CONTENTSPEC_TITLE + "-post.contentspec";
-        // and a output path that is a directory
-        String outputPath = bookDir.getAbsolutePath();
-
-        // When saving the output file
-        command.saveOutputFile(filename, outputPath, randomString);
-
-        // Then check that the file exists and contains the right data
-        File file = new File(bookDir, filename);
-        assertTrue(file.exists());
-        assertThat(FileUtilities.readFileContents(file), is(randomString));
-    }
-
-    @Test
-    public void shouldSaveFileWhenOutputPathIsFile() {
-        // Given a filename
-        String filename = CONTENTSPEC_TITLE + "-post.contentspec";
-        // and a output path that is a directory
-        String outputPath = bookDir.getAbsolutePath() + File.separator + TOPIC_TITLE + ".txt";
-
-        // When saving the output file
-        command.saveOutputFile(filename, outputPath, randomString);
-
-        // Then check that the file exists and contains the right data
-        File file = new File(bookDir, TOPIC_TITLE + ".txt");
-        File incorrectFile = new File(bookDir, filename);
-        assertTrue(file.exists());
-        assertFalse(incorrectFile.exists());
-        assertThat(FileUtilities.readFileContents(file), is(randomString));
     }
 
     @Test
@@ -386,10 +351,5 @@ public class PullCommandTest extends BaseUnitTest {
 
         // Then the result should be false
         assertFalse(result);
-    }
-
-    @After
-    public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(bookDir);
     }
 }

@@ -1,7 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,7 +23,6 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
-import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
 @Parameters(commandDescription = "Pull a revision of a content specification that represents a snapshot in time.")
 public class PullSnapshotCommand extends BaseCommandImpl {
@@ -46,6 +44,14 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
     public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    protected ContentSpecProcessor getProcessor() {
+        return csp;
+    }
+
+    protected void setProcessor(final ContentSpecProcessor processor) {
+        csp = processor;
     }
 
     @Override
@@ -96,37 +102,69 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        boolean success = false;
-
         // Get the topic from the rest interface
-        final ContentSpecWrapper contentSpecEntity = getProviderFactory().getProvider(ContentSpecProvider.class).getContentSpec(ids.get(0),
-                revision);
+        final ContentSpecWrapper contentSpecEntity = getProviderFactory().getProvider(ContentSpecProvider.class).getContentSpec(
+                getIds().get(0), revision);
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                    getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
         }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
+        // Transform the content spec
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Process the content spec to set the snapshot revisions
+        setRevisionsForContentSpec(contentSpec, user);
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        if (pullForConfig) {
+            setOutputPath(ClientUtilities.getOutputRootDirectory(getCspConfig(),
+                    contentSpecEntity) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator);
+        }
+
+        // Save or print the data
+        final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
+        final String contentSpecString = contentSpec.toString();
+        final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-snapshot-" + dateFormatter.format(
+                contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
+        if (getOutputPath() == null) {
+            JCommander.getConsole().println(contentSpecString);
+        } else {
+            ClientUtilities.saveOutputFile(this, fileName, getOutputPath(), contentSpecString);
+        }
+    }
+
+    /**
+     * Processes a content spec object and adds the revision information for topics to the spec.
+     *
+     * @param contentSpec The content spec to be processed
+     * @param user        The user who requested the processing.
+     */
+    protected void setRevisionsForContentSpec(final ContentSpec contentSpec, final UserWrapper user) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(true);
         processingOptions.setValidating(true);
         processingOptions.setAllowEmptyLevels(true);
         processingOptions.setAddRevisions(true);
-        processingOptions.setUpdateRevisions(update);
+        processingOptions.setUpdateRevisions(getUpdate());
         processingOptions.setIgnoreChecksum(true);
-        processingOptions.setRevision(revision);
-
-        // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+        processingOptions.setRevision(getRevision());
 
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
+        boolean success = false;
+        setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
         try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
         }
@@ -137,55 +175,14 @@ public class PullSnapshotCommand extends BaseCommandImpl {
             JCommander.getConsole().println("");
             shutdown(Constants.EXIT_TOPIC_INVALID);
         }
+    }
 
-        if (pullForConfig) {
-            outputPath = ClientUtilities.getOutputRootDirectory(getCspConfig(),
-                    contentSpecEntity) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator;
+    @Override
+    public void shutdown() {
+        if (getProcessor() != null) {
+            getProcessor().shutdown();
         }
-
-        // Save or print the data
-        final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
-        final String contentSpecString = contentSpec.toString();
-        final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-snapshot-" + dateFormatter.format(
-                contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
-        if (outputPath == null) {
-            JCommander.getConsole().println(contentSpecString);
-        } else {
-            // Create the output file
-            File output;
-            outputPath = ClientUtilities.fixFilePath(outputPath);
-            if (outputPath != null && outputPath.endsWith(File.separator)) {
-                output = new File(outputPath + fileName);
-            } else if (outputPath == null || outputPath.equals("")) {
-                output = new File(fileName);
-            } else {
-                output = new File(outputPath);
-            }
-
-            // Make sure the directories exist
-            if (output.isDirectory()) {
-                output.mkdirs();
-                output = new File(output.getAbsolutePath() + File.separator + fileName);
-            } else {
-                if (output.getParentFile() != null) output.getParentFile().mkdirs();
-            }
-
-            // Good point to check for a shutdown
-            allowShutdownToContinueIfRequested();
-
-            // If the file exists then create a backup file
-            if (output.exists()) {
-                output.renameTo(new File(output.getAbsolutePath() + ".backup"));
-            }
-
-            // Create and write to the file
-            try {
-                FileUtilities.saveFile(output, contentSpecString, Constants.FILE_ENCODING);
-                JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
-            } catch (IOException e) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
-            }
-        }
+        super.shutdown();
     }
 
     @Override

@@ -53,6 +53,8 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 @PrepareForTest(FileUtilities.class)
 public class ClientUtilitiesTest extends BaseUnitTest {
     private static final String BOOK_TITLE = "Test";
+    private static final String EMPTY_FILE_NAME = "empty.txt";
+
     @Rule public PowerMockRule rule = new PowerMockRule();
 
     @Arbitrary Integer id;
@@ -71,9 +73,10 @@ public class ClientUtilitiesTest extends BaseUnitTest {
 
     File rootTestDirectory;
     File bookDir;
+    File emptyFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         doCallRealMethod().when(command).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
 
         // Return the test directory as the root directory
@@ -83,6 +86,10 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Make the book title directory
         bookDir = new File(rootTestDirectory, BOOK_TITLE);
         bookDir.mkdir();
+
+        // Make a empty file in that directory
+        emptyFile = new File(bookDir, EMPTY_FILE_NAME);
+        emptyFile.createNewFile();
     }
 
     @Test
@@ -238,7 +245,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenSaveFails() throws IOException {
+    public void shouldShutdownWhenSaveFailsForCreateProjectDir() throws IOException {
         // Given the title of the book and an id
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpecWrapper.getId()).willReturn(id);
@@ -266,6 +273,58 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldSaveFileWhenOutputPathIsDirectoryForSaveOutputFile() {
+        // Given a filename
+        String filename = BOOK_TITLE + "-post.contentspec";
+        // and a output path that is a directory
+        String outputPath = bookDir.getAbsolutePath();
+
+        // When saving the output file
+        ClientUtilities.saveOutputFile(command, filename, outputPath, randomString);
+
+        // Then check that the file exists and contains the right data
+        File file = new File(bookDir, filename);
+        assertTrue(file.exists());
+        assertThat(FileUtilities.readFileContents(file), Matchers.is(randomString));
+    }
+
+    @Test
+    public void shouldSaveFileWhenOutputPathIsFileForSaveOutputFile() {
+        // Given a filename
+        String filename = BOOK_TITLE + "-post.contentspec";
+        // and a output path that is a directory
+        String outputPath = bookDir.getAbsolutePath() + File.separator + BOOK_TITLE + ".txt";
+
+        // When saving the output file
+        ClientUtilities.saveOutputFile(command, filename, outputPath, randomString);
+
+        // Then check that the file exists and contains the right data
+        File file = new File(bookDir, BOOK_TITLE + ".txt");
+        File incorrectFile = new File(bookDir, filename);
+        assertTrue(file.exists());
+        assertFalse(incorrectFile.exists());
+        assertThat(FileUtilities.readFileContents(file), Matchers.is(randomString));
+    }
+
+    @Test
+    public void shouldSaveFileAndCreateBackupIfFileExistsForSaveOutputFile() {
+        // Given a filename
+        String filename = BOOK_TITLE + "-post.contentspec";
+        // and a output path that is a directory
+        String outputPath = emptyFile.getAbsolutePath();
+
+        // When saving the output file
+        ClientUtilities.saveOutputFile(command, filename, outputPath, randomString);
+
+        // Then check that the file exists, a backup has been created and contains the right data
+        File backupFile = new File(emptyFile.getAbsolutePath() + ".backup");
+        assertTrue(emptyFile.exists());
+        assertTrue(backupFile.exists());
+        assertThat(FileUtilities.readFileContents(emptyFile), Matchers.is(randomString));
+        assertThat(FileUtilities.readFileContents(backupFile), Matchers.is(""));
+    }
+
+    @Test
     public void shouldValidateServerUrlWhenValid() {
         // Given a valid URL, that also contains a redirect
         String url = "http://www.example.com/";
@@ -290,7 +349,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @After
-    public void cleanUp() {
-        bookDir.delete();
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 }

@@ -96,10 +96,10 @@ public class SnapshotCommand extends BaseCommandImpl {
         boolean success = false;
 
         // Get the topic from the rest interface
-        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), revision);
+        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(getIds().get(0), getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                    getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
         }
 
         // Good point to check for a shutdown
@@ -109,8 +109,9 @@ public class SnapshotCommand extends BaseCommandImpl {
         final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
 
         // If we want to create it as a new spec then remove the checksum and id
-        if (createNew) {
-            contentSpec.setId(0);
+        if (getCreateNew()) {
+            contentSpec.setId(null);
+            contentSpec.setChecksum(null);
         }
 
         // Setup the processing options
@@ -119,16 +120,16 @@ public class SnapshotCommand extends BaseCommandImpl {
         processingOptions.setValidating(false);
         processingOptions.setAllowEmptyLevels(true);
         processingOptions.setAddRevisions(true);
-        processingOptions.setUpdateRevisions(update);
+        processingOptions.setUpdateRevisions(getUpdate());
         processingOptions.setIgnoreChecksum(true);
-        processingOptions.setRevision(revision);
+        processingOptions.setRevision(getRevision());
 
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
         Integer revision = null;
         try {
-            if (createNew) {
+            if (getCreateNew()) {
                 success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
             } else {
                 success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
@@ -154,7 +155,7 @@ public class SnapshotCommand extends BaseCommandImpl {
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        return ids.size() == 0;
+        return getIds().size() == 0;
     }
 
     @Override
