@@ -1,8 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
@@ -12,12 +10,10 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
-import org.jboss.pressgang.ccms.contentspec.client.entities.Revision;
-import org.jboss.pressgang.ccms.contentspec.client.entities.RevisionList;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.entities.RevisionList;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.sort.EnversRevisionSort;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 
@@ -85,12 +81,12 @@ public class RevisionsCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Get the list of revisions
-        List<Object[]> revisions = null;
+        RevisionList revisions = null;
         if (topic) {
-            revisions = EntityUtilities.getTopicRevisionsById(getProviderFactory().getProvider(TopicProvider.class), ids.get(0));
+            revisions = EntityUtilities.getTopicRevisionsById(getProviderFactory().getProvider(TopicProvider.class), getIds().get(0));
         } else {
             revisions = ContentSpecUtilities.getContentSpecRevisionsById(getProviderFactory().getProvider(ContentSpecProvider.class),
-                    ids.get(0));
+                    getIds().get(0));
         }
 
         // Check that the content spec is valid
@@ -98,28 +94,16 @@ public class RevisionsCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
         }
 
-        // Sort the revisions
-        Collections.sort(revisions, new EnversRevisionSort());
-
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Create the revision list
-        final RevisionList list = new RevisionList(ids.get(0), topic ? "Topic" : "Content Specification");
-        for (final Object[] o : revisions) {
-            final Number rev = (Number) o[0];
-            final Date revDate = (Date) o[1];
-            final String type = (String) o[2];
-            list.addRevision(new Revision((Integer) rev, revDate, type));
-        }
-
         // Display the list
-        JCommander.getConsole().println(list.toString());
+        JCommander.getConsole().println(revisions.toString());
     }
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        return ids.size() == 0;
+        return getIds().size() == 0;
     }
 
     @Override

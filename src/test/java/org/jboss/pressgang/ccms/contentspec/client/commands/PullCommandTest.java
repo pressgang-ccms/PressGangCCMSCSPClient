@@ -10,6 +10,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,11 +29,13 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -51,6 +54,7 @@ public class PullCommandTest extends BaseUnitTest {
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock TopicProvider topicProvider;
+    @Mock ContentSpecWrapper contentSpecWrapper;
 
     PullCommand command;
     File rootTestDirectory;
@@ -157,10 +161,22 @@ public class PullCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void should() {
-        // Given
-        // When
-        // Then
+    public void shouldGenerateRightFilenameAndPathForContentSpec() {
+        // Given a command called without an ID
+        command.setIds(new ArrayList<Integer>());
+        // And no matching content spec
+        given(contentSpecProvider.getContentSpec(id, null)).willReturn(null);
+        // and a output file is specified
+        command.setOutputPath(rootTestDirectory.getAbsolutePath());
+        // And we don't actually want to save anything
+        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+
+        // When processing the command
+        ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> outputPath = ArgumentCaptor.forClass(String.class);
+        command.process();
+
+        // Then verify that
     }
 
     @Test

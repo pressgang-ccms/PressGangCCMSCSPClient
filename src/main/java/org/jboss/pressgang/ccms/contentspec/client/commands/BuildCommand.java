@@ -580,7 +580,8 @@ public class BuildCommand extends BaseCommandImpl {
     /**
      * Validates that a content specification object and it's contents are valid.
      *
-     * @param providerFactory The provider factory that can create providers to lookup various entities from a datasource.
+     * @param providerFactory The provider factory that can create providers to lookup various org.jboss.pressgang.ccms.contentspec
+     *                        .entities from a datasource.
      * @param loggerManager   The logging manager that handles output.
      * @param user            The user who requested the build/validation.
      * @param contentSpec     The content spec object to be validated.
