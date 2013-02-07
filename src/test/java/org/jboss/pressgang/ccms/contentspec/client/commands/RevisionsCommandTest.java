@@ -46,7 +46,8 @@ public class RevisionsCommandTest extends BaseUnitTest {
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock TopicProvider topicProvider;
     @Mock RevisionList revisionList;
-    @Mock RevisionsCommand command;
+
+    private RevisionsCommand command;
 
     @Before
     public void setUp() {
