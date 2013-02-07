@@ -130,13 +130,15 @@ public class PreviewCommand extends AssembleCommand {
                 final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
                 final String locale = generateOutputLocale();
 
+                final String FS = File.separator;
                 if (previewFormat.equals("pdf")) {
-                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
+                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp" + FS + locale + FS + previewFormat + FS +
                             DocBookUtilities.escapeTitle(
                                     contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
                             contentSpec.getTitle()) + "-" + locale + ".pdf";
                 } else {
-                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index.html";
+                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp" + FS + locale + FS + previewFormat + FS + "index" +
+                            ".html";
                 }
             } else {
                 return findFileToPreview(contentSpec.getTitle(), contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
@@ -165,7 +167,7 @@ public class PreviewCommand extends AssembleCommand {
             final String previewFormat) {
         // Create the fully qualified output path
         String fileDirectory = "";
-        if (getOutputPath() != null && getOutputPath().endsWith("/")) {
+        if (getOutputPath() != null && (getOutputPath().endsWith(File.separator) || new File(getOutputPath()).isDirectory())) {
             fileDirectory = ClientUtilities.fixDirectoryPath(getOutputPath());
         } else if (getOutputPath() != null) {
             final File file = new File(ClientUtilities.fixFilePath(getOutputPath()));
@@ -176,12 +178,14 @@ public class PreviewCommand extends AssembleCommand {
 
         final String locale = generateOutputLocale();
 
+        final String FS = File.separator;
         if (previewFormat.equals("pdf")) {
-            return fileDirectory + DocBookUtilities.escapeTitle(
-                    contentSpecTitle) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
-                    contentSpecProduct) + "-" + contentSpecVersion + "-" + DocBookUtilities.escapeTitle(contentSpecTitle) + "-en-US.pdf";
+            return fileDirectory + DocBookUtilities.escapeTitle(contentSpecTitle) + FS + "tmp" + locale + FS + previewFormat + FS +
+                    DocBookUtilities.escapeTitle(contentSpecProduct) + "-" + contentSpecVersion + "-" + DocBookUtilities.escapeTitle(
+                    contentSpecTitle) + "-en-US.pdf";
         } else {
-            return fileDirectory + DocBookUtilities.escapeTitle(contentSpecTitle) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
+            return fileDirectory + DocBookUtilities.escapeTitle(
+                    contentSpecTitle) + FS + "tmp" + FS + locale + FS + previewFormat + FS + "index.html";
         }
     }
 

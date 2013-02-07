@@ -20,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -395,7 +396,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @After
-    public void cleanUp() {
-        bookDir.delete();
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 }

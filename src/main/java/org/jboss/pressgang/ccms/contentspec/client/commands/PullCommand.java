@@ -217,7 +217,6 @@ public class PullCommand extends BaseCommandImpl {
 
         // Make sure the directories exist
         if (output.isDirectory()) {
-            output.mkdirs();
             output = new File(output.getAbsolutePath() + File.separator + fileName);
         } else if (output.getParentFile() != null) {
             output.getParentFile().mkdirs();

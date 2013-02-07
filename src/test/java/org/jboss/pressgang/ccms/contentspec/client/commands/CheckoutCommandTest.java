@@ -237,7 +237,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
     }
 
     @After
-    public void cleanUp() {
-        bookDir.delete();
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 }

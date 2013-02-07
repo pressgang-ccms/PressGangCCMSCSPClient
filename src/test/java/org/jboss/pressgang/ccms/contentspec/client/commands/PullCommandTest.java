@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -30,6 +31,9 @@ import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,11 +47,16 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @PrepareForTest({RESTProviderFactory.class})
 public class PullCommandTest extends BaseUnitTest {
+    private static final String CONTENTSPEC_TITLE = "ContentSpec";
+    private static final String TOPIC_TITLE = "Topic";
+    private static final String EMPTY_FILE_NAME = "empty.txt";
+
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary Integer revision;
+    @Arbitrary String randomString;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
@@ -55,12 +64,15 @@ public class PullCommandTest extends BaseUnitTest {
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock TopicProvider topicProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TopicWrapper topicWrapper;
 
     PullCommand command;
     File rootTestDirectory;
+    File bookDir;
+    File emptyFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         bindStdout();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
@@ -70,6 +82,14 @@ public class PullCommandTest extends BaseUnitTest {
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+
+        // Make the book title directory
+        bookDir = new File(rootTestDirectory, CONTENTSPEC_TITLE);
+        bookDir.mkdir();
+
+        // Make a empty file in that directory
+        emptyFile = new File(bookDir, EMPTY_FILE_NAME);
+        emptyFile.createNewFile();
     }
 
     @Test
@@ -162,10 +182,14 @@ public class PullCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldGenerateRightFilenameAndPathForContentSpec() {
-        // Given a command called without an ID
-        command.setIds(new ArrayList<Integer>());
-        // And no matching content spec
-        given(contentSpecProvider.getContentSpec(id, null)).willReturn(null);
+        // Given a command called with an ID
+        command.setIds(Arrays.asList(id));
+        // And a matching content spec
+        given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
+        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(randomString);
+        // and the content spec title/id is set
+        given(contentSpecWrapper.getTitle()).willReturn(CONTENTSPEC_TITLE);
+        given(contentSpecWrapper.getId()).willReturn(id);
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // And we don't actually want to save anything
@@ -176,7 +200,128 @@ public class PullCommandTest extends BaseUnitTest {
         ArgumentCaptor<String> outputPath = ArgumentCaptor.forClass(String.class);
         command.process();
 
-        // Then verify that
+        // Then verify that the filename and path are valid
+        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        assertThat(fileName.getValue(), is(CONTENTSPEC_TITLE + "-post.contentspec"));
+        assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
+    }
+
+    @Test
+    public void shouldGenerateRightFilenameAndPathForContentSpecPullingFromConfig() {
+        // Given a command called without an ID
+        command.setIds(new ArrayList<Integer>());
+        // and the cspconfig has an id
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // And a matching content spec
+        given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
+        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(randomString);
+        // and the content spec title/id is set
+        given(contentSpecWrapper.getTitle()).willReturn(CONTENTSPEC_TITLE);
+        given(contentSpecWrapper.getId()).willReturn(id);
+        // And we don't actually want to save anything
+        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+
+        // When processing the command
+        ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> outputPath = ArgumentCaptor.forClass(String.class);
+        command.process();
+
+        // Then verify that the filename and path are valid
+        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        assertThat(fileName.getValue(), is(CONTENTSPEC_TITLE + "-post.contentspec"));
+        assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath() + File.separator + CONTENTSPEC_TITLE + File.separator));
+    }
+
+    @Test
+    public void shouldGenerateRightFilenameAndPathForTopicXML() {
+        // Given a command called with an ID
+        command.setIds(Arrays.asList(id));
+        // and pull topic xml
+        command.setTopic(true);
+        command.setUseXml(true);
+        // And a topic exists
+        given(topicProvider.getTopic(anyInt(), anyInt())).willReturn(topicWrapper);
+        // and the topic title/id/xml is set
+        given(topicWrapper.getTitle()).willReturn(TOPIC_TITLE);
+        given(topicWrapper.getId()).willReturn(id);
+        given(topicWrapper.getXml()).willReturn(randomString);
+        // and a output file is specified
+        command.setOutputPath(rootTestDirectory.getAbsolutePath());
+        // And we don't actually want to save anything
+        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+
+        // When processing the command
+        ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> outputPath = ArgumentCaptor.forClass(String.class);
+        command.process();
+
+        // Then verify that the filename and path are valid
+        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        assertThat(fileName.getValue(), is(TOPIC_TITLE + ".xml"));
+        assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
+    }
+
+    @Test
+    public void shouldGenerateRightFilenameAndPathForTopicHTML() {
+        // Given a command called with an ID
+        command.setIds(Arrays.asList(id));
+        // and pull topic html
+        command.setTopic(true);
+        command.setUseHtml(true);
+        // And a topic exists
+        given(topicProvider.getTopic(anyInt(), anyInt())).willReturn(topicWrapper);
+        // and the topic title/id/xml is set
+        given(topicWrapper.getTitle()).willReturn(TOPIC_TITLE);
+        given(topicWrapper.getId()).willReturn(id);
+        given(topicWrapper.getXml()).willReturn(randomString);
+        // and a output file is specified
+        command.setOutputPath(rootTestDirectory.getAbsolutePath());
+        // And we don't actually want to save anything
+        doNothing().when(command).saveOutputFile(anyString(), anyString(), anyString());
+
+        // When processing the command
+        ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> outputPath = ArgumentCaptor.forClass(String.class);
+        command.process();
+
+        // Then verify that the filename and path are valid
+        verify(command, times(1)).saveOutputFile(fileName.capture(), outputPath.capture(), anyString());
+        assertThat(fileName.getValue(), is(TOPIC_TITLE + ".html"));
+        assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
+    }
+
+    @Test
+    public void shouldSaveFileWhenOutputPathIsDirectory() {
+        // Given a filename
+        String filename = CONTENTSPEC_TITLE + "-post.contentspec";
+        // and a output path that is a directory
+        String outputPath = bookDir.getAbsolutePath();
+
+        // When saving the output file
+        command.saveOutputFile(filename, outputPath, randomString);
+
+        // Then check that the file exists and contains the right data
+        File file = new File(bookDir, filename);
+        assertTrue(file.exists());
+        assertThat(FileUtilities.readFileContents(file), is(randomString));
+    }
+
+    @Test
+    public void shouldSaveFileWhenOutputPathIsFile() {
+        // Given a filename
+        String filename = CONTENTSPEC_TITLE + "-post.contentspec";
+        // and a output path that is a directory
+        String outputPath = bookDir.getAbsolutePath() + File.separator + TOPIC_TITLE + ".txt";
+
+        // When saving the output file
+        command.saveOutputFile(filename, outputPath, randomString);
+
+        // Then check that the file exists and contains the right data
+        File file = new File(bookDir, TOPIC_TITLE + ".txt");
+        File incorrectFile = new File(bookDir, filename);
+        assertTrue(file.exists());
+        assertFalse(incorrectFile.exists());
+        assertThat(FileUtilities.readFileContents(file), is(randomString));
     }
 
     @Test
@@ -241,5 +386,10 @@ public class PullCommandTest extends BaseUnitTest {
 
         // Then the result should be false
         assertFalse(result);
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 }
