@@ -92,8 +92,8 @@
             <version>1.24-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.jboss.pressgang.ccms.contentspec</groupId>
-            <artifactId>csprocessor-rest-provider</artifactId>
+            <groupId>org.jboss.pressgang.ccms</groupId>
+            <artifactId>rest-provider</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 

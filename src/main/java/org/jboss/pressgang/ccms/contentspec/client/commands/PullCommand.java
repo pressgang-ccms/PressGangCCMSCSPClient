@@ -110,13 +110,13 @@ public class PullCommand extends BaseCommandImpl {
     }
 
     public boolean isValid() {
-        if (pullTopic && !pullContentSpec) {
-            if (useXml && useHtml) {
+        if (useTopic() && !useContentSpec()) {
+            if (isUseXml() && isUseHtml()) {
                 return false;
             }
 
-        } else if (!pullTopic) {
-            if (useXml || useHtml) {
+        } else if (!useTopic()) {
+            if (isUseXml() || isUseHtml()) {
                 return false;
             }
         } else {
@@ -133,7 +133,7 @@ public class PullCommand extends BaseCommandImpl {
         // Initialise the basic data and perform basic input checks
         if (ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds())) {
             pullForConfig = true;
-            revision = null;
+            setRevision(null);
         }
 
         // Check that the additional options are valid
@@ -147,39 +147,39 @@ public class PullCommand extends BaseCommandImpl {
         String outputString = "";
         String fileName = "";
         // Topic
-        if (pullTopic) {
-            final TopicWrapper topic = getProviderFactory().getProvider(TopicProvider.class).getTopic(ids.get(0), revision);
+        if (useTopic()) {
+            final TopicWrapper topic = getProviderFactory().getProvider(TopicProvider.class).getTopic(getIds().get(0), getRevision());
             if (topic == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                        getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
-                if (useXml) {
+                if (isUseXml()) {
                     outputString = topic.getXml();
                     fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
-                } else if (useHtml) {
+                } else if (isUseHtml()) {
                     outputString = topic.getHtml();
                     fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".html";
                 }
             }
             // Content Specification
         } else {
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), revision);
-            final String contentSpecString = contentSpecProvider.getContentSpecAsString(ids.get(0), null);
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(getIds().get(0), getRevision());
+            final String contentSpecString = contentSpecProvider.getContentSpecAsString(getIds().get(0), getRevision());
             if (contentSpecEntity == null || contentSpecString == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        revision == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                        getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
                 outputString = contentSpecString;
 
                 // Calculate the filenames and output directory.
-                if (revision == null) {
+                if (getRevision() == null) {
                     fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 } else {
                     fileName = DocBookUtilities.escapeTitle(
-                            contentSpecEntity.getTitle()) + "-post-r" + revision + "." + Constants.FILENAME_EXTENSION;
+                            contentSpecEntity.getTitle()) + "-post-r" + getRevision() + "." + Constants.FILENAME_EXTENSION;
                 }
                 if (pullForConfig) {
-                    outputPath = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpecEntity);
+                    setOutputPath(ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpecEntity));
                 }
             }
         }
@@ -188,45 +188,55 @@ public class PullCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Save or print the data
-        if (outputPath == null) {
+        if (getOutputPath() == null) {
             JCommander.getConsole().println(outputString);
         } else {
-            // Create the output file
-            File output;
-            outputPath = ClientUtilities.fixFilePath(outputPath);
-            if (outputPath != null && outputPath.endsWith(File.separator)) {
-                output = new File(outputPath + fileName);
-            } else if (outputPath == null || outputPath.equals("")) {
-                output = new File(fileName);
-            } else {
-                output = new File(outputPath);
-            }
+            saveOutputFile(fileName, getOutputPath(), outputString);
+        }
+    }
 
-            // Make sure the directories exist
-            if (output.isDirectory()) {
-                output.mkdirs();
-                output = new File(output.getAbsolutePath() + File.separator + fileName);
-            } else {
-                if (output.getParentFile() != null) {
-                    output.getParentFile().mkdirs();
-                }
-            }
+    /**
+     * Saves the some content to a file. The method will also determine the correct directory to save to using the filename and output
+     * path.
+     *
+     * @param fileName   The name that the file should be saved as.
+     * @param outputPath The location that the file should be saved to.
+     * @param content    The content to be saved to the file.
+     */
+    protected void saveOutputFile(String fileName, String outputPath, String content) {
+        // Create the output file
+        File output;
+        String fixedOutputPath = ClientUtilities.fixFilePath(outputPath);
+        if (fixedOutputPath != null && fixedOutputPath.endsWith(File.separator)) {
+            output = new File(fixedOutputPath + fileName);
+        } else if (fixedOutputPath == null || fixedOutputPath.equals("")) {
+            output = new File(fileName);
+        } else {
+            output = new File(fixedOutputPath);
+        }
 
-            // Good point to check for a shutdown
-            allowShutdownToContinueIfRequested();
+        // Make sure the directories exist
+        if (output.isDirectory()) {
+            output.mkdirs();
+            output = new File(output.getAbsolutePath() + File.separator + fileName);
+        } else if (output.getParentFile() != null) {
+            output.getParentFile().mkdirs();
+        }
 
-            // If the file exists then create a backup file
-            if (output.exists()) {
-                output.renameTo(new File(output.getAbsolutePath() + ".backup"));
-            }
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
 
-            // Create and write to the file
-            try {
-                FileUtilities.saveFile(output, outputString, Constants.FILE_ENCODING);
-                JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
-            } catch (IOException e) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
-            }
+        // If the file exists then create a backup file
+        if (output.exists()) {
+            output.renameTo(new File(output.getAbsolutePath() + ".backup"));
+        }
+
+        // Create and write to the file
+        try {
+            FileUtilities.saveFile(output, content, Constants.FILE_ENCODING);
+            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
+        } catch (IOException e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
         }
     }
 
