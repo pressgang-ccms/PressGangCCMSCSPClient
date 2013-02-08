@@ -400,7 +400,7 @@ public class BuildCommand extends BaseCommandImpl {
         // Get the content spec from the file
         final String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
 
-        if (contentSpec == null || contentSpec.equals("")) {
+        if (contentSpec.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 
@@ -800,12 +800,8 @@ public class BuildCommand extends BaseCommandImpl {
         // Parse the spec to get the title
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         ContentSpec contentSpec = null;
-        try {
-            contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString,
-                    ContentSpecParser.ParsingMode.EITHER, processProcesses);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
-        }
+        contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString,
+                ContentSpecParser.ParsingMode.EITHER, processProcesses);
 
         // Check that that content specification was parsed successfully
         if (contentSpec == null) {

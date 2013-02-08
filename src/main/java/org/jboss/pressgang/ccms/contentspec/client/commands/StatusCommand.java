@@ -70,7 +70,7 @@ public class StatusCommand extends BaseCommandImpl {
         // Read in the file contents
         String contentSpecData = FileUtilities.readFileContents(file);
 
-        if (contentSpecData == null || contentSpecData.equals("")) {
+        if (contentSpecData.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 

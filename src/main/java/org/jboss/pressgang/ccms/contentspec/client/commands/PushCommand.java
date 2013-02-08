@@ -137,19 +137,14 @@ public class PushCommand extends BaseCommandImpl {
         // Read in the file contents
         String contentSpecString = FileUtilities.readFileContents(files.get(0));
 
-        if (contentSpecString == null || contentSpecString.equals("")) {
+        if (contentSpecString.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 
         // Parse the spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        ContentSpec contentSpec = null;
-        try {
-            contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
-                    ContentSpecParser.ParsingMode.EDITED);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
-        }
+        ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
+                ContentSpecParser.ParsingMode.EDITED);
 
         // Check that that content specification was parsed successfully
         if (contentSpec == null) {

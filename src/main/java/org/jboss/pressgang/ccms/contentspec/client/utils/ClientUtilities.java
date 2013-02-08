@@ -453,10 +453,9 @@ public class ClientUtilities {
      * @param loggerManager     The Logging manager that keeps tracks of error logs.
      * @param contentSpecString The Content Spec String representation to be parsed.
      * @return The parsed content spec if no errors occurred otherwise null.
-     * @throws Exception Thrown if a fatal error occurs while parsing.
      */
     public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
-            final String contentSpecString) throws Exception {
+            final String contentSpecString) {
         return parseContentSpecString(providerFactory, loggerManager, contentSpecString, ContentSpecParser.ParsingMode.EITHER);
     }
 
@@ -466,10 +465,9 @@ public class ClientUtilities {
      * @param contentSpecString The Content Spec String representation to be parsed.
      * @param parsingMode       The mode that the content spec should be parsed as.
      * @return The parsed content spec if no errors occurred otherwise null.
-     * @throws Exception Thrown if a fatal error occurs while parsing.
      */
     public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
-            final String contentSpecString, final ContentSpecParser.ParsingMode parsingMode) throws Exception {
+            final String contentSpecString, final ContentSpecParser.ParsingMode parsingMode) {
         return parseContentSpecString(providerFactory, loggerManager, contentSpecString, parsingMode, false);
     }
 
@@ -480,10 +478,9 @@ public class ClientUtilities {
      * @param parsingMode       The mode that the content spec should be parsed as.
      * @param processProcesses  If processes should be processed to setup their relationships (makes external calls)
      * @return The parsed content spec if no errors occurred otherwise null.
-     * @throws Exception Thrown if a fatal error occurs while parsing.
      */
     public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
-            final String contentSpecString, final ContentSpecParser.ParsingMode parsingMode, boolean processProcesses) throws Exception {
+            final String contentSpecString, final ContentSpecParser.ParsingMode parsingMode, boolean processProcesses) {
         final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
         if (csp.parse(contentSpecString, parsingMode, processProcesses)) {
             return csp.getContentSpec();

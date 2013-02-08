@@ -111,12 +111,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Parse the spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        ContentSpec contentSpec = null;
-        try {
-            contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_INTERNAL_ERROR, false);
-        }
+        ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
