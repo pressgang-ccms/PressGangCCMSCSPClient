@@ -76,7 +76,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         // When it is processed
         try {
             command.process();
-            // Then an error is printed and the program is shut down
+            // If we get here then the test failed
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));

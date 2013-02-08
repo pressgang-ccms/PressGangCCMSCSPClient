@@ -65,9 +65,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Check that the file exists
         final File file = files.get(0);
-        if (file.isDirectory() || !file.exists() || !file.isFile()) return false;
-
-        return true;
+        return !(file.isDirectory() || !file.exists() || !file.isFile());
     }
 
     @Override
@@ -107,7 +105,7 @@ public class ValidateCommand extends BaseCommandImpl {
         // Read in the file contents
         final String contentSpecString = FileUtilities.readFileContents(files.get(0));
 
-        if (contentSpecString == null || contentSpecString.equals("")) {
+        if (contentSpecString.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 
