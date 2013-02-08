@@ -58,6 +58,7 @@ public class SearchCommandTest extends BaseUnitTest {
     public void setUp() {
         bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
+        PowerMockito.mockStatic(ClientUtilities.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         this.command = new SearchCommand(parser, cspConfig, clientConfig);
@@ -100,7 +101,6 @@ public class SearchCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(collectionWrapper);
         List<ContentSpecWrapper> resultList = Arrays.asList(result1, result2);
         given(collectionWrapper.getItems()).willReturn(resultList);
-        PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.buildSpecList(resultList, providerFactory)).willReturn(specList);
         given(ClientUtilities.generateContentSpecListResponse(specList)).willReturn(queryResult);
 

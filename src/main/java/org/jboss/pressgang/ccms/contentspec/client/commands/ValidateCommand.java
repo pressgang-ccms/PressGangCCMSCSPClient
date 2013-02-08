@@ -122,11 +122,12 @@ public class ValidateCommand extends BaseCommandImpl {
         processingOptions.setValidating(true);
         processingOptions.setAllowEmptyLevels(true);
 
-        // Process the content spec to see if its valid
+        // Process the content spec to see if it's valid
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
         } catch (Exception e) {
+            e.printStackTrace();
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
         }
 
