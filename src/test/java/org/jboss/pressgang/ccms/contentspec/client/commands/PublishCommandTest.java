@@ -40,7 +40,7 @@ public class PublishCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);

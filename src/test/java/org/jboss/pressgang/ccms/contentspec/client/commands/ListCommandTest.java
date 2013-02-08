@@ -59,7 +59,7 @@ public class ListCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -87,7 +87,7 @@ public class ListCommandTest extends BaseUnitTest {
 
         // Then an error should be print and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
+        assertThat(getStdOutLogs(), containsString(
                 "There are 51 Content Specs on this server. You should probably use \"csprocessor search\" if you have an idea what you "
                         + "are looking for. Otherwise, rerun the list command, and this time use --limit <NUMBER>"));
     }
@@ -106,7 +106,7 @@ public class ListCommandTest extends BaseUnitTest {
         command.process();
 
         // Then a message about no specs should be printed
-        assertThat(getStdoutLogs(), containsString("No Content Specifications were found on the Server."));
+        assertThat(getStdOutLogs(), containsString("No Content Specifications were found on the Server."));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class ListCommandTest extends BaseUnitTest {
         ClientUtilities.buildSpecList(anyList(), eq(providerFactory));
         PowerMockito.verifyStatic(times(1));
         ClientUtilities.generateContentSpecListResponse(eq(specList));
-        assertThat(getStdoutLogs(), containsString(randomString));
+        assertThat(getStdOutLogs(), containsString(randomString));
     }
 
     @Test

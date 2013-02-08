@@ -69,7 +69,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -100,7 +100,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
@@ -123,7 +123,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("Unable to assemble the Content Specification because the \"" + DUMMY_BUILD_FILE_NAME +
+        assertThat(getStdOutLogs(), containsString("Unable to assemble the Content Specification because the \"" + DUMMY_BUILD_FILE_NAME +
                 "\" file couldn't be found."));
     }
 
@@ -151,7 +151,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("The content specification failed to be assembled."));
+        assertThat(getStdOutLogs(), containsString("The content specification failed to be assembled."));
     }
 
     @Test
@@ -175,7 +175,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command printed a success message and the runPublican method wasn't executed
         verify(command, times(0)).runPublican(any(File.class));
-        assertThat(getStdoutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
+        assertThat(getStdOutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
     }
 
     @Test
@@ -199,8 +199,8 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command printed a success message and the runPublican method wasn't executed
         verify(command, times(1)).runPublican(any(File.class));
-        assertThat(getStdoutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
-        assertThat(getStdoutLogs(),
+        assertThat(getStdOutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
+        assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully assembled at " + rootPath + File.separator + BOOK_TITLE));
     }
 
@@ -222,7 +222,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -244,7 +244,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("The specified file was empty!"));
+        assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
     }
 
     @Test
@@ -356,7 +356,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the command should shutdown and an error be printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("Unable to assemble the Content Specification because an error " +
+        assertThat(getStdOutLogs(), containsString("Unable to assemble the Content Specification because an error " +
                 "occurred while running Publican. (exit code: " + exitCode + ")"));
     }
 

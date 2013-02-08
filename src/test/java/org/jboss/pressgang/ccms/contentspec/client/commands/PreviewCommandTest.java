@@ -64,7 +64,7 @@ public class PreviewCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -95,7 +95,7 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
@@ -116,7 +116,7 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("\"blah\" is not currently supported as a preview format."));
+        assertThat(getStdOutLogs(), containsString("\"blah\" is not currently supported as a preview format."));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(),
+        assertThat(getStdOutLogs(),
                 containsString("Unable to preview the Content Specification because the \"" + rootPath + "\" file couldn't be found"));
     }
 
@@ -171,7 +171,7 @@ public class PreviewCommandTest extends BaseUnitTest {
         PowerMockito.verifyStatic(times(1));
         FileUtilities.openFile(any(File.class));
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("Unable to open the \"" + rootPath + "EmptyFile.txt\" file."));
+        assertThat(getStdOutLogs(), containsString("Unable to open the \"" + rootPath + "EmptyFile.txt\" file."));
     }
 
     @Test
@@ -192,7 +192,7 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -214,7 +214,7 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("The specified file was empty!"));
+        assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
     }
 
     @Test

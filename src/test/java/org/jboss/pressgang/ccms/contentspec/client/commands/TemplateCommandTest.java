@@ -47,7 +47,7 @@ public class TemplateCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         command = spy(new TemplateCommand(parser, cspConfig, clientConfig));
 
         // Return the test directory as the root directory
@@ -75,6 +75,6 @@ public class TemplateCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("An error occurred while trying to save the file."));
+        assertThat(getStdOutLogs(), containsString("An error occurred while trying to save the file."));
     }
 }

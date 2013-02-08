@@ -74,7 +74,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() throws IOException {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -109,7 +109,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line."));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("A directory already exists for the Content Specification. Please check the " +
+        assertThat(getStdOutLogs(), containsString("A directory already exists for the Content Specification. Please check the " +
                 "\"" + bookDir.getAbsolutePath() + "\" directory first and if it's correct, then use the --force option."));
     }
 

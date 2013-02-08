@@ -80,7 +80,7 @@ public class SetupCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Save the configuration file
-        final File file = new File(System.getProperty("user.home") + "/.config/csprocessor.ini");
+        final File file = new File(Constants.DEFAULT_CONFIG_LOCATION);
         try {
             // Make sure the directory exists
             if (file.getParentFile() != null) {
@@ -410,6 +410,6 @@ public class SetupCommand extends BaseCommandImpl {
 
     @Override
     public boolean requiresExternalConnection() {
-        return true;
+        return false;
     }
 }

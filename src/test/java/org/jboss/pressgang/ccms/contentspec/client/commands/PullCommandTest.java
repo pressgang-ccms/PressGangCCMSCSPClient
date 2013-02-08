@@ -68,7 +68,7 @@ public class PullCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -97,7 +97,7 @@ public class PullCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
@@ -118,7 +118,7 @@ public class PullCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -141,7 +141,7 @@ public class PullCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID and revision!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID and revision!"));
     }
 
     @Test
@@ -164,7 +164,7 @@ public class PullCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test

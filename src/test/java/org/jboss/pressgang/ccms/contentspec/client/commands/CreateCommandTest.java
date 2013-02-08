@@ -80,7 +80,7 @@ public class CreateCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -113,7 +113,7 @@ public class CreateCommandTest extends BaseUnitTest {
 
         // Then an error message should be printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No file was found for the specified file name!"));
+        assertThat(getStdOutLogs(), containsString("No file was found for the specified file name!"));
     }
 
     @Test
@@ -132,7 +132,7 @@ public class CreateCommandTest extends BaseUnitTest {
 
         // Then an error message should be printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No file was found for the specified file name!"));
+        assertThat(getStdOutLogs(), containsString("No file was found for the specified file name!"));
     }
 
     @Test
@@ -151,7 +151,7 @@ public class CreateCommandTest extends BaseUnitTest {
 
         // Then an error message should be printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No file was found for the specified file name!"));
+        assertThat(getStdOutLogs(), containsString("No file was found for the specified file name!"));
     }
 
     @Test
@@ -174,7 +174,7 @@ public class CreateCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("The specified file was empty"));
+        assertThat(getStdOutLogs(), containsString("The specified file was empty"));
     }
 
     @Test
@@ -233,7 +233,7 @@ public class CreateCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
+        assertThat(getStdOutLogs(), containsString(
                 "A directory already exists for the Content Specification. Please check the \"" + bookDir.getAbsolutePath() + "\" " +
                         "directory first and if it's correct, then use the --force option."));
     }
@@ -336,7 +336,7 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.verifyStatic();
         ClientUtilities.createContentSpecProject(eq(command), eq(cspConfig), any(File.class), anyString(), eq(contentSpecWrapper),
                 any(ZanataDetails.class));
-        assertThat(getStdoutLogs(), containsString("Content Specification ID: " + id + "\nRevision: " + randomNumber));
+        assertThat(getStdOutLogs(), containsString("Content Specification ID: " + id + "\nRevision: " + randomNumber));
     }
 
     @Test
@@ -370,7 +370,7 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.verifyStatic(times(0));
         ClientUtilities.createContentSpecProject(eq(command), eq(cspConfig), any(File.class), anyString(), eq(contentSpecWrapper),
                 any(ZanataDetails.class));
-        assertThat(getStdoutLogs(), containsString("Content Specification ID: " + id + "\nRevision: " + randomNumber));
+        assertThat(getStdOutLogs(), containsString("Content Specification ID: " + id + "\nRevision: " + randomNumber));
     }
 
     @Test

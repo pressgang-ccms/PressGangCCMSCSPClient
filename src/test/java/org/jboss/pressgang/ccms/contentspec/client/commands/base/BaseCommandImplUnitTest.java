@@ -61,7 +61,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         // Create an actual object and spy on it
         command = spy(new BaseCommandImplImpl(parser, cspConfig, clientConfig));
@@ -86,7 +86,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         // Then check that an error message was printed
         verify(command, times(1)).shutdown(anyInt());
         verify(command, times(1)).printError(anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("Unauthorised Request! Please check your username and the server URL is correct."));
+        assertThat(getStdOutLogs(), containsString("Unauthorised Request! Please check your username and the server URL is correct."));
     }
 
     @Test
@@ -122,7 +122,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         // Then check that an error message was printed
         verify(command, times(1)).shutdown(anyInt());
         verify(command, times(1)).printError(anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
+        assertThat(getStdOutLogs(), containsString(
                 "No username was specified for the server. Please check your configuration files and make sure a username exists."));
     }
 
@@ -141,7 +141,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         // Then check that an error message was printed
         verify(command, times(1)).shutdown(anyInt());
         verify(command, times(1)).printError(anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
+        assertThat(getStdOutLogs(), containsString(
                 "No username was specified for the server. Please check your configuration files and make sure a username exists."));
     }
 
@@ -204,7 +204,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         verify(parser, times(0)).usage(anyBoolean(), any(String[].class));
         verify(parser, times(0)).usage(anyBoolean());
         verify(parser, times(0)).usage();
-        assertThat(getStdoutLogs(), containsString(randomString));
+        assertThat(getStdOutLogs(), containsString(randomString));
     }
 
     @Test
@@ -218,7 +218,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         verify(parser, times(1)).usage(anyBoolean(), eq(new String[]{commandName}));
         verify(parser, times(0)).usage(anyBoolean());
         verify(parser, times(0)).usage();
-        assertThat(getStdoutLogs(), containsString(randomString));
+        assertThat(getStdOutLogs(), containsString(randomString));
     }
 
     @Test
@@ -269,7 +269,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         }
 
         // Then an error message should have been printed and a System.exit() called
-        assertThat(getStdoutLogs(), containsString("Cannot connect to the server, as the server address can't be resolved."));
+        assertThat(getStdOutLogs(), containsString("Cannot connect to the server, as the server address can't be resolved."));
     }
 
     /**

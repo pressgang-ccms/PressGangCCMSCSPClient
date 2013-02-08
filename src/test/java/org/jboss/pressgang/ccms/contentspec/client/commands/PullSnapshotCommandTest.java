@@ -79,7 +79,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -111,7 +111,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
@@ -132,7 +132,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID and revision!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID and revision!"));
     }
 
     @Test
@@ -260,7 +260,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the command should shutdown and an error message should be printed
         verify(command, times(1)).shutdown(anyInt());
-        assertThat(getStdoutLogs(),
+        assertThat(getStdOutLogs(),
                 containsString("The revision of the Content Specification is invalid and as such the snapshot couldn't be pulled."));
     }
 

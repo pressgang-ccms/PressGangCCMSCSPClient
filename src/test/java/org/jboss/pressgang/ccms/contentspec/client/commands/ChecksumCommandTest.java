@@ -59,7 +59,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -84,7 +84,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         command.process();
 
         // Then the command should be shutdown and an error message printed
-        assertThat(getStdoutLogs(), containsString("CHECKSUM=" + randomNumber));
+        assertThat(getStdOutLogs(), containsString("CHECKSUM=" + randomNumber));
     }
 
     @Test

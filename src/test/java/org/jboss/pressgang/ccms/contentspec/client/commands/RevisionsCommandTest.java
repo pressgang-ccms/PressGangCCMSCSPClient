@@ -1,5 +1,18 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
@@ -21,17 +34,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.junit.matchers.JUnitMatchers.containsString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
-
 @PrepareForTest({RESTProviderFactory.class, EntityUtilities.class, ContentSpecUtilities.class})
 public class RevisionsCommandTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
@@ -51,7 +53,7 @@ public class RevisionsCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(EntityUtilities.class);
         PowerMockito.mockStatic(ContentSpecUtilities.class);
         PowerMockito.mockStatic(RESTProviderFactory.class);
@@ -77,7 +79,7 @@ public class RevisionsCommandTest extends BaseUnitTest {
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(5));
         }
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
@@ -95,7 +97,7 @@ public class RevisionsCommandTest extends BaseUnitTest {
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(5));
         }
-        assertThat(getStdoutLogs(), containsString("Invalid argument!"));
+        assertThat(getStdOutLogs(), containsString("Invalid argument!"));
     }
 
     @Test
@@ -110,7 +112,7 @@ public class RevisionsCommandTest extends BaseUnitTest {
         command.process();
 
         // Then the revision list for that ID should be output
-        assertThat(getStdoutLogs(), containsString(revisions));
+        assertThat(getStdOutLogs(), containsString(revisions));
         // And the Topic Utilities methods should not be called
         verify(topicProvider, never()).getTopic(id);
     }
@@ -131,7 +133,7 @@ public class RevisionsCommandTest extends BaseUnitTest {
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -146,7 +148,7 @@ public class RevisionsCommandTest extends BaseUnitTest {
         command.process();
 
         // Then the revision list for that ID should be output
-        assertThat(getStdoutLogs(), containsString(revisions));
+        assertThat(getStdOutLogs(), containsString(revisions));
     }
 
     @Test
@@ -162,6 +164,6 @@ public class RevisionsCommandTest extends BaseUnitTest {
         command.process();
 
         // Then the revision list for that ID should be output
-        assertThat(getStdoutLogs(), containsString(revisions));
+        assertThat(getStdOutLogs(), containsString(revisions));
     }
 }

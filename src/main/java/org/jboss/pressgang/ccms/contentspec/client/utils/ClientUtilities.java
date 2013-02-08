@@ -684,8 +684,8 @@ public class ClientUtilities {
     }
 
     /**
-     * Saves some content to a file. The method will also determine the correct directory to save to using the filename and output
-     * path.
+     * Saves some content to a file and backups a file if one exists with the same name. The method will also determine the correct
+     * directory to save to using the filename and output path.
      *
      * @param command    The command that the file is being saved for.
      * @param fileName   The name that the file should be saved as.

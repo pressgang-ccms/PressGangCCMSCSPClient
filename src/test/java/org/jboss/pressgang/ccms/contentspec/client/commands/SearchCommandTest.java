@@ -1,5 +1,16 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -23,17 +34,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.containsString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
 public class SearchCommandTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
@@ -56,7 +56,7 @@ public class SearchCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -69,16 +69,9 @@ public class SearchCommandTest extends BaseUnitTest {
         command.setQueries(Arrays.asList(query1, query2));
         // And an expected query that should result from that set
         String expectedSearchString = query1 + " " + query2;
-        String expectedQuery = new StringBuilder("query;contentSpecTitle=")
-                .append(expectedSearchString)
-                .append(";contentSpecVersion=")
-                .append(expectedSearchString)
-                .append(";contentSpecProduct=")
-                .append(expectedSearchString)
-                .append(";logic=Or;propertyTag14=")
-                .append(expectedSearchString)
-                .append(";")
-                .toString();
+        String expectedQuery = new StringBuilder("query;contentSpecTitle=").append(expectedSearchString).append(
+                ";contentSpecVersion=").append(expectedSearchString).append(";contentSpecProduct=").append(expectedSearchString).append(
+                ";logic=Or;propertyTag14=").append(expectedSearchString).append(";").toString();
 
         // When the SearchCommand is processed
         command.process();
@@ -98,7 +91,7 @@ public class SearchCommandTest extends BaseUnitTest {
         command.process();
 
         // Then an appropriate message is written to the console
-        assertThat(getStdoutLogs(), containsString("No Content Specifications were found on the Server."));
+        assertThat(getStdOutLogs(), containsString("No Content Specifications were found on the Server."));
     }
 
     @Test
@@ -115,6 +108,6 @@ public class SearchCommandTest extends BaseUnitTest {
         command.process();
 
         // Then those results should be written to the console
-        assertThat(getStdoutLogs(), containsString(queryResult));
+        assertThat(getStdOutLogs(), containsString(queryResult));
     }
 }

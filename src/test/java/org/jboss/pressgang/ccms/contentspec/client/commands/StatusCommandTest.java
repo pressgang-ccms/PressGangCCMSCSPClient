@@ -65,7 +65,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
     @Before
     public void setUp() throws UnsupportedEncodingException {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -90,7 +90,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then shutdown should be called and an error printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID"));
     }
 
     @Test
@@ -107,7 +107,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then make sure an error message is printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
+        assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then make sure an error message is printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("The \"" + DocBookUtilities.escapeTitle(randomString) + "-post.contentspec\" file " +
+        assertThat(getStdOutLogs(), containsString("The \"" + DocBookUtilities.escapeTitle(randomString) + "-post.contentspec\" file " +
                 "couldn't be found. This could mean the title has changed on the server or the ID is wrong."));
     }
 
@@ -166,7 +166,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then make sure an error message is printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("The specified file was empty!"));
+        assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
     }
 
     @Test
@@ -197,7 +197,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then make sure an error message is printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
+        assertThat(getStdOutLogs(), containsString(
                 "The local copy and server copy of the Content Specification has been updated. Please use \"csprocessor pull\" to update " +
                         "your local copy. Your unsaved local changes will be saved as " + specFile.getAbsolutePath() + ".backup."));
     }
@@ -234,7 +234,7 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then make sure an error message is printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
+        assertThat(getStdOutLogs(), containsString(
                 "The local copy of the Content Specification has been updated and is out of sync with the server. Please use " +
                         "\"csprocessor push\" to update the server copy."));
     }
@@ -272,9 +272,9 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then make sure an error message is printed and the command shutdown
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString(
-                "The local copy of the Content Specification is out of date. Please use \"csprocessor pull\" to download the latest copy" +
-                        "."));
+        assertThat(getStdOutLogs(), containsString(
+                "The local copy of the Content Specification is out of date. Please use \"csprocessor pull\" to download the latest copy"
+                        + "."));
     }
 
     @Test

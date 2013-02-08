@@ -77,7 +77,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
 
     @Before
     public void setUp() throws UnsupportedEncodingException {
-        bindStdout();
+        bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
@@ -103,7 +103,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdoutLogs(), containsString("No data was found for the specified ID!"));
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         command.process();
 
         // Then the output should contain an Id, Revision, Title and stats
-        final String logs = getStdoutLogs();
+        final String logs = getStdOutLogs();
         assertThat(logs, containsString("Content Specification ID: " + id));
         assertThat(logs, containsString("Content Specification Revision: " + revision));
         assertThat(logs, containsString("Content Specification Title: " + contentSpecTitle));
