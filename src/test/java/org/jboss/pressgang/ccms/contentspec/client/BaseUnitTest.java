@@ -22,13 +22,16 @@ public class BaseUnitTest {
     protected static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
     private final ByteArrayOutputStream stdOutCapture = new ByteArrayOutputStream();
     private final ByteArrayOutputStream stdErrCapture = new ByteArrayOutputStream();
-    private final PrintStream stdOut = System.out;
-    private final PrintStream stdErr = System.err;
-    private final InputStream stdIn = System.in;
+    private PrintStream stdOut;
+    private PrintStream stdErr;
+    private InputStream stdIn;
 
     @Before
     public void initMocks() {
         MockitoAnnotations.initMocks(this);
+        stdOut = System.out;
+        stdErr = System.err;
+        stdIn = System.in;
     }
 
     @After

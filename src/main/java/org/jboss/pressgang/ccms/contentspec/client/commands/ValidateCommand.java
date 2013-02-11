@@ -127,7 +127,6 @@ public class ValidateCommand extends BaseCommandImpl {
         try {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
         } catch (Exception e) {
-            e.printStackTrace();
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
         }
 
