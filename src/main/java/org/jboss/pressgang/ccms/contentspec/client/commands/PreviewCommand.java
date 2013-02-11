@@ -180,7 +180,7 @@ public class PreviewCommand extends AssembleCommand {
 
         final String FS = File.separator;
         if (previewFormat.equals("pdf")) {
-            return fileDirectory + DocBookUtilities.escapeTitle(contentSpecTitle) + FS + "tmp" + locale + FS + previewFormat + FS +
+            return fileDirectory + DocBookUtilities.escapeTitle(contentSpecTitle) + FS + "tmp" + FS + locale + FS + previewFormat + FS +
                     DocBookUtilities.escapeTitle(contentSpecProduct) + "-" + contentSpecVersion + "-" + DocBookUtilities.escapeTitle(
                     contentSpecTitle) + "-en-US.pdf";
         } else {

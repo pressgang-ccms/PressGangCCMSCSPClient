@@ -398,7 +398,12 @@ public class BuildCommand extends BaseCommandImpl {
      */
     protected String getContentSpecFromFile(final String file) {
         // Get the content spec from the file
-        final String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
+        String contentSpec = null;
+        try {
+            contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
 
         if (contentSpec.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
