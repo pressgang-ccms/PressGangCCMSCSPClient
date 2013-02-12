@@ -143,6 +143,8 @@ public class Constants {
             + "make sure a username exists.";
     public static final String ERROR_PULL_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
             "snapshot couldn't be pulled.";
+    public static final String ERROR_CREATE_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
+            "snapshot couldn't be saved.";
     public static final String ERROR_FAILED_TO_CLEAN_ASSEMBLY = "The assembly directory was unable to be emptied. Please close an open "
             + "previews and try again.";
     public static final String ERROR_FAILED_FETCH_PUBSNUM = "An error occurred when fetching the pubsnumber from " + Constants.KOJI_NAME +
@@ -181,7 +183,7 @@ public class Constants {
             ".2f%%";
     public static final String SUCCESSFUL_PUBLISH_MSG = "Content Specification successfully published.";
     public static final String SUCCESSFUL_ZANATA_PUSH_MSG = "Topics successfully pushed to Zanata for translation.";
-    public static final String SUCCESSFUL_PUSH_SNAPSHOT_MSG = "Snapshot successfully created.";
+    public static final String SUCCESSFUL_PUSH_SNAPSHOT_MSG = "Snapshot successfully saved.";
 
     // Start Messages
     public static final String STARTING_ASSEMBLE_MSG = "Starting to assemble...";

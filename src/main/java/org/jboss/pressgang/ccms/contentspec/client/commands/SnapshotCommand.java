@@ -43,6 +43,14 @@ public class SnapshotCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    protected ContentSpecProcessor getProcessor() {
+        return csp;
+    }
+
+    protected void setProcessor(final ContentSpecProcessor processor) {
+        csp = processor;
+    }
+
     @Override
     public String getCommandName() {
         return Constants.SNAPSHOT_COMMAND_NAME;
@@ -126,12 +134,12 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
+        setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
         Integer revision = null;
         if (getCreateNew()) {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
+            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
         } else {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
         }
         if (success) {
             revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
@@ -139,7 +147,7 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         if (!success) {
             JCommander.getConsole().println(loggerManager.generateLogs());
-            JCommander.getConsole().println(Constants.ERROR_PULL_SNAPSHOT_INVALID);
+            JCommander.getConsole().println(Constants.ERROR_CREATE_SNAPSHOT_INVALID);
             JCommander.getConsole().println("");
             shutdown(Constants.EXIT_TOPIC_INVALID);
         } else {
