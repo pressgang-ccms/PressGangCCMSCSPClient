@@ -7,12 +7,8 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -69,7 +65,7 @@ public class StatusCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        command = spy(new StatusCommand(parser, cspConfig, clientConfig));
+        command = new StatusCommand(parser, cspConfig, clientConfig);
     }
 
     @Test
@@ -89,7 +85,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then shutdown should be called and an error printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID"));
     }
 
@@ -106,7 +101,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then make sure an error message is printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
@@ -130,7 +124,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then make sure an error message is printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("The \"" + DocBookUtilities.escapeTitle(randomString) + "-post.contentspec\" file " +
                 "couldn't be found. This could mean the title has changed on the server or the ID is wrong."));
     }
@@ -165,7 +158,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then make sure an error message is printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
     }
 
@@ -196,7 +188,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then make sure an error message is printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString(
                 "The local copy and server copy of the Content Specification has been updated. Please use \"csprocessor pull\" to update " +
                         "your local copy. Your unsaved local changes will be saved as " + specFile.getAbsolutePath() + ".backup."));
@@ -233,7 +224,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then make sure an error message is printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString(
                 "The local copy of the Content Specification has been updated and is out of sync with the server. Please use " +
                         "\"csprocessor push\" to update the server copy."));
@@ -271,7 +261,6 @@ public class StatusCommandTest extends BaseUnitTest {
         }
 
         // Then make sure an error message is printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString(
                 "The local copy of the Content Specification is out of date. Please use \"csprocessor pull\" to download the latest copy"
                         + "."));

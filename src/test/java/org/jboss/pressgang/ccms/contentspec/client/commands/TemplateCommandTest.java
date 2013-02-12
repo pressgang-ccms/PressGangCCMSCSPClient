@@ -5,12 +5,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +43,7 @@ public class TemplateCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        command = spy(new TemplateCommand(parser, cspConfig, clientConfig));
+        command = new TemplateCommand(parser, cspConfig, clientConfig);
 
         // Return the test directory as the root directory
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
@@ -74,7 +69,6 @@ public class TemplateCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("An error occurred while trying to save the file."));
     }
 }
