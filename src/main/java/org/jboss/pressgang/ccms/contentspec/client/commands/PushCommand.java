@@ -162,13 +162,9 @@ public class PushCommand extends BaseCommandImpl {
 
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
         Integer revision = null;
-        try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
-            if (success) {
-                revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
-            }
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
+        success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+        if (success) {
+            revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
         }
 
         // Print the logs

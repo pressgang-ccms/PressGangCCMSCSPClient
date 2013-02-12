@@ -1,7 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -44,7 +43,7 @@ public class PublishCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        command = spy(new PublishCommand(parser, cspConfig, clientConfig));
+        command = new PublishCommand(parser, cspConfig, clientConfig);
 
         // Only test the publish command and not the build or assemble command content.
         command.setNoAssemble(true);

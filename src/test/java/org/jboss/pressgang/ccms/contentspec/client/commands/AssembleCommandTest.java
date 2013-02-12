@@ -11,11 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -32,11 +28,14 @@ import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,6 +55,7 @@ public class AssembleCommandTest extends BaseUnitTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
+    @Arbitrary String randomString;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
@@ -66,20 +66,30 @@ public class AssembleCommandTest extends BaseUnitTest {
 
     AssembleCommand command;
     File rootTestDirectory;
+    File bookDir;
+    File emptyFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        command = spy(new AssembleCommand(parser, cspConfig, clientConfig));
+        command = new AssembleCommand(parser, cspConfig, clientConfig);
 
         // Only test the assemble command and not the build command content.
         command.setNoBuild(true);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+
+        // Make the book title directory
+        bookDir = new File(rootTestDirectory, BOOK_TITLE);
+        bookDir.mkdir();
+
+        // Make a empty file in that directory
+        emptyFile = new File(bookDir, DUMMY_BUILD_FILE_NAME);
+        emptyFile.createNewFile();
     }
 
     @Test
@@ -99,18 +109,26 @@ public class AssembleCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
     @Test
     public void shouldShutdownWhenBuildFileDoesntExist() {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
         // Given a command with ids
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
-        // and the build file information has been set
-        command.setBuildFileDirectory(rootTestDirectory.getAbsolutePath());
-        command.setBuildFileName(DUMMY_BUILD_FILE_NAME);
-        doNothing().when(command).findBuildDirectoryAndFiles(any(ContentSpecProvider.class), anyBoolean());
+        // and the content spec file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the content spec parses
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the content spec returns a title and id
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
 
         // When processing the command
         try {
@@ -122,22 +140,31 @@ public class AssembleCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("Unable to assemble the Content Specification because the \"" + DUMMY_BUILD_FILE_NAME +
                 "\" file couldn't be found."));
     }
 
     @Test
     public void shouldShutdownWhenUnableToUnzipBuild() {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.mockStatic(ZipUtilities.class);
         // Given a command with ids
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
         // and the build file information has been set
-        command.setBuildFileDirectory(rootTestDirectory.getAbsolutePath());
-        command.setBuildFileName("EmptyFile.txt");
-        command.setOutputDirectory(rootTestDirectory.getAbsolutePath() + File.separator + BOOK_TITLE);
-        doNothing().when(command).findBuildDirectoryAndFiles(any(ContentSpecProvider.class), anyBoolean());
+        command.setOutputPath(rootTestDirectory.getAbsolutePath() + File.separator + BOOK_TITLE);
+        // and the file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the content spec parses
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the content spec returns a title and id
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and the unzip fails
-        PowerMockito.mockStatic(ZipUtilities.class);
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(false);
 
         // When processing the command
@@ -150,55 +177,72 @@ public class AssembleCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("The content specification failed to be assembled."));
     }
 
     @Test
     public void shouldOnlyPrintSuccessWhenUnzipBuildAndNoPublicanBuild() {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.mockStatic(ZipUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
         // and the build file information has been set
-        command.setBuildFileDirectory(rootPath);
-        command.setBuildFileName("EmptyFile.txt");
-        command.setOutputDirectory(rootPath + File.separator + BOOK_TITLE);
-        doNothing().when(command).findBuildDirectoryAndFiles(any(ContentSpecProvider.class), anyBoolean());
+        command.setOutputPath(rootPath + File.separator + BOOK_TITLE);
+        // and the file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the content spec parses
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the content spec returns a title and id
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and no publican build
         command.setNoPublicanBuild(true);
         // and the unzip succeeds
-        PowerMockito.mockStatic(ZipUtilities.class);
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(true);
 
         // When processing the command
         command.process();
 
         // Then the command printed a success message and the runPublican method wasn't executed
-        verify(command, times(0)).runPublican(any(File.class));
         assertThat(getStdOutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
     }
 
     @Test
-    public void shouldPrintSuccessAndRunPublican() {
+    public void shouldPrintSuccessAndRunPublican() throws IOException {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.mockStatic(ZipUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
         // and the build file information has been set
-        command.setBuildFileDirectory(rootPath);
-        command.setBuildFileName("EmptyFile.txt");
-        command.setOutputDirectory(rootPath + File.separator + BOOK_TITLE);
-        doNothing().when(command).findBuildDirectoryAndFiles(any(ContentSpecProvider.class), anyBoolean());
+        command.setOutputPath(rootPath + File.separator + BOOK_TITLE);
+        // and the content spec file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the content spec parses
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the content spec returns a title and id
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and the unzip succeeds
-        PowerMockito.mockStatic(ZipUtilities.class);
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(true);
-        // and don't actually run the runPublican method
-        doNothing().when(command).runPublican(any(File.class));
+        // and the publican command will execute successfully
+        when(ClientUtilities.runCommand(anyString(), any(File.class), any(Console.class), anyBoolean(), anyBoolean())).thenReturn(0);
 
         // When processing the command
         command.process();
 
         // Then the command printed a success message and the runPublican method wasn't executed
-        verify(command, times(1)).runPublican(any(File.class));
         assertThat(getStdOutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully assembled at " + rootPath + File.separator + BOOK_TITLE));
@@ -221,7 +265,6 @@ public class AssembleCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
@@ -231,7 +274,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
         // And no file
         PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn(null);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn("");
 
         // When it finding files
         try {
@@ -243,7 +286,6 @@ public class AssembleCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
     }
 
@@ -269,12 +311,21 @@ public class AssembleCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldSetBuildFileLocationsWhenFileSpecifiedAndNoOutputPath() {
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.mockStatic(ClientUtilities.class);
         // Given a command with a file
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
-        // and the file will be found
-        doReturn("").when(command).getContentSpecFromFile(anyString());
+        // and the content spec file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         // and the content spec parses
-        doReturn(contentSpec).when(command).parseContentSpec(any(RESTProviderFactory.class), anyString(), anyBoolean());
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the content spec returns a title and id
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
@@ -294,11 +345,17 @@ public class AssembleCommandTest extends BaseUnitTest {
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
         // and the file will be found
-        doReturn("").when(command).getContentSpecFromFile(anyString());
+        PowerMockito.mockStatic(FileUtilities.class);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         // and the output path is a directory
         command.setOutputPath(rootPath);
         // and the content spec parses
-        doReturn(contentSpec).when(command).parseContentSpec(any(RESTProviderFactory.class), anyString(), anyBoolean());
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
@@ -318,11 +375,16 @@ public class AssembleCommandTest extends BaseUnitTest {
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
         // and the file will be found
-        doReturn("").when(command).getContentSpecFromFile(anyString());
+        PowerMockito.mockStatic(FileUtilities.class);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         // and the output path is a directory
         command.setOutputPath(rootPath + DUMMY_BUILD_FILE_NAME);
         // and the content spec parses
-        doReturn(contentSpec).when(command).parseContentSpec(any(RESTProviderFactory.class), anyString(), anyBoolean());
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
@@ -355,7 +417,6 @@ public class AssembleCommandTest extends BaseUnitTest {
         }
 
         // Then the command should shutdown and an error be printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("Unable to assemble the Content Specification because an error " +
                 "occurred while running Publican. (exit code: " + exitCode + ")"));
     }
@@ -381,5 +442,10 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // Then the result should be false
         assertFalse(result);
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 }

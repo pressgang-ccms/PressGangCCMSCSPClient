@@ -518,7 +518,7 @@ public class ClientUtilities {
      * @param contentSpecTitle The title of the content specification for the output directory.
      * @return A string that represents where the root folder is for content to be saved.
      */
-    private static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final String contentSpecTitle) {
+    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final String contentSpecTitle) {
         assert contentSpecTitle != null;
         assert cspConfig != null;
 

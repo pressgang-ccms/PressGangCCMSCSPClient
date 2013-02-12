@@ -124,11 +124,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Process the content spec to see if it's valid
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
-        try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
-        }
+        success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();

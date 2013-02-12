@@ -18,6 +18,8 @@ import com.google.common.collect.Lists;
 import com.redhat.j2koji.exceptions.KojiException;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
+import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
+import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
 import org.jboss.pressgang.ccms.contentspec.builder.structures.CSDocbookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
@@ -398,12 +400,7 @@ public class BuildCommand extends BaseCommandImpl {
      */
     protected String getContentSpecFromFile(final String file) {
         // Get the content spec from the file
-        String contentSpec = null;
-        try {
-            contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
+        String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
 
         if (contentSpec.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
@@ -575,7 +572,9 @@ public class BuildCommand extends BaseCommandImpl {
             } else {
                 builderOutput = getBuilder().buildTranslatedBook(contentSpec, user, getBuildOptions(), getCspConfig().getZanataDetails());
             }
-        } catch (Exception e) {
+        } catch (BuildProcessingException e) {
+            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
+        } catch (BuilderCreationException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
         }
 

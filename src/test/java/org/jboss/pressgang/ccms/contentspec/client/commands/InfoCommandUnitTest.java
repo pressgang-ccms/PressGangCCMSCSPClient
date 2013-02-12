@@ -8,15 +8,10 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
@@ -82,7 +77,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        this.command = spy(new InfoCommand(parser, cspConfig, clientConfig));
+        this.command = new InfoCommand(parser, cspConfig, clientConfig);
     }
 
     @Test
@@ -102,13 +97,14 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
     public void shouldPrintExpectedOutput() {
         final List<SpecTopic> specTopics = Arrays.asList(specTopic);
+        final CollectionWrapper<TopicWrapper> topics = mock(CollectionWrapper.class);
+        final List<TopicWrapper> topicList = Arrays.asList(topicWrapper);
         // Given a command with an id
         command.setIds(Arrays.asList(id));
         // and a matching content spec
@@ -120,7 +116,9 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         given(contentSpec.getSpecTopics()).willReturn(specTopics);
         given(specTopic.getDBId()).willReturn(secondId);
         // and the calculate number of complete topics method works
-        doReturn(topicCount).when(command).calculateNumTopicsComplete(any(TopicProvider.class), anyList());
+        given(topicProvider.getTopics(anyList())).willReturn(topics);
+        given(topics.getItems()).willReturn(topicList);
+        given(topicWrapper.getXml()).willReturn(contentSpecTitle);
         // and the content spec will be successfully transformed
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(contentSpec);
@@ -134,7 +132,8 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         assertThat(logs, containsString("Content Specification Revision: " + revision));
         assertThat(logs, containsString("Content Specification Title: " + contentSpecTitle));
         assertThat(logs, containsString(
-                "Total Number of Topics: " + specTopics.size() + "\nNumber of Topics with XML: " + topicCount + "\nPercentage Complete:"));
+                "Total Number of Topics: " + specTopics.size() + "\nNumber of Topics with XML: " + specTopics.size() + "\nPercentage " +
+                        "Complete:"));
     }
 
     @Test

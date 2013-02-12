@@ -211,13 +211,7 @@ public class CreateCommand extends BaseCommandImpl {
         processingOptions.setPermissiveMode(permissive);
 
         setContentSpecProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        try {
-            return getContentSpecProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
-        }
-
-        return false;
+        return getContentSpecProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
     }
 
     @Override

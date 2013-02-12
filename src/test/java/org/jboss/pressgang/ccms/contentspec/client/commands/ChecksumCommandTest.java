@@ -7,12 +7,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -63,7 +59,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        this.command = spy(new ChecksumCommand(parser, cspConfig, clientConfig));
+        command = new ChecksumCommand(parser, cspConfig, clientConfig);
     }
 
     @Test
@@ -83,7 +79,6 @@ public class ChecksumCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 

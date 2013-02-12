@@ -38,6 +38,8 @@ public class SetupCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
+        configFile.append("\n");
+
         // Setup the Root csprocessor project directory
         setupRootDirectory(configFile);
 
@@ -127,7 +129,7 @@ public class SetupCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Use the default server configuration? (Yes/No)");
         String answer = JCommander.getConsole().readLine();
 
-        /* We are using the default setup so we only need to get the default server and a username */
+        // We are using the default setup so we only need to get the default server and a username
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Get which server they want to connect to by default
             while (!defaultServerName.equalsIgnoreCase("test") && !defaultServerName.equalsIgnoreCase("production")) {
@@ -149,9 +151,9 @@ public class SetupCommand extends BaseCommandImpl {
             servers.put("test", new ServerConfiguration("test", Constants.DEFAULT_TEST_SERVER));
             servers.put("production", new ServerConfiguration("production", Constants.DEFAULT_PROD_SERVER));
 
-        }        /* We need to read in a list of servers and then get the default server */ else if (answer.equalsIgnoreCase(
-                "no") || answer.equalsIgnoreCase("n")) {
-            while (!answer.matches("^[0-9]+$")) {
+        } else if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
+            // We need to read in a list of servers and then get the default server
+            while (!answer.matches("^[0-9]+$") || (Integer.parseInt(answer) <= 0)) {
                 JCommander.getConsole().print("How many servers are to be configured? ");
                 answer = JCommander.getConsole().readLine();
 
@@ -185,7 +187,7 @@ public class SetupCommand extends BaseCommandImpl {
                 allowShutdownToContinueIfRequested();
             }
 
-            /* Only ask for the default when there are multiple servers */
+            // Only ask for the default when there are multiple servers
             if (servers.size() > 1) {
                 // Get which server they want to connect to
                 while (!servers.containsKey(defaultServerName)) {
@@ -208,6 +210,7 @@ public class SetupCommand extends BaseCommandImpl {
 
         // Add the information to the configuration file
         configFile.append("[servers]\n");
+        int count = 0;
         for (final Entry<String, ServerConfiguration> serverEntry : servers.entrySet()) {
             final String serverName = serverEntry.getKey();
             final ServerConfiguration config = serverEntry.getValue();
@@ -224,8 +227,10 @@ public class SetupCommand extends BaseCommandImpl {
                 configFile.append(serverName + ".username=" + config.getUsername() + "\n");
             else configFile.append(serverName + ".username=\n");
 
-            // Add a blank line to separate servers
-            configFile.append("\n");
+            if (++count < servers.size()) {
+                // Add a blank line to separate servers
+                configFile.append("\n");
+            }
 
             // Good point to check for a shutdown
             allowShutdownToContinueIfRequested();
@@ -295,7 +300,7 @@ public class SetupCommand extends BaseCommandImpl {
         // Create the Publish Settings
         configFile.append("[publish]\n");
         configFile.append("koji.huburl=" + (kojiHubUrl.isEmpty() ? Constants.DEFAULT_KOJIHUB_URL : kojiHubUrl) + "\n");
-        configFile.append("command=" + (publishCommand.isEmpty() ? Constants.DEFAULT_PUBLISH_COMMAND : publishCommand) + "\n\n");
+        configFile.append("command=" + (publishCommand.isEmpty() ? Constants.DEFAULT_PUBLISH_COMMAND : publishCommand) + "\n");
     }
 
     /**
@@ -318,7 +323,7 @@ public class SetupCommand extends BaseCommandImpl {
         final HashMap<String, ZanataServerConfiguration> servers = new HashMap<String, ZanataServerConfiguration>();
         String answer = "";
 
-        while (!answer.matches("^[0-9]+$")) {
+        while (!answer.matches("^[0-9]+$") || (Integer.parseInt(answer) <= 0)) {
             JCommander.getConsole().print("How many zanata servers are to be configured? ");
             answer = JCommander.getConsole().readLine();
 
@@ -326,10 +331,12 @@ public class SetupCommand extends BaseCommandImpl {
             allowShutdownToContinueIfRequested();
         }
 
+        // Get the number of servers
+        final Integer numServers = Integer.parseInt(answer);
+
         // Get the server setup details from the user
-        final Integer numProjects = Integer.parseInt(answer);
         final StringBuilder serverNames = new StringBuilder("");
-        for (int i = 1; i <= numProjects; i++) {
+        for (int i = 1; i <= numServers; i++) {
             final ZanataServerConfiguration config = new ZanataServerConfiguration();
 
             // Get the name of the server
@@ -377,6 +384,7 @@ public class SetupCommand extends BaseCommandImpl {
 
         // Add the information to the configuration file
         configFile.append("[zanata]\n");
+        int count = 0;
         for (final Entry<String, ZanataServerConfiguration> serverEntry : servers.entrySet()) {
             final String serverName = serverEntry.getKey();
             final ZanataServerConfiguration config = serverEntry.getValue();
@@ -400,8 +408,10 @@ public class SetupCommand extends BaseCommandImpl {
                 else configFile.append(serverName + ".key=\n");
             }
 
-            // Add a blank line to separate servers
-            configFile.append("\n");
+            if (++count < servers.size()) {
+                // Add a blank line to separate servers
+                configFile.append("\n");
+            }
 
             // Good point to check for a shutdown
             allowShutdownToContinueIfRequested();

@@ -7,13 +7,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,7 +61,7 @@ public class ListCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        command = spy(new ListCommand(parser, cspConfig, clientConfig));
+        command = new ListCommand(parser, cspConfig, clientConfig);
     }
 
     @Test
@@ -86,7 +84,6 @@ public class ListCommandTest extends BaseUnitTest {
         }
 
         // Then an error should be print and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString(
                 "There are 51 Content Specs on this server. You should probably use \"csprocessor search\" if you have an idea what you "
                         + "are looking for. Otherwise, rerun the list command, and this time use --limit <NUMBER>"));

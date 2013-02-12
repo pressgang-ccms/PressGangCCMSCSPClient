@@ -8,17 +8,11 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -30,6 +24,8 @@ import java.util.Date;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
+import net.sf.ipsedixit.annotation.ArbitraryString;
+import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
@@ -41,8 +37,10 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,6 +62,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
     @Arbitrary Integer id;
     @Arbitrary Integer revision;
     @Arbitrary String randomString;
+    @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
@@ -71,8 +70,11 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock TopicProvider topicProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
-    @Mock UserWrapper userWrapper;
+    @Mock UserProvider userProvider;
+    @Mock CollectionWrapper<UserWrapper> users;
+    @Mock UserWrapper user;
     @Mock ContentSpec contentSpec;
+    @Mock ContentSpecProcessor processor;
 
     PullSnapshotCommand command;
     File rootTestDirectory;
@@ -84,10 +86,11 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
+        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         command = spy(new PullSnapshotCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid
-        doReturn(userWrapper).when(command).authenticate(anyString(), any(RESTProviderFactory.class));
+        setUpAuthorisedUser();
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
@@ -110,7 +113,6 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
@@ -131,7 +133,6 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
@@ -154,7 +155,6 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID and revision!"));
     }
 
@@ -173,7 +173,9 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // and assume the processing worked
-        doNothing().when(command).setRevisionsForContentSpec(any(ContentSpec.class), any(UserWrapper.class));
+        given(command.getProcessor()).willReturn(processor);
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),
+                any(ContentSpecParser.ParsingMode.class))).willReturn(true);
         // And we don't actually want to save anything
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
@@ -212,7 +214,9 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // and assume the processing worked
-        doNothing().when(command).setRevisionsForContentSpec(any(ContentSpec.class), any(UserWrapper.class));
+        given(command.getProcessor()).willReturn(processor);
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),
+                any(ContentSpecParser.ParsingMode.class))).willReturn(true);
         // And we don't actually want to save anything
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
@@ -243,7 +247,6 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldShutdownWhenSetContentSpecRevisionsFails() throws Exception {
-        ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         // Given processing the spec will fail
         given(command.getProcessor()).willReturn(processor);
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),
@@ -251,7 +254,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // When setting the content spec topic revisions
         try {
-            command.setRevisionsForContentSpec(contentSpec, userWrapper);
+            command.setRevisionsForContentSpec(contentSpec, user);
             // Then an error is printed and the program is shut down
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
@@ -259,7 +262,6 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         }
 
         // Then the command should shutdown and an error message should be printed
-        verify(command, times(1)).shutdown(anyInt());
         assertThat(getStdOutLogs(),
                 containsString("The revision of the Content Specification is invalid and as such the snapshot couldn't be pulled."));
     }
@@ -285,5 +287,13 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the result should be false
         assertFalse(result);
+    }
+
+    protected void setUpAuthorisedUser() {
+        command.setUsername(username);
+        given(userProvider.getUsersByName(username)).willReturn(users);
+        given(users.size()).willReturn(1);
+        given(users.getItems()).willReturn(Arrays.asList(user));
+        given(user.getUsername()).willReturn(username);
     }
 }

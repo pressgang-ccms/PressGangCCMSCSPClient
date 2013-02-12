@@ -128,17 +128,13 @@ public class SnapshotCommand extends BaseCommandImpl {
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
         Integer revision = null;
-        try {
-            if (getCreateNew()) {
-                success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
-            } else {
-                success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
-            }
-            if (success) {
-                revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
-            }
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
+        if (getCreateNew()) {
+            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
+        } else {
+            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+        }
+        if (success) {
+            revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
         }
 
         if (!success) {

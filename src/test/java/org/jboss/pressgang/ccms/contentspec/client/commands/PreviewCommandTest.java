@@ -11,13 +11,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -28,10 +28,14 @@ import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +46,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, FileUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, FileUtilities.class, ClientUtilities.class})
 public class PreviewCommandTest extends BaseUnitTest {
     private static final String BOOK_TITLE = "Test";
     private static final String DUMMY_BUILD_FILE_NAME = "Test.zip";
@@ -51,6 +55,7 @@ public class PreviewCommandTest extends BaseUnitTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
+    @Arbitrary String randomString;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
@@ -61,9 +66,12 @@ public class PreviewCommandTest extends BaseUnitTest {
 
     PreviewCommand command;
     File rootTestDirectory;
+    File bookDir;
+    File previewFile;
+    File htmlSingleDir;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
@@ -75,6 +83,17 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+
+        // Make the book title directory
+        bookDir = new File(rootTestDirectory, BOOK_TITLE);
+        bookDir.mkdir();
+
+        // Make the preview dummy file
+        htmlSingleDir = new File(
+                bookDir.getAbsolutePath() + File.separator + "tmp" + File.separator + "en-US" + File.separator + "html-single");
+        htmlSingleDir.mkdirs();
+        previewFile = new File(htmlSingleDir, "index.html");
+        previewFile.createNewFile();
     }
 
     @Test
@@ -94,7 +113,6 @@ public class PreviewCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
@@ -115,7 +133,6 @@ public class PreviewCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("\"blah\" is not currently supported as a preview format."));
     }
 
@@ -125,9 +142,16 @@ public class PreviewCommandTest extends BaseUnitTest {
         // Given a command with ids
         command.setIds(Arrays.asList(id.toString()));
         // and a valid preview format
-        given(clientConfig.getPublicanPreviewFormat()).willReturn("html-single");
-        // and the find preview file returns an invalid file path
-        doReturn(rootPath).when(command).findFileToPreview(any(ContentSpecProvider.class), anyBoolean(), anyString());
+        given(clientConfig.getPublicanPreviewFormat()).willReturn("html");
+        // and the output path is set
+        command.setOutputPath(rootTestDirectory.getAbsolutePath() + File.separator);
+        // and the provider will return a wrapper
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the wrapper returns a title, product, version and id
+        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpecWrapper.getVersion()).willReturn("1");
+        given(contentSpecWrapper.getProduct()).willReturn(BOOK_TITLE);
+        given(contentSpecWrapper.getId()).willReturn(id);
 
         // When processing the command
         try {
@@ -139,20 +163,26 @@ public class PreviewCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdOutLogs(),
-                containsString("Unable to preview the Content Specification because the \"" + rootPath + "\" file couldn't be found"));
+        assertThat(getStdOutLogs(), containsString(
+                "Unable to preview the Content Specification because the \"" + previewFile.getAbsolutePath().replace("-single",
+                        "") + "\" file couldn't be found"));
     }
 
     @Test
     public void shouldShutdownWhenUnableToOpenFile() throws Exception {
-        final String rootPath = rootTestDirectory.getAbsolutePath() + File.separator;
         // Given a command with ids
         command.setIds(Arrays.asList(id.toString()));
         // and a valid preview format
         given(clientConfig.getPublicanPreviewFormat()).willReturn("html-single");
-        // and the find preview file returns a valid
-        doReturn(rootPath + "EmptyFile.txt").when(command).findFileToPreview(any(ContentSpecProvider.class), anyBoolean(), anyString());
+        // and the output path is set
+        command.setOutputPath(rootTestDirectory.getAbsolutePath() + File.separator);
+        // and the provider will return a wrapper
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the wrapper returns a title, product, version and id
+        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpecWrapper.getVersion()).willReturn("1");
+        given(contentSpecWrapper.getProduct()).willReturn(BOOK_TITLE);
+        given(contentSpecWrapper.getId()).willReturn(id);
         // and the File won't open
         PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.doThrow(new Exception()).when(FileUtilities.class);
@@ -170,8 +200,7 @@ public class PreviewCommandTest extends BaseUnitTest {
         // Then the command should be shutdown and an error message printed
         PowerMockito.verifyStatic(times(1));
         FileUtilities.openFile(any(File.class));
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
-        assertThat(getStdOutLogs(), containsString("Unable to open the \"" + rootPath + "EmptyFile.txt\" file."));
+        assertThat(getStdOutLogs(), containsString("Unable to open the \"" + previewFile.getAbsolutePath() + "\" file."));
     }
 
     @Test
@@ -191,7 +220,6 @@ public class PreviewCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
@@ -201,7 +229,7 @@ public class PreviewCommandTest extends BaseUnitTest {
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
         // And no file
         PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn(null);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn("");
 
         // When it finding files
         try {
@@ -213,7 +241,6 @@ public class PreviewCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
     }
 
@@ -245,18 +272,24 @@ public class PreviewCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldGetPreviewFileWhenFileSpecifiedAndNoOutputPath() {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
         boolean previewFromConfig = false;
         // Given a command with a file
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
-        // and the file will be found
-        doReturn("").when(command).getContentSpecFromFile(anyString());
+        // and the content spec file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         // and the content spec parses
-        doReturn(contentSpec).when(command).parseContentSpec(any(RESTProviderFactory.class), anyString(), anyBoolean());
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         // and the content spec returns a title, product, version and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getVersion()).willReturn("1");
         given(contentSpec.getProduct()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
 
         // When the command is finding the files
         final String previewHtmlSingleFile = command.findFileToPreview(contentSpecProvider, previewFromConfig, "html-single");
@@ -271,21 +304,27 @@ public class PreviewCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldGetPreviewFileWhenFileSpecifiedAndOutputDirectory() {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath() + File.separator;
         boolean previewFromConfig = false;
         // Given a command with a file
         command.setIds(Arrays.asList(rootPath));
-        // and the file will be found
-        doReturn("").when(command).getContentSpecFromFile(anyString());
+        // and the content spec file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the content spec parses
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         // and the output path is a directory
         command.setOutputPath(rootPath);
-        // and the content spec parses
-        doReturn(contentSpec).when(command).parseContentSpec(any(RESTProviderFactory.class), anyString(), anyBoolean());
         // and the content spec returns a title, product, version and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getVersion()).willReturn("1");
         given(contentSpec.getProduct()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
 
         // When the command is finding the files
         final String previewHtmlSingleFile = command.findFileToPreview(contentSpecProvider, previewFromConfig, "html-single");
@@ -300,21 +339,27 @@ public class PreviewCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldGetPreviewFileWhenFileSpecifiedAndOutputFile() {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath() + File.separator;
         boolean previewFromConfig = false;
         // Given a command with a file
         command.setIds(Arrays.asList(rootPath));
-        // and the file will be found
-        doReturn("").when(command).getContentSpecFromFile(anyString());
+        // and the content spec file will be found
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the content spec parses
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         // and the output path is a directory
         command.setOutputPath(rootPath + DUMMY_BUILD_FILE_NAME);
-        // and the content spec parses
-        doReturn(contentSpec).when(command).parseContentSpec(any(RESTProviderFactory.class), anyString(), anyBoolean());
         // and the content spec returns a title, product, version and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getVersion()).willReturn("1");
         given(contentSpec.getProduct()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
 
         // When the command is finding the files
         final String previewHtmlSingleFile = command.findFileToPreview(contentSpecProvider, previewFromConfig, "html-single");
@@ -348,5 +393,10 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the result should be false
         assertFalse(result);
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 }

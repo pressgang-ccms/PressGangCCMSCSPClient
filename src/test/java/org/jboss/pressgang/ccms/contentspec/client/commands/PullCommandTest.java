@@ -7,13 +7,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -24,6 +23,7 @@ import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -73,7 +73,7 @@ public class PullCommandTest extends BaseUnitTest {
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        command = spy(new PullCommand(parser, cspConfig, clientConfig));
+        command = new PullCommand(parser, cspConfig, clientConfig);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
@@ -96,7 +96,6 @@ public class PullCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No ID was specified by the command line or a csprocessor.cfg file."));
     }
 
@@ -117,7 +116,6 @@ public class PullCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
@@ -140,7 +138,6 @@ public class PullCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID and revision!"));
     }
 
@@ -163,12 +160,12 @@ public class PullCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
     }
 
     @Test
     public void shouldGenerateRightFilenameAndPathForContentSpec() {
+        PowerMockito.mockStatic(ClientUtilities.class);
         // Given a command called with an ID
         command.setIds(Arrays.asList(id));
         // And a matching content spec
@@ -180,7 +177,6 @@ public class PullCommandTest extends BaseUnitTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // And we don't actually want to save anything
-        PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
 
@@ -197,7 +193,8 @@ public class PullCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldGenerateRightFilenameAndPathForContentSpecPullingFromConfig() {
+    public void shouldGenerateRightFilenameAndPathForContentSpecPullingFromConfig() throws NoSuchMethodException {
+        PowerMockito.mockStatic(ClientUtilities.class);
         // Given a command called without an ID
         command.setIds(new ArrayList<Integer>());
         // and the cspconfig has an id
@@ -209,9 +206,13 @@ public class PullCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getTitle()).willReturn(CONTENTSPEC_TITLE);
         given(contentSpecWrapper.getId()).willReturn(id);
         // And we don't actually want to save anything
-        PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
+        // and call some real methods
+        when(ClientUtilities.prepareAndValidateIds(any(BaseCommandImpl.class), eq(cspConfig), anyList())).thenCallRealMethod();
+        when(ClientUtilities.prepareIds(any(BaseCommandImpl.class), eq(cspConfig), anyList())).thenCallRealMethod();
+        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenCallRealMethod();
+        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), anyString())).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);

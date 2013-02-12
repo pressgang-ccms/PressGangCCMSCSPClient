@@ -161,13 +161,8 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        boolean success = false;
         setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        try {
-            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
-        } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
-        }
+        boolean success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
 
         if (!success) {
             JCommander.getConsole().println(loggerManager.generateLogs());

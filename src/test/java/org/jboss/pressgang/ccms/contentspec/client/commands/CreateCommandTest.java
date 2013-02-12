@@ -13,10 +13,8 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -26,8 +24,11 @@ import java.util.Arrays;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
+import net.sf.ipsedixit.annotation.ArbitraryString;
+import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.Level;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
@@ -35,10 +36,13 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.junit.After;
@@ -63,16 +67,22 @@ public class CreateCommandTest extends BaseUnitTest {
     @Arbitrary Integer id;
     @Arbitrary Integer randomNumber;
     @Arbitrary String randomString;
+    @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
+    @ArbitraryString(type = StringType.ALPHANUMERIC) String randomAlphanumString;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
+    @Mock TopicProvider topicProvider;
     @Mock UserProvider userProvider;
+    @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock File mockFile;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TopicWrapper topicWrapper;
     @Mock ContentSpec contentSpec;
+    @Mock Level level;
 
     CreateCommand command;
     File rootTestDirectory;
@@ -84,10 +94,12 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
+        given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
+        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         command = spy(new CreateCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid
-        doReturn(user).when(command).authenticate(anyString(), any(RESTProviderFactory.class));
+        setUpAuthorisedUser();
 
         // Return the test directory as the root directory
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
@@ -112,7 +124,6 @@ public class CreateCommandTest extends BaseUnitTest {
         }
 
         // Then an error message should be printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No file was found for the specified file name!"));
     }
 
@@ -131,7 +142,6 @@ public class CreateCommandTest extends BaseUnitTest {
         }
 
         // Then an error message should be printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No file was found for the specified file name!"));
     }
 
@@ -150,15 +160,15 @@ public class CreateCommandTest extends BaseUnitTest {
         }
 
         // Then an error message should be printed and the command shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("No file was found for the specified file name!"));
     }
 
     @Test
     public void shouldShutdownWhenFileIsEmpty() {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn("");
@@ -173,15 +183,15 @@ public class CreateCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown and an error message printed
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString("The specified file was empty"));
     }
 
     @Test
     public void shouldShutdownWhenFileIsNotValidContentSpec() throws Exception {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
@@ -198,16 +208,14 @@ public class CreateCommandTest extends BaseUnitTest {
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
-
-        // Then the command should be shutdown
-        verify(command, times(1)).shutdown(anyInt());
     }
 
     @Test
     public void shouldShutdownWhenOutputDirectoryExistsAndNoForceAndCreateCsprocessorCfg() throws Exception {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // and no force
         command.setForce(false);
         // and should create the csprocessor cfg
@@ -232,7 +240,6 @@ public class CreateCommandTest extends BaseUnitTest {
         }
 
         // Then the command should be shutdown
-        verify(command, times(1)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertThat(getStdOutLogs(), containsString(
                 "A directory already exists for the Content Specification. Please check the \"" + bookDir.getAbsolutePath() + "\" " +
                         "directory first and if it's correct, then use the --force option."));
@@ -240,9 +247,10 @@ public class CreateCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldNotShutdownWhenOutputDirectoryExistsAndNoCreateCsprocessorCfg() throws Exception {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // and should create the csprocessor cfg
         command.setCreateCsprocessorCfg(false);
         // that is empty
@@ -254,9 +262,9 @@ public class CreateCommandTest extends BaseUnitTest {
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
-        // and we only want to test up until just after the check
-        doThrow(new CheckExitCalled(-2)).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class),
-                any(UserWrapper.class));
+        // and the processing fails
+        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), any(UserWrapper.class));
+        ;
 
         // When it is processed
         try {
@@ -265,15 +273,16 @@ public class CreateCommandTest extends BaseUnitTest {
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
             // Then the command should exit from the given above.
-            assertThat(e.getStatus(), is(-2));
+            assertThat(e.getStatus(), is(-1));
         }
     }
 
     @Test
     public void shouldShutdownWhenProcessingFails() throws Exception {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // and force to bypass the directory exists check
         command.setForce(true);
         // and should create the csprocessor cfg
@@ -298,16 +307,14 @@ public class CreateCommandTest extends BaseUnitTest {
         } catch (CheckExitCalled e) {
             assertThat(e.getStatus(), is(-1));
         }
-
-        // Then the command should be shutdown
-        verify(command, times(1)).shutdown(anyInt());
     }
 
     @Test
     public void shouldCreateProjectDirectoryOnSuccess() throws Exception {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // and force to bypass the directory exists check
         command.setForce(true);
         // and should create the csprocessor cfg
@@ -341,9 +348,10 @@ public class CreateCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldNotCreateProjectDirectoryOnSuccessAndNoCsprocessorCfg() throws Exception {
-        // Given a command with a valid file
+        // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
-        doReturn(true).when(command).isValid();
+        // and the file is valid
+        setUpValidMockFile();
         // and should create the csprocessor cfg
         command.setCreateCsprocessorCfg(false);
         // that is empty
@@ -398,5 +406,19 @@ public class CreateCommandTest extends BaseUnitTest {
     @After
     public void cleanUp() throws IOException {
         FileUtils.deleteDirectory(bookDir);
+    }
+
+    protected void setUpValidMockFile() {
+        given(mockFile.isDirectory()).willReturn(false);
+        given(mockFile.isFile()).willReturn(true);
+        given(mockFile.exists()).willReturn(true);
+    }
+
+    protected void setUpAuthorisedUser() {
+        command.setUsername(username);
+        given(userProvider.getUsersByName(username)).willReturn(users);
+        given(users.size()).willReturn(1);
+        given(users.getItems()).willReturn(Arrays.asList(user));
+        given(user.getUsername()).willReturn(username);
     }
 }

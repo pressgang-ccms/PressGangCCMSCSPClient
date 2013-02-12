@@ -61,11 +61,11 @@ public class SearchCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        this.command = new SearchCommand(parser, cspConfig, clientConfig);
+        command = new SearchCommand(parser, cspConfig, clientConfig);
     }
 
     @Test
-    public void shouldCreateDatabaseQueriesAsExpected() throws Exception {
+    public void shouldCreateDatabaseQueriesAsExpected() {
         // Given a query set
         command.setQueries(Arrays.asList(query1, query2));
         // And an expected query that should result from that set

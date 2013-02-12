@@ -223,13 +223,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Validate and parse the Content Specification
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
-        boolean success = false;
-        try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
-        } catch (Exception e) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
-            shutdown(Constants.EXIT_FAILURE);
-        }
+        boolean success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
 
         // Print the error/warning messages
         JCommander.getConsole().println(loggerManager.generateLogs());

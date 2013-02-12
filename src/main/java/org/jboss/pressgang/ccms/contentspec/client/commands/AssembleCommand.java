@@ -207,7 +207,7 @@ public class AssembleCommand extends BuildCommand {
     private void findBuildDirectoryAndFiles(final String contentSpecTitle) {
         // Create the fully qualified output path
         if (getOutputPath() != null && (getOutputPath().endsWith(File.separator) || new File(getOutputPath()).isDirectory())) {
-            setBuildFileDirectory(getOutputPath());
+            setBuildFileDirectory(ClientUtilities.fixDirectoryPath(getOutputPath()));
             setBuildFileName(DocBookUtilities.escapeTitle(contentSpecTitle) + ".zip");
         } else if (getOutputPath() == null) {
             setBuildFileName(DocBookUtilities.escapeTitle(contentSpecTitle) + ".zip");
