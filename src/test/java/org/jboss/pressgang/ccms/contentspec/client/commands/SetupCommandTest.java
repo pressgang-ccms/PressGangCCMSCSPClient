@@ -182,6 +182,36 @@ public class SetupCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldAskForDefaultServerWhenSetZanataOptionsWithTwoServers() {
+        // Given some input
+        String zanataServerName1 = "public";
+        String zanataUrl1 = "http://translate.zanata.org/";
+        String zanataUsername1 = username;
+        String zanataKey1 = apikey;
+
+        String zanataServerName2 = "test";
+        String zanataUrl2 = "http://test.zanata.org/";
+        String zanataUsername2 = username;
+        String zanataKey2 = apikey;
+
+        String zanataProjectName = "project";
+        String zanataVersionName = "version";
+        setStdInput(zanataProjectName + "\n" + zanataVersionName + "\n" + "2" + "\n" + zanataServerName2 + "\n" + zanataUrl2 + "\n" +
+                zanataUsername2 + "\n" + zanataKey2 + "\n" + zanataServerName1 + "\n" + zanataUrl1 + "\n" +
+                zanataUsername1 + "\n" + zanataKey1 + "\n" + zanataServerName1 + "\n");
+
+        // When getting the zanata options from the user
+        StringBuilder builder = new StringBuilder();
+        command.setupZanata(builder);
+
+        // Then the output should have the zanata details set
+        assertThat(builder.toString(), is("[zanata]\ndefault=" + zanataServerName1 + "\ndefault.project=" + zanataProjectName +
+                "\ndefault.project-version=" + zanataVersionName + "\n\npublic.url=" + zanataUrl1 + "\npublic.username=" + zanataUsername1 +
+                "\npublic.key=" + zanataKey1 + "\n\ntest.url=" + zanataUrl2 + "\ntest.username=" + zanataUsername2 + "\ntest.key=" +
+                zanataKey2 + "\n"));
+    }
+
+    @Test
     public void shouldSetEmptyValuesForSetZanataOptions() {
         // Given some input
         setStdInput("\n\n1\npublic\n\n\n\n");
@@ -208,9 +238,33 @@ public class SetupCommandTest extends BaseUnitTest {
 
         // Then the output should have the default server setup
         assertThat(builder.toString(),
-                is("[servers]\ndefault=" + defaultServer + "\ndefault.username=" + username + "\n\ntest.url=" + Constants
-                        .DEFAULT_TEST_SERVER + "\ntest.username=\n\nproduction.url=" + Constants.DEFAULT_PROD_SERVER + "\nproduction" +
+                is("[servers]\ndefault=" + defaultServer + "\ndefault.username=" + username + "\n\nproduction.url=" + Constants
+                        .DEFAULT_PROD_SERVER + "\nproduction.username=\n\ntest.url=" + Constants.DEFAULT_TEST_SERVER + "\ntest" +
                         ".username=\n"));
+    }
+
+    @Test
+    public void shouldAskForDefaultServerWhenSetServerOptionsWithTwoServers() {
+        // Given some input
+        String pressgangServerName1 = "public";
+        String pressgangUrl1 = "http://www.example.com/";
+        String pressgangUsername1 = username;
+
+        String pressgangServerName2 = "test";
+        String pressgangUrl2 = "http://test.example.com/";
+        String pressgangUsername2 = username;
+
+        setStdInput("n\n" + "2" + "\n" + pressgangServerName2 + "\n" + pressgangUrl2 + "\n" + pressgangUsername2 + "\n" +
+                pressgangServerName1 + "\n" + pressgangUrl1 + "\n" + pressgangUsername1 + "\n" + pressgangServerName1 + "\n");
+
+        // When getting the server options from the user
+        StringBuilder builder = new StringBuilder();
+        command.setupServers(builder);
+
+        // Then the output should have the pressgang details set
+        assertThat(builder.toString(), is("[servers]\ndefault=" + pressgangServerName1 + "\ndefault.username=\n\npublic.url=" +
+                pressgangUrl1 + "\npublic.username=" + pressgangUsername1 + "\n\ntest.url=" + pressgangUrl2 + "\ntest.username=" +
+                pressgangUsername2 + "\n"));
     }
 
     @Test

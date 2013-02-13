@@ -56,6 +56,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
     @Mock DataProviderFactory providerFactory;
     @Mock UserProvider userProvider;
     @Mock UserWrapper user;
+    @Mock CollectionWrapper<UserWrapper> usersCollection;
 
     BaseCommandImpl command;
 
@@ -69,7 +70,6 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
 
     @Test
     public void shouldShutdownWhenAuthenticationFails() {
-        final CollectionWrapper<UserWrapper> usersCollection = mock(CollectionWrapper.class);
         final List<UserWrapper> users = Collections.EMPTY_LIST;
         // Given that authentication won't succeed
         when(userProvider.getUsersByName(anyString())).thenReturn(usersCollection);

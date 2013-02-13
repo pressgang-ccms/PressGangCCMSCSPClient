@@ -91,10 +91,10 @@ public class PushCommand extends BaseCommandImpl {
      */
     public boolean isValid() {
         // We should have only one file
-        if (files.size() != 1) return false;
+        if (getFiles().size() != 1) return false;
 
         // Check that the file exists
-        final File file = files.get(0);
+        final File file = getFiles().get(0);
         if (file.isDirectory()) return false;
         if (!file.exists()) return false;
         if (!file.isFile()) return false;
@@ -223,7 +223,7 @@ public class PushCommand extends BaseCommandImpl {
     }
 
     /**
-     * Saves a post processed content specifcation to the project directory if pushing using a csprocessor.cfg,
+     * Saves a post processed content specification to the project directory if pushing using a csprocessor.cfg,
      * otherwise save it in the current working directory.
      *
      * @param pushingFromConfig If the command is pushing from a CSP Project directory.

@@ -365,6 +365,103 @@ public class BuildCommand extends BaseCommandImpl {
         this.hideBugLinks = hideBugLinks;
     }
 
+    @Override
+    public void process() {
+        // Authenticate the user
+        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
+
+        final long startTime = System.currentTimeMillis();
+        boolean buildingFromConfig = false;
+
+        // Add the details for the csprocessor.cfg if no ids are specified and then validate input
+        if (ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds())) {
+            // Set the output path to the value store in the client config
+            if (getCspConfig().getRootOutputDirectory() != null && !getCspConfig().getRootOutputDirectory().equals("")) {
+                setOutputPath(getCspConfig().getRootOutputDirectory());
+            }
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Get the content spec and make sure it exists
+        final ContentSpec contentSpec = getContentSpec(getIds().get(0));
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Validate that the content spec is valid
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        boolean success = validateContentSpec(getProviderFactory(), loggerManager, user, contentSpec);
+
+        // Print the error/warning messages
+        JCommander.getConsole().println(loggerManager.generateLogs());
+
+        // Check that everything validated fine
+        if (!success) {
+            shutdown(Constants.EXIT_TOPIC_INVALID);
+        }
+
+        // Pull in the pubsnumber from koji if the option is set
+        if (getFetchPubsnum()) {
+            final Integer pubsnumber = getContentSpecPubsNumberFromKoji(contentSpec);
+            if (pubsnumber != null) {
+                contentSpec.setPubsNumber(pubsnumber);
+            }
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        JCommander.getConsole().println(Constants.STARTING_BUILD_MSG);
+
+        // Setup the zanata details incase some were overridden via the command line
+        setupZanataOptions();
+
+        // Build the Content Specification
+        byte[] builderOutput = buildContentSpec(contentSpec, user);
+
+        // Print the success messages
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, getBuilder().getNumErrors(),
+                getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
+                + "Victory!" : ""));
+        if (executionTime) {
+            JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
+        }
+
+        // Get the filename for the spec, using it's title.
+        String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+
+        // Create the output file
+        String outputDir = "";
+        if (buildingFromConfig) {
+            outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
+            fileName += Constants.DEFAULT_CONFIG_BUILD_POSTFIX;
+        }
+        fileName += ".zip";
+
+        // Create the output file based on the command line params and content spec
+        final File outputFile = getOutputFile(outputDir, fileName);
+
+        // Make sure the directories exist
+        if (outputFile.isDirectory() && !outputFile.exists()) {
+            // TODO ensure that the directory is created
+            outputFile.mkdirs();
+        } else if (outputFile.getParentFile() != null && !outputFile.getParentFile().exists()) {
+            // TODO ensure that the directory is created
+            outputFile.getParentFile().mkdirs();
+        }
+
+        // Save the build output to the output file
+        saveBuildToFile(builderOutput, outputFile, buildingFromConfig);
+    }
+
+    /**
+     * Get the options that should be used when building.
+     *
+     * @return The Object that holds all the options used when building.
+     */
     public CSDocbookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
@@ -441,98 +538,6 @@ public class BuildCommand extends BaseCommandImpl {
         if (getZanataVersion() != null) {
             getCspConfig().getZanataDetails().setVersion(getZanataVersion());
         }
-    }
-
-    @Override
-    public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
-        final long startTime = System.currentTimeMillis();
-        boolean buildingFromConfig = false;
-
-        // Add the details for the csprocessor.cfg if no ids are specified and then validate input
-        if (ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds())) {
-            // Set the output path to the value store in the client config
-            if (getCspConfig().getRootOutputDirectory() != null && !getCspConfig().getRootOutputDirectory().equals("")) {
-                setOutputPath(getCspConfig().getRootOutputDirectory());
-            }
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        // Get the content spec and make sure it exists
-        final ContentSpec contentSpec = getContentSpec(ids.get(0));
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        // Validate that the content spec is valid
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        boolean success = validateContentSpec(getProviderFactory(), loggerManager, user, contentSpec);
-
-        // Print the error/warning messages
-        JCommander.getConsole().println(loggerManager.generateLogs());
-
-        // Check that everything validated fine
-        if (!success) {
-            shutdown(Constants.EXIT_TOPIC_INVALID);
-        }
-
-        // Pull in the pubsnumber from koji if the option is set
-        if (getFetchPubsnum()) {
-            final Integer pubsnumber = getContentSpecPubsNumberFromKoji(contentSpec);
-            if (pubsnumber != null) {
-                contentSpec.setPubsNumber(pubsnumber);
-            }
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        JCommander.getConsole().println(Constants.STARTING_BUILD_MSG);
-
-        // Setup the zanata details incase some were overridden via the command line
-        setupZanataOptions();
-
-        // Build the Content Specification
-        byte[] builderOutput = buildContentSpec(contentSpec, user);
-
-        // Print the success messages
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, getBuilder().getNumErrors(),
-                getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
-                + "Victory!" : ""));
-        if (executionTime) {
-            JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
-        }
-
-        // Get the filename for the spec, using it's title.
-        String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-
-        // Create the output file
-        String outputDir = "";
-        if (buildingFromConfig) {
-            outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
-            fileName += Constants.DEFAULT_CONFIG_BUILD_POSTFIX;
-        }
-        fileName += ".zip";
-
-        // Create the output file based on the command line params and content spec
-        final File outputFile = getOutputFile(outputDir, fileName);
-
-        // Make sure the directories exist
-        if (outputFile.isDirectory() && !outputFile.exists()) {
-            // TODO ensure that the directory is created
-            outputFile.mkdirs();
-        } else if (outputFile.getParentFile() != null && !outputFile.getParentFile().exists()) {
-            // TODO ensure that the directory is created
-            outputFile.getParentFile().mkdirs();
-        }
-
-        // Save the build output to the output file
-        saveBuildToFile(builderOutput, outputFile, buildingFromConfig);
     }
 
     /**
@@ -633,6 +638,12 @@ public class BuildCommand extends BaseCommandImpl {
         if (fileOrId.matches("^\\d+$")) {
             final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
             final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(Integer.parseInt(fileOrId), revision);
+
+            // Check that the content spec entity exists.
+            if (contentSpecEntity == null) {
+                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+            }
+
             contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
         } else {
             // Get the content spec from the file
@@ -644,11 +655,6 @@ public class BuildCommand extends BaseCommandImpl {
             // Parse the content spec
             JCommander.getConsole().println("Starting to parse...");
             contentSpec = parseContentSpec(getProviderFactory(), contentSpecString, true);
-        }
-
-        // Check that that content specification was parsed successfully
-        if (contentSpec == null) {
-            printErrorAndShutdown(Constants.EXIT_TOPIC_INVALID, ProcessorConstants.ERROR_INVALID_CS_MSG, false);
         }
 
         return contentSpec;
@@ -803,8 +809,7 @@ public class BuildCommand extends BaseCommandImpl {
             boolean processProcesses) {
         // Parse the spec to get the title
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        ContentSpec contentSpec = null;
-        contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString,
+        final ContentSpec contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString,
                 ContentSpecParser.ParsingMode.EITHER, processProcesses);
 
         // Check that that content specification was parsed successfully

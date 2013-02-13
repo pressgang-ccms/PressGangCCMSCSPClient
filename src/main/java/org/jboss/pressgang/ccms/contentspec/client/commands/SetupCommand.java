@@ -2,8 +2,9 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
@@ -124,7 +125,7 @@ public class SetupCommand extends BaseCommandImpl {
         String username = "";
         String defaultServerName = "";
 
-        final HashMap<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
+        final TreeMap<String, ServerConfiguration> servers = new TreeMap<String, ServerConfiguration>(new ServerNameComparator());
 
         JCommander.getConsole().println("Use the default server configuration? (Yes/No)");
         String answer = JCommander.getConsole().readLine();
@@ -320,7 +321,8 @@ public class SetupCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Please enter a default zanata project version:");
         defaultZanataVersion = JCommander.getConsole().readLine();
 
-        final HashMap<String, ZanataServerConfiguration> servers = new HashMap<String, ZanataServerConfiguration>();
+        final TreeMap<String, ZanataServerConfiguration> servers = new TreeMap<String, ZanataServerConfiguration>(
+                new ServerNameComparator());
         String answer = "";
 
         while (!answer.matches("^[0-9]+$") || (Integer.parseInt(answer) <= 0)) {
@@ -421,5 +423,21 @@ public class SetupCommand extends BaseCommandImpl {
     @Override
     public boolean requiresExternalConnection() {
         return false;
+    }
+}
+
+/**
+ * A comparator that can be used to sort servers into alphabetical order and ensure the default server is always first.
+ */
+class ServerNameComparator implements Comparator<String> {
+    @Override
+    public int compare(String serverName1, String serverName2) {
+        if (serverName1.equals(Constants.DEFAULT_SERVER_NAME)) {
+            return -1;
+        } else if (serverName2.equals(Constants.DEFAULT_SERVER_NAME)) {
+            return 1;
+        } else {
+            return serverName1.compareTo(serverName2);
+        }
     }
 }

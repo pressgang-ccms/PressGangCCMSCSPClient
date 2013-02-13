@@ -18,6 +18,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -36,6 +37,14 @@ public class ValidateCommand extends BaseCommandImpl {
 
     public ValidateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    protected ContentSpecProcessor getProcessor() {
+        return csp;
+    }
+
+    protected void setProcessor(final ContentSpecProcessor processor) {
+        csp = processor;
     }
 
     @Override
@@ -61,10 +70,10 @@ public class ValidateCommand extends BaseCommandImpl {
 
     public boolean isValid() {
         // We should have only one file
-        if (files.size() != 1) return false;
+        if (getFiles().size() != 1) return false;
 
         // Check that the file exists
-        final File file = files.get(0);
+        final File file = getFiles().get(0);
         return !(file.isDirectory() || !file.exists() || !file.isFile());
     }
 
@@ -88,7 +97,7 @@ public class ValidateCommand extends BaseCommandImpl {
                         printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
                     }
                 }
-                files.add(file);
+                getFiles().add(file);
             }
         }
 
@@ -102,29 +111,15 @@ public class ValidateCommand extends BaseCommandImpl {
 
         boolean success = false;
 
-        // Read in the file contents
-        final String contentSpecString = FileUtilities.readFileContents(files.get(0));
-
-        if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
-        }
-
-        // Parse the spec
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString);
+        // Read in the file contents and parse it to a content spec object
+        final ContentSpec contentSpec = getContentSpecFromFile(getFiles().get(0));
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Setup the processing options
-        final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(permissive);
-        processingOptions.setValidating(true);
-        processingOptions.setAllowEmptyLevels(true);
-
-        // Process the content spec to see if it's valid
-        csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
-        success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+        // Validate the content spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        success = validateContentSpec(getProviderFactory(), loggerManager, contentSpec, user);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -140,17 +135,66 @@ public class ValidateCommand extends BaseCommandImpl {
         }
     }
 
+    /**
+     * Get a content specification from a file and parse it into a ContentSpec object, so that it can be used for processing.
+     *
+     * @param file The file to load the content spec from.
+     * @return The parsed content specification object.
+     */
+    protected ContentSpec getContentSpecFromFile(File file) {
+        // Read in the file contents
+        String contentSpecString = FileUtilities.readFileContents(file);
+
+        if (contentSpecString.equals("")) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+        }
+
+        // Parse the spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString);
+
+        // Check that that content specification was parsed successfully
+        if (contentSpec == null) {
+            JCommander.getConsole().println(loggerManager.generateLogs());
+            shutdown(Constants.EXIT_FAILURE);
+        }
+
+        return contentSpec;
+    }
+
+    /**
+     * Process a content specification to see if it is valid
+     *
+     * @param providerFactory The provider factory to create providers to lookup entity details.
+     * @param loggerManager   The manager object that handles logging.
+     * @param contentSpec     The content spec to be validated.
+     * @param user            The user who requested the content spec be validated.
+     * @return True if the content spec is valid, otherwise false.
+     */
+    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final ContentSpec contentSpec, final UserWrapper user) {
+        // Setup the processing options
+        final ProcessingOptions processingOptions = new ProcessingOptions();
+        processingOptions.setPermissiveMode(permissive);
+        processingOptions.setValidating(true);
+        processingOptions.setAllowEmptyLevels(true);
+
+        // Process the content spec to see if it's valid
+        setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
+        return getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+    }
+
     @Override
     public void shutdown() {
         super.shutdown();
-        if (csp != null) {
-            csp.shutdown();
+        if (getProcessor() != null) {
+            getProcessor().shutdown();
         }
     }
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        return files.size() == 0;
+        return getFiles().size() == 0;
     }
 
     @Override
