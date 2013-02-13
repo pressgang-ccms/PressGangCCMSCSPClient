@@ -19,6 +19,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -83,6 +84,11 @@ public class PushCommand extends BaseCommandImpl {
         this.pushOnly = pushOnly;
     }
 
+    /**
+     * Checks that the input from the command line is valid arguments.
+     *
+     * @return True if the set arguments are valid, otherwise false.
+     */
     public boolean isValid() {
         // We should have only one file
         if (files.size() != 1) return false;
@@ -118,7 +124,7 @@ public class PushCommand extends BaseCommandImpl {
                         printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
                     }
                 }
-                files.add(file);
+                getFiles().add(file);
             }
             pushingFromConfig = true;
         }
@@ -134,8 +140,49 @@ public class PushCommand extends BaseCommandImpl {
         long startTime = System.currentTimeMillis();
         boolean success = false;
 
+        // Load the content spec from the file and parse it into a ContentSpec object
+        final ContentSpec contentSpec = getContentSpecFromFile(getFiles().get(0));
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Process and save the content spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        success = processAndSaveContentSpec(getProviderFactory(), loggerManager, contentSpec, user);
+
+        // Print the logs
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        JCommander.getConsole().println(loggerManager.generateLogs());
+        if (success) {
+            Integer revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
+        }
+        if (getExecutionTime()) {
+            JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
+        }
+
+        // if we failed validation then exit
+        if (!success) {
+            shutdown(Constants.EXIT_TOPIC_INVALID);
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        if (success && !pushOnly) {
+            savePostProcessedContentSpec(pushingFromConfig, contentSpec);
+        }
+    }
+
+    /**
+     * Get a content specification from a file and parse it into a ContentSpec object, so that ti can be used for processing.
+     *
+     * @param file The file to load the content spec from.
+     * @return The parsed content specification object.
+     */
+    protected ContentSpec getContentSpecFromFile(File file) {
         // Read in the file contents
-        String contentSpecString = FileUtilities.readFileContents(files.get(0));
+        String contentSpecString = FileUtilities.readFileContents(file);
 
         if (contentSpecString.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
@@ -152,60 +199,58 @@ public class PushCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_FAILURE);
         }
 
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
+        return contentSpec;
+    }
 
+    /**
+     * Process a content specification and save it to the server.
+     *
+     * @param providerFactory The provider factory to create providers to lookup entity details.
+     * @param loggerManager   The manager object that handles logging.
+     * @param contentSpec     The content spec to be processed and saved.
+     * @param user            The user who requested the content spec be processed and saved.
+     * @return True if the content spec was processed and saved successfully, otherwise false.
+     */
+    protected boolean processAndSaveContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+            final ContentSpec contentSpec, final UserWrapper user) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setAllowEmptyLevels(true);
 
-        csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
-        Integer revision = null;
-        success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
-        if (success) {
-            revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
+        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
+        return csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+    }
+
+    /**
+     * Saves a post processed content specifcation to the project directory if pushing using a csprocessor.cfg,
+     * otherwise save it in the current working directory.
+     *
+     * @param pushingFromConfig If the command is pushing from a CSP Project directory.
+     * @param contentSpec       The post processed content spec object.
+     */
+    protected void savePostProcessedContentSpec(boolean pushingFromConfig, final ContentSpec contentSpec) {
+        // Save the post spec to file if the push was successful
+        final File outputSpec;
+        if (pushingFromConfig) {
+            final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+            outputSpec = new File(ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + escapedTitle + "-post." +
+                    Constants.FILENAME_EXTENSION);
+        } else {
+            outputSpec = getFiles().get(0);
         }
 
-        // Print the logs
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(loggerManager.generateLogs());
-        if (success) {
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
-        }
-        if (executionTime) {
-            JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
+        // Create the directory
+        if (outputSpec.getParentFile() != null) {
+            outputSpec.getParentFile().mkdirs();
         }
 
-        // if we failed validation then exit
-        if (!success) {
-            shutdown(Constants.EXIT_TOPIC_INVALID);
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        if (success && !pushOnly) {
-            // Save the post spec to file if the push was successful
-            final File outputSpec;
-            if (pushingFromConfig) {
-                final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-                outputSpec = new File(ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + escapedTitle + "-post." +
-                        Constants.FILENAME_EXTENSION);
-            } else {
-                outputSpec = files.get(0);
-            }
-
-            // Create the directory
-            if (outputSpec.getParentFile() != null) outputSpec.getParentFile().mkdirs();
-
-            // Save the Post Processed spec
-            try {
-                FileUtilities.saveFile(outputSpec, contentSpec.toString(), Constants.FILE_ENCODING);
-            } catch (IOException e) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
-            }
+        // Save the Post Processed spec
+        try {
+            FileUtilities.saveFile(outputSpec, contentSpec.toString(), Constants.FILE_ENCODING);
+        } catch (IOException e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()),
+                    false);
         }
     }
 
@@ -219,7 +264,7 @@ public class PushCommand extends BaseCommandImpl {
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        return files.size() == 0;
+        return getFiles().size() == 0;
     }
 
     @Override
