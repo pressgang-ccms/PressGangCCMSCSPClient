@@ -1,23 +1,5 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createRealFile;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.util.Arrays;
-
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -29,18 +11,13 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
-import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
-import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.*;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
-import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,6 +28,17 @@ import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
+
+import java.io.File;
+import java.util.Arrays;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.*;
+import static org.junit.Assert.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.when;
 
 @PrepareForTest({RESTProviderFactory.class, FileUtilities.class, ClientUtilities.class, DocBookUtilities.class})
 public class ValidateCommandTest extends BaseUnitTest {
@@ -121,7 +109,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         // Given multiple files to validate, which is an invalid case
         command.setFiles(Arrays.asList(file, file2));
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the ValidateCommand is processed
         try {
@@ -144,7 +132,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         given(FileUtilities.readFileContents(file)).willReturn("");
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the ValidateCommand is processed
         try {
@@ -167,7 +155,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the ValidateCommand is processed
         try {
@@ -195,7 +183,7 @@ public class ValidateCommandTest extends BaseUnitTest {
                 contentSpec);
         given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the ValidateCommand is processed
         try {
@@ -224,18 +212,15 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
                 any(String.class))).willReturn(contentSpec);
-        setValidLevelMocking();
-        setValidContentSpecMocking();
+        setValidLevelMocking(level, randomAlphanumString);
+        setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
         // And the wrapper has the basic data
-        setValidContentSpecWrapperMocking();
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the ValidateCommand is processed
-        try {
-            command.process();
-        } catch (CheckExitCalled e) {
-        }
+        command.process();
 
         // Then VALID should be returned to the console
         assertThat(getStdOutLogs(), containsString("The Content Specification is valid."));
@@ -248,7 +233,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         // And there is no id specified in CSP config
         given(cspConfig.getContentSpecId()).willReturn(null);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the ValidateCommand is processed
         try {
@@ -274,15 +259,15 @@ public class ValidateCommandTest extends BaseUnitTest {
         String testFilename = filename + "-post.contentspec";
         realFile = createRealFile(testFilename, randomAlphanumString);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
         // And valid values for validation
         given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
                 any(String.class))).willReturn(contentSpec);
-        setValidLevelMocking();
-        setValidContentSpecMocking();
-        setValidContentSpecWrapperMocking();
+        setValidLevelMocking(level, randomAlphanumString);
+        setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
 
         // When the Validate Command is processed
         command.process();
@@ -303,15 +288,15 @@ public class ValidateCommandTest extends BaseUnitTest {
         String testFilename = filename + "-post.txt";
         realFile = createRealFile(testFilename, randomAlphanumString);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
         // And valid values for validation
         given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
                 any(String.class))).willReturn(contentSpec);
-        setValidLevelMocking();
-        setValidContentSpecMocking();
-        setValidContentSpecWrapperMocking();
+        setValidLevelMocking(level, randomAlphanumString);
+        setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
 
         // When the Validate Command is processed
         command.process();
@@ -330,7 +315,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(DocBookUtilities.class);
         given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the Validate Command is processed
         try {
@@ -359,16 +344,16 @@ public class ValidateCommandTest extends BaseUnitTest {
         assertTrue(result);
     }
 
-    @Test
-    public void shouldNotLoadFromCsprocessorCfg() {
-        // Given a command with no arguments
-
-        // When invoking the method
-        boolean result = command.loadFromCSProcessorCfg();
-
-        // Then the result should be false
-        assertFalse(result);
-    }
+//    @Test
+//    public void shouldNotLoadFromCsprocessorCfg() {
+//        // Given a command with no arguments
+//
+//        // When invoking the method
+//        boolean result = command.loadFromCSProcessorCfg();
+//
+//        // Then the result should be false
+//        assertFalse(result);
+//    }
 
     @Test
     public void shouldReturnRightCommandName() {
@@ -378,39 +363,5 @@ public class ValidateCommandTest extends BaseUnitTest {
 
         // Then the name should be "validate"
         assertThat(commandName, is("validate"));
-    }
-
-    private void setUpAuthorisedUser() {
-        command.setUsername(username);
-        given(userProvider.getUsersByName(username)).willReturn(users);
-        given(users.size()).willReturn(1);
-        given(users.getItems()).willReturn(Arrays.asList(user));
-        given(user.getUsername()).willReturn(username);
-    }
-
-    private void setValidLevelMocking() {
-        given(level.getType()).willReturn(LevelType.BASE);
-        given(level.getNumberOfSpecTopics()).willReturn(1);
-        given(level.getTitle()).willReturn(randomAlphanumString);
-    }
-
-    private void setValidContentSpecWrapperMocking() {
-        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
-        given(contentSpecWrapper.getId()).willReturn(id);
-        given(contentSpecWrapper.getProduct()).willReturn(randomAlphanumString);
-        given(contentSpecWrapper.getVersion()).willReturn(randomAlphanumString);
-    }
-
-    private void setValidContentSpecMocking() {
-        given(contentSpec.getBaseLevel()).willReturn(level);
-        given(contentSpec.getPreProcessedText()).willReturn(Arrays.asList(randomAlphanumString));
-        given(contentSpec.getTitle()).willReturn(randomAlphanumString);
-        given(contentSpec.getProduct()).willReturn(randomAlphanumString);
-        given(contentSpec.getVersion()).willReturn("1-A");
-        given(contentSpec.getDtd()).willReturn("Docbook 4.5");
-        given(contentSpec.getCopyrightHolder()).willReturn(randomAlphanumString);
-        given(contentSpec.getId()).willReturn(id);
-        given(contentSpec.getChecksum()).willReturn(HashUtilities.generateMD5("ID = " + id + "\nTitle = " + randomAlphanumString +
-                "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n\n\n"));
     }
 }

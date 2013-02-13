@@ -11,6 +11,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
+import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.*;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
@@ -18,7 +19,9 @@ import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
@@ -31,12 +34,12 @@ import java.util.Arrays;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createRealFile;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -61,10 +64,11 @@ public class PushCommandTest extends BaseUnitTest {
     @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
+    @Mock private Level level;
     @Mock File file;
     @Mock File file2;
-    private File realFile;
 
+    private File realFile;
     private PushCommand command;
 
     @Before
@@ -101,7 +105,7 @@ public class PushCommandTest extends BaseUnitTest {
         // And there is no id specified in CSP config
         given(cspConfig.getContentSpecId()).willReturn(null);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the PushCommand is processed
         try {
@@ -121,7 +125,7 @@ public class PushCommandTest extends BaseUnitTest {
         // Given multiple files to push, which is an invalid case
         command.setFiles(Arrays.asList(file, file2));
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the PushCommand is processed
         try {
@@ -144,7 +148,7 @@ public class PushCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         given(FileUtilities.readFileContents(file)).willReturn("");
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the PushCommand is processed
         try {
@@ -167,7 +171,7 @@ public class PushCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
         // And an authorised user
-        setUpAuthorisedUser();
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // When the PushCommand is processed
         try {
@@ -182,12 +186,32 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("Invalid Content Specification! Incorrect file format."));
     }
 
-    private void setUpAuthorisedUser() {
-        command.setUsername(username);
-        given(userProvider.getUsersByName(username)).willReturn(users);
-        given(users.size()).willReturn(1);
-        given(users.getItems()).willReturn(Arrays.asList(user));
-        given(user.getUsername()).willReturn(username);
-    }
+    @Test
+    public void shouldPrintErrorLogsAndFailWhenInvalidSpec() {
+        // Given a valid file with a content spec that is invalid
+        command.setFiles(Arrays.asList(file));
+        setValidFileProperties(file);
+        PowerMockito.mockStatic(FileUtilities.class);
+        given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
+        given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
+        PowerMockito.mockStatic(ClientUtilities.class);
+        given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
+                any(String.class), any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
+        given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
 
+        // When the PushCommand is processed
+        try {
+            command.process();
+            // If we get here then the test failed
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(8));
+        }
+
+        // Then error messages are printed to the console and the program exits
+        assertThat(getStdOutLogs(), containsString("Invalid Content Specification! No Title.")); // Just one of the missing fields
+        assertThat(getStdOutLogs(), containsString("The Content Specification is not valid."));
+    }
 }
