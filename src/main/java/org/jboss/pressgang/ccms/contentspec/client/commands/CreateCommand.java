@@ -108,11 +108,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Check that the file exists
         final File file = getFiles().get(0);
-        if (file.isDirectory()) return false;
-        if (!file.exists()) return false;
-        if (!file.isFile()) return false;
-
-        return true;
+        return !(file.isDirectory() || !file.exists() || !file.isFile());
     }
 
     @Override
@@ -129,26 +125,8 @@ public class CreateCommand extends BaseCommandImpl {
 
         long startTime = System.currentTimeMillis();
 
-        // Read in the file contents
-        final String contentSpecString = FileUtilities.readFileContents(files.get(0));
-        if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        // Parse the spec to get the title
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        ContentSpec contentSpec = null;
-        contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
-                ContentSpecParser.ParsingMode.NEW, true);
-
-        // Check that that content specification was parsed successfully
-        if (contentSpec == null) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
-            shutdown(Constants.EXIT_FAILURE);
-        }
+        // Read in the file contents and parse the file into a ContentSpec object
+        final ContentSpec contentSpec = getContentSpecFromFile(getFiles().get(0));
 
         // Check that the output directory doesn't already exist
         final File directory = new File(getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
@@ -161,6 +139,7 @@ public class CreateCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process/Save the content spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         boolean success = processContentSpec(contentSpec, loggerManager, user);
 
         // Print the logs
@@ -181,7 +160,7 @@ public class CreateCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        if (success && createCsprocessorCfg) {
+        if (success && getCreateCsprocessorCfg()) {
             // Create the blank zanata details as we shouldn't have a zanata setup at creation time
             final ZanataDetails zanataDetails = new ZanataDetails();
             zanataDetails.setServer(null);
@@ -195,6 +174,36 @@ public class CreateCommand extends BaseCommandImpl {
             ClientUtilities.createContentSpecProject(this, getCspConfig(), directory, contentSpec.toString(), contentSpecEntity,
                     zanataDetails);
         }
+    }
+
+    /**
+     * Get a content specification from a file and parse it into a ContentSpec object, so that ti can be used for processing.
+     *
+     * @param file The file to load the content spec from.
+     * @return The parsed content specification object.
+     */
+    protected ContentSpec getContentSpecFromFile(final File file) {
+        final String contentSpecString = FileUtilities.readFileContents(file);
+        if (contentSpecString.equals("")) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Parse the spec to get the title
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        JCommander.getConsole().println("Starting to parse...");
+        ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
+                ContentSpecParser.ParsingMode.NEW, true);
+
+        // Check that that content specification was parsed successfully
+        if (contentSpec == null) {
+            JCommander.getConsole().println(loggerManager.generateLogs());
+            shutdown(Constants.EXIT_FAILURE);
+        }
+
+        return contentSpec;
     }
 
     /**

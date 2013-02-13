@@ -151,6 +151,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Parse the spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        JCommander.getConsole().println("Starting to parse...");
         ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString);
 
         // Check that that content specification was parsed successfully

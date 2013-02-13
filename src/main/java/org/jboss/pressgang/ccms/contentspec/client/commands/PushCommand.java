@@ -95,11 +95,7 @@ public class PushCommand extends BaseCommandImpl {
 
         // Check that the file exists
         final File file = getFiles().get(0);
-        if (file.isDirectory()) return false;
-        if (!file.exists()) return false;
-        if (!file.isFile()) return false;
-
-        return true;
+        return !(file.isDirectory() || !file.exists() || !file.isFile());
     }
 
     @Override
@@ -190,6 +186,7 @@ public class PushCommand extends BaseCommandImpl {
 
         // Parse the spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        JCommander.getConsole().println("Starting to parse...");
         ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
                 ContentSpecParser.ParsingMode.EDITED);
 
