@@ -4,10 +4,10 @@ import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
-import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -32,11 +32,12 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createRealFile;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
@@ -84,7 +85,8 @@ public class ValidateCommandTest extends BaseUnitTest {
     @After
     public void cleanUp() {
         if (realFile != null && realFile.exists() && (!realFile.delete())) {
-            System.err.println("Test file cleanup for " + realFile.getAbsolutePath() + "was unsuccessful");
+            resetStdStreams();
+            System.err.println("WARNING: Test file cleanup for " + realFile.getAbsolutePath() + "was unsuccessful");
         }
     }
 
@@ -147,6 +149,29 @@ public class ValidateCommandTest extends BaseUnitTest {
 
         // Then it should fail with an error message and exit
         assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
+    }
+
+    @Test
+    public void shouldPrintErrorLogsAndExitIfSpecStringParsingFails() {
+        // Given a valid file with a content spec string that produces a null result when parsed due to an error
+        command.setFiles(Arrays.asList(file));
+        setValidFileProperties(file);
+        PowerMockito.mockStatic(FileUtilities.class);
+        given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
+        // And an authorised user
+        setUpAuthorisedUser();
+
+        // When the ValidateCommand is processed
+        try {
+            command.process();
+            // If we get here then the test failed
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then error messages are printed, INVALID is written to the console and the program exits
+        assertThat(getStdOutLogs(), containsString("Invalid Content Specification! Incorrect file format."));
     }
 
     @Test
@@ -315,24 +340,12 @@ public class ValidateCommandTest extends BaseUnitTest {
         assertThat(command.getFiles().size(), is(0));
     }
 
-    private void setValidFileProperties(File file) {
-        given(file.isDirectory()).willReturn(false);
-        given(file.isFile()).willReturn(true);
-        given(file.exists()).willReturn(true);
-    }
-
     private void setUpAuthorisedUser() {
         command.setUsername(username);
         given(userProvider.getUsersByName(username)).willReturn(users);
         given(users.size()).willReturn(1);
         given(users.getItems()).willReturn(Arrays.asList(user));
         given(user.getUsername()).willReturn(username);
-    }
-
-    private File createRealFile(String newFilename, String contents) throws IOException {
-        File file = new File(newFilename);
-        FileUtils.writeStringToFile(file, contents);
-        return file;
     }
 
     private void setValidLevelMocking() {
