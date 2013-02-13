@@ -90,6 +90,11 @@ public class CheckoutCommandTest extends BaseUnitTest {
         emptyFile.createNewFile();
     }
 
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
+    }
+
     @Test
     public void shouldFailWithNoIds() {
         // Given a command with no ids
@@ -238,10 +243,5 @@ public class CheckoutCommandTest extends BaseUnitTest {
 
         // Then the name should be "checkout"
         assertThat(commandName, is("checkout"));
-    }
-
-    @After
-    public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(bookDir);
     }
 }

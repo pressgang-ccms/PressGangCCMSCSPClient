@@ -96,6 +96,11 @@ public class PreviewCommandTest extends BaseUnitTest {
         previewFile.createNewFile();
     }
 
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
+    }
+
     @Test
     public void shouldFailWithNoIds() {
         // Given a command with no ids
@@ -403,10 +408,5 @@ public class PreviewCommandTest extends BaseUnitTest {
 
         // Then the name should be "preview"
         assertThat(commandName, is("preview"));
-    }
-
-    @After
-    public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(bookDir);
     }
 }

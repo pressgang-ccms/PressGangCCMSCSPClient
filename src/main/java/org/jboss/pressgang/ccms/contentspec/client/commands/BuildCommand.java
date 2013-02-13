@@ -371,15 +371,9 @@ public class BuildCommand extends BaseCommandImpl {
         final UserWrapper user = authenticate(getUsername(), getProviderFactory());
 
         final long startTime = System.currentTimeMillis();
-        boolean buildingFromConfig = false;
 
         // Add the details for the csprocessor.cfg if no ids are specified and then validate input
-        if (ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds())) {
-            // Set the output path to the value store in the client config
-            if (getCspConfig().getRootOutputDirectory() != null && !getCspConfig().getRootOutputDirectory().equals("")) {
-                setOutputPath(getCspConfig().getRootOutputDirectory());
-            }
-        }
+        boolean buildingFromConfig = ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -438,6 +432,7 @@ public class BuildCommand extends BaseCommandImpl {
         if (buildingFromConfig) {
             outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
             fileName += Constants.DEFAULT_CONFIG_BUILD_POSTFIX;
+            setOutputPath(null);
         }
         fileName += ".zip";
 
@@ -673,11 +668,12 @@ public class BuildCommand extends BaseCommandImpl {
      */
     protected File getOutputFile(final String outputDir, final String fileName) {
         final String output;
+        final String fixedOutputDir = ClientUtilities.fixDirectoryPath(outputDir);
         // Create the fully qualified output path
-        if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-            output = getOutputPath() + outputDir + fileName;
+        if (getOutputPath() != null && (getOutputPath().endsWith(File.separator) || new File(getOutputPath()).isDirectory())) {
+            output = ClientUtilities.fixDirectoryPath(getOutputPath()) + fixedOutputDir + fileName;
         } else if (getOutputPath() == null) {
-            output = outputDir + fileName;
+            output = fixedOutputDir + fileName;
         } else {
             output = getOutputPath();
         }

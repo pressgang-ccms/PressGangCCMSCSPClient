@@ -29,6 +29,7 @@ import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -90,7 +91,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         command = spy(new PullSnapshotCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid
-        setUpAuthorisedUser();
+        TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
@@ -297,13 +298,5 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the name should be "pull-snapshot"
         assertThat(commandName, is("pull-snapshot"));
-    }
-
-    protected void setUpAuthorisedUser() {
-        command.setUsername(username);
-        given(userProvider.getUsersByName(username)).willReturn(users);
-        given(users.size()).willReturn(1);
-        given(users.getItems()).willReturn(Arrays.asList(user));
-        given(user.getUsername()).willReturn(username);
     }
 }

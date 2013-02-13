@@ -1,5 +1,21 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setUpAuthorisedUser;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.util.Arrays;
+
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -12,7 +28,11 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.provider.*;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -28,20 +48,6 @@ import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
-
-import java.io.File;
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 @PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
 public class PushCommandTest extends BaseUnitTest {
@@ -195,8 +201,8 @@ public class PushCommandTest extends BaseUnitTest {
         given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
         given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
-                any(String.class), any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
+        given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class), any(String.class),
+                any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
         given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
         // And an authorised user
         setUpAuthorisedUser(command, userProvider, users, user, username);
@@ -213,5 +219,38 @@ public class PushCommandTest extends BaseUnitTest {
         // Then error messages are printed to the console and the program exits
         assertThat(getStdOutLogs(), containsString("Invalid Content Specification! No Title.")); // Just one of the missing fields
         assertThat(getStdOutLogs(), containsString("The Content Specification is not valid."));
+    }
+
+    @Test
+    public void shouldRequireAnExternalConnection() {
+        // Given an already initialised command
+
+        // When invoking the method
+        boolean result = command.requiresExternalConnection();
+
+        // Then the answer should be true
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldNotLoadFromCsprocessorCfgWhenFileSpecified() {
+        // Given a command with a file
+        command.setFiles(Arrays.asList(file));
+
+        // When invoking the method
+        boolean result = command.loadFromCSProcessorCfg();
+
+        // Then the result should be false
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "push"
+        assertThat(commandName, is("push"));
     }
 }
