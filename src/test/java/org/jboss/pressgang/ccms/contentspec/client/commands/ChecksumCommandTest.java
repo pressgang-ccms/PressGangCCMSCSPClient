@@ -118,4 +118,14 @@ public class ChecksumCommandTest extends BaseUnitTest {
         // Then the result should be false
         assertFalse(result);
     }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "checksum"
+        assertThat(commandName, is("checksum"));
+    }
 }

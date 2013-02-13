@@ -230,6 +230,16 @@ public class CheckoutCommandTest extends BaseUnitTest {
         assertFalse(result);
     }
 
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "checkout"
+        assertThat(commandName, is("checkout"));
+    }
+
     @After
     public void cleanUp() throws IOException {
         FileUtils.deleteDirectory(bookDir);

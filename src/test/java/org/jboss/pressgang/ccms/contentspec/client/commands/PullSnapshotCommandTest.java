@@ -289,6 +289,16 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         assertFalse(result);
     }
 
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "pull-snapshot"
+        assertThat(commandName, is("pull-snapshot"));
+    }
+
     protected void setUpAuthorisedUser() {
         command.setUsername(username);
         given(userProvider.getUsersByName(username)).willReturn(users);

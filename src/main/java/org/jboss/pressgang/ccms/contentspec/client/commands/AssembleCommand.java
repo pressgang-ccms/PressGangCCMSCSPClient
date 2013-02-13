@@ -189,10 +189,8 @@ public class AssembleCommand extends BuildCommand {
                 findBuildDirectoryAndFiles(contentSpec.getTitle());
             }
         } else {
-            final String contentSpecString = getContentSpecFromFile(getIds().get(0));
-
-            // Parse the spec to get the main details
-            final ContentSpec contentSpec = parseContentSpec(getProviderFactory(), contentSpecString, false);
+            // Parse the spec from a file to get the main details
+            final ContentSpec contentSpec = getContentSpecFromFile(getIds().get(0), false);
 
             // Find the build directories and files from the content spec
             findBuildDirectoryAndFiles(contentSpec.getTitle());

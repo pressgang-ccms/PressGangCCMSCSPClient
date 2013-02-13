@@ -1,6 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -286,5 +286,15 @@ public class StatusCommandTest extends BaseUnitTest {
 
         // Then the result should be true
         assertTrue(result);
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "status"
+        assertThat(commandName, is("status"));
     }
 }

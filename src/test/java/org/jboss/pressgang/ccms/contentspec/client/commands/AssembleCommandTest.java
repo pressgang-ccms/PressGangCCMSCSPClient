@@ -444,6 +444,16 @@ public class AssembleCommandTest extends BaseUnitTest {
         assertFalse(result);
     }
 
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "assemble"
+        assertThat(commandName, is("assemble"));
+    }
+
     @After
     public void cleanUp() throws IOException {
         FileUtils.deleteDirectory(bookDir);

@@ -1,6 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
@@ -70,5 +71,26 @@ public class TemplateCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         assertThat(getStdOutLogs(), containsString("An error occurred while trying to save the file."));
+    }
+
+    @Test
+    public void shouldRequireAnExternalConnection() {
+        // Given an already initialised command
+
+        // When invoking the method
+        boolean result = command.requiresExternalConnection();
+
+        // Then the answer should be false
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "template"
+        assertThat(commandName, is("template"));
     }
 }

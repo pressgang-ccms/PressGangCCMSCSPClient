@@ -249,11 +249,12 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         boolean result = command.validateServerUrl();
 
         // Then the result from the method should be true
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
         assertTrue(result);
     }
 
     @Test
-    public void shouldNotValidateServerUrlWithValidURL() {
+    public void shouldNotValidateServerUrlWithInvalidURL() {
         // Given a URL
         String url = "http://www.example.com";
         command.setServerUrl(url);
@@ -269,6 +270,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         }
 
         // Then an error message should have been printed and a System.exit() called
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
         assertThat(getStdOutLogs(), containsString("Cannot connect to the server, as the server address can't be resolved."));
     }
 

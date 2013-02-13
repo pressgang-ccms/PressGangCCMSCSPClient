@@ -395,6 +395,16 @@ public class PreviewCommandTest extends BaseUnitTest {
         assertFalse(result);
     }
 
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "preview"
+        assertThat(commandName, is("preview"));
+    }
+
     @After
     public void cleanUp() throws IOException {
         FileUtils.deleteDirectory(bookDir);

@@ -1,6 +1,6 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
@@ -109,5 +109,15 @@ public class SearchCommandTest extends BaseUnitTest {
 
         // Then those results should be written to the console
         assertThat(getStdOutLogs(), containsString(queryResult));
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "search"
+        assertThat(commandName, is("search"));
     }
 }

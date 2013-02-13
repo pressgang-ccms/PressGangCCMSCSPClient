@@ -2,51 +2,99 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.refEq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.beust.jcommander.JCommander;
+import com.redhat.j2koji.exceptions.KojiException;
 import net.sf.ipsedixit.annotation.Arbitrary;
+import net.sf.ipsedixit.annotation.ArbitraryString;
+import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
+import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
+import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
+import org.jboss.pressgang.ccms.contentspec.builder.structures.CSDocbookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
+import org.jboss.pressgang.ccms.contentspec.provider.BlobConstantProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-// TODO Write these tests
-@Ignore
+@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class})
 public class BuildCommandTest extends BaseUnitTest {
+    private static final String BOOK_TITLE = "Test";
+    private static final String DUMMY_SPEC_FILE = "Test.contentspec";
+
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
+    @Arbitrary Integer randomNumber;
+    @Arbitrary String randomString;
+    @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
+    @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock ContentSpec contentSpec;
+    @Mock UserProvider userProvider;
+    @Mock CollectionWrapper<UserWrapper> users;
+    @Mock UserWrapper user;
+    @Mock TopicProvider topicProvider;
+    @Mock BlobConstantProvider blobConstantProvider;
 
-    PreviewCommand command;
+    BuildCommand command;
     File rootTestDirectory;
+    File bookDir;
 
     @Before
     public void setUp() {
@@ -54,13 +102,19 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        command = new PreviewCommand(parser, cspConfig, clientConfig);
+        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
+        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
+        when(providerFactory.getProvider(BlobConstantProvider.class)).thenReturn(blobConstantProvider);
+        command = spy(new BuildCommand(parser, cspConfig, clientConfig));
 
-        // Only test the preview command and not the build or assemble command content.
-        command.setNoAssemble(true);
+        setUpAuthorisedUser();
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+
+        // Make the book title directory
+        bookDir = new File(rootTestDirectory, BOOK_TITLE);
+        bookDir.mkdir();
     }
 
     @Test
@@ -84,6 +138,595 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldFailWhenContentSpecFileDoesntExist() {
+        final String dummySpecFile = bookDir.getAbsolutePath() + File.separator + DUMMY_SPEC_FILE;
+        // Given a command with a file that doesn't exist
+        command.setIds(Arrays.asList(dummySpecFile));
+
+        // When it is processed
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
+    }
+
+    @Test
+    public void shouldSetOutputDirectoryWhenLoadingFromCsprocessorCfg() {
+        // Given a command with no ids
+        command.setIds(new ArrayList<String>());
+        // and a csprocessor.cfg that has a content spec id
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // and getting the content spec from the external source will not exist, just as a way to kill the processing
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(null);
+
+        // When
+        try {
+            command.process();
+            fail("Exception was not thrown, but was expected");
+        } catch (CheckExitCalled e) {
+        }
+
+        // Then the output directory should be set to the root directory
+        assertThat(command.getOutputPath(), is(rootTestDirectory.getAbsolutePath() + File.separator));
+    }
+
+    @Test
+    public void shouldShutdownWhenContentSpecNotFound() {
+        // Given no content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(null);
+
+        // When getting the content spec
+        try {
+            command.getContentSpec(id.toString());
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
+    }
+
+    @Test
+    public void shouldReturnContentSpecWhenUsingIdAndExists() {
+        // Given a content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+
+        // When getting the content spec
+        final ContentSpec contentSpec = command.getContentSpec(id.toString());
+
+        // Then verify that the content spec isn't null
+        assertNotNull(contentSpec);
+    }
+
+    @Test
+    public void shouldReturnContentSpecWhenUsingFileAndParses() {
+        final String emptyFile = rootTestDirectory + File.separator + "EmptyFile.txt";
+        // Given a File that exists
+        PowerMockito.mockStatic(FileUtilities.class);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the parse works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        // and call some real methods
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+
+        // When getting the content spec
+        final ContentSpec contentSpec = command.getContentSpec(emptyFile);
+
+        // Then verify that the content spec isn't null and permissive is false
+        assertNotNull(contentSpec);
+        assertFalse(command.getPermissive());
+    }
+
+    @Test
+    public void shouldShutdownWhenContentSpecFailsToParse() {
+        final String emptyFile = rootTestDirectory + File.separator + "EmptyFile.txt";
+        // Given a File that exists
+        PowerMockito.mockStatic(FileUtilities.class);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        // and the parse works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
+                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(null);
+        // and call some real methods
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+
+        // When parsing the content spec
+        try {
+            command.getContentSpec(emptyFile);
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(8));
+        }
+
+        // Then verify that the output contains a message about failing to parse
+        assertThat(getStdOutLogs(), containsString("The Content Specification is not valid."));
+    }
+
+    @Test
+    public void shouldShutdownWhenContentSpecInvalid() {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and an invalid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(false);
+        given(command.getCsp()).willReturn(processor);
+
+        // When validating the content spec in process
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(8));
+        }
+    }
+
+    @Test
+    public void shouldGetPubsnumberFromKojiWhenSet() throws MalformedURLException, KojiException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the fetch pubsnumber is set
+        command.setFetchPubsnum(true);
+        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenReturn(randomNumber);
+        // and we want to inject a place to stop processing
+        command.setZanataUrl("test");
+        doThrow(new CheckExitCalled(-2)).when(clientConfig).getZanataServers();
+
+        // When processing the command
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then check that the pubsnumber has been set and the output has a message
+        assertThat(getStdOutLogs(), containsString("Fetching the pubsnumber from " + Constants.KOJI_NAME + "..."));
+        assertThat(contentSpec.getPubsNumber(), is(randomNumber));
+    }
+
+    @Test
+    public void shouldShutdownWhenGetPubsnumberFromKojiFails() throws MalformedURLException, KojiException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the fetch pubsnumber is set
+        command.setFetchPubsnum(true);
+        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new KojiException(""));
+
+        // When processing the command
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then check that an error was printed
+        assertThat(getStdOutLogs(), containsString("Fetching the pubsnumber from " + Constants.KOJI_NAME + "..."));
+        assertThat(getStdOutLogs(), containsString("An error occurred when fetching the pubsnumber from " + Constants.KOJI_NAME + "."));
+    }
+
+    @Test
+    public void shouldShutdownWhenGetPubsnumberFromKojiWithInvalidURL() throws MalformedURLException, KojiException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the fetch pubsnumber is set
+        command.setFetchPubsnum(true);
+        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new MalformedURLException());
+
+        // When processing the command
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(4));
+        }
+
+        // Then check that an error was printed
+        assertThat(getStdOutLogs(), containsString("Fetching the pubsnumber from " + Constants.KOJI_NAME + "..."));
+        assertThat(getStdOutLogs(),
+                containsString("The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure that the URL is valid."));
+    }
+
+    @Test
+    public void shouldSetupZanataOptions() {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ZanataDetails details = new ZanataDetails();
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the cspconfig has some zanata details
+        given(cspConfig.getZanataDetails()).willReturn(details);
+        // and some zanata options are set via the command line
+        command.setZanataUrl(randomString);
+        command.setZanataProject(randomString);
+        command.setZanataVersion(randomNumber.toString());
+        // and the fixHostURL will return the input string
+        when(ClientUtilities.fixHostURL(anyString())).thenReturn(randomString);
+        // and we make a way to kill the processing after the setup
+        doThrow(new CheckExitCalled(-2)).when(command).getBuilder();
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then the details should have been set for the zanata options
+        assertThat(details.getServer(), is(randomString));
+        assertThat(details.getProject(), is(randomString));
+        assertThat(details.getVersion(), is(randomNumber.toString()));
+    }
+
+    @Test
+    public void shouldShutdownOnBuildProcessingException() throws BuildProcessingException, BuilderCreationException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willThrow(
+                new BuildProcessingException(""));
+        given(command.getBuilder()).willReturn(builder);
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(3));
+        }
+
+        // Then check an error message was printed
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(), containsString("Internal processing error!"));
+    }
+
+    @Test
+    public void shouldShutdownOnBuilderCreationException() throws BuildProcessingException, BuilderCreationException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willThrow(
+                new BuilderCreationException(""));
+        given(command.getBuilder()).willReturn(builder);
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(3));
+        }
+
+        // Then check an error message was printed
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(), containsString("Internal processing error!"));
+    }
+
+    @Test
+    public void shouldReturnByteArrayOnSuccessfulBuild() throws BuildProcessingException, BuilderCreationException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        final byte[] bookData = new byte[0];
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(command.getBuilder()).willReturn(builder);
+        // and we create a way to exit after building
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
+        DocBookUtilities.escapeTitle(anyString());
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then check the build method was called
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class));
+    }
+
+    @Test
+    public void shouldReturnByteArrayOnSuccessfulTranslationBuild() throws BuildProcessingException, BuilderCreationException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        final byte[] bookData = new byte[0];
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(command.getBuilder()).willReturn(builder);
+        // and a locale is set
+        command.setLocale("ja");
+        // and we create a way to exit after building
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
+        DocBookUtilities.escapeTitle(anyString());
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then check that the translated build method was called
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        verify(builder).buildTranslatedBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class),
+                any(ZanataDetails.class));
+    }
+
+    @Test
+    public void shouldValidateServerUrlWithValidURL() {
+        // Given a URL
+        String url = "http://www.example.com";
+        command.setServerUrl(url);
+        // And that the URL will be valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+
+        // When validating the server url
+        boolean result = command.validateServerUrl();
+
+        // Then the result from the method should be true
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldNotValidateServerUrlWithInvalidURL() {
+        // Given a URL
+        String url = "http://www.example.com";
+        command.setServerUrl(url);
+        // And that the URL will not be valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.validateServerExists(anyString())).thenReturn(false);
+
+        // When validating the server url
+        try {
+            command.validateServerUrl();
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(1));
+        }
+
+        // Then an error message should have been printed and a System.exit() called
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
+        assertThat(getStdOutLogs(), containsString("Cannot connect to the server, as the server address can't be resolved."));
+    }
+
+    @Test
+    public void shouldValidateKojiUrlWithValidURL() {
+        // Given a URL
+        String url = "http://www.example.com";
+        command.setServerUrl(url);
+        // and we are fetching from koji
+        command.setFetchPubsnum(true);
+        // and the koji url is set
+        given(cspConfig.getKojiHubUrl()).willReturn(url);
+        // And that the URL will be valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+
+        // When validating the server url
+        boolean result = command.validateServerUrl();
+
+        // Then the result from the method should be true
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
+        assertThat(getStdOutLogs(), containsString("Connecting to " + Constants.KOJI_NAME + "hub server: " + url));
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldNotValidateKojiUrlWithInvalidURL() {
+        // Given a URL
+        String url = "http://www.example.com";
+        command.setServerUrl(url);
+        // And that the URL will not be valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.validateServerExists(refEq(url))).thenReturn(true);
+        // and we are fetching from koji
+        command.setFetchPubsnum(true);
+        // and the koji url is set
+        String kojiUrl = "http://koji.example.com";
+        given(cspConfig.getKojiHubUrl()).willReturn(kojiUrl);
+        // And that the URL will be invalid
+        when(ClientUtilities.validateServerExists(refEq(kojiUrl))).thenReturn(false);
+
+        // When validating the server url
+        try {
+            command.validateServerUrl();
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(1));
+        }
+
+        // Then an error message should have been printed and a System.exit() called
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
+        assertThat(getStdOutLogs(), containsString("Connecting to " + Constants.KOJI_NAME + "hub server: " + kojiUrl));
+        assertThat(getStdOutLogs(), containsString("Cannot connect to the server, as the server address can't be resolved."));
+    }
+
+    @Test
+    public void shouldValidateZanataUrlWithValidURL() {
+        final ZanataDetails zanataDetails = mock(ZanataDetails.class);
+        // Given a URL
+        String url = "http://www.example.com";
+        command.setServerUrl(url);
+        // and we are inserting links and have a locale
+        command.setInsertEditorLinks(true);
+        command.setLocale("ja");
+        // and the zanata details are set
+        given(cspConfig.getZanataDetails()).willReturn(zanataDetails);
+        given(zanataDetails.returnUrl()).willReturn(url);
+        // And that the URL will be valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+
+        // When validating the server url
+        boolean result = command.validateServerUrl();
+
+        // Then the result from the method should be true
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldNotValidateZanataUrlWithInvalidURL() {
+        final ZanataDetails zanataDetails = mock(ZanataDetails.class);
+        // Given a URL
+        String url = "http://www.example.com";
+        command.setServerUrl(url);
+        // And that the URL will not be valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.validateServerExists(refEq(url))).thenReturn(true);
+        // and the zanata url is set
+        String zanataUrl = "http://translate.zanata.org";
+        // and we are inserting links and have a locale
+        command.setInsertEditorLinks(true);
+        command.setLocale("ja");
+        // and the zanata details are set
+        given(cspConfig.getZanataDetails()).willReturn(zanataDetails);
+        given(zanataDetails.returnUrl()).willReturn(zanataUrl);
+        given(zanataDetails.getProject()).willReturn(randomString);
+        given(zanataDetails.getServer()).willReturn(zanataUrl);
+        given(zanataDetails.getVersion()).willReturn(randomNumber.toString());
+        // And that the URL will be invalid
+        when(ClientUtilities.validateServerExists(refEq(zanataUrl))).thenReturn(false);
+
+        // When validating the server url
+        try {
+            command.validateServerUrl();
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(1));
+        }
+
+        // Then an error message should have been printed and a System.exit() called
+        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
+        assertThat(getStdOutLogs(), containsString("No Zanata Project exists for the \"" + randomString + "\" project at version \"" +
+                randomNumber + "\" from: " + zanataUrl));
+    }
+
+    @Test
     public void shouldRequireAnExternalConnection() {
         // Given an already initialised command
 
@@ -104,5 +747,28 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // Then the result should be false
         assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "build"
+        assertThat(commandName, is("build"));
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
+    }
+
+    protected void setUpAuthorisedUser() {
+        command.setUsername(username);
+        given(userProvider.getUsersByName(username)).willReturn(users);
+        given(users.size()).willReturn(1);
+        given(users.getItems()).willReturn(Arrays.asList(user));
+        given(user.getUsername()).willReturn(username);
     }
 }

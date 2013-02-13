@@ -144,11 +144,8 @@ public class PreviewCommand extends AssembleCommand {
                 return findFileToPreview(contentSpec.getTitle(), contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
             }
         } else {
-            // Create the file based on an ID passed from the command line
-            final String contentSpecString = getContentSpecFromFile(getIds().get(0));
-
-            // Parse the spec to get the main details
-            final ContentSpec contentSpec = parseContentSpec(getProviderFactory(), contentSpecString, false);
+            // Parse the spec from a file to get the main details
+            final ContentSpec contentSpec = getContentSpecFromFile(getIds().get(0), false);
 
             return findFileToPreview(contentSpec.getTitle(), contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
         }

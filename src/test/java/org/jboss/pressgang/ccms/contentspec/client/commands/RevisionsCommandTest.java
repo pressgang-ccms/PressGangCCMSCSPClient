@@ -166,4 +166,14 @@ public class RevisionsCommandTest extends BaseUnitTest {
         // Then the revision list for that ID should be output
         assertThat(getStdOutLogs(), containsString(revisions));
     }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "revisions"
+        assertThat(commandName, is("revisions"));
+    }
 }

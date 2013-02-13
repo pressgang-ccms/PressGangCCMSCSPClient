@@ -403,6 +403,16 @@ public class CreateCommandTest extends BaseUnitTest {
         assertFalse(result);
     }
 
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "create"
+        assertThat(commandName, is("create"));
+    }
+
     @After
     public void cleanUp() throws IOException {
         FileUtils.deleteDirectory(bookDir);

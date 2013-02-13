@@ -4,7 +4,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createRealFile;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -344,6 +346,38 @@ public class ValidateCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("was not found in the current directory"));
         // And no files were added for processing
         assertThat(command.getFiles().size(), is(0));
+    }
+
+    @Test
+    public void shouldRequireAnExternalConnection() {
+        // Given an already initialised command
+
+        // When invoking the method
+        boolean result = command.requiresExternalConnection();
+
+        // Then the answer should be true
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldNotLoadFromCsprocessorCfg() {
+        // Given a command with no arguments
+
+        // When invoking the method
+        boolean result = command.loadFromCSProcessorCfg();
+
+        // Then the result should be false
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "validate"
+        assertThat(commandName, is("validate"));
     }
 
     private void setUpAuthorisedUser() {

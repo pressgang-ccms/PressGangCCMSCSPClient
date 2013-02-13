@@ -426,7 +426,7 @@ public class BuildCommand extends BaseCommandImpl {
         JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, getBuilder().getNumErrors(),
                 getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
                 + "Victory!" : ""));
-        if (executionTime) {
+        if (getExecutionTime()) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
         }
 
@@ -490,22 +490,34 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     /**
-     * Gets the content spec as a String from a file.
+     * Gets the content spec from a file and parses it into a content spec object
      *
-     * @param file The file to load and read the content from.
+     * @param file             The file to load and read the content from.
+     * @param processProcesses If the processes should be processed fully during parsing
      * @return A String representation of the file,
      */
-    protected String getContentSpecFromFile(final String file) {
+    protected ContentSpec getContentSpecFromFile(final String file, boolean processProcesses) {
         // Get the content spec from the file
-        String contentSpec = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
+        String contentSpecString = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
 
-        if (contentSpec.equals("")) {
+        if (contentSpecString.equals("")) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 
-        // Set permissive to false as when loading from file we don't know if the content was ever valid.
-        if (getPermissive() == null) {
-            setPermissive(false);
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Parse the content spec
+        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
+        JCommander.getConsole().println("Starting to parse...");
+        final ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
+                ContentSpecParser.ParsingMode.EITHER, processProcesses);
+
+        // Check that that content specification was parsed successfully
+        if (contentSpec == null) {
+            JCommander.getConsole().println(loggerManager.generateLogs());
+            JCommander.getConsole().println(ProcessorConstants.ERROR_INVALID_CS_MSG);
+            shutdown(Constants.EXIT_TOPIC_INVALID);
         }
 
         return contentSpec;
@@ -526,7 +538,7 @@ public class BuildCommand extends BaseCommandImpl {
                 }
             }
 
-            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(zanataUrl));
+            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
         }
 
         // Set the zanata project
@@ -572,7 +584,7 @@ public class BuildCommand extends BaseCommandImpl {
         byte[] builderOutput = null;
         try {
             setBuilder(new ContentSpecBuilder(getProviderFactory()));
-            if (locale == null) {
+            if (getLocale() == null) {
                 builderOutput = getBuilder().buildBook(contentSpec, user, getBuildOptions());
             } else {
                 builderOutput = getBuilder().buildTranslatedBook(contentSpec, user, getBuildOptions(), getCspConfig().getZanataDetails());
@@ -600,30 +612,22 @@ public class BuildCommand extends BaseCommandImpl {
             final UserWrapper user, final ContentSpec contentSpec) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(permissive);
+        processingOptions.setPermissiveMode(getPermissive() == null ? true : getPermissive());
         processingOptions.setValidating(true);
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);
-        processingOptions.setRevision(revision);
-        processingOptions.setUpdateRevisions(useLatestVersions);
-        if (revision != null) {
+        processingOptions.setRevision(getRevision());
+        processingOptions.setUpdateRevisions(getUseLatestVersions());
+        if (getRevision() != null) {
             processingOptions.setAddRevisions(true);
         }
-        if (allowEmptyLevels) {
+        if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
-        boolean success = false;
-        try {
-            success = getCsp().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
-        } catch (Exception e) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
-            shutdown(Constants.EXIT_FAILURE);
-        }
-
-        return success;
+        return getCsp().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, getLocale());
     }
 
     /**
@@ -637,7 +641,7 @@ public class BuildCommand extends BaseCommandImpl {
         final ContentSpec contentSpec;
         if (fileOrId.matches("^\\d+$")) {
             final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(Integer.parseInt(fileOrId), revision);
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(Integer.parseInt(fileOrId), getRevision());
 
             // Check that the content spec entity exists.
             if (contentSpecEntity == null) {
@@ -647,14 +651,12 @@ public class BuildCommand extends BaseCommandImpl {
             contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
         } else {
             // Get the content spec from the file
-            final String contentSpecString = getContentSpecFromFile(fileOrId);
+            contentSpec = getContentSpecFromFile(fileOrId, true);
 
-            // Good point to check for a shutdown
-            allowShutdownToContinueIfRequested();
-
-            // Parse the content spec
-            JCommander.getConsole().println("Starting to parse...");
-            contentSpec = parseContentSpec(getProviderFactory(), contentSpecString, true);
+            // Set permissive to false as when loading from file we don't know if the content was ever valid.
+            if (getPermissive() == null) {
+                setPermissive(false);
+            }
         }
 
         return contentSpec;
@@ -752,7 +754,7 @@ public class BuildCommand extends BaseCommandImpl {
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        return ids.size() == 0;
+        return getIds().size() == 0;
     }
 
     @Override
@@ -763,7 +765,7 @@ public class BuildCommand extends BaseCommandImpl {
          * Check the KojiHub server url to ensure that it exists
          * if the user wants to fetch the pubsnumber from koji.
          */
-        if (fetchPubsnum) {
+        if (getFetchPubsnum()) {
             // Print the kojihub server url
             JCommander.getConsole().println(String.format(Constants.KOJI_WEBSERVICE_MSG, getCspConfig().getKojiHubUrl()));
 
@@ -780,7 +782,7 @@ public class BuildCommand extends BaseCommandImpl {
          * Check the Zanata server url and Project/Version to ensure that it
          * exists if the user wants to insert editor links for translations.
          */
-        if (insertEditorLinks && locale != null) {
+        if (getInsertEditorLinks() && getLocale() != null) {
             setupZanataOptions();
 
             final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
@@ -795,31 +797,6 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         return true;
-    }
-
-    /**
-     * Parse the content specification and display errors or shutdown the application.
-     *
-     * @param providerFactory   The Entity Provider Factory to create Providers to get Entities from a Datasource.
-     * @param contentSpecString The Content Spec String representation to be parsed.
-     * @param processProcesses  If processes should be processed to setup their relationships (makes external calls)
-     * @return The parsed content spec if no errors occurred otherwise null.
-     */
-    protected ContentSpec parseContentSpec(final DataProviderFactory providerFactory, final String contentSpecString,
-            boolean processProcesses) {
-        // Parse the spec to get the title
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        final ContentSpec contentSpec = ClientUtilities.parseContentSpecString(providerFactory, loggerManager, contentSpecString,
-                ContentSpecParser.ParsingMode.EITHER, processProcesses);
-
-        // Check that that content specification was parsed successfully
-        if (contentSpec == null) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
-            JCommander.getConsole().println(ProcessorConstants.ERROR_INVALID_CS_MSG);
-            shutdown(Constants.EXIT_TOPIC_INVALID);
-        }
-
-        return contentSpec;
     }
 
     @Override

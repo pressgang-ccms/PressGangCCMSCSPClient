@@ -12,11 +12,13 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 
 /**
  * @author kamiller@redhat.com (Katie Miller)
  */
 @RunWith(JUnit4IpsedixitTestRunner.class)
+@PowerMockIgnore("org.apache.log4j.*")
 @Ignore // We don't expect any tests on this class
 public class BaseUnitTest {
     protected static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
