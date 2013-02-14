@@ -79,8 +79,8 @@ public class SearchCommand extends BaseCommandImpl {
         queryBuilder.setPropertyTag(CSConstants.ADDED_BY_PROPERTY_TAG_ID, searchText);
 
         // Search the database for content specs that match the query parameters
-        final CollectionWrapper<ContentSpecWrapper> contentSpecs = getProviderFactory().getProvider(ContentSpecProvider.class)
-                .getContentSpecsWithQuery(queryBuilder.getQuery());
+        final CollectionWrapper<ContentSpecWrapper> contentSpecs = getProviderFactory().getProvider(
+                ContentSpecProvider.class).getContentSpecsWithQuery(queryBuilder.getQuery());
         final List<ContentSpecWrapper> csList;
         if (contentSpecs != null) {
             csList = contentSpecs.getItems();
@@ -96,7 +96,7 @@ public class SearchCommand extends BaseCommandImpl {
             JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
         } else {
             JCommander.getConsole().println(
-                    ClientUtilities.generateContentSpecListResponse(ClientUtilities.buildSpecList(csList, getProviderFactory())));
+                    ClientUtilities.generateContentSpecList(ClientUtilities.buildSpecList(csList, getProviderFactory())));
         }
     }
 

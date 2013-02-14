@@ -40,7 +40,7 @@ import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.RESTUserProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
@@ -172,20 +172,29 @@ public class ClientUtilities {
      * Read from a csprocessor.cfg file and intitialise the variables into a configuration object.
      *
      * @param csprocessorcfg The csprocessor.cfg file.
-     * @param cspConfig      The content spec configuration object to load the settings into
+     * @return The content spec configuration object to load the settings into
      * @throws FileNotFoundException The csprocessor.cfg couldn't be found
      * @throws IOException
      */
-    public static void readFromCsprocessorCfg(final File csprocessorcfg, final ContentSpecConfiguration cspConfig) throws IOException {
+    public static ContentSpecConfiguration readFromCsprocessorCfg(final File csprocessorcfg) throws IOException {
         final Properties prop = new Properties();
         prop.load(new FileInputStream(csprocessorcfg));
-        cspConfig.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
+
+        // If the file contains no properties then return an empty config
+        if (prop.isEmpty()) {
+            return new ContentSpecConfiguration();
+        }
+
+        final ContentSpecConfiguration cspConfig = new ContentSpecConfiguration();
+        final String specId = prop.getProperty("SPEC_ID");
+        cspConfig.setContentSpecId(Integer.parseInt(specId == null ? null : specId));
         cspConfig.setServerUrl(fixHostURL(prop.getProperty("SERVER_URL")));
         cspConfig.getZanataDetails().setServer(fixHostURL(prop.getProperty("ZANATA_URL")));
         cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
         cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
         cspConfig.setKojiHubUrl(fixHostURL(prop.getProperty("KOJI_HUB_URL")));
         cspConfig.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
+        return cspConfig;
     }
 
     /**
@@ -311,9 +320,9 @@ public class ClientUtilities {
         for (final ContentSpecWrapper cs : specList) {
             UserWrapper creator = null;
             if (cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
-                final CollectionWrapper<UserWrapper> users = providerFactory.getProvider(RESTUserProvider.class).getUsersByName(
+                final CollectionWrapper<UserWrapper> users = providerFactory.getProvider(UserProvider.class).getUsersByName(
                         cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
-                if (users.size() == 1) {
+                if (users != null && users.size() == 1) {
                     creator = users.getItems().get(0);
                 }
             }
@@ -329,7 +338,7 @@ public class ClientUtilities {
      * @param contentSpecs The SpecList that contains the processed Content Specifications
      * @return The generated response output.
      */
-    public static String generateContentSpecListResponse(final SpecList contentSpecs) {
+    public static String generateContentSpecList(final SpecList contentSpecs) {
         final LinkedHashMap<String, Integer> sizes = new LinkedHashMap<String, Integer>();
         // Create the initial sizes incase they never increase
         sizes.put("ID", 2);
@@ -372,7 +381,7 @@ public class ClientUtilities {
                     String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
             for (final Spec spec : contentSpecs.getSpecs()) {
                 output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(),
-                        spec.getCreator(),
+                        spec.getCreator() == null ? "Unknown" : spec.getCreator(),
                         spec.getLastModified() == null ? "Unknown" : dateFormatter.format(spec.getLastModified())) + "\n");
             }
             return output.toString();

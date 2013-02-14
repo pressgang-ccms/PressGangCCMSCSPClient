@@ -84,7 +84,7 @@ public class ListCommand extends BaseCommandImpl {
 
             // Generate and then print the list of content specs
             final SpecList specList = ClientUtilities.buildSpecList(csList, getProviderFactory());
-            JCommander.getConsole().println(ClientUtilities.generateContentSpecListResponse(specList));
+            JCommander.getConsole().println(ClientUtilities.generateContentSpecList(specList));
         }
     }
 

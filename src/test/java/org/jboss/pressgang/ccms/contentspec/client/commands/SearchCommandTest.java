@@ -102,7 +102,7 @@ public class SearchCommandTest extends BaseUnitTest {
         List<ContentSpecWrapper> resultList = Arrays.asList(result1, result2);
         given(collectionWrapper.getItems()).willReturn(resultList);
         given(ClientUtilities.buildSpecList(resultList, providerFactory)).willReturn(specList);
-        given(ClientUtilities.generateContentSpecListResponse(specList)).willReturn(queryResult);
+        given(ClientUtilities.generateContentSpecList(specList)).willReturn(queryResult);
 
         // When the SearchCommand is processed
         command.process();

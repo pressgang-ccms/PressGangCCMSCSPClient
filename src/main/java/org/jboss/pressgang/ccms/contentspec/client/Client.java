@@ -178,7 +178,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 // Load the csprocessor.cfg file from the current directory
                 try {
                     if (csprocessorcfg.exists() && csprocessorcfg.isFile()) {
-                        ClientUtilities.readFromCsprocessorCfg(csprocessorcfg, cspConfig);
+                        cspConfig = ClientUtilities.readFromCsprocessorCfg(csprocessorcfg);
                         if (cspConfig.getContentSpecId() == null) {
                             printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_INVALID_CSPROCESSOR_CFG_MSG, false);
                         }

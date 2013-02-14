@@ -121,7 +121,7 @@ public class ListCommandTest extends BaseUnitTest {
         // and we want to mock the Client Utilities methods
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.buildSpecList(anyList(), eq(providerFactory))).thenReturn(specList);
-        when(ClientUtilities.generateContentSpecListResponse(eq(specList))).thenReturn(randomString);
+        when(ClientUtilities.generateContentSpecList(eq(specList))).thenReturn(randomString);
 
         // When the command is processing
         final ArgumentCaptor<Integer> numResults = ArgumentCaptor.forClass(Integer.class);
@@ -133,7 +133,7 @@ public class ListCommandTest extends BaseUnitTest {
         PowerMockito.verifyStatic(times(1));
         ClientUtilities.buildSpecList(anyList(), eq(providerFactory));
         PowerMockito.verifyStatic(times(1));
-        ClientUtilities.generateContentSpecListResponse(eq(specList));
+        ClientUtilities.generateContentSpecList(eq(specList));
         assertThat(getStdOutLogs(), containsString(randomString));
     }
 

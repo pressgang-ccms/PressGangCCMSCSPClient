@@ -3,6 +3,8 @@ package org.jboss.pressgang.ccms.contentspec.client.utils;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.matchers.JUnitMatchers.containsString;
@@ -12,32 +14,44 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryNumber;
+import net.sf.ipsedixit.annotation.ArbitraryString;
+import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Matchers;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.entities.Spec;
+import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
+import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.PropertyTagInContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.junit.After;
@@ -61,6 +75,8 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     @Arbitrary Integer secondId;
     @ArbitraryNumber Integer checksum;
     @Arbitrary String randomString;
+    @ArbitraryString(type = StringType.ALPHANUMERIC) String randomAlphanumString;
+    @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
     @Mock JCommander parser;
     @Mock ContentSpecConfiguration cspConfig;
     @Mock ClientConfiguration clientConfig;
@@ -70,6 +86,8 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     @Mock UserWrapper user;
     @Mock CSTransformer csTransformer;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock RESTProviderFactory providerFactory;
+    @Mock UserProvider userProvider;
 
     File rootTestDirectory;
     File bookDir;
@@ -77,6 +95,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
 
     @Before
     public void setUp() throws IOException {
+        bindStdOut();
         doCallRealMethod().when(command).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
 
         // Return the test directory as the root directory
@@ -90,6 +109,11 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Make a empty file in that directory
         emptyFile = new File(bookDir, EMPTY_FILE_NAME);
         emptyFile.createNewFile();
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 
     @Test
@@ -158,6 +182,54 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldLeaveConfigLocationUnalteredForCorrectPath() {
+        // Given a correct config location
+        String configLocation = rootTestDirectory.getAbsolutePath() + File.separator + ".config" + File.separator + "csprocessor.ini";
+
+        // When fixing the config location
+        String fixedConfigLocation = ClientUtilities.fixConfigLocation(configLocation);
+
+        // Then the two locations should be the same
+        assertThat(fixedConfigLocation, is(configLocation));
+    }
+
+    @Test
+    public void shouldLeaveConfigLocationUnalteredForAnEmptyFileThatExists() {
+        // Given a correct config location
+        String configLocation = rootTestDirectory.getAbsolutePath() + File.separator + "EmptyFile.txt";
+
+        // When fixing the config location
+        String fixedConfigLocation = ClientUtilities.fixConfigLocation(configLocation);
+
+        // Then the two locations should be the same
+        assertThat(fixedConfigLocation, is(configLocation));
+    }
+
+    @Test
+    public void shouldLeaveConfigLocationUnalteredForNonExistentFileThatEndsInINI() {
+        // Given a correct config location
+        String configLocation = rootTestDirectory.getAbsolutePath() + File.separator + "NonExistentFile.ini";
+
+        // When fixing the config location
+        String fixedConfigLocation = ClientUtilities.fixConfigLocation(configLocation);
+
+        // Then the two locations should be the same
+        assertThat(fixedConfigLocation, is(configLocation));
+    }
+
+    @Test
+    public void shouldAddConfigFileNameToConfigDirectoryLocation() {
+        // Given a correct config location
+        String configLocation = rootTestDirectory.getAbsolutePath();
+
+        // When fixing the config location
+        String fixedConfigLocation = ClientUtilities.fixConfigLocation(configLocation);
+
+        // Then the fixed location should have the csprocessor.ini filename added
+        assertThat(fixedConfigLocation, is(configLocation + File.separator + "csprocessor.ini"));
+    }
+
+    @Test
     public void shouldPrintErrorAndShutdownOnProcessWhenNoId() {
         // Given a command called with no ID
         List<Integer> ids = Collections.EMPTY_LIST;
@@ -210,6 +282,23 @@ public class ClientUtilitiesTest extends BaseUnitTest {
 
         // When it is processed
         boolean retValue = ClientUtilities.prepareAndValidateIds(command, cspConfig, ids);
+
+        // Then the command should complete without error
+        verify(command, times(0)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
+        assertTrue(retValue);
+    }
+
+    @Test
+    public void shouldLoadIdFromFileOnProcessWhenNoStringIdSupplied() {
+        // Given a command called with no ID
+        List<String> ids = new ArrayList<String>();
+        // And that there is an ID in the CS Processor config
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // And we are loading from the csprocessor.cfg
+        given(command.loadFromCSProcessorCfg()).willReturn(true);
+
+        // When it is processed
+        boolean retValue = ClientUtilities.prepareAndValidateStringIds(command, cspConfig, ids);
 
         // Then the command should complete without error
         verify(command, times(0)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
@@ -348,8 +437,290 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         assertFalse(result);
     }
 
-    @After
-    public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(bookDir);
+    @Test
+    public void shouldReadFromCsprocessorCfg() throws IOException {
+        // Given a file
+        File csprocessorCfg = new File(rootTestDirectory.getAbsolutePath() + File.separator + "csprocessor.cfg");
+
+        // When getting the csprocessor.cfg
+        final ContentSpecConfiguration cspConfig = ClientUtilities.readFromCsprocessorCfg(csprocessorCfg);
+
+        // Then check that the server and id is set
+        assertNotNull(cspConfig);
+        assertThat(cspConfig.getContentSpecId(), is(7210));
+        assertThat(cspConfig.getServerUrl(), is("http://www.example.com/"));
+    }
+
+    @Test
+    public void shouldReadFromCsprocessorCfgWithBlankFile() throws IOException {
+        // Given a new empty file
+        File csprocessorCfg = TestUtil.createRealFile(bookDir.getAbsolutePath() + File.separator + "csprocessor.cfg", "");
+
+        // When getting the csprocessor.cfg
+        final ContentSpecConfiguration cspConfig = ClientUtilities.readFromCsprocessorCfg(csprocessorCfg);
+
+        // Then check that the server and id are still null
+        assertNull(cspConfig.getServerUrl());
+        assertNull(cspConfig.getContentSpecId());
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputRootDirectoryWithRootDirectorySet() {
+        // Given a config with a root directory
+        given(cspConfig.getRootOutputDirectory()).willReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+
+        // When determining the root directory
+        String rootDirectory = ClientUtilities.getOutputRootDirectory(cspConfig, BOOK_TITLE);
+
+        // Then the directory should be the root test dir + book title
+        assertThat(rootDirectory, is(rootTestDirectory.getAbsolutePath() + File.separator + BOOK_TITLE + File.separator));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputRootDirectoryWithNoRootDirectorySet() {
+        // Given a config with no root directory
+        given(cspConfig.getRootOutputDirectory()).willReturn(null);
+
+        // When determining the root directory
+        String rootDirectory = ClientUtilities.getOutputRootDirectory(cspConfig, BOOK_TITLE);
+
+        // Then the directory should be the current working directory or an empty string for short
+        assertThat(rootDirectory, is(""));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputRootDirectoryWithEmptyRootDirectorySet() {
+        // Given a config with no root directory
+        given(cspConfig.getRootOutputDirectory()).willReturn("");
+
+        // When determining the root directory
+        String rootDirectory = ClientUtilities.getOutputRootDirectory(cspConfig, BOOK_TITLE);
+
+        // Then the directory should be the current working directory or an empty string for short
+        assertThat(rootDirectory, is(""));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputRootDirectoryFromContentSpec() {
+        // Given a config with a root directory
+        given(cspConfig.getRootOutputDirectory()).willReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+        // and the content spec has a title
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+
+        // When determining the root directory
+        String rootDirectory = ClientUtilities.getOutputRootDirectory(cspConfig, contentSpec);
+
+        // Then the directory should be the root test dir + book title
+        assertThat(rootDirectory, is(rootTestDirectory.getAbsolutePath() + File.separator + BOOK_TITLE + File.separator));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputRootDirectoryFromContentSpecWrapper() {
+        // Given a config with a root directory
+        given(cspConfig.getRootOutputDirectory()).willReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+        // and the content spec wrapper has a title
+        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
+
+        // When determining the root directory
+        String rootDirectory = ClientUtilities.getOutputRootDirectory(cspConfig, contentSpecWrapper);
+
+        // Then the directory should be the root test dir + book title
+        assertThat(rootDirectory, is(rootTestDirectory.getAbsolutePath() + File.separator + BOOK_TITLE + File.separator));
+    }
+
+    @Test
+    public void shouldTransformContentSpec() {
+        // Given a valid content spec wrapper
+        TestUtil.setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+
+        // When transforming a content spec
+        ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecWrapper);
+
+        // Then check that the details were set
+        assertNotNull(contentSpec);
+        assertThat(contentSpec.getTitle(), is(randomAlphanumString));
+        assertThat(contentSpec.getId(), is(id));
+    }
+
+    @Test
+    public void shouldGenerateEmptyStringForEmptySpecList() {
+        // Given a SpecList with no data
+        SpecList specList = new SpecList();
+
+        // When generating the spec list response
+        String output = ClientUtilities.generateContentSpecList(specList);
+
+        // Then the output should be an empty string
+        assertThat(output, is(""));
+    }
+
+    @Test
+    public void shouldGenerateEmptyStringForNullSpecList() {
+        // Given a null SpecList
+        SpecList specList = null;
+
+        // When generating the spec list response
+        String output = ClientUtilities.generateContentSpecList(specList);
+
+        // Then the output should be an empty string
+        assertThat(output, is(""));
+    }
+
+    @Test
+    public void shouldGenerateStringWithHeaderForSpecListWithOneEntry() {
+        final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy");
+        // Given a SpecList with one entry
+        SpecList specList = new SpecList();
+        Date now = new Date();
+        specList.addSpec(new Spec(id, randomAlphanumString, randomString, secondId.toString(), username, now));
+
+        // When generating the spec list response
+        String output = ClientUtilities.generateContentSpecList(specList);
+
+        // Then the output should have a header and the spec entry
+        final String format = "%" + (id.toString().length() + 2) + "s%" + (randomAlphanumString.length() + 2) + "s%" + (randomString
+                .length() + 2) + "s%9s%" + (username.length() + 2) + "s%15s";
+        assertThat(output, containsString(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED")));
+        assertThat(output, containsString(
+                String.format(format, id, randomAlphanumString, randomString, secondId, username, dateFormatter.format(now))));
+    }
+
+    @Test
+    public void shouldGenerateStringWithHeaderForSpecListWithOneEntryWithoutCreator() {
+        final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy");
+        // Given a SpecList with one entry that has no user
+        SpecList specList = new SpecList();
+        Date now = new Date();
+        specList.addSpec(new Spec(id, randomAlphanumString, randomString, secondId.toString(), null, now));
+
+        // When generating the spec list response
+        String output = ClientUtilities.generateContentSpecList(specList);
+
+        // Then the output should have a header and the spec entry
+        final String format = "%" + (id.toString().length() + 2) + "s%" + (randomAlphanumString.length() + 2) + "s%" + (randomString
+                .length() + 2) + "s%9s%12s%15s";
+        assertThat(output, containsString(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED")));
+        assertThat(output, containsString(
+                String.format(format, id, randomAlphanumString, randomString, secondId, "Unknown", dateFormatter.format(now))));
+    }
+
+    @Test
+    public void shouldGenerateStringWithHeaderForSpecListWithOneEntryWithoutALastModifiedDate() {
+        // Given a SpecList with one entry that has no date
+        SpecList specList = new SpecList();
+        specList.addSpec(new Spec(id, randomAlphanumString, randomString, secondId.toString(), username, null));
+
+        // When generating the spec list response
+        String output = ClientUtilities.generateContentSpecList(specList);
+
+        // Then the output should have a header and the spec entry
+        final String format = "%" + (id.toString().length() + 2) + "s%" + (randomAlphanumString.length() + 2) + "s%" + (randomString
+                .length() + 2) + "s%9s%" + (username.length() + 2) + "s%15s";
+        assertThat(output, containsString(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED")));
+        assertThat(output, containsString(String.format(format, id, randomAlphanumString, randomString, secondId, username, "Unknown")));
+    }
+
+    @Test
+    public void shouldBuildSpecListObjectFromListOfContentSpecsWithNoCreator() {
+        Date now = new Date();
+        // Given a list of content specs
+        List<ContentSpecWrapper> contentSpecs = Arrays.asList(contentSpecWrapper);
+        // and the content spec has some basic properties
+        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(contentSpecWrapper.getId()).willReturn(id);
+        given(contentSpecWrapper.getProduct()).willReturn(randomString);
+        given(contentSpecWrapper.getVersion()).willReturn(secondId.toString());
+        given(contentSpecWrapper.getLastModified()).willReturn(now);
+        // and no creator
+        given(contentSpecWrapper.getProperty(anyInt())).willReturn(null);
+        // and the provider factory will return a user provider
+        given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);
+
+        // When building the spec list
+        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory);
+
+        // Then check that the spec list contains one spec and the details are right
+        assertThat(list.getCount(), is(1L));
+        assertNotNull(list.getSpecs());
+        Spec spec = list.getSpecs().get(0);
+        assertThat(spec.getId(), is(id));
+        assertThat(spec.getTitle(), is(randomAlphanumString));
+        assertThat(spec.getProduct(), is(randomString));
+        assertThat(spec.getVersion(), is(secondId.toString()));
+        assertThat(spec.getLastModified(), is(now));
+    }
+
+    @Test
+    public void shouldBuildSpecListObjectFromListOfContentSpecsWithWithInvalidCreator() {
+        final PropertyTagInContentSpecWrapper propTag = mock(PropertyTagInContentSpecWrapper.class);
+        Date now = new Date();
+        // Given a list of content specs
+        List<ContentSpecWrapper> contentSpecs = Arrays.asList(contentSpecWrapper);
+        // and the content spec has some basic properties
+        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(contentSpecWrapper.getId()).willReturn(id);
+        given(contentSpecWrapper.getProduct()).willReturn(randomString);
+        given(contentSpecWrapper.getVersion()).willReturn(secondId.toString());
+        given(contentSpecWrapper.getLastModified()).willReturn(now);
+        // and a creator
+        given(contentSpecWrapper.getProperty(anyInt())).willReturn(propTag);
+        given(propTag.getValue()).willReturn(username);
+        // and the provider factory will return a user provider
+        given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);
+        // and the user provider returns a user that doesn't exist
+        given(userProvider.getUsersByName(anyString())).willReturn(null);
+
+        // When building the spec list
+        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory);
+
+        // Then check that the spec list contains one spec and the details are right
+        assertThat(list.getCount(), is(1L));
+        assertNotNull(list.getSpecs());
+        Spec spec = list.getSpecs().get(0);
+        assertThat(spec.getId(), is(id));
+        assertThat(spec.getTitle(), is(randomAlphanumString));
+        assertThat(spec.getProduct(), is(randomString));
+        assertThat(spec.getVersion(), is(secondId.toString()));
+        assertThat(spec.getLastModified(), is(now));
+        assertNull(spec.getCreator());
+    }
+
+    @Test
+    public void shouldBuildSpecListObjectFromListOfContentSpecsWithWithValidCreator() {
+        final PropertyTagInContentSpecWrapper propTag = mock(PropertyTagInContentSpecWrapper.class);
+        final CollectionWrapper<UserWrapper> users = mock(CollectionWrapper.class);
+        Date now = new Date();
+        // Given a list of content specs
+        List<ContentSpecWrapper> contentSpecs = Arrays.asList(contentSpecWrapper);
+        // and the content spec has some basic properties
+        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(contentSpecWrapper.getId()).willReturn(id);
+        given(contentSpecWrapper.getProduct()).willReturn(randomString);
+        given(contentSpecWrapper.getVersion()).willReturn(secondId.toString());
+        given(contentSpecWrapper.getLastModified()).willReturn(now);
+        // and a creator
+        given(contentSpecWrapper.getProperty(anyInt())).willReturn(propTag);
+        given(propTag.getValue()).willReturn(username);
+        // and the provider factory will return a user provider
+        given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);
+        // and the user provider finds a valid user
+        given(userProvider.getUsersByName(anyString())).willReturn(users);
+        given(users.size()).willReturn(1);
+        given(users.getItems()).willReturn(Arrays.asList(user));
+        given(user.getUsername()).willReturn(username);
+
+        // When building the spec list
+        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory);
+
+        // Then check that the spec list contains one spec and the details are right
+        assertThat(list.getCount(), is(1L));
+        assertNotNull(list.getSpecs());
+        Spec spec = list.getSpecs().get(0);
+        assertThat(spec.getId(), is(id));
+        assertThat(spec.getTitle(), is(randomAlphanumString));
+        assertThat(spec.getProduct(), is(randomString));
+        assertThat(spec.getVersion(), is(secondId.toString()));
+        assertThat(spec.getLastModified(), is(now));
+        assertThat(spec.getCreator(), is(username));
     }
 }
