@@ -41,15 +41,14 @@ import java.util.Arrays;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
-@PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class})
 public class PushCommandTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -77,6 +76,7 @@ public class PushCommandTest extends BaseUnitTest {
     @Mock CollectionWrapper<TopicWrapper> topicWrapperCollection;
     @Mock File file;
     @Mock File file2;
+
     private File realFile;
     private PushCommand command;
 
@@ -96,6 +96,39 @@ public class PushCommandTest extends BaseUnitTest {
             resetStdStreams();
             System.err.println("WARNING: Test file cleanup for " + realFile.getAbsolutePath() + "was unsuccessful");
         }
+    }
+
+    @Test
+    public void shouldRequireAnExternalConnection() {
+        // Given an already initialised command
+
+        // When invoking the method
+        boolean result = command.requiresExternalConnection();
+
+        // Then the answer should be true
+        assertTrue(result);
+    }
+
+    @Test
+    public void shouldNotLoadFromCsprocessorCfgWhenFileSpecified() {
+        // Given a command with a file
+        command.setFiles(Arrays.asList(file));
+
+        // When invoking the method
+        boolean result = command.loadFromCSProcessorCfg();
+
+        // Then the result should be false
+        assertFalse(result);
+    }
+
+    @Test
+    public void shouldReturnRightCommandName() {
+        // Given
+        // When getting the commands name
+        String commandName = command.getCommandName();
+
+        // Then the name should be "push"
+        assertThat(commandName, is("push"));
     }
 
     @Test
@@ -212,8 +245,8 @@ public class PushCommandTest extends BaseUnitTest {
         given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
         given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
-                any(String.class), any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
+        given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class), any(String.class),
+                any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
         given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
         // And an authorised user
         setUpAuthorisedUser(command, userProvider, users, user, username);

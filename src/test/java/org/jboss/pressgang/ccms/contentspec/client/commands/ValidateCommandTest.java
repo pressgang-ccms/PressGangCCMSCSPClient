@@ -1,5 +1,27 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createRealFile;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setUpAuthorisedUser;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidContentSpecMocking;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidContentSpecWrapperMocking;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidLevelMocking;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.util.Arrays;
+
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -11,7 +33,11 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
-import org.jboss.pressgang.ccms.contentspec.provider.*;
+import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
@@ -28,17 +54,6 @@ import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
-
-import java.io.File;
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.*;
-import static org.junit.Assert.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.when;
 
 @PrepareForTest({RESTProviderFactory.class, FileUtilities.class, ClientUtilities.class, DocBookUtilities.class})
 public class ValidateCommandTest extends BaseUnitTest {
@@ -344,16 +359,17 @@ public class ValidateCommandTest extends BaseUnitTest {
         assertTrue(result);
     }
 
-//    @Test
-//    public void shouldNotLoadFromCsprocessorCfg() {
-//        // Given a command with no arguments
-//
-//        // When invoking the method
-//        boolean result = command.loadFromCSProcessorCfg();
-//
-//        // Then the result should be false
-//        assertFalse(result);
-//    }
+    @Test
+    public void shouldNotLoadFromCsprocessorCfgWhenFileSpecified() {
+        // Given a command with a file
+        command.setFiles(Arrays.asList(file));
+
+        // When invoking the method
+        boolean result = command.loadFromCSProcessorCfg();
+
+        // Then the result should be false
+        assertFalse(result);
+    }
 
     @Test
     public void shouldReturnRightCommandName() {

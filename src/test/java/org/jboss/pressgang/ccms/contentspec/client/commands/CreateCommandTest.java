@@ -30,6 +30,7 @@ import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -99,7 +100,7 @@ public class CreateCommandTest extends BaseUnitTest {
         command = spy(new CreateCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid
-        setUpAuthorisedUser();
+        TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
 
         // Return the test directory as the root directory
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
@@ -108,6 +109,11 @@ public class CreateCommandTest extends BaseUnitTest {
         // Make the book title directory
         bookDir = new File(rootTestDirectory, BOOK_TITLE);
         bookDir.mkdir();
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 
     @Test
@@ -168,7 +174,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn("");
@@ -191,7 +197,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
@@ -215,7 +221,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // and no force
         command.setForce(false);
         // and should create the csprocessor cfg
@@ -250,7 +256,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // and should create the csprocessor cfg
         command.setCreateCsprocessorCfg(false);
         // that is empty
@@ -282,7 +288,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // and force to bypass the directory exists check
         command.setForce(true);
         // and should create the csprocessor cfg
@@ -314,7 +320,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // and force to bypass the directory exists check
         command.setForce(true);
         // and should create the csprocessor cfg
@@ -351,7 +357,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
-        setUpValidMockFile();
+        TestUtil.setValidFileProperties(mockFile);
         // and should create the csprocessor cfg
         command.setCreateCsprocessorCfg(false);
         // that is empty
@@ -411,24 +417,5 @@ public class CreateCommandTest extends BaseUnitTest {
 
         // Then the name should be "create"
         assertThat(commandName, is("create"));
-    }
-
-    @After
-    public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(bookDir);
-    }
-
-    protected void setUpValidMockFile() {
-        given(mockFile.isDirectory()).willReturn(false);
-        given(mockFile.isFile()).willReturn(true);
-        given(mockFile.exists()).willReturn(true);
-    }
-
-    protected void setUpAuthorisedUser() {
-        command.setUsername(username);
-        given(userProvider.getUsersByName(username)).willReturn(users);
-        given(users.size()).willReturn(1);
-        given(users.getItems()).willReturn(Arrays.asList(user));
-        given(user.getUsername()).willReturn(username);
     }
 }

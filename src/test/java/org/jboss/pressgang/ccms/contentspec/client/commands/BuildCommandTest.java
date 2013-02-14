@@ -1,8 +1,10 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -11,12 +13,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.refEq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +29,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import com.beust.jcommander.JCommander;
 import com.redhat.j2koji.exceptions.KojiException;
@@ -38,8 +43,10 @@ import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingExc
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
 import org.jboss.pressgang.ccms.contentspec.builder.structures.CSDocbookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
@@ -107,7 +114,8 @@ public class BuildCommandTest extends BaseUnitTest {
         when(providerFactory.getProvider(BlobConstantProvider.class)).thenReturn(blobConstantProvider);
         command = spy(new BuildCommand(parser, cspConfig, clientConfig));
 
-        setUpAuthorisedUser();
+        // Authentication is tested in the base implementation so assume all users are valid
+        TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
@@ -115,6 +123,11 @@ public class BuildCommandTest extends BaseUnitTest {
         // Make the book title directory
         bookDir = new File(rootTestDirectory, BOOK_TITLE);
         bookDir.mkdir();
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        FileUtils.deleteDirectory(bookDir);
     }
 
     @Test
@@ -154,26 +167,6 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
-    }
-
-    @Test
-    public void shouldSetOutputDirectoryWhenLoadingFromCsprocessorCfg() {
-        // Given a command with no ids
-        command.setIds(new ArrayList<String>());
-        // and a csprocessor.cfg that has a content spec id
-        given(cspConfig.getContentSpecId()).willReturn(id);
-        // and getting the content spec from the external source will not exist, just as a way to kill the processing
-        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(null);
-
-        // When
-        try {
-            command.process();
-            fail("Exception was not thrown, but was expected");
-        } catch (CheckExitCalled e) {
-        }
-
-        // Then the output directory should be set to the root directory
-        assertThat(command.getOutputPath(), is(rootTestDirectory.getAbsolutePath() + File.separator));
     }
 
     @Test
@@ -427,6 +420,30 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldSetZanataUrlWhenCommandLineOptionIsZanataServerName() {
+        final ZanataDetails details = new ZanataDetails();
+        final ZanataServerConfiguration zanataConfig = mock(ZanataServerConfiguration.class);
+        // Given the cspconfig has some zanata details
+        given(cspConfig.getZanataDetails()).willReturn(details);
+        // and the client config has some servers
+        HashMap<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
+        zanataServers.put(randomString, zanataConfig);
+        given(clientConfig.getZanataServers()).willReturn(zanataServers);
+        // and the zanata config has a url
+        String url = "http://www.example.com/";
+        given(zanataConfig.getUrl()).willReturn(url);
+        // and some zanata options are set via the command line
+        command.setZanataUrl(randomString);
+
+
+        // When setting up the zanata options
+        command.setupZanataOptions();
+
+        // Then the command should have the url set
+        assertThat(command.getZanataUrl(), is(url));
+    }
+
+    @Test
     public void shouldShutdownOnBuildProcessingException() throws BuildProcessingException, BuilderCreationException {
         final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
@@ -516,6 +533,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the builder will throw a builder processing exception
         given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
         given(command.getBuilder()).willReturn(builder);
+        // and the builder has an error
+        given(builder.getNumErrors()).willReturn(randomNumber);
+        given(builder.getNumWarnings()).willReturn(0);
         // and we create a way to exit after building
         PowerMockito.mockStatic(DocBookUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
@@ -531,8 +551,10 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        assertThat(getStdOutLogs(), containsString("Starting to build..."));
         verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class));
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(),
+                containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
     }
 
     @Test
@@ -557,6 +579,9 @@ public class BuildCommandTest extends BaseUnitTest {
         given(command.getBuilder()).willReturn(builder);
         // and a locale is set
         command.setLocale("ja");
+        // and the builder has no errors
+        given(builder.getNumErrors()).willReturn(0);
+        given(builder.getNumWarnings()).willReturn(0);
         // and we create a way to exit after building
         PowerMockito.mockStatic(DocBookUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
@@ -572,9 +597,270 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check that the translated build method was called
-        assertThat(getStdOutLogs(), containsString("Starting to build..."));
         verify(builder).buildTranslatedBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class),
                 any(ZanataDetails.class));
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(),
+                containsString("Content Specification successfully built with 0 Errors and 0 Warnings - Flawless " + "Victory!"));
+    }
+
+    @Test
+    public void shouldShutdownWhenSaveBuildFails() throws BuildProcessingException, BuilderCreationException, IOException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        final byte[] bookData = new byte[0];
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(command.getBuilder()).willReturn(builder);
+        // and the builder has no errors
+        given(builder.getNumErrors()).willReturn(0);
+        given(builder.getNumWarnings()).willReturn(0);
+        // and the output path is set to the test book dir
+        command.setOutputPath(bookDir.getAbsolutePath());
+        // and saving should fail
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
+        FileUtilities.saveFile(any(File.class), any(byte[].class));
+        // and some real methods should be called
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then an error should be printed
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(), containsString("An error occurred while trying to save the file."));
+    }
+
+    @Test
+    public void shouldIgnoreOutputDirectoryWhenLoadingFromCsprocessorCfg() throws BuildProcessingException, BuilderCreationException,
+            IOException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        final byte[] bookData = new byte[0];
+        // Given a command with no ids
+        command.setIds(new ArrayList<String>());
+        // and a csprocessor.cfg that has a content spec id
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper))).thenReturn(contentSpec);
+        // and the content spec has a title
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(command.getBuilder()).willReturn(builder);
+        // and the builder has no errors
+        given(builder.getNumErrors()).willReturn(0);
+        given(builder.getNumWarnings()).willReturn(0);
+        // and the output path is set to the test book dir
+        command.setOutputPath(bookDir.getAbsolutePath());
+        // and we create a way to end the program
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.doThrow(new CheckExitCalled(-2)).when(FileUtilities.class);
+        FileUtilities.saveFile(any(File.class), any(byte[].class));
+        // and some real methods should be called
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.prepareAndValidateStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
+        when(ClientUtilities.prepareStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then the output directory should be now be null
+        assertNull(command.getOutputPath());
+    }
+
+    @Test
+    public void shouldAskToOverwriteOutputFileIfExistsWhenNotBuildingFromCsprocessorcfg() {
+        // Given a mocked file
+        File mockFile = mock(File.class);
+        // and the file exists
+        given(mockFile.exists()).willReturn(true);
+        // and we don't want to overwrite the file
+        setStdInput("no\n");
+        // and we are loading from the csprocessor.cfg
+        boolean loadFromCsprocessorCfg = false;
+
+        // When saving the output
+        try {
+            command.saveBuildToFile(new byte[0], mockFile, loadFromCsprocessorCfg);
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the output should have a question printed
+        assertThat(getStdOutLogs(), containsString("already exists! Overwrite existing file (y/n)? "));
+    }
+
+    @Test
+    public void shouldKeepAskingToOverwriteOutputFileIfExistsWhenNotBuildingFromCsprocessorcfgAndNotValidAnswer() {
+        // Given a mocked file
+        File mockFile = mock(File.class);
+        // and the file exists
+        given(mockFile.exists()).willReturn(true);
+        // and the getName method return something
+        given(mockFile.getName()).willReturn(randomString);
+        // and we don't want to overwrite the file
+        setStdInput("blah\nno\n");
+        // and we are loading from the csprocessor.cfg
+        boolean loadFromCsprocessorCfg = false;
+
+        // When saving the output
+        try {
+            command.saveBuildToFile(new byte[0], mockFile, loadFromCsprocessorCfg);
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the output should have a question printed twice. The first should have the answer
+        assertThat(getStdOutLogs(),
+                containsString(randomString + " already exists! Overwrite existing file (y/n)? \n" + randomString + " already exists!" +
+                        " Overwrite existing file (y/n)? "));
+    }
+
+    @Test
+    public void shouldOverwriteOutputFileIfExistsWhenNotBuildingFromCsprocessorcfg() throws IOException {
+        // Given a mocked file
+        File mockFile = mock(File.class);
+        // and the file exists
+        given(mockFile.exists()).willReturn(true);
+        // and we want to overwrite the file
+        setStdInput("y\n");
+        // and we don't actually want to save anything
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.doNothing().when(FileUtilities.class);
+        FileUtilities.saveFile(any(File.class), any(byte[].class));
+        // and we are loading from the csprocessor.cfg
+        boolean loadFromCsprocessorCfg = false;
+
+        // When saving the output
+        command.saveBuildToFile(new byte[0], mockFile, loadFromCsprocessorCfg);
+
+        // Then the save file method should have been called
+        PowerMockito.verifyStatic(times(1));
+        FileUtilities.saveFile(eq(mockFile), any(byte[].class));
+        assertThat(getStdOutLogs(), containsString("already exists! Overwrite existing file (y/n)? "));
+        assertThat(getStdOutLogs(), containsString("Output saved to: "));
+    }
+
+    @Test
+    public void shouldOverwriteOutputFileIfExistsAndNotAskWhenBuildingFromCsprocessorcfg() throws IOException {
+        // Given a mocked file
+        File mockFile = mock(File.class);
+        // and the file exists
+        given(mockFile.exists()).willReturn(true);
+        // and we don't actually want to save anything
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.doNothing().when(FileUtilities.class);
+        FileUtilities.saveFile(any(File.class), any(byte[].class));
+        // and we are loading from the csprocessor.cfg
+        boolean loadFromCsprocessorCfg = true;
+
+        // When saving the output
+        command.saveBuildToFile(new byte[0], mockFile, loadFromCsprocessorCfg);
+
+        // Then the save file method should have been called and the overwrite question should not be asked
+        PowerMockito.verifyStatic(times(1));
+        FileUtilities.saveFile(eq(mockFile), any(byte[].class));
+        assertThat(getStdOutLogs(), not(containsString("already exists! Overwrite existing file (y/n)? ")));
+        assertThat(getStdOutLogs(), containsString("Output saved to: "));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputFileWithNoOuputPath() {
+        // Given a filename
+        String filename = "EmptyFile.txt";
+        // and no output path
+        command.setOutputPath(null);
+
+        // When getting the output file
+        final File outputFile = command.getOutputFile(bookDir.getAbsolutePath(), filename);
+
+        // Then check the file created is correct
+        assertThat(outputFile.getAbsolutePath(), is(bookDir + File.separator + filename));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputFileWithOuputPathAsDirectory() {
+        // Given a filename
+        String filename = "EmptyFile.txt";
+        // and no output path
+        command.setOutputPath(rootTestDirectory.getAbsolutePath());
+
+        // When getting the output file
+        final File outputFile = command.getOutputFile(BOOK_TITLE, filename);
+
+        // Then check the file created is correct
+        assertThat(outputFile.getAbsolutePath(), is(bookDir + File.separator + filename));
+    }
+
+    @Test
+    public void shouldReturnCorrectOutputFileWithOuputPathAsFile() {
+        // Given a filename
+        String filename = "EmptyFile.txt";
+        // and no output path
+        command.setOutputPath(rootTestDirectory.getAbsolutePath() + File.separator + filename);
+
+        // When getting the output file
+        final File outputFile = command.getOutputFile(BOOK_TITLE, filename);
+
+        // Then check the file created is correct
+        assertThat(outputFile.getAbsolutePath(), is(rootTestDirectory.getAbsolutePath() + File.separator + filename));
+    }
+
+    @Test
+    public void shouldFixRevHistoryAndAuthorGroupFilePaths() {
+        // Given a command with a rev history and author group override
+        HashMap<String, String> overrides = new HashMap<String, String>();
+        overrides.put("Revision_History.xml", randomString);
+        overrides.put("Author_Group.xml", randomNumber.toString());
+        command.setOverrides(overrides);
+        // and we want to mock the client util calls
+        PowerMockito.mockStatic(ClientUtilities.class);
+
+        // When fixing the overrides
+        command.fixOverrides();
+
+        // Then calls should have been made to the fixFilePath method
+        PowerMockito.verifyStatic(times(1));
+        ClientUtilities.fixFilePath(eq(randomString));
+        PowerMockito.verifyStatic(times(1));
+        ClientUtilities.fixFilePath(eq(randomNumber.toString()));
     }
 
     @Test
@@ -757,18 +1043,5 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // Then the name should be "build"
         assertThat(commandName, is("build"));
-    }
-
-    @After
-    public void cleanUp() throws IOException {
-        FileUtils.deleteDirectory(bookDir);
-    }
-
-    protected void setUpAuthorisedUser() {
-        command.setUsername(username);
-        given(userProvider.getUsersByName(username)).willReturn(users);
-        given(users.size()).willReturn(1);
-        given(users.getItems()).willReturn(Arrays.asList(user));
-        given(user.getUsername()).willReturn(username);
     }
 }
