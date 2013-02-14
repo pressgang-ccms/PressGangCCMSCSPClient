@@ -45,6 +45,7 @@ public class TestUtil {
         given(contentSpecWrapperMock.getId()).willReturn(id);
         given(contentSpecWrapperMock.getProduct()).willReturn(randomAlphanumString);
         given(contentSpecWrapperMock.getVersion()).willReturn(randomAlphanumString);
+        given(contentSpecWrapperMock.getRevision()).willReturn(id);
     }
 
     public static void setValidContentSpecMocking(ContentSpec contentSpecMock, Level levelMock, String randomAlphanumString, Integer id) {

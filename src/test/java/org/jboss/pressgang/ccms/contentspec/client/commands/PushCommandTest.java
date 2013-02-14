@@ -15,21 +15,27 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.provider.*;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.PropertyTagInTopicWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.UpdateableCollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.containsString;
@@ -41,7 +47,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
 public class PushCommandTest extends BaseUnitTest {
@@ -64,10 +70,13 @@ public class PushCommandTest extends BaseUnitTest {
     @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
-    @Mock private Level level;
+    @Mock Level level;
+    @Mock TopicWrapper topicWrapper;
+    @Mock PropertyTagProvider propertyTagProvider;
+    @Mock UpdateableCollectionWrapper<PropertyTagInTopicWrapper> restPropertyTagInTopicCollectionV1Wrapper;
+    @Mock CollectionWrapper<TopicWrapper> topicWrapperCollection;
     @Mock File file;
     @Mock File file2;
-
     private File realFile;
     private PushCommand command;
 
@@ -79,6 +88,14 @@ public class PushCommandTest extends BaseUnitTest {
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         this.command = new PushCommand(parser, cspConfig, clientConfig);
+    }
+
+    @After
+    public void cleanUp() {
+        if (realFile != null && realFile.exists() && (!realFile.delete())) {
+            resetStdStreams();
+            System.err.println("WARNING: Test file cleanup for " + realFile.getAbsolutePath() + "was unsuccessful");
+        }
     }
 
     @Test
@@ -213,5 +230,224 @@ public class PushCommandTest extends BaseUnitTest {
         // Then error messages are printed to the console and the program exits
         assertThat(getStdOutLogs(), containsString("Invalid Content Specification! No Title.")); // Just one of the missing fields
         assertThat(getStdOutLogs(), containsString("The Content Specification is not valid."));
+    }
+
+    @Test
+    public void shouldPrintResultWhenSpecPushed() throws Exception {
+        // Given a valid CSP
+        setUpValidCspFromFileParameter();
+        // And the wrapper has the basic data
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // And command is set to require execution time
+        command.setExecutionTime(true);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+
+        // When the PushCommand is processed
+        command.process();
+
+        // Then the time taken should be returned to the console as well as the ID and revision
+        assertThat(getStdOutLogs(), containsString("The Content Specification is valid."));
+        assertThat(getStdOutLogs(), containsString("The Content Specification saved successfully."));
+        assertThat(getStdOutLogs(), containsString("Content Specification ID: " + id));
+        assertThat(getStdOutLogs(), containsString("Revision: " + id));
+        assertThat(getStdOutLogs(), containsString("Request processed in"));
+    }
+
+    @Test
+    public void shouldNotSaveValidSpecWhenPushOnly() throws Exception {
+        // Given a valid CSP
+        setUpValidCspFromFileParameter();
+        // And the wrapper has the basic data
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // And command is set to push only
+        command.setPushOnly(true);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+
+        // When the command is processed
+        command.process();
+
+        // Then the processed spec is not saved
+        PowerMockito.verifyStatic(Mockito.times(0));
+        FileUtilities.saveFile(any(File.class), anyString(), anyString());
+
+        // And the spec is validated and pushed but not saved post processing
+        assertThat(getStdOutLogs(), containsString("The Content Specification is valid."));
+        assertThat(getStdOutLogs(), containsString("The Content Specification saved successfully."));
+        assertThat(getStdOutLogs(), containsString("Content Specification ID: " + id));
+        assertThat(getStdOutLogs(), containsString("Revision: " + id));
+    }
+
+    @Test
+    public void shouldProcessFileFromConfigAndCreateFileWhenSaving() throws Exception {
+        // Given no files are specified as a parameter
+        // And there is a valid .contentspec file with its ID specified in the CSP config
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
+        String testFilename = filename + "-post.contentspec";
+        realFile = createRealFile(testFilename, randomAlphanumString);
+        // And valid values are available for validation
+        setUpValidValues();
+        // And the wrapper has the basic data
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+        // And readFileContents will work but saveFile will not actually save (to keep our environment clean)
+        mockSaveFileButNotReadFileContents();
+
+        // When the command is processed
+        command.process();
+
+        // Then a file with this name is added and processed
+        assertThat(command.getFiles().get(0), is(realFile));
+        assertThat(command.getFiles().get(0).getName(), is(testFilename));
+        // And a file with the post-processing content spec is created
+        PowerMockito.verifyStatic(Mockito.times(1));
+        ClientUtilities.getOutputRootDirectory(cspConfig, contentSpec);
+        PowerMockito.verifyStatic(Mockito.times(1));
+        FileUtilities.saveFile(any(File.class), anyString(), anyString());
+    }
+
+    @Test
+    public void shouldPrintErrorAndShutdownIfErrorWhileSavingFile() throws Exception {
+        // Given a valid CSP
+        setUpValidCspFromFileParameter();
+        // And the wrapper has the basic data
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+        // And an IOException will be thrown when saveFile is called
+        PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
+        FileUtilities.saveFile(any(File.class), anyString(), anyString());
+
+        // When the command is processed
+        try {
+            command.process();
+            // If we get here then the test failed
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then both validation confirmation and an error message is printed to the console and the program exits
+        assertThat(getStdOutLogs(), containsString("The Content Specification is valid."));
+        assertThat(getStdOutLogs(), containsString("The Content Specification saved successfully."));
+        assertThat(getStdOutLogs(), containsString("An error occurred while trying to save"));
+    }
+
+    @Test
+    public void shouldCreateDirectoriesWhenSavingFileIfRequired() throws Exception {
+        // Given a valid CSP
+        setUpValidCspFromFileParameter();
+        // And the wrapper has the basic data
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+        // And an output spec parent file
+        given(file.getParentFile()).willReturn(file2);
+
+        // When the command is processed
+        command.process();
+
+        // Then a directory and any required parent directories are created
+        verify(file2, times(1)).mkdirs();
+        // And the command completes as expected
+        assertThat(getStdOutLogs(), containsString("The Content Specification is valid."));
+        assertThat(getStdOutLogs(), containsString("The Content Specification saved successfully."));
+        assertThat(getStdOutLogs(), containsString("Content Specification ID: " + id));
+        assertThat(getStdOutLogs(), containsString("Revision: " + id));
+    }
+
+    @Test
+    public void shouldProcessContentSpecFileFromCspConfigWithTxtExtension() throws Exception {
+        // Given no files are specified as a parameter
+        // And there is a valid .txt file with its ID specified in the CSP config but no .contentspec version
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
+        String testFilename = filename + "-post.txt";
+        realFile = createRealFile(testFilename, randomAlphanumString);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+        // And valid values for validation
+        setUpValidValues();
+        // And the wrapper has the basic data
+        setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // And no files will be actually written to disk to keep our environment clean
+        mockSaveFileButNotReadFileContents();
+
+        // When the command is processed
+        command.process();
+
+        // Then a file with this name is added and processed
+        assertThat(command.getFiles().get(0), is(realFile));
+        assertThat(command.getFiles().get(0).getName(), is(testFilename));
+    }
+
+    @Test
+    public void shouldFailIfCspConfigSpecIdDoesNotMapToExistingFile() {
+        // Given no files are specified as a parameter
+        // And there is an ID specifided in the CSP config but the spec file doesn't exist
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
+        // And an authorised user
+        setUpAuthorisedUser(command, userProvider, users, user, username);
+
+        // When the command is processed
+        try {
+            command.process();
+            // If we get here then the test failed
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then it should fail with an error message and exit
+        assertThat(getStdOutLogs(), containsString(filename));
+        assertThat(getStdOutLogs(), containsString("was not found in the current directory"));
+        // And no files were added for processing
+        assertThat(command.getFiles().size(), is(0));
+    }
+
+    private void setValidTopicProviderAndWrapperMocking() throws Exception {
+        given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
+        given(topicProvider.getTopic(id)).willReturn(topicWrapper);
+        given(topicProvider.updateTopic(any(TopicWrapper.class))).willReturn(topicWrapper);
+        given(topicProvider.newTopicCollection()).willReturn(topicWrapperCollection);
+        given(topicWrapperCollection.isEmpty()).willReturn(true);
+        given(topicWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(topicWrapper.getProperties()).willReturn(restPropertyTagInTopicCollectionV1Wrapper);
+    }
+
+    private void setUpValidCspFromFileParameter() throws Exception {
+        command.setFiles(Arrays.asList(file));
+        setValidFileProperties(file);
+        PowerMockito.mockStatic(FileUtilities.class);
+        given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
+        setUpValidValues();
+    }
+
+    private void setUpValidValues() throws Exception {
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
+        given(providerFactory.getProvider(PropertyTagProvider.class)).willReturn(propertyTagProvider);
+        setValidTopicProviderAndWrapperMocking();
+        PowerMockito.mockStatic(ClientUtilities.class);
+        given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
+                any(String.class), any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
+        setValidLevelMocking(level, randomAlphanumString);
+        setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
+    }
+
+    private void mockSaveFileButNotReadFileContents() throws IOException {
+        PowerMockito.mockStatic(FileUtilities.class);
+        when(FileUtilities.readFileContents(any(File.class))).thenCallRealMethod();
+        PowerMockito.doNothing().when(FileUtilities.class);
+        FileUtilities.saveFile(any(File.class), anyString(), anyString());
     }
 }
