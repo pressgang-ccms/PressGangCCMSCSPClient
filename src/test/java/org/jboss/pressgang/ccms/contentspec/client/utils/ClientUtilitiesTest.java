@@ -534,7 +534,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         TestUtil.setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
 
         // When transforming a content spec
-        ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecWrapper);
+        ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecWrapper, providerFactory);
 
         // Then check that the details were set
         assertNotNull(contentSpec);

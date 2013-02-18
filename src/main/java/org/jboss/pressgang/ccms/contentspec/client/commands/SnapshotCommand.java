@@ -114,7 +114,7 @@ public class SnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
 
         // If we want to create it as a new spec then remove the checksum and id
         if (getCreateNew()) {

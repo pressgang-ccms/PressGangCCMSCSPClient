@@ -165,7 +165,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works successfully
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(spec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(spec);
         // and the content spec has some data
         spec.setId(id);
         spec.setChecksum(checksum);
@@ -200,7 +200,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works successfully
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(contentSpec);
         // and the processing fails
         given(command.getProcessor()).willReturn(processor);
         given(processor.processContentSpec(eq(contentSpec), any(UserWrapper.class), eq(ContentSpecParser.ParsingMode.EDITED))).willReturn(
@@ -232,7 +232,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getRevision()).willReturn(revision);
         // and the transform works successfully
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(contentSpec);
         // and the content spec has some data
         given(contentSpec.getId()).willReturn(id);
         given(contentSpec.getChecksum()).willReturn(checksum);

@@ -120,7 +120,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         given(topicWrapper.getXml()).willReturn(contentSpecTitle);
         // and the content spec will be successfully transformed
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(contentSpec);
 
         // When the command is executed
         command.process();

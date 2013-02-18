@@ -182,7 +182,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
         // and the transformer returns a content spec
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(contentSpec);
         // and the content spec will return some string
         given(contentSpec.toString()).willReturn(randomString);
 
@@ -223,7 +223,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
         // and the transformer returns a content spec
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class))).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(contentSpec);
         // and the content spec will return some string
         given(contentSpec.toString()).willReturn(randomString);
         // and the command should call some real methods in ClientUtilities

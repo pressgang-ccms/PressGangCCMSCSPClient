@@ -643,7 +643,7 @@ public class BuildCommand extends BaseCommandImpl {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
-            contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+            contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
         } else {
             // Get the content spec from the file
             contentSpec = getContentSpecFromFile(fileOrId, true);

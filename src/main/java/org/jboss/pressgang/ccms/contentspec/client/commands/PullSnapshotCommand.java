@@ -114,7 +114,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();

@@ -449,12 +449,13 @@ public class ClientUtilities {
     /**
      * Transforms a Content Specification wrapped entity into a POJO Content Spec object,
      *
-     * @param contentSpec The Content Spec entity to be transformed.
+     * @param contentSpec     The Content Spec entity to be transformed.
+     * @param providerFactory The Factory to create Providers to get Entities from a Datasource.
      * @return The POJO ContentSpec object created from the Content Spec entity.
      */
-    public static ContentSpec transformContentSpec(final ContentSpecWrapper contentSpec) {
+    public static ContentSpec transformContentSpec(final ContentSpecWrapper contentSpec, final DataProviderFactory providerFactory) {
         final CSTransformer transformer = new CSTransformer();
-        return transformer.transform(contentSpec);
+        return transformer.transform(contentSpec, providerFactory);
     }
 
     /**

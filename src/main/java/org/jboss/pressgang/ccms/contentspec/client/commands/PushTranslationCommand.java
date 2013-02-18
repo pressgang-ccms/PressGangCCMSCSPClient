@@ -220,7 +220,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();

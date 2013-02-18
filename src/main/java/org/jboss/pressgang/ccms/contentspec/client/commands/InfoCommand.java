@@ -6,13 +6,13 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
@@ -69,7 +69,7 @@ public class InfoCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Starting to calculate the statistics...");
 
         // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity);
+        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -101,7 +101,7 @@ public class InfoCommand extends BaseCommandImpl {
      * Calculate the number of topics that have been written (or in other words has at least some content stored in the topic XML).
      *
      * @param topicProvider The Provider that supplies topics from an external datasource.
-     * @param topicIds A list of topic ids to get stats for.
+     * @param topicIds      A list of topic ids to get stats for.
      * @return The number of completed topics from the list of ids provided.
      */
     protected Integer calculateNumTopicsComplete(final TopicProvider topicProvider, final List<Integer> topicIds) {
