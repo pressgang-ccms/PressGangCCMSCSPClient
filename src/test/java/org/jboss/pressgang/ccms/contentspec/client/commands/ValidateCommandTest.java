@@ -84,7 +84,7 @@ public class ValidateCommandTest extends BaseUnitTest {
     private ValidateCommand command;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);

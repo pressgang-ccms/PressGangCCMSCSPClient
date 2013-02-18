@@ -155,7 +155,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenCreateNewContentSpecFails() throws Exception {
+    public void shouldShutdownWhenCreateNewContentSpecFails() {
         final ContentSpec spec = new ContentSpec();
         // Given a command with an id
         command.setIds(Arrays.asList(id));
@@ -191,7 +191,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenSaveEditedContentSpecFails() throws Exception {
+    public void shouldShutdownWhenSaveEditedContentSpecFails() {
         // Given a command with an id
         command.setIds(Arrays.asList(id));
         // and the new flag is set

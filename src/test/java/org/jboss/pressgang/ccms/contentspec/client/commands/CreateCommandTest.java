@@ -193,7 +193,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenFileIsNotValidContentSpec() throws Exception {
+    public void shouldShutdownWhenFileIsNotValidContentSpec() {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
@@ -217,7 +217,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenOutputDirectoryExistsAndNoForceAndCreateCsprocessorCfg() throws Exception {
+    public void shouldShutdownWhenOutputDirectoryExistsAndNoForceAndCreateCsprocessorCfg() {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
@@ -252,7 +252,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldNotShutdownWhenOutputDirectoryExistsAndNoCreateCsprocessorCfg() throws Exception {
+    public void shouldNotShutdownWhenOutputDirectoryExistsAndNoCreateCsprocessorCfg() {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
@@ -284,7 +284,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenProcessingFails() throws Exception {
+    public void shouldShutdownWhenProcessingFails() {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
@@ -316,7 +316,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldCreateProjectDirectoryOnSuccess() throws Exception {
+    public void shouldCreateProjectDirectoryOnSuccess() {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
@@ -353,7 +353,7 @@ public class CreateCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldNotCreateProjectDirectoryOnSuccessAndNoCsprocessorCfg() throws Exception {
+    public void shouldNotCreateProjectDirectoryOnSuccessAndNoCsprocessorCfg() {
         // Given a command with a file
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid

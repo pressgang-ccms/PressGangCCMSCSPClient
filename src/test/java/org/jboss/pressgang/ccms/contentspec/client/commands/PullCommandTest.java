@@ -193,7 +193,7 @@ public class PullCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldGenerateRightFilenameAndPathForContentSpecPullingFromConfig() throws NoSuchMethodException {
+    public void shouldGenerateRightFilenameAndPathForContentSpecPullingFromConfig() {
         PowerMockito.mockStatic(ClientUtilities.class);
         // Given a command called without an ID
         command.setIds(new ArrayList<Integer>());

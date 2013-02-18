@@ -12,7 +12,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -60,7 +59,7 @@ public class StatusCommandTest extends BaseUnitTest {
     StatusCommand command;
 
     @Before
-    public void setUp() throws UnsupportedEncodingException {
+    public void setUp() {
         bindStdOut();
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);

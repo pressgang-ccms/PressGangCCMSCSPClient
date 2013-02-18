@@ -41,7 +41,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
     protected final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
     protected final AtomicBoolean shutdown = new AtomicBoolean(false);
 
-    public BaseCommandImpl(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+    protected BaseCommandImpl(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         assert parser != null;
         assert cspConfig != null;
         assert clientConfig != null;

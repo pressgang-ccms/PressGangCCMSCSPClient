@@ -1,5 +1,11 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands.base;
 
+import static org.mockito.BDDMockito.given;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
@@ -9,12 +15,6 @@ import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-
-import static org.mockito.BDDMockito.given;
 
 /**
  * Methods shared across tests.
@@ -40,7 +40,8 @@ public class TestUtil {
         given(levelMock.getTitle()).willReturn(title);
     }
 
-    public static void setValidContentSpecWrapperMocking(ContentSpecWrapper contentSpecWrapperMock, String randomAlphanumString, Integer id) {
+    public static void setValidContentSpecWrapperMocking(ContentSpecWrapper contentSpecWrapperMock, String randomAlphanumString,
+            Integer id) {
         given(contentSpecWrapperMock.getTitle()).willReturn(randomAlphanumString);
         given(contentSpecWrapperMock.getId()).willReturn(id);
         given(contentSpecWrapperMock.getProduct()).willReturn(randomAlphanumString);
@@ -50,7 +51,6 @@ public class TestUtil {
 
     public static void setValidContentSpecMocking(ContentSpec contentSpecMock, Level levelMock, String randomAlphanumString, Integer id) {
         given(contentSpecMock.getBaseLevel()).willReturn(levelMock);
-        given(contentSpecMock.getPreProcessedText()).willReturn(Arrays.asList(randomAlphanumString));
         given(contentSpecMock.getTitle()).willReturn(randomAlphanumString);
         given(contentSpecMock.getProduct()).willReturn(randomAlphanumString);
         given(contentSpecMock.getVersion()).willReturn("1-A");
@@ -61,7 +61,8 @@ public class TestUtil {
                 "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n\n\n"));
     }
 
-    public static void setUpAuthorisedUser(BaseCommand command, UserProvider userProviderMock, CollectionWrapper<UserWrapper> usersMock, UserWrapper userMock, String username) {
+    public static void setUpAuthorisedUser(BaseCommand command, UserProvider userProviderMock, CollectionWrapper<UserWrapper> usersMock,
+            UserWrapper userMock, String username) {
         command.setUsername(username);
         given(userProviderMock.getUsersByName(username)).willReturn(usersMock);
         given(usersMock.size()).willReturn(1);

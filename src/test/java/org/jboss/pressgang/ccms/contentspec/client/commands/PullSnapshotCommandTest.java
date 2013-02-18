@@ -247,7 +247,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenSetContentSpecRevisionsFails() throws Exception {
+    public void shouldShutdownWhenSetContentSpecRevisionsFails() {
         // Given processing the spec will fail
         given(command.getProcessor()).willReturn(processor);
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),

@@ -1,11 +1,14 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -20,6 +23,8 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.provider.CSTranslatedNodeProvider;
+import org.jboss.pressgang.ccms.contentspec.provider.CSTranslatedNodeStringProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.contentspec.provider.TopicProvider;
@@ -28,11 +33,15 @@ import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.contentspec.wrapper.CSNodeWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.CSTranslatedNodeStringWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.CSTranslatedNodeWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.TranslatedTopicWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.UpdateableCollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
@@ -259,7 +268,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final List<Pair<Integer, Integer>> referencedRevisionTopicIds = new ArrayList<Pair<Integer, Integer>>();
         for (final SpecTopic specTopic : specTopics) {
             if (specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
-                referencedRevisionTopicIds.add(new Pair(specTopic.getDBId(), specTopic.getRevision()));
+                referencedRevisionTopicIds.add(new Pair<Integer, Integer>(specTopic.getDBId(), specTopic.getRevision()));
             }
         }
 
@@ -273,7 +282,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        if (!pushCSTopicsToZanata(getProviderFactory(), topics, contentSpecEntity, contentSpec)) {
+        if (!pushToZanata(getProviderFactory(), topics, contentSpecEntity)) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         } else {
@@ -286,9 +295,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
         return ids.size() == 0;
     }
 
-    protected boolean pushCSTopicsToZanata(final DataProviderFactory providerFactory, final CollectionWrapper<TopicWrapper> topics,
-            final ContentSpecWrapper contentSpecEntity, final ContentSpec contentSpec) {
-        final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
+    /**
+     * Pushes a content spec and its topics to zanata.
+     *
+     * @param providerFactory
+     * @param topics
+     * @param contentSpecEntity
+     * @return True if the push was successful otherwise false.
+     */
+    protected boolean pushToZanata(final DataProviderFactory providerFactory, final CollectionWrapper<TopicWrapper> topics,
+            final ContentSpecWrapper contentSpecEntity) {
         final Map<TopicWrapper, Document> topicToDoc = new HashMap<TopicWrapper, Document>();
         boolean error = false;
         final ZanataInterface zanataInterface = new ZanataInterface(0.2);
@@ -350,129 +366,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
                 final TopicWrapper topic = topicEntry.getKey();
                 final Document doc = topicEntry.getValue();
-                final String zanataId = topic.getId() + "-" + topic.getRevision();
 
-                final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
-
-                if (zanataFile == null) {
-                    final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory, topic.getId(),
-                            topic.getRevision(), topic.getLocale()) != null;
-
-                    final Resource resource = new Resource();
-
-                    resource.setContentType(ContentType.TextPlain);
-                    resource.setLang(LocaleId.fromJavaName(topic.getLocale()));
-                    resource.setName(zanataId);
-                    resource.setRevision(1);
-                    resource.setType(ResourceType.FILE);
-
-                    final List<StringToNodeCollection> translatableStrings = XMLUtilities.getTranslatableStringsV2(doc, false);
-
-                    for (final StringToNodeCollection translatableStringData : translatableStrings) {
-                        final String translatableString = translatableStringData.getTranslationString();
-                        if (!translatableString.trim().isEmpty()) {
-                            final TextFlow textFlow = new TextFlow();
-                            textFlow.setContents(translatableString);
-                            textFlow.setLang(LocaleId.fromJavaName(topic.getLocale()));
-                            textFlow.setId(HashUtilities.generateMD5(translatableString));
-                            textFlow.setRevision(1);
-
-                            resource.getTextFlows().add(textFlow);
-                        }
-                    }
-
-                    if (!zanataInterface.createFile(resource)) {
-                        messages.add(
-                                "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
-                        error = true;
-                    } else if (!translatedTopicExists) {
-                        final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, topic);
-                        try {
-                            if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
-                                messages.add(
-                                        "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
-                                                "PressGang.");
-                                error = true;
-                            }
-                        } catch (Exception e) {
-                            /*
-                             * Do nothing here as it shouldn't fail. If it does then it'll be created
-                             * by the sync service anyways.
-                             */
-                            messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
-                                    "PressGang.");
-                            error = true;
-                        }
-                    }
-                } else {
-                    messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - Skipping.");
+                if (!pushTopicToZanata(providerFactory, topic, doc, zanataInterface, messages)) {
+                    error = true;
                 }
             }
+
             // Upload the content specification to zanata
             if (!topicsOnly) {
-                final String zanataId = contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
-                final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
-
-                if (zanataFile == null) {
-                    final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory,
-                            contentSpecEntity.getId(), contentSpecEntity.getRevision(), contentSpecEntity.getLocale()) != null;
-
-                    final Resource resource = new Resource();
-
-                    resource.setContentType(ContentType.TextPlain);
-                    resource.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
-                    resource.setName(contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision());
-                    resource.setRevision(1);
-                    resource.setType(ResourceType.FILE);
-
-                    final List<StringToCSNodeCollection> translatableStrings = ContentSpecUtilities.getTranslatableStrings(contentSpec,
-                            false);
-
-                    for (final StringToCSNodeCollection translatableStringData : translatableStrings) {
-                        final String translatableString = translatableStringData.getTranslationString();
-                        if (!translatableString.trim().isEmpty()) {
-                            final TextFlow textFlow = new TextFlow();
-                            textFlow.setContents(translatableString);
-                            textFlow.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
-                            textFlow.setId(HashUtilities.generateMD5(translatableString));
-                            textFlow.setRevision(1);
-
-                            resource.getTextFlows().add(textFlow);
-                        }
-                    }
-
-                    if (!zanataInterface.createFile(resource)) {
-                        messages.add(
-                                "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
-                                        "failed" +
-                                        " to be created in Zanata.");
-                        error = true;
-                    } else if (!translatedTopicExists) {
-                        // Save the translated topic
-                        // TODO Content Spec Translations
-                        /*final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, contentSpecEntity);
-                        try {
-                            if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
-                                messages.add(
-                                        "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() +
-                                                " failed to be created in PressGang.");
-                                error = true;
-                            }
-                        } catch (Exception e) {
-                            /*
-                             * Do nothing here as it shouldn't fail. If it does then it'll be created 
-                             * by the sync service anyways.
-                             */
-                            /*messages.add(
-                                    "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
-                                            "failed to be created in PressGang.");
-                            error = true;
-                        }*/
-                    }
-                } else {
-                    messages.add(
-                            "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " already " +
-                                    "exists - Skipping.");
+                if (!pushContentSpecToZanata(providerFactory, contentSpecEntity, zanataInterface, messages)) {
+                    error = true;
                 }
             }
         }
@@ -483,6 +386,160 @@ public class PushTranslationCommand extends BaseCommandImpl {
             for (final String message : messages) {
                 JCommander.getConsole().println("\t" + message);
             }
+        }
+
+        return !error;
+    }
+
+    /**
+     * @param providerFactory
+     * @param topic
+     * @param doc
+     * @param zanataInterface
+     * @param messages
+     * @return True if the topic was pushed successful otherwise false.
+     */
+    protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, final TopicWrapper topic, final Document doc,
+            final ZanataInterface zanataInterface, final List<String> messages) {
+        boolean error = false;
+
+        final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
+        final String zanataId = topic.getId() + "-" + topic.getRevision();
+
+        final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
+
+        if (zanataFile == null) {
+            final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory, topic.getId(),
+                    topic.getRevision(), topic.getLocale()) != null;
+
+            final Resource resource = new Resource();
+
+            resource.setContentType(ContentType.TextPlain);
+            resource.setLang(LocaleId.fromJavaName(topic.getLocale()));
+            resource.setName(zanataId);
+            resource.setRevision(1);
+            resource.setType(ResourceType.FILE);
+
+            final List<StringToNodeCollection> translatableStrings = XMLUtilities.getTranslatableStringsV2(doc, false);
+
+            for (final StringToNodeCollection translatableStringData : translatableStrings) {
+                final String translatableString = translatableStringData.getTranslationString();
+                if (!translatableString.trim().isEmpty()) {
+                    final TextFlow textFlow = new TextFlow();
+                    textFlow.setContents(translatableString);
+                    textFlow.setLang(LocaleId.fromJavaName(topic.getLocale()));
+                    textFlow.setId(HashUtilities.generateMD5(translatableString));
+                    textFlow.setRevision(1);
+
+                    resource.getTextFlows().add(textFlow);
+                }
+            }
+
+            if (!zanataInterface.createFile(resource)) {
+                messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+                error = true;
+            } else if (!translatedTopicExists) {
+                final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, topic);
+                try {
+                    if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
+                        messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
+                                "PressGang.");
+                        error = true;
+                    }
+                } catch (Exception e) {
+                            /*
+                             * Do nothing here as it shouldn't fail. If it does then it'll be created
+                             * by the sync service anyways.
+                             */
+                    messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
+                            "PressGang.");
+                    error = true;
+                }
+            }
+        } else {
+            messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - Skipping.");
+        }
+
+        return !error;
+    }
+
+    /**
+     * @param providerFactory
+     * @param contentSpecEntity
+     * @param zanataInterface
+     * @param messages
+     * @return True if the content spec was pushed successful otherwise false.
+     */
+    protected boolean pushContentSpecToZanata(final DataProviderFactory providerFactory, final ContentSpecWrapper contentSpecEntity,
+            final ZanataInterface zanataInterface, final List<String> messages) {
+        boolean error = false;
+
+        final CSTranslatedNodeProvider translatedNodeProvider = providerFactory.getProvider(CSTranslatedNodeProvider.class);
+        final String zanataId = "CS" + contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
+        final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
+
+        if (zanataFile == null) {
+            // TODO Fix this to use a content spec entity
+            final boolean translatedContentSpecExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory,
+                    contentSpecEntity.getId(), contentSpecEntity.getRevision(), contentSpecEntity.getLocale()) != null;
+
+            final Resource resource = new Resource();
+
+            resource.setContentType(ContentType.TextPlain);
+            resource.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
+            resource.setName(zanataId);
+            resource.setRevision(1);
+            resource.setType(ResourceType.FILE);
+
+            final List<StringToCSNodeCollection> translatableStrings = ContentSpecUtilities.getTranslatableStrings(contentSpecEntity,
+                    false);
+
+            for (final StringToCSNodeCollection translatableStringData : translatableStrings) {
+                final String translatableString = translatableStringData.getTranslationString();
+                if (!translatableString.trim().isEmpty()) {
+                    final TextFlow textFlow = new TextFlow();
+                    textFlow.setContents(translatableString);
+                    textFlow.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
+                    textFlow.setId(HashUtilities.generateMD5(translatableString));
+                    textFlow.setRevision(1);
+
+                    resource.getTextFlows().add(textFlow);
+                }
+            }
+
+            if (!zanataInterface.createFile(resource)) {
+                messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
+                        "failed to be created in Zanata.");
+                error = true;
+            } else if (!translatedContentSpecExists) {
+                // Get all the nodes to be translated
+                final Set<CSNodeWrapper> nodes = new HashSet<CSNodeWrapper>();
+                for (final StringToCSNodeCollection translatableString : translatableStrings) {
+                    nodes.addAll(translatableString.getNodeCollections());
+                }
+
+                // Save the translated nodes
+                final CollectionWrapper<CSTranslatedNodeWrapper> translatedNodes = createCSTranslatedNodes(providerFactory,
+                        contentSpecEntity, nodes);
+                try {
+                    if (translatedNodeProvider.createCSTranslatedNodes(translatedNodes) == null) {
+                        messages.add("Content Spec ID " + contentSpecEntity.getId() + ", " +
+                                "Revision " + contentSpecEntity.getRevision() + " failed to be created in PressGang.");
+                        error = true;
+                    }
+                } catch (Exception e) {
+                            /*
+                             * Do nothing here as it shouldn't fail. If it does then it'll be created
+                             * by the sync service anyways.
+                             */
+                    messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
+                            "failed to be created in PressGang.");
+                    error = true;
+                }
+            }
+        } else {
+            messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " already " +
+                    "exists - Skipping.");
         }
 
         return !error;
@@ -504,6 +561,57 @@ public class PushTranslationCommand extends BaseCommandImpl {
         translatedTopic.setHtml(topic.getHtml());
         translatedTopic.setHtmlUpdated(new Date());
         return translatedTopic;
+    }
+
+    /**
+     * Creates a list of Content Spec Translated Node entities from a list of Content Spec node entities.
+     *
+     * @param providerFactory The factory to produce entity providers to lookup entity details.
+     * @param contentSpec     The content spec object the nodes belong to.
+     * @param nodes           The nodes to create the translated nodes for.
+     * @return
+     */
+    protected CollectionWrapper<CSTranslatedNodeWrapper> createCSTranslatedNodes(final DataProviderFactory providerFactory,
+            final ContentSpecWrapper contentSpec, final Collection<CSNodeWrapper> nodes) {
+        final CollectionWrapper<CSTranslatedNodeWrapper> translatedNodes = providerFactory.getProvider(
+                CSTranslatedNodeProvider.class).newCSTranslatedNodeCollection();
+        for (final CSNodeWrapper node : nodes) {
+            translatedNodes.addNewItem(createCSTranslatedNode(providerFactory, contentSpec, node));
+        }
+
+        return translatedNodes;
+    }
+
+    /**
+     * Creates a Translated Content Spec Node based on an original Content Spec Node.
+     *
+     * @param providerFactory The factory to produce entity providers to lookup entity details.
+     * @param contentSpec     The content spec the nodes belong to.
+     * @param node            The node to create a translated node for.
+     * @return A CSTranslatedNode entity that contains the information from the original node.
+     */
+    protected CSTranslatedNodeWrapper createCSTranslatedNode(final DataProviderFactory providerFactory,
+            final ContentSpecWrapper contentSpec, final CSNodeWrapper node) {
+        final CSTranslatedNodeWrapper translatedNode = providerFactory.getProvider(CSTranslatedNodeProvider.class).newCSTranslatedNode();
+        translatedNode.setNodeId(node.getId());
+        translatedNode.setNodeRevision(node.getRevision());
+
+        final CSTranslatedNodeStringProvider translatedNodeStringProvider = providerFactory.getProvider(
+                CSTranslatedNodeStringProvider.class);
+        final UpdateableCollectionWrapper<CSTranslatedNodeStringWrapper> translatedStrings = translatedNodeStringProvider
+                .newCSTranslatedNodeStringCollection(
+                translatedNode);
+
+        final CSTranslatedNodeStringWrapper translatedNodeString = translatedNodeStringProvider.newCSTranslatedNodeString(translatedNode);
+        translatedNodeString.setLocale(contentSpec.getLocale());
+        translatedNodeString.setOriginalString(node.getAdditionalText());
+        translatedNodeString.setTranslatedString(node.getAdditionalText());
+        translatedNodeString.setFuzzy(false);
+        translatedStrings.addNewItem(translatedNodeString);
+
+        translatedNode.setTranslatedStrings(translatedStrings);
+
+        return translatedNode;
     }
 
     @Override

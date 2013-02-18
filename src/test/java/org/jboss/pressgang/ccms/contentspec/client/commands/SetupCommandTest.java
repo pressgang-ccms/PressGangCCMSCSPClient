@@ -7,7 +7,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -75,7 +74,7 @@ public class SetupCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldSetPublicanOptions() throws IOException {
+    public void shouldSetPublicanOptions() {
         // Given some input
         String buildOptions = "--formats html-single,html --langs en-US";
         String previewFormat = "html";
@@ -91,7 +90,7 @@ public class SetupCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldSetDefaultPublicanOptionsWhenNoInput() throws IOException {
+    public void shouldSetDefaultPublicanOptionsWhenNoInput() {
         // Given some input
         String buildOptions = "--langs=en-US --formats=html-single";
         String previewFormat = "html-single";
@@ -107,7 +106,7 @@ public class SetupCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldSetPublishOptions() throws IOException {
+    public void shouldSetPublishOptions() {
         // Given some input
         String kojiUrl = "http://www.example.com/kojihub";
         String publishCommand = "fdpkg --lang en-US";
@@ -123,7 +122,7 @@ public class SetupCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldSetDefaultPublishOptions() throws IOException {
+    public void shouldSetDefaultPublishOptions() {
         // Given some input
         String kojiUrl = Constants.DEFAULT_KOJIHUB_URL;
         String publishCommand = Constants.DEFAULT_PUBLISH_COMMAND;

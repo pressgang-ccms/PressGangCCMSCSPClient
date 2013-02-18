@@ -2,6 +2,7 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -429,7 +430,9 @@ public class SetupCommand extends BaseCommandImpl {
 /**
  * A comparator that can be used to sort servers into alphabetical order and ensure the default server is always first.
  */
-class ServerNameComparator implements Comparator<String> {
+class ServerNameComparator implements Comparator<String>, Serializable {
+    private static final long serialVersionUID = 8086132813427986154L;
+
     @Override
     public int compare(String serverName1, String serverName2) {
         if (serverName1.equals(Constants.DEFAULT_SERVER_NAME)) {
