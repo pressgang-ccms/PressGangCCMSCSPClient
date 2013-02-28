@@ -415,6 +415,9 @@ public class BuildCommand extends BaseCommandImpl {
         // Build the Content Specification
         byte[] builderOutput = buildContentSpec(contentSpec, user);
 
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
         // Print the success messages
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(String.format(Constants.ZIP_SAVED_ERRORS_MSG, getBuilder().getNumErrors(),
