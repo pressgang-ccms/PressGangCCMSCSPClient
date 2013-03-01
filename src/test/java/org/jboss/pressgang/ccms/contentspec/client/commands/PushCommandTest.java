@@ -53,6 +53,7 @@ import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
@@ -280,6 +281,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("The Content Specification is not valid."));
     }
 
+    @Ignore
     @Test
     public void shouldPrintResultWhenSpecPushed() throws Exception {
         // Given a valid CSP
@@ -302,6 +304,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("Request processed in"));
     }
 
+    @Ignore
     @Test
     public void shouldNotSaveValidSpecWhenPushOnly() throws Exception {
         // Given a valid CSP
@@ -327,6 +330,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("Revision: " + id));
     }
 
+    @Ignore
     @Test
     public void shouldProcessFileFromConfigAndCreateFileWhenSaving() throws Exception {
         // Given no files are specified as a parameter
@@ -358,6 +362,7 @@ public class PushCommandTest extends BaseUnitTest {
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
     }
 
+    @Ignore
     @Test
     public void shouldPrintErrorAndShutdownIfErrorWhileSavingFile() throws Exception {
         // Given a valid CSP
@@ -385,6 +390,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("An error occurred while trying to save"));
     }
 
+    @Ignore
     @Test
     public void shouldCreateDirectoriesWhenSavingFileIfRequired() throws Exception {
         // Given a valid CSP
@@ -408,6 +414,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(getStdOutLogs(), containsString("Revision: " + id));
     }
 
+    @Ignore
     @Test
     public void shouldProcessContentSpecFileFromCspConfigWithTxtExtension() throws Exception {
         // Given no files are specified as a parameter

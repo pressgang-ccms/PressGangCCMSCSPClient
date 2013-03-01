@@ -193,7 +193,7 @@ public class BuildCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
 
         // When getting the content spec
         final ContentSpec contentSpec = command.getContentSpec(id.toString());
@@ -258,7 +258,7 @@ public class BuildCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and an invalid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(false);
@@ -284,7 +284,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -320,7 +320,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -353,7 +353,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -388,7 +388,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -454,7 +454,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -489,7 +489,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -525,7 +525,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -569,7 +569,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -616,7 +616,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -664,7 +664,7 @@ public class BuildCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and the content spec has a title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and a valid content spec

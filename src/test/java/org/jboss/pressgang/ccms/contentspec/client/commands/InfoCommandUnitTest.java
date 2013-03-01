@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -120,7 +121,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         given(topicWrapper.getXml()).willReturn(contentSpecTitle);
         // and the content spec will be successfully transformed
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), providerFactory)).thenReturn(contentSpec);
+        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
 
         // When the command is executed
         command.process();

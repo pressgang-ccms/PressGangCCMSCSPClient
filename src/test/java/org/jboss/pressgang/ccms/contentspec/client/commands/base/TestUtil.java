@@ -58,7 +58,7 @@ public class TestUtil {
         given(contentSpecMock.getCopyrightHolder()).willReturn(randomAlphanumString);
         given(contentSpecMock.getId()).willReturn(id);
         given(contentSpecMock.getChecksum()).willReturn(HashUtilities.generateMD5("ID = " + id + "\nTitle = " + randomAlphanumString +
-                "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n\n\n"));
+                "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n\n"));
     }
 
     public static void setUpAuthorisedUser(BaseCommand command, UserProvider userProviderMock, CollectionWrapper<UserWrapper> usersMock,
