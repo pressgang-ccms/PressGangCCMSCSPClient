@@ -47,6 +47,14 @@ public class PushCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
+    protected ContentSpecProcessor getProcessor() {
+        return csp;
+    }
+
+    protected void setProcessor(ContentSpecProcessor processor) {
+        csp = processor;
+    }
+
     @Override
     public String getCommandName() {
         return Constants.PUSH_COMMAND_NAME;
@@ -215,8 +223,8 @@ public class PushCommand extends BaseCommandImpl {
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setAllowEmptyLevels(true);
 
-        csp = new ContentSpecProcessor(providerFactory, loggerManager, processingOptions);
-        return csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+        setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
+        return getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
     }
 
     /**
