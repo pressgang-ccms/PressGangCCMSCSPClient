@@ -78,7 +78,7 @@ public class InfoCommand extends BaseCommandImpl {
         final List<Integer> referencedTopicIds = new ArrayList<Integer>();
         final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
         for (final SpecTopic specTopic : specTopics) {
-            if (specTopic.getDBId() > 0) {
+            if (specTopic.getDBId() != null && specTopic.getDBId() > 0) {
                 referencedTopicIds.add(specTopic.getDBId());
             }
         }

@@ -249,7 +249,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final List<Integer> referencedLatestTopicIds = new ArrayList<Integer>();
         final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
         for (final SpecTopic specTopic : specTopics) {
-            if (specTopic.getDBId() > 0 && specTopic.getRevision() == null) {
+            if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() == null) {
                 referencedLatestTopicIds.add(specTopic.getDBId());
             }
         }
@@ -267,7 +267,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Create the list of referenced revision topics
         final List<Pair<Integer, Integer>> referencedRevisionTopicIds = new ArrayList<Pair<Integer, Integer>>();
         for (final SpecTopic specTopic : specTopics) {
-            if (specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
+            if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
                 referencedRevisionTopicIds.add(new Pair<Integer, Integer>(specTopic.getDBId(), specTopic.getRevision()));
             }
         }
