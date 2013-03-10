@@ -1,19 +1,23 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands.base;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
 import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
+import org.jboss.pressgang.ccms.contentspec.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.contentspec.wrapper.collection.UpdateableCollectionWrapper;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 
 /**
@@ -42,23 +46,47 @@ public class TestUtil {
 
     public static void setValidContentSpecWrapperMocking(ContentSpecWrapper contentSpecWrapperMock, String randomAlphanumString,
             Integer id) {
-        given(contentSpecWrapperMock.getTitle()).willReturn(randomAlphanumString);
         given(contentSpecWrapperMock.getId()).willReturn(id);
-        given(contentSpecWrapperMock.getProduct()).willReturn(randomAlphanumString);
-        given(contentSpecWrapperMock.getVersion()).willReturn(randomAlphanumString);
         given(contentSpecWrapperMock.getRevision()).willReturn(id);
+        final UpdateableCollectionWrapper<CSNodeWrapper> metaData = createValidContentSpecMetaDatasMocking(randomAlphanumString);
+        given(contentSpecWrapperMock.getChildren()).willReturn(metaData);
+    }
+
+    private static UpdateableCollectionWrapper<CSNodeWrapper> createValidContentSpecMetaDatasMocking(String randomAlphanumString) {
+        final UpdateableCollectionWrapper<CSNodeWrapper> metaDatas = mock(UpdateableCollectionWrapper.class);
+
+        final CSNodeWrapper titleMetaData = createValidMetaDataMocking(1, "Title", randomAlphanumString, null, 2);
+        final CSNodeWrapper productMetaData = createValidMetaDataMocking(2, "Product", randomAlphanumString, 1, 3);
+        final CSNodeWrapper versionMetaData = createValidMetaDataMocking(3, "Version", randomAlphanumString, 2, null);
+
+        final List<CSNodeWrapper> metaData = Arrays.asList(titleMetaData, productMetaData, versionMetaData);
+        given(metaDatas.size()).willReturn(metaData.size());
+        given(metaDatas.getItems()).willReturn(metaData);
+
+        return metaDatas;
+    }
+
+    private static CSNodeWrapper createValidMetaDataMocking(Integer id, String key, String value, Integer previousId, Integer nextId) {
+        final CSNodeWrapper metaDataMock = mock(CSNodeWrapper.class);
+        given(metaDataMock.getId()).willReturn(id);
+        given(metaDataMock.getNodeType()).willReturn(7);
+        given(metaDataMock.getTitle()).willReturn(key);
+        given(metaDataMock.getAdditionalText()).willReturn(value);
+        given(metaDataMock.getPreviousNodeId()).willReturn(previousId);
+        given(metaDataMock.getNextNodeId()).willReturn(nextId);
+        return metaDataMock;
     }
 
     public static void setValidContentSpecMocking(ContentSpec contentSpecMock, Level levelMock, String randomAlphanumString, Integer id) {
         given(contentSpecMock.getBaseLevel()).willReturn(levelMock);
         given(contentSpecMock.getTitle()).willReturn(randomAlphanumString);
         given(contentSpecMock.getProduct()).willReturn(randomAlphanumString);
-        given(contentSpecMock.getVersion()).willReturn("1-A");
+        given(contentSpecMock.getVersion()).willReturn("1");
         given(contentSpecMock.getDtd()).willReturn("Docbook 4.5");
         given(contentSpecMock.getCopyrightHolder()).willReturn(randomAlphanumString);
         given(contentSpecMock.getId()).willReturn(id);
         given(contentSpecMock.getChecksum()).willReturn(HashUtilities.generateMD5("ID = " + id + "\nTitle = " + randomAlphanumString +
-                "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n\n"));
+                "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n"));
     }
 
     public static void setUpAuthorisedUser(BaseCommand command, UserProvider userProviderMock, CollectionWrapper<UserWrapper> usersMock,
