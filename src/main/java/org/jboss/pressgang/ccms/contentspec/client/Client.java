@@ -50,6 +50,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
 
@@ -88,6 +89,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
     protected final AtomicBoolean shutdown = new AtomicBoolean(false);
+    protected final AtomicBoolean isProcessingCommand = new AtomicBoolean(false);
 
     public static void main(String[] args) {
         Client client = new Client();
@@ -96,6 +98,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             client.setup();
             client.processArgs(args);
         } catch (Throwable ex) {
+            JCommander.getConsole().println(ExceptionUtilities.getStackTrace((Exception) ex));
+            JCommander.getConsole().println(Constants.ERROR_INTERNAL_ERROR);
             client.shutdown(Constants.EXIT_FAILURE);
         }
     }
@@ -210,7 +214,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             allowShutdownToContinueIfRequested();
 
             // Process the commands
+            isProcessingCommand.set(true);
             command.process();
+            isProcessingCommand.set(false);
 
             // Add a newline just to separate the output
             JCommander.getConsole().println("");
@@ -913,7 +919,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Override
     public boolean isShutdown() {
-        return command == null || command == this ? shutdown.get() : command.isShutdown();
+        // If a command is processing check if its shutdown, otherwise check the root client if it's okay to shutdown
+        return command != null && command != this && isProcessingCommand.get() ? command.isShutdown() : shutdown.get();
     }
 
     @Override

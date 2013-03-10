@@ -359,7 +359,7 @@ public class ClientUtilities {
                     sizes.put("PRODUCT", spec.getProduct().length());
                 }
 
-                if (spec.getTitle().length() > sizes.get("TITLE")) {
+                if (spec.getTitle() != null && spec.getTitle().length() > sizes.get("TITLE")) {
                     sizes.put("TITLE", spec.getTitle().length());
                 }
 
