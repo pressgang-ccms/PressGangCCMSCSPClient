@@ -10,7 +10,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 
 @Parameters(commandDescription = "Build, Assemble and then Publish the Content Specification")
 public class PublishCommand extends AssembleCommand {

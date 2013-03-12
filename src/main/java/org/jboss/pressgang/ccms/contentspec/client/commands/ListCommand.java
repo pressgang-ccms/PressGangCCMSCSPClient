@@ -11,9 +11,9 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
-import org.jboss.pressgang.ccms.contentspec.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.contentspec.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
 public class ListCommand extends BaseCommandImpl {

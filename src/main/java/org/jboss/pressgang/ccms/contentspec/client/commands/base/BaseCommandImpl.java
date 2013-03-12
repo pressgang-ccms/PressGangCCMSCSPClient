@@ -8,11 +8,11 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.contentspec.provider.UserProvider;
-import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.contentspec.wrapper.collection.CollectionWrapper;
+import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
 public abstract class BaseCommandImpl implements BaseCommand {
     private final JCommander parser;

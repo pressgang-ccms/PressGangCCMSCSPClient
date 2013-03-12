@@ -4,7 +4,7 @@ import com.beust.jcommander.JCommander;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
-import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;

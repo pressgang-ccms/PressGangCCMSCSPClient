@@ -10,7 +10,7 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
-import org.jboss.pressgang.ccms.contentspec.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 
 @Parameters(commandDescription = "Clone a Content Specification to create a new Content Specification")
 public class CloneCommand extends BaseCommandImpl {

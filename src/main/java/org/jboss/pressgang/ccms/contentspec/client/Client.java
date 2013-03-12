@@ -49,7 +49,7 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
-import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;

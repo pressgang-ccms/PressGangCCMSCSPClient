@@ -16,7 +16,7 @@ import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
-import org.jboss.pressgang.ccms.contentspec.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
