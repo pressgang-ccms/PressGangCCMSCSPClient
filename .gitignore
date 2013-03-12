@@ -1,1 +1,9 @@
-/target
+rpm-script/rpm/BUILD/*
+rpm-script/rpm/BUILDROOT/*
+rpm-script/rpm/SOURCES/*
+rpm-script/rpm/RPMS/*
+rpm-script/rpm/SRPMS/*
+rpm-script/rpm/tmp/*
+target/
+.idea/
+*.iml
