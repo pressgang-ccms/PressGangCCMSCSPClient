@@ -1,6 +1,6 @@
 package com.redhat.contentspec.client.utils;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,20 +21,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
-import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
-import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
-import org.jboss.pressgang.ccms.utils.common.StringUtilities;
-import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
-import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
@@ -50,17 +37,29 @@ import com.redhat.j2koji.base.KojiConnector;
 import com.redhat.j2koji.entities.KojiBuild;
 import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.j2koji.rpc.search.KojiBuildSearch;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.StringUtilities;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 public class ClientUtilities {
     /**
      * Checks if the location for a config location is in the correct format then corrects it if not.
-     * 
+     *
      * @param location The path location to be checked
      * @return The fixed path location string
      */
     public static String validateConfigLocation(final String location) {
-        if (location == null || location.isEmpty())
-            return location;
+        if (location == null || location.isEmpty()) return location;
 
         String fixedLocation = location;
         if (location.startsWith("~")) {
@@ -87,13 +86,12 @@ public class ClientUtilities {
 
     /**
      * Checks if the directory location is in the correct format then corrects it if not.
-     * 
+     *
      * @param location The path location to be checked
      * @return The fixed path location string
      */
     public static String validateDirLocation(final String location) {
-        if (location == null || location.isEmpty())
-            return location;
+        if (location == null || location.isEmpty()) return location;
 
         String fixedLocation = location;
         if (!location.endsWith(File.separator)) {
@@ -113,13 +111,12 @@ public class ClientUtilities {
 
     /**
      * Checks if the host address is in the correct format then corrects it if not.
-     * 
+     *
      * @param host The host address of the server to be checked
      * @return The fixed host address string
      */
     public static String validateHost(final String host) {
-        if (host == null || host.isEmpty())
-            return host;
+        if (host == null || host.isEmpty()) return host;
 
         String fixedHost = host;
         if (!host.endsWith("/")) {
@@ -133,7 +130,7 @@ public class ClientUtilities {
 
     /**
      * Checks that a server exists at the specified URL by sending a request to get the headers from the URL.
-     * 
+     *
      * @param serverUrl The URL of the server.
      * @return True if the server exists and got a successful response otherwise false.
      */
@@ -156,13 +153,12 @@ public class ClientUtilities {
 
     /**
      * Checks if the file path is in the correct format then corrects it if not.
-     * 
+     *
      * @param host The path location to be checked
      * @return The fixed path location string
      */
     public static String validateFilePath(final String filePath) {
-        if (filePath == null)
-            return null;
+        if (filePath == null) return null;
         String fixedPath = filePath;
         if (filePath.startsWith("~")) {
             fixedPath = Constants.HOME_LOCATION + fixedPath.substring(1);
@@ -178,14 +174,13 @@ public class ClientUtilities {
 
     /**
      * Authenticates a user against the database specified by their username
-     * 
+     *
      * @param username The key used to search the database for a user
      * @return The database User object for the specified API Key or null if none was found
      */
     public static RESTUserV1 authenticateUser(final String username, final RESTReader reader) {
         // Check that the username is valid and get the user for that username
-        if (username == null)
-            return null;
+        if (username == null) return null;
         if (!StringUtilities.isAlphanumeric(username)) {
             return null;
         }
@@ -195,14 +190,14 @@ public class ClientUtilities {
 
     /**
      * Read from a csprocessor.cfg file and intitialise the variables into a configuration object.
-     * 
+     *
      * @param csprocessorcfg The csprocessor.cfg file.
-     * @param cspConfig The content spec configuration object to load the settings into
+     * @param cspConfig      The content spec configuration object to load the settings into
      * @throws FileNotFoundException The csprocessor.cfg couldn't be found
      * @throws IOException
      */
-    public static void readFromCsprocessorCfg(final File csprocessorcfg, final ContentSpecConfiguration cspConfig)
-            throws FileNotFoundException, IOException {
+    public static void readFromCsprocessorCfg(final File csprocessorcfg,
+            final ContentSpecConfiguration cspConfig) throws FileNotFoundException, IOException {
         final Properties prop = new Properties();
         prop.load(new FileInputStream(csprocessorcfg));
         cspConfig.setContentSpecId(Integer.parseInt(prop.getProperty("SPEC_ID")));
@@ -216,9 +211,9 @@ public class ClientUtilities {
 
     /**
      * Generates the contents of a csprocessor.cfg file from the passed arguments.
-     * 
-     * @param contentSpec The content specification object the csprocessor.cfg will be used for.
-     * @param serverUrl The server URL that the content specification exists on.
+     *
+     * @param contentSpec  The content specification object the csprocessor.cfg will be used for.
+     * @param serverUrl    The server URL that the content specification exists on.
      * @param clientConfig TODO
      * @return The generated contents of the csprocessor.cfg file.
      */
@@ -238,12 +233,12 @@ public class ClientUtilities {
 
     /**
      * Runs a command from a specified directory
-     * 
-     * @param command The command to be run.
-     * @param dir The directory to run the command from.
-     * @param console The console to print the output to.
+     *
+     * @param command       The command to be run.
+     * @param dir           The directory to run the command from.
+     * @param console       The console to print the output to.
      * @param displayOutput Whether the output should be displayed or not.
-     * @param allowInput Whether the process should allow input form stdin.
+     * @param allowInput    Whether the process should allow input form stdin.
      * @return The exit value of the command
      * @throws IOException
      */
@@ -254,20 +249,19 @@ public class ClientUtilities {
 
     /**
      * Runs a command from a specified directory
-     * 
-     * @param command The command to be run.
-     * @param envVariables An array of environment variables to be used.
-     * @param dir The directory to run the command from.
-     * @param console The console to print the output to.
+     *
+     * @param command       The command to be run.
+     * @param envVariables  An array of environment variables to be used.
+     * @param dir           The directory to run the command from.
+     * @param console       The console to print the output to.
      * @param displayOutput Whether the output should be displayed or not.
-     * @param allowInput Whether the process should allow input form stdin.
+     * @param allowInput    Whether the process should allow input form stdin.
      * @return The exit value of the command
      * @throws IOException
      */
     public static Integer runCommand(final String command, final String[] envVariables, final File dir, final Console console,
             boolean displayOutput, boolean allowInput) throws IOException {
-        if (!dir.isDirectory())
-            throw new IOException();
+        if (!dir.isDirectory()) throw new IOException();
 
         try {
             String[] fixedEnvVariables = envVariables;
@@ -275,8 +269,7 @@ public class ClientUtilities {
             final List<String> envVars = new ArrayList<String>();
             for (final Entry<String, String> entry : env.entrySet()) {
                 final String key = entry.getKey();
-                if (!key.equals("XML_CATALOG_FILES"))
-                    envVars.add(key + "=" + entry.getValue());
+                if (!key.equals("XML_CATALOG_FILES")) envVars.add(key + "=" + entry.getValue());
             }
             if (envVariables != null) {
                 for (final String envVar : envVariables) {
@@ -336,14 +329,13 @@ public class ClientUtilities {
 
     /**
      * Opens a file using the Java Desktop API.
-     * 
+     *
      * @param file The file to be opened.
      * @throws Exception
      */
     public static void openFile(final File file) throws Exception {
         // Check that the file is a file
-        if (!file.isFile())
-            throw new Exception("Passed file is not a file.");
+        if (!file.isFile()) throw new Exception("Passed file is not a file.");
 
         // Check that the Desktop API is supported
         if (!Desktop.isDesktopSupported()) {
@@ -380,14 +372,14 @@ public class ClientUtilities {
             csp.parse(cs.getXml());
             final ContentSpec contentSpec = csp.getContentSpec();
             specs.add(new Spec(cs.getId(), cs.getTitle(), contentSpec.getProduct(), contentSpec.getVersion(),
-                    creator != null ? creator.getName() : null));
+                    creator != null ? creator.getName() : null, cs.getLastModified()));
         }
         return new SpecList(specs, specs.size());
     }
 
     /**
      * Generates the response output for a list of content specifications
-     * 
+     *
      * @param contentSpecs The SpecList that contains the processed Content Specifications
      * @return The generated response ouput.
      */
@@ -401,6 +393,7 @@ public class ClientUtilities {
         sizes.put("PRODUCT", 7);
         sizes.put("VERSION", 7);
         sizes.put("CREATED BY", 10);
+        sizes.put("LAST MODIFIED", 13);
         if (contentSpecs != null && contentSpecs.getSpecs() != null && !contentSpecs.getSpecs().isEmpty()) {
             for (final Spec spec : contentSpecs.getSpecs()) {
                 if (spec.getId().toString().length() > sizes.get("ID")) {
@@ -424,16 +417,16 @@ public class ClientUtilities {
                 }
             }
 
-            final String format = "%" + (sizes.get("ID") + 2) + "s" + "%" + (sizes.get("TITLE") + 2) + "s" + "%"
-                    + (sizes.get("PRODUCT") + 2) + "s" + "%" + (sizes.get("VERSION") + 2) + "s" + "%"
-                    + (sizes.get("CREATED BY") + 2) + "s";
+            final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy");
+            final String format = "%" + (sizes.get("ID") + 2) + "s%" + (sizes.get("TITLE") + 2) + "s%" + (sizes.get(
+                    "PRODUCT") + 2) + "s%" + (sizes.get("VERSION") + 2) + "s%" + (sizes.get(
+                    "CREATED BY") + 2) + "s%" + (sizes.get("LAST MODIFIED") + 2) + "s";
 
-            final StringBuilder output = new StringBuilder(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION",
-                    "CREATED BY") + "\n");
+            final StringBuilder output = new StringBuilder(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
             for (final Spec spec : contentSpecs.getSpecs()) {
-                output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(),
-                        spec.getVersion(), spec.getCreator())
-                        + "\n");
+                output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(),
+                        spec.getCreator() == null ? "Unknown" : spec.getCreator(),
+                        spec.getLastModified() == null ? "Unknown" : dateFormatter.format(spec.getLastModified())) + "\n");
             }
             return output.toString();
         }
@@ -442,14 +435,13 @@ public class ClientUtilities {
 
     /**
      * Delete a directory and all of its sub directories/files
-     * 
+     *
      * @param dir The directory to be deleted.
      * @return True if the directory was deleted otherwise false if an error occurred.
      */
     public static boolean deleteDir(final File dir) {
         // Delete the contents of the directory first
-        if (!deleteDirContents(dir))
-            return false;
+        if (!deleteDirContents(dir)) return false;
 
         // The directory is now empty so delete it
         return dir.delete();
@@ -457,7 +449,7 @@ public class ClientUtilities {
 
     /**
      * Delete the contents of a directory and all of its sub directories/files
-     * 
+     *
      * @param dir The directory whose content is to be deleted.
      * @return True if the directories contents were deleted otherwise false if an error occurred.
      */
@@ -475,15 +467,15 @@ public class ClientUtilities {
 
     /**
      * Get the next pubsnumber from koji for the content spec that will be built.
-     * 
+     *
      * @param contentSpec The contentspec to be built.
-     * @param kojiHubUrl The URL of the Koji Hub server to connect to.
+     * @param kojiHubUrl  The URL of the Koji Hub server to connect to.
      * @return The next valid pubsnumber for a build to koji.
-     * @throws KojiException Thrown if an error occurs when searching koji for the builds.
+     * @throws KojiException         Thrown if an error occurs when searching koji for the builds.
      * @throws MalformedURLException Thrown if the passed Koji Hub URL isn't a valid URL.
      */
-    public static Integer getPubsnumberFromKoji(final ContentSpec contentSpec, final String kojiHubUrl) throws KojiException,
-            MalformedURLException {
+    public static Integer getPubsnumberFromKoji(final ContentSpec contentSpec,
+            final String kojiHubUrl) throws KojiException, MalformedURLException {
         assert contentSpec != null;
 
         if (kojiHubUrl == null) {
@@ -519,8 +511,7 @@ public class ClientUtilities {
 
                 while (matcher.find()) {
                     final Integer buildPubsnumber = Integer.parseInt(matcher.group("Pubsnumber"));
-                    if (buildPubsnumber > pubsnumber)
-                        pubsnumber = buildPubsnumber;
+                    if (buildPubsnumber > pubsnumber) pubsnumber = buildPubsnumber;
                     break;
                 }
             }

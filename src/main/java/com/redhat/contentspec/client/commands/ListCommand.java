@@ -3,12 +3,6 @@ package com.redhat.contentspec.client.commands;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -17,188 +11,159 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
+import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
+import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
-public class ListCommand extends BaseCommandImpl
-{
-	@Parameter(metaVar = "[ID]")
-	private List<Integer> ids = new ArrayList<Integer>();
-	
-	@Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
-	private Boolean contentSpec = false;
-	
-	@Parameter(names = {Constants.SNAPSHOT_LONG_PARAM, Constants.SNAPSHOT_SHORT_PARAM}, hidden = true)
-	private Boolean snapshot = false;
+public class ListCommand extends BaseCommandImpl {
+    @Parameter(metaVar = "[ID]")
+    private List<Integer> ids = new ArrayList<Integer>();
 
-	@Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, hidden = true)
-	private Boolean force = false;
-	
-	@Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", description = "Limit the results to only show up to <NUM> results.")
-	private Integer limit = null;
-	
-	public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig)
-	{
-		super(parser, cspConfig, clientConfig);
-	}
-	
-	public Boolean useContentSpec()
-	{
-		return contentSpec;
-	}
+    @Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
+    private Boolean contentSpec = false;
 
-	public void setContentSpec(final Boolean contentSpec)
-	{
-		this.contentSpec = contentSpec;
-	}
+    @Parameter(names = {Constants.SNAPSHOT_LONG_PARAM, Constants.SNAPSHOT_SHORT_PARAM}, hidden = true)
+    private Boolean snapshot = false;
 
-	public Boolean useSnapshot()
-	{
-		return snapshot;
-	}
+    @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, hidden = true)
+    private Boolean force = false;
 
-	public void setSnapshot(final Boolean snapshot)
-	{
-		this.snapshot = snapshot;
-	}
+    @Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", description = "Limit the results to only show up to <NUM> results.")
+    private Integer limit = null;
 
-	public List<Integer> getIds()
-	{
-		return ids;
-	}
+    public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
+        super(parser, cspConfig, clientConfig);
+    }
 
-	public void setIds(final List<Integer> ids)
-	{
-		this.ids = ids;
-	}
+    public Boolean useContentSpec() {
+        return contentSpec;
+    }
 
-	public Boolean isForce()
-	{
-		return force;
-	}
+    public void setContentSpec(final Boolean contentSpec) {
+        this.contentSpec = contentSpec;
+    }
 
-	public void setForce(final Boolean force) {
-		this.force = force;
-	}
-	
-	public Integer getLimit()
-	{
-		return limit;
-	}
-	
-	public void setLimit(final Integer limit)
-	{
-		this.limit = limit;
-	}
+    public Boolean useSnapshot() {
+        return snapshot;
+    }
 
-	@Override
-	public void printError(final String errorMsg, final boolean displayHelp) {
-		printError(errorMsg, displayHelp, Constants.LIST_COMMAND_NAME);
-	}
+    public void setSnapshot(final Boolean snapshot) {
+        this.snapshot = snapshot;
+    }
 
-	@Override
-	public void printHelp()
-	{
-		printHelp(Constants.LIST_COMMAND_NAME);
-	}
+    public List<Integer> getIds() {
+        return ids;
+    }
 
-	@Override
-	public RESTUserV1 authenticate(final RESTReader reader)
-	{
-		return null;
-	}
-	
-	public boolean isValid()
-	{
-		if (contentSpec && snapshot)
-		{
-			return false;
-		}
-		return true;
-	}
+    public void setIds(final List<Integer> ids) {
+        this.ids = ids;
+    }
 
-	@Override
-	public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user)
-	{
-		if (!isValid())
-		{
-			printError(Constants.INVALID_ARG_MSG, true);
-			shutdown(Constants.EXIT_ARGUMENT_ERROR);
-		}
-		
-		final RESTReader reader = restManager.getReader();
-		
-		// Get the number of results to display
-		Integer numResults = 0;
-		if (limit != null && !force)
-		{
-			numResults = limit;
-		}
-		else if (!force)
-		{
-			numResults = Constants.MAX_LIST_RESULT;
-		}
-		
-		if (snapshot)
-		{
-			// TODO implement snapshot listing
-		}
-		else
-		{
-			// Get the number of content specs in the database
-			long noSpecs = reader.getNumberOfContentSpecs();
-			
-			// Good point to check for a shutdown
-			if (isAppShuttingDown())
-			{
-				shutdown.set(true);
-				return;
-			}
-			
-			// If there are too many content specs & force isn't set then send back an error message
-			if (noSpecs > Constants.MAX_LIST_RESULT && limit == null && !force)
-			{
-				printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
-				shutdown(Constants.EXIT_FAILURE);
-			}
-			else
-			{
-				final List<RESTTopicV1> csList = reader.getContentSpecs(0, numResults);
-				
-				// Good point to check for a shutdown
-				if (isAppShuttingDown())
-				{
-					shutdown.set(true);
-					return;
-				}
-				
-				if (csList.isEmpty())
-				{
-					JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
-				}
-				else
-				{
-					try
-					{
-						JCommander.getConsole().println(ClientUtilities.generateContentSpecListResponse(ClientUtilities.buildSpecList(csList, restManager, elm)));
-					}
-					catch (Exception e)
-					{
-						printError(Constants.ERROR_INTERNAL_ERROR, false);
-						shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
-					}
-				}
-			}
-		}
-	}
+    public Boolean isForce() {
+        return force;
+    }
 
-	@Override
-	public boolean loadFromCSProcessorCfg()
-	{
-		/* 
+    public void setForce(final Boolean force) {
+        this.force = force;
+    }
+
+    public Integer getLimit() {
+        return limit;
+    }
+
+    public void setLimit(final Integer limit) {
+        this.limit = limit;
+    }
+
+    @Override
+    public void printError(final String errorMsg, final boolean displayHelp) {
+        printError(errorMsg, displayHelp, Constants.LIST_COMMAND_NAME);
+    }
+
+    @Override
+    public void printHelp() {
+        printHelp(Constants.LIST_COMMAND_NAME);
+    }
+
+    @Override
+    public RESTUserV1 authenticate(final RESTReader reader) {
+        return null;
+    }
+
+    public boolean isValid() {
+        if (contentSpec && snapshot) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user) {
+        if (!isValid()) {
+            printError(Constants.INVALID_ARG_MSG, true);
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
+
+        final RESTReader reader = restManager.getReader();
+
+        // Get the number of results to display
+        Integer numResults = 0;
+        if (limit != null && !force) {
+            numResults = limit;
+        } else if (!force) {
+            numResults = Constants.MAX_LIST_RESULT;
+        }
+
+        if (snapshot) {
+            // TODO implement snapshot listing
+        } else {
+            // Get the number of content specs in the database
+            long noSpecs = reader.getNumberOfContentSpecs();
+
+            // Good point to check for a shutdown
+            if (isAppShuttingDown()) {
+                shutdown.set(true);
+                return;
+            }
+
+            // If there are too many content specs & force isn't set then send back an error message
+            if (noSpecs > Constants.MAX_LIST_RESULT && limit == null && !force) {
+                printError(String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
+                shutdown(Constants.EXIT_FAILURE);
+            } else {
+                final List<RESTTopicV1> csList = reader.getContentSpecs(0, numResults);
+
+                // Good point to check for a shutdown
+                if (isAppShuttingDown()) {
+                    shutdown.set(true);
+                    return;
+                }
+
+                if (csList.isEmpty()) {
+                    JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
+                } else {
+                    try {
+                        JCommander.getConsole().println(
+                                ClientUtilities.generateContentSpecListResponse(ClientUtilities.buildSpecList(csList, restManager, elm)));
+                    } catch (Exception e) {
+                        printError(Constants.ERROR_INTERNAL_ERROR, false);
+                        shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public boolean loadFromCSProcessorCfg() {
+        /*
 		 * We shouldn't use a csprocessor.cfg file for the 
 		 * list URL as it should be specified or read from the
 		 * csprocessor.ini
 		 */
-		return false;
-	}
+        return false;
+    }
 }

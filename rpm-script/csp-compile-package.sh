@@ -23,6 +23,16 @@ echo "New Version: $VERSION"
 FILE_NAME=cspclient-"$VERSION"
 
 pushd ${DIR}
+echo "Starting to compile the CSP"
+
+# Compile the CSP
+./compile-csp.sh
+
+if [[ $? != 0 ]]; then
+    exit 1
+fi
+
+echo "Finished compiling the CSP"
 
 cd ${DIR}/rpm/SPECS/
 

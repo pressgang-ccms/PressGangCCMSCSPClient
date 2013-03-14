@@ -65,7 +65,7 @@ public abstract class BaseCommandImpl implements BaseCommand
 	}
 	
 	@Override
-	public String getSkynetServerUrl()
+	public String getPressGangServerUrl()
 	{
 		return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest");
 	}

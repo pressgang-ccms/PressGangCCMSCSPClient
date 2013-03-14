@@ -11,7 +11,7 @@ public interface BaseCommand extends ShutdownAbleApp
 	String getUsername();
 	void setUsername(String username);
 	String getServerUrl();
-	String getSkynetServerUrl();
+	String getPressGangServerUrl();
 	void setServerUrl(String serverUrl);
 	Boolean isShowHelp();
 	void setShowHelp(Boolean showHelp);
