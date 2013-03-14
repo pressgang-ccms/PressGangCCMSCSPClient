@@ -129,6 +129,10 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM}, description = "Flatten the topics folder when building.")
     private Boolean flattenTopics = false;
 
+    @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
+            description = "Answer \"yes\" to any and all questions that might be asked.")
+    private Boolean answerYes = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -363,6 +367,14 @@ public class BuildCommand extends BaseCommandImpl {
 
     public void setHideBugLinks(Boolean hideBugLinks) {
         this.hideBugLinks = hideBugLinks;
+    }
+
+    public Boolean getAnswerYes() {
+        return answerYes;
+    }
+
+    public void setAnswerYes(Boolean answerYes) {
+        this.answerYes = answerYes;
     }
 
     @Override
@@ -710,7 +722,7 @@ public class BuildCommand extends BaseCommandImpl {
          * Check if the file exists, if we aren't building from Project directory with a csprocessor.cfg file. If it does then check if the
          * file should be overwritten.
          */
-        if (!buildingFromConfig && outputFile.exists()) {
+        if (!buildingFromConfig && outputFile.exists() && !getAnswerYes()) {
             JCommander.getConsole().println(String.format(Constants.FILE_EXISTS_OVERWRITE_MSG, outputFile.getName()));
             answer = JCommander.getConsole().readLine();
             while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase(

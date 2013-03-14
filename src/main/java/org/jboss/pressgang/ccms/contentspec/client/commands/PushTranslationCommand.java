@@ -1,25 +1,23 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.SpecTopic;
+import org.jboss.pressgang.ccms.contentspec.builder.constants.BuilderConstants;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.client.utils.TranslationUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
@@ -27,29 +25,26 @@ import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.provider.CSTranslatedNodeProvider;
-import org.jboss.pressgang.ccms.provider.CSTranslatedNodeStringProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
+import org.jboss.pressgang.ccms.provider.TranslatedContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedTopicProvider;
+import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
 import org.jboss.pressgang.ccms.utils.structures.StringToNodeCollection;
-import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
-import org.jboss.pressgang.ccms.wrapper.CSTranslatedNodeStringWrapper;
-import org.jboss.pressgang.ccms.wrapper.CSTranslatedNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
-import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataConstants;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.zanata.common.ContentType;
 import org.zanata.common.LocaleId;
 import org.zanata.common.ResourceType;
@@ -75,6 +70,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     @Parameter(names = Constants.TOPICS_ONLY_LONG_PARAM, description = "Only push the topics in the content specification to Zanata.")
     private Boolean topicsOnly = false;
+
+    @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
+            description = "Answer \"yes\" to any and all questions that might be asked.")
+    private Boolean answerYes = false;
 
     private ContentSpecProcessor csp;
 
@@ -120,6 +119,22 @@ public class PushTranslationCommand extends BaseCommandImpl {
         this.zanataVersion = zanataVersion;
     }
 
+    public Boolean getAnswerYes() {
+        return answerYes;
+    }
+
+    public void setAnswerYes(Boolean answerYes) {
+        this.answerYes = answerYes;
+    }
+
+    public Boolean getTopicsOnly() {
+        return topicsOnly;
+    }
+
+    public void setTopicsOnly(Boolean topicsOnly) {
+        this.topicsOnly = topicsOnly;
+    }
+
     @Override
     public boolean validateServerUrl() {
         if (!super.validateServerUrl()) return false;
@@ -146,26 +161,26 @@ public class PushTranslationCommand extends BaseCommandImpl {
      */
     protected void setupZanataOptions() {
         // Set the zanata url
-        if (this.zanataUrl != null) {
+        if (getZanataUrl() != null) {
             // Find the zanata server if the url is a reference to the zanata server name
             for (final String serverName : getClientConfig().getZanataServers().keySet()) {
-                if (serverName.equals(zanataUrl)) {
-                    zanataUrl = getClientConfig().getZanataServers().get(serverName).getUrl();
+                if (serverName.equals(getZanataUrl())) {
+                    setZanataUrl(getClientConfig().getZanataServers().get(serverName).getUrl());
                     break;
                 }
             }
 
-            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(zanataUrl));
+            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
         }
 
         // Set the zanata project
-        if (this.zanataProject != null) {
-            getCspConfig().getZanataDetails().setProject(zanataProject);
+        if (getZanataProject() != null) {
+            getCspConfig().getZanataDetails().setProject(getZanataProject());
         }
 
         // Set the zanata version
-        if (this.zanataVersion != null) {
-            getCspConfig().getZanataDetails().setVersion(zanataVersion);
+        if (getZanataVersion() != null) {
+            getCspConfig().getZanataDetails().setVersion(getZanataVersion());
         }
     }
 
@@ -245,44 +260,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Create the list of referenced topics
-        final List<Integer> referencedLatestTopicIds = new ArrayList<Integer>();
-        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
-        for (final SpecTopic specTopic : specTopics) {
-            if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() == null) {
-                referencedLatestTopicIds.add(specTopic.getDBId());
-            }
-        }
-
-        // Get the topics that were processed by the ContentSpecProcessor. (They should be stored in cache)
-        CollectionWrapper<TopicWrapper> topics = topicProvider.getTopics(referencedLatestTopicIds);
-
-        if (topics == null) {
-            topics = topicProvider.newTopicCollection();
-        }
+        // Initialise the topic wrappers in the spec topics
+        initialiseSpecTopics(topicProvider, contentSpec);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Create the list of referenced revision topics
-        final List<Pair<Integer, Integer>> referencedRevisionTopicIds = new ArrayList<Pair<Integer, Integer>>();
-        for (final SpecTopic specTopic : specTopics) {
-            if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
-                referencedRevisionTopicIds.add(new Pair<Integer, Integer>(specTopic.getDBId(), specTopic.getRevision()));
-            }
-        }
-
-        // Get the revision topics that were processed by the ContentSpecProcessor. (They should be stored in cache)
-        for (final Pair<Integer, Integer> referencedRevisionTopic : referencedRevisionTopicIds) {
-            final TopicWrapper revisionTopic = topicProvider.getTopic(referencedRevisionTopic.getFirst(),
-                    referencedRevisionTopic.getSecond());
-            topics.addItem(revisionTopic);
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
-        if (!pushToZanata(getProviderFactory(), topics, contentSpecEntity)) {
+        if (!pushToZanata(getProviderFactory(), contentSpec, contentSpecEntity)) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_ZANATA_PUSH_FAILED_MSG, false);
             shutdown(Constants.EXIT_FAILURE);
         } else {
@@ -295,39 +279,58 @@ public class PushTranslationCommand extends BaseCommandImpl {
         return ids.size() == 0;
     }
 
+    protected void initialiseSpecTopics(final TopicProvider topicProvider, final ContentSpec contentSpec) {
+        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
+        for (final SpecTopic specTopic : specTopics) {
+            if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() == null) {
+                specTopic.setTopic(topicProvider.getTopic(specTopic.getDBId()));
+            } else if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
+                specTopic.setTopic(topicProvider.getTopic(specTopic.getDBId(), specTopic.getRevision()));
+            }
+        }
+    }
+
     /**
      * Pushes a content spec and its topics to zanata.
      *
      * @param providerFactory
-     * @param topics
+     * @param contentSpec
      * @param contentSpecEntity
      * @return True if the push was successful otherwise false.
      */
-    protected boolean pushToZanata(final DataProviderFactory providerFactory, final CollectionWrapper<TopicWrapper> topics,
+    protected boolean pushToZanata(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
             final ContentSpecWrapper contentSpecEntity) {
-        final Map<TopicWrapper, Document> topicToDoc = new HashMap<TopicWrapper, Document>();
+        final Map<TopicWrapper, SpecTopic> topicToSpecTopic = new HashMap<TopicWrapper, SpecTopic>();
         boolean error = false;
         final ZanataInterface zanataInterface = new ZanataInterface(0.2);
 
         // Convert all the topics to DOM Documents first so we know if any are invalid
-        final List<TopicWrapper> topicItems = topics.getItems();
-        for (final TopicWrapper topic : topicItems) {            /*
-             * make sure the section title is the same as the
-             * topic title
-             */
-            Document doc = null;
-            try {
-                doc = XMLUtilities.convertStringToDocument(topic.getXml());
-            } catch (Exception e) {
-                // Do Nothing as we handle the error below.
-            }
+        final Map<Pair<Integer, Integer>, TopicWrapper> topics = new HashMap<Pair<Integer, Integer>, TopicWrapper>();
+        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
+        for (final SpecTopic specTopic : specTopics) {
+            final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+            final Pair<Integer, Integer> topicId = new Pair<Integer, Integer>(topic.getId(), topic.getRevision());
 
-            if (doc == null) {
-                JCommander.getConsole().println(
-                        "ERROR: Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " does not have valid XML");
-                error = true;
-            } else {
-                topicToDoc.put(topic, doc);
+            // Only process the topic if it hasn't already been added, since the same topic can exist twice
+            if (!topics.containsKey(topicId)) {
+                topics.put(topicId, topic);
+
+                // Convert the XML String into a DOM object.
+                Document doc = null;
+                try {
+                    doc = XMLUtilities.convertStringToDocument(topic.getXml());
+                } catch (Exception e) {
+                    // Do Nothing as we handle the error below.
+                }
+
+                if (doc == null) {
+                    JCommander.getConsole().println(
+                            "ERROR: Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " does not have valid XML");
+                    error = true;
+                } else {
+                    specTopic.setXmlDocument(doc);
+                    topicToSpecTopic.put(topic, specTopic);
+                }
             }
 
             // Good point to check for a shutdown
@@ -342,13 +345,19 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        final float total = topics.getItems().size() + (topicsOnly ? 0 : 1);
+        final float total = topics.size() + (topicsOnly ? 0 : 1);
         float current = 0;
         final int showPercent = 5;
         int lastPercent = 0;
 
-        JCommander.getConsole().println("You are about to push " + ((int) total) + " topics to zanata. Continue? (Yes/No)");
-        String answer = JCommander.getConsole().readLine();
+        final String answer;
+        if (getAnswerYes()) {
+            JCommander.getConsole().println("Pushing " + ((int) total) + " topics to zanata.");
+            answer = "yes";
+        } else {
+            JCommander.getConsole().println("You are about to push " + ((int) total) + " topics to zanata. Continue? (Yes/No)");
+            answer = JCommander.getConsole().readLine();
+        }
 
         final List<String> messages = new ArrayList<String>();
 
@@ -356,7 +365,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             JCommander.getConsole().println("Starting to push topics to zanata...");
 
             // Loop through each topic and upload it to zanata
-            for (final Entry<TopicWrapper, Document> topicEntry : topicToDoc.entrySet()) {
+            for (final Entry<TopicWrapper, SpecTopic> topicEntry : topicToSpecTopic.entrySet()) {
                 ++current;
                 final int percent = Math.round(current / total * 100);
                 if (percent - lastPercent >= showPercent) {
@@ -364,16 +373,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     JCommander.getConsole().println("\tPushing topics to zanata " + percent + "% Done");
                 }
 
-                final TopicWrapper topic = topicEntry.getKey();
-                final Document doc = topicEntry.getValue();
-
-                if (!pushTopicToZanata(providerFactory, topic, doc, zanataInterface, messages)) {
+                if (!pushTopicToZanata(providerFactory, topicEntry.getValue(), zanataInterface, messages)) {
                     error = true;
                 }
             }
 
             // Upload the content specification to zanata
-            if (!topicsOnly) {
+            if (!getTopicsOnly()) {
                 if (!pushContentSpecToZanata(providerFactory, contentSpecEntity, zanataInterface, messages)) {
                     error = true;
                 }
@@ -393,25 +399,33 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     /**
      * @param providerFactory
-     * @param topic
-     * @param doc
+     * @param specTopic
      * @param zanataInterface
      * @param messages
      * @return True if the topic was pushed successful otherwise false.
      */
-    protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, final TopicWrapper topic, final Document doc,
+    protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, final SpecTopic specTopic,
             final ZanataInterface zanataInterface, final List<String> messages) {
+        final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+        final Document doc = specTopic.getXmlDocument();
         boolean error = false;
 
         final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
-        final String zanataId = topic.getId() + "-" + topic.getRevision();
 
+        // Create the zanata id based on whether a condition has been specified or not
+        final String zanataId = getTopicZanataId(specTopic);
+
+        // Check if the zanata document already exists, if it does than the topic can be ignored.
         final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
-
         if (zanataFile == null) {
             final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory, topic.getId(),
                     topic.getRevision(), topic.getLocale()) != null;
 
+            // Process the conditions, if any exist, to remove any nodes that wouldn't be seen for the content spec.
+            final String condition = specTopic.getConditionStatement(true);
+            DocBookUtilities.processConditions(condition, doc, BuilderConstants.DEFAULT_CONDITION);
+
+            // Create the document to be created in Zanata
             final Resource resource = new Resource();
 
             resource.setContentType(ContentType.TextPlain);
@@ -420,8 +434,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
             resource.setRevision(1);
             resource.setType(ResourceType.FILE);
 
+            // Get the translatable nodes
             final List<StringToNodeCollection> translatableStrings = XMLUtilities.getTranslatableStringsV2(doc, false);
 
+            // Add the translatable nodes to the zanata document
             for (final StringToNodeCollection translatableStringData : translatableStrings) {
                 final String translatableString = translatableStringData.getTranslationString();
                 if (!translatableString.trim().isEmpty()) {
@@ -435,11 +451,12 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 }
             }
 
+            // Create the document in zanata and then in PressGang if the document was successfully created in Zanata.
             if (!zanataInterface.createFile(resource)) {
                 messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
                 error = true;
             } else if (!translatedTopicExists) {
-                final TranslatedTopicWrapper translatedTopic = createTranslatedTopic(providerFactory, topic);
+                final TranslatedTopicWrapper translatedTopic = TranslationUtilities.createTranslatedTopic(providerFactory, topic);
                 try {
                     if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
                         messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
@@ -447,10 +464,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
                         error = true;
                     }
                 } catch (Exception e) {
-                            /*
-                             * Do nothing here as it shouldn't fail. If it does then it'll be created
-                             * by the sync service anyways.
-                             */
                     messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
                             "PressGang.");
                     error = true;
@@ -464,6 +477,27 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     /**
+     * Gets the Zanata ID for a topic based on whether or not the topic has any conditional text.
+     *
+     * @param specTopic The topic to create the Zanata ID for.
+     * @return The unique Zanata ID that can be used to create a document in Zanata.
+     */
+    protected String getTopicZanataId(final SpecTopic specTopic) {
+        final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+        Map<Node, List<String>> conditionNodes = DocBookUtilities.getConditionNodes(specTopic.getXmlDocument());
+
+        // Create the zanata id based on whether a condition has been specified or not
+        final String zanataId;
+        if (specTopic.getConditionStatement(true) != null && !conditionNodes.isEmpty()) {
+            zanataId = topic.getId() + "-" + topic.getRevision() + "-" + specTopic.getUniqueId();
+        } else {
+            zanataId = topic.getId() + "-" + topic.getRevision();
+        }
+
+        return zanataId;
+    }
+
+    /**
      * @param providerFactory
      * @param contentSpecEntity
      * @param zanataInterface
@@ -474,14 +508,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final ZanataInterface zanataInterface, final List<String> messages) {
         boolean error = false;
 
-        final CSTranslatedNodeProvider translatedNodeProvider = providerFactory.getProvider(CSTranslatedNodeProvider.class);
+        final TranslatedContentSpecProvider translatedContentSpecProvider = providerFactory.getProvider(
+                TranslatedContentSpecProvider.class);
         final String zanataId = "CS" + contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
         final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
 
         if (zanataFile == null) {
-            // TODO Fix this to use a content spec entity
-            final boolean translatedContentSpecExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory,
-                    contentSpecEntity.getId(), contentSpecEntity.getRevision(), contentSpecEntity.getLocale()) != null;
+            final boolean translatedContentSpecExists = EntityUtilities.getTranslatedContentSpecById(providerFactory,
+                    contentSpecEntity.getId(), contentSpecEntity.getRevision()) != null;
 
             final Resource resource = new Resource();
 
@@ -512,26 +546,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
                         "failed to be created in Zanata.");
                 error = true;
             } else if (!translatedContentSpecExists) {
-                // Get all the nodes to be translated
-                final Set<CSNodeWrapper> nodes = new HashSet<CSNodeWrapper>();
-                for (final StringToCSNodeCollection translatableString : translatableStrings) {
-                    nodes.addAll(translatableString.getNodeCollections());
-                }
-
-                // Save the translated nodes
-                final CollectionWrapper<CSTranslatedNodeWrapper> translatedNodes = createCSTranslatedNodes(providerFactory,
-                        contentSpecEntity, nodes);
+                // Save the translated content spec
+                final TranslatedContentSpecWrapper translatedContentSpec = TranslationUtilities.createTranslatedContentSpec(providerFactory,
+                        contentSpecEntity, translatableStrings);
                 try {
-                    if (translatedNodeProvider.createCSTranslatedNodes(translatedNodes) == null) {
+                    if (translatedContentSpecProvider.createTranslatedContentSpec(translatedContentSpec) == null) {
                         messages.add("Content Spec ID " + contentSpecEntity.getId() + ", " +
                                 "Revision " + contentSpecEntity.getRevision() + " failed to be created in PressGang.");
                         error = true;
                     }
                 } catch (Exception e) {
-                            /*
-                             * Do nothing here as it shouldn't fail. If it does then it'll be created
-                             * by the sync service anyways.
-                             */
                     messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
                             "failed to be created in PressGang.");
                     error = true;
@@ -543,75 +567,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         return !error;
-    }
-
-    /**
-     * Create a TranslatedTopic based on the content from a normal Topic.
-     *
-     * @param topic The topic to transform to a TranslatedTopic
-     * @return The new TranslatedTopic initialised with data from the topic.
-     */
-    protected TranslatedTopicWrapper createTranslatedTopic(final DataProviderFactory providerFactory, final TopicWrapper topic) {
-        final TranslatedTopicWrapper translatedTopic = providerFactory.getProvider(TranslatedTopicProvider.class).newTranslatedTopic();
-        translatedTopic.setLocale(topic.getLocale());
-        translatedTopic.setTranslationPercentage(100);
-        translatedTopic.setTopicId(topic.getId());
-        translatedTopic.setTopicRevision(topic.getRevision());
-        translatedTopic.setXml(topic.getXml());
-        translatedTopic.setHtml(topic.getHtml());
-        translatedTopic.setHtmlUpdated(new Date());
-        return translatedTopic;
-    }
-
-    /**
-     * Creates a list of Content Spec Translated Node entities from a list of Content Spec node entities.
-     *
-     * @param providerFactory The factory to produce entity providers to lookup entity details.
-     * @param contentSpec     The content spec object the nodes belong to.
-     * @param nodes           The nodes to create the translated nodes for.
-     * @return
-     */
-    protected CollectionWrapper<CSTranslatedNodeWrapper> createCSTranslatedNodes(final DataProviderFactory providerFactory,
-            final ContentSpecWrapper contentSpec, final Collection<CSNodeWrapper> nodes) {
-        final CollectionWrapper<CSTranslatedNodeWrapper> translatedNodes = providerFactory.getProvider(
-                CSTranslatedNodeProvider.class).newCSTranslatedNodeCollection();
-        for (final CSNodeWrapper node : nodes) {
-            translatedNodes.addNewItem(createCSTranslatedNode(providerFactory, contentSpec, node));
-        }
-
-        return translatedNodes;
-    }
-
-    /**
-     * Creates a Translated Content Spec Node based on an original Content Spec Node.
-     *
-     * @param providerFactory The factory to produce entity providers to lookup entity details.
-     * @param contentSpec     The content spec the nodes belong to.
-     * @param node            The node to create a translated node for.
-     * @return A CSTranslatedNode entity that contains the information from the original node.
-     */
-    protected CSTranslatedNodeWrapper createCSTranslatedNode(final DataProviderFactory providerFactory,
-            final ContentSpecWrapper contentSpec, final CSNodeWrapper node) {
-        final CSTranslatedNodeWrapper translatedNode = providerFactory.getProvider(CSTranslatedNodeProvider.class).newCSTranslatedNode();
-        translatedNode.setNodeId(node.getId());
-        translatedNode.setNodeRevision(node.getRevision());
-
-        final CSTranslatedNodeStringProvider translatedNodeStringProvider = providerFactory.getProvider(
-                CSTranslatedNodeStringProvider.class);
-        final UpdateableCollectionWrapper<CSTranslatedNodeStringWrapper> translatedStrings = translatedNodeStringProvider
-                .newCSTranslatedNodeStringCollection(
-                translatedNode);
-
-        final CSTranslatedNodeStringWrapper translatedNodeString = translatedNodeStringProvider.newCSTranslatedNodeString(translatedNode);
-        translatedNodeString.setLocale(contentSpec.getLocale());
-        translatedNodeString.setOriginalString(node.getAdditionalText());
-        translatedNodeString.setTranslatedString(node.getAdditionalText());
-        translatedNodeString.setFuzzy(false);
-        translatedStrings.addNewItem(translatedNodeString);
-
-        translatedNode.setTranslatedStrings(translatedStrings);
-
-        return translatedNode;
     }
 
     @Override
