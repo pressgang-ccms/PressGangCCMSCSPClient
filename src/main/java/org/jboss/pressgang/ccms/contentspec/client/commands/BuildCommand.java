@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -472,7 +473,7 @@ public class BuildCommand extends BaseCommandImpl {
      *
      * @return The Object that holds all the options used when building.
      */
-    public CSDocbookBuildingOptions getBuildOptions() {
+    protected CSDocbookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
 
@@ -497,6 +498,25 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setFlattenTopics(getFlattenTopics());
 
         return buildOptions;
+    }
+
+    /**
+     * Gets the override files from the file system and create a byte array of each file.
+     *
+     * @return The map of Override File to their actual data.
+     */
+    protected Map<String, byte[]> getOverrideFiles() {
+        final Map<String, byte[]> overrideFiles = new HashMap<String, byte[]>();
+        for (final Entry<String, String> override : getOverrides().entrySet()) {
+            final String overrideName = override.getKey();
+            if (overrideName.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || overrideName.equals(
+                    CSConstants.REVISION_HISTORY_OVERRIDE) || overrideName.equals(CSConstants.FEEDBACK_OVERRIDE)) {
+                final File file = new File(override.getValue());
+                overrideFiles.put(overrideName, FileUtilities.readFileContentsAsByteArray(file));
+            }
+        }
+
+        return overrideFiles;
     }
 
     /**
@@ -595,9 +615,10 @@ public class BuildCommand extends BaseCommandImpl {
         try {
             setBuilder(new ContentSpecBuilder(getProviderFactory()));
             if (getLocale() == null) {
-                builderOutput = getBuilder().buildBook(contentSpec, user, getBuildOptions());
+                builderOutput = getBuilder().buildBook(contentSpec, user, getBuildOptions(), getOverrideFiles());
             } else {
-                builderOutput = getBuilder().buildTranslatedBook(contentSpec, user, getBuildOptions(), getCspConfig().getZanataDetails());
+                builderOutput = getBuilder().buildTranslatedBook(contentSpec, user, getBuildOptions(), getOverrideFiles(),
+                        getCspConfig().getZanataDetails());
             }
         } catch (BuildProcessingException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
@@ -611,8 +632,7 @@ public class BuildCommand extends BaseCommandImpl {
     /**
      * Validates that a content specification object and it's contents are valid.
      *
-     * @param providerFactory The provider factory that can create providers to lookup various org.jboss.pressgang.ccms.contentspec
-     *                        .entities from a datasource.
+     * @param providerFactory The provider factory that can create providers to lookup various entities from a datasource.
      * @param loggerManager   The logging manager that handles output.
      * @param user            The user who requested the build/validation.
      * @param contentSpec     The content spec object to be validated.
@@ -703,7 +723,8 @@ public class BuildCommand extends BaseCommandImpl {
         final Map<String, String> overrides = getOverrides();
         for (final Entry<String, String> entry : overrides.entrySet()) {
             final String key = entry.getKey();
-            if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE)) {
+            if (key.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || key.equals(CSConstants.REVISION_HISTORY_OVERRIDE) || key.equals(
+                    CSConstants.FEEDBACK_OVERRIDE)) {
                 overrides.put(key, ClientUtilities.fixFilePath(entry.getValue()));
             }
         }

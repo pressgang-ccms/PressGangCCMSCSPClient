@@ -14,6 +14,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.refEq;
@@ -30,6 +31,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.beust.jcommander.JCommander;
 import com.redhat.j2koji.exceptions.KojiException;
@@ -69,6 +71,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -460,7 +463,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willThrow(
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap())).willThrow(
                 new BuildProcessingException(""));
         given(command.getBuilder()).willReturn(builder);
 
@@ -495,7 +498,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willThrow(
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap())).willThrow(
                 new BuilderCreationException(""));
         given(command.getBuilder()).willReturn(builder);
 
@@ -551,10 +554,63 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class));
+        verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap());
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
+    }
+
+    @Test
+    public void shouldGetOverrideFilesFromFileSystemOnBuild() throws BuildProcessingException, BuilderCreationException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        final byte[] bookData = new byte[0];
+        // Given a command with an id
+        command.setIds(Arrays.asList(id.toString()));
+        // and an override
+        final String emptyFilePath = rootTestDirectory.getAbsolutePath() + File.separator + "EmptyFile.txt";
+        command.getOverrides().put("Author_Group.xml", emptyFilePath);
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(ClientUtilities.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(command.getBuilder()).willReturn(builder);
+        // and the builder has an error
+        given(builder.getNumErrors()).willReturn(randomNumber);
+        given(builder.getNumWarnings()).willReturn(0);
+        // and we create a way to exit after building
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
+        DocBookUtilities.escapeTitle(anyString());
+
+        // When the command is processing
+        ArgumentCaptor<Map> overrideFileCaptor = ArgumentCaptor.forClass(Map.class);
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then check the build method was called
+        verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class),
+                overrideFileCaptor.capture());
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(),
+                containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
+        // and that the override was passed with it's file
+        assertThat(overrideFileCaptor.getValue().size(), is(1));
+        assertTrue(overrideFileCaptor.getValue().containsKey("Author_Group.xml"));
     }
 
     @Test
@@ -597,7 +653,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check that the translated build method was called
-        verify(builder).buildTranslatedBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class),
+        verify(builder).buildTranslatedBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap(),
                 any(ZanataDetails.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),

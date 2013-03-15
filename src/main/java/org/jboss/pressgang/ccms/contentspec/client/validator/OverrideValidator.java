@@ -1,7 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.validator;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.beust.jcommander.IParameterValidator;
@@ -11,16 +11,8 @@ import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
 
 public class OverrideValidator implements IParameterValidator {
-    private static final List<String> validNames = new ArrayList<String>() {
-        private static final long serialVersionUID = 8972067339176103456L;
-
-        {
-            add(CSConstants.AUTHOR_GROUP_OVERRIDE);
-            add(CSConstants.REVISION_HISTORY_OVERRIDE);
-            add(CSConstants.REVNUMBER_OVERRIDE);
-            add(CSConstants.BRAND_OVERRIDE);
-        }
-    };
+    private static final List<String> validNames = Arrays.asList(CSConstants.AUTHOR_GROUP_OVERRIDE, CSConstants.REVISION_HISTORY_OVERRIDE,
+            CSConstants.FEEDBACK_OVERRIDE, CSConstants.REVNUMBER_OVERRIDE, CSConstants.PUBSNUMBER_OVERRIDE, CSConstants.BRAND_OVERRIDE);
 
     @Override
     public void validate(final String name, final String value) throws ParameterException {
@@ -30,7 +22,8 @@ public class OverrideValidator implements IParameterValidator {
             final String varValue = vars[1];
 
             if (validNames.contains(varName)) {
-                if (varName.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || varName.equals(CSConstants.REVISION_HISTORY_OVERRIDE)) {
+                if (varName.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || varName.equals(
+                        CSConstants.REVISION_HISTORY_OVERRIDE) || varName.equals(CSConstants.FEEDBACK_OVERRIDE)) {
                     final File file = new File(ClientUtilities.fixFilePath(varValue));
                     if (!(file.exists() && file.isFile())) {
                         throw new ParameterException("The \"" + varName + "\" override is not a valid file.");
@@ -38,6 +31,12 @@ public class OverrideValidator implements IParameterValidator {
                 } else if (varName.equals(CSConstants.REVNUMBER_OVERRIDE)) {
                     if (!varValue.matches("^(" + ProcessorConstants.VERSION_EPOCH_VALIDATE_REGEX + ")-[0-9]+$")) {
                         throw new ParameterException("The \"" + varName + "\" override is not a valid revision history number.");
+                    }
+                } else if (varName.equals(CSConstants.PUBSNUMBER_OVERRIDE)) {
+                    try {
+                        Integer.parseInt(varValue);
+                    } catch (Exception e) {
+                        throw new ParameterException("The \"" + varName + "\" override is not a valid pubsnumber.");
                     }
                 }
             } else {
