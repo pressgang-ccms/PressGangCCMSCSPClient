@@ -55,6 +55,7 @@ import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 
 public class Client implements BaseCommand, ShutdownAbleApp {
     private final JCommander parser = new JCommander(this);
@@ -212,6 +213,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // Check that the server Urls are valid
             command.validateServerUrl();
+            final String uiServerURL = command.getServerUrl().replace("/TopicIndex/", "/pressgang-ccms-ui/");
+            System.setProperty(CommonConstants.PRESS_GANG_UI_SYSTEM_PROPERTY, uiServerURL);
 
             // Print a line to separate content
             JCommander.getConsole().println("");

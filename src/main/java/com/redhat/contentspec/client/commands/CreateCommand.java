@@ -217,7 +217,7 @@ public class CreateCommand extends BaseCommandImpl
 			// If the output directory exists and force is enabled delete the directory contents
 			if (directory.exists() && directory.isDirectory())
 			{
-				ClientUtilities.deleteDir(directory);
+                FileUtilities.deleteDir(directory);
 			}
 			
 			// Create the blank zanata details as we shouldn't have a zanata setup at creation time

@@ -453,7 +453,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     }
                 } else {
                     messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - Skipping.");
-                    error = true;
                 }
             }
             // Upload the content specification to zanata
@@ -519,7 +518,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     messages.add(
                             "Content Spec ID " + contentSpecTopic.getId() + ", Revision " + contentSpecTopic.getRevision() + " already " +
                                     "exists - Skipping.");
-                    error = true;
                 }
             }
         }

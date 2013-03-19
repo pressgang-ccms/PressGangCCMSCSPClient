@@ -12,6 +12,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 import com.beust.jcommander.JCommander;
@@ -147,7 +148,7 @@ public class CheckoutCommand extends BaseCommandImpl
 		}
 		else if (directory.exists())
 		{
-			ClientUtilities.deleteDir(directory);
+			FileUtilities.deleteDir(directory);
 		}
 		
 		// Good point to check for a shutdown

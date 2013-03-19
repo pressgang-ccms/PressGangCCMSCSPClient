@@ -587,7 +587,6 @@ public class BuildCommand extends BaseCommandImpl {
             success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
         } catch (Exception e) {
             JCommander.getConsole().println(elm.generateLogs());
-            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
             shutdown(Constants.EXIT_FAILURE);
         }
 

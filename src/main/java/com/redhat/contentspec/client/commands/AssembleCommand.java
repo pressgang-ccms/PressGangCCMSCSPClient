@@ -9,6 +9,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 
 import com.beust.jcommander.JCommander;
@@ -167,7 +168,7 @@ public class AssembleCommand extends BuildCommand {
 		outputDir.mkdirs();
 		
 		// Ensure that the directory is empty
-		ClientUtilities.deleteDirContents(outputDir);
+		FileUtilities.deleteDirContents(outputDir);
 		
 		// Unzip the file
 		if (!ZipUtilities.unzipFileIntoDirectory(file, outputDirectory))
