@@ -22,6 +22,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -235,7 +236,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         }
 
         // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
+        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();

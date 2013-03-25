@@ -33,6 +33,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
@@ -678,7 +679,7 @@ public class BuildCommand extends BaseCommandImpl {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
-            contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
+            contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
         } else {
             // Get the content spec from the file
             contentSpec = getContentSpecFromFile(fileOrId, true);

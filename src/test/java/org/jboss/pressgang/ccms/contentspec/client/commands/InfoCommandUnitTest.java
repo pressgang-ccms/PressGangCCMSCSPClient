@@ -26,7 +26,7 @@ import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
@@ -44,7 +44,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({ClientUtilities.class, RESTProviderFactory.class})
+@PrepareForTest({CSTransformer.class, RESTProviderFactory.class})
 public class InfoCommandUnitTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -120,8 +120,8 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         given(topics.getItems()).willReturn(topicList);
         given(topicWrapper.getXml()).willReturn(contentSpecTitle);
         // and the content spec will be successfully transformed
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
 
         // When the command is executed
         command.process();

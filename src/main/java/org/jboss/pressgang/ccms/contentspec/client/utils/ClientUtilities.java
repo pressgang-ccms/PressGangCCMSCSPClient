@@ -39,7 +39,6 @@ import org.jboss.pressgang.ccms.contentspec.entities.Spec;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.UserProvider;
@@ -444,18 +443,6 @@ public class ClientUtilities {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Transforms a Content Specification wrapped entity into a POJO Content Spec object,
-     *
-     * @param contentSpec     The Content Spec entity to be transformed.
-     * @param providerFactory The Factory to create Providers to get Entities from a Datasource.
-     * @return The POJO ContentSpec object created from the Content Spec entity.
-     */
-    public static ContentSpec transformContentSpec(final ContentSpecWrapper contentSpec, final DataProviderFactory providerFactory) {
-        final CSTransformer transformer = new CSTransformer();
-        return transformer.transform(contentSpec, providerFactory);
     }
 
     /**

@@ -529,20 +529,6 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldTransformContentSpec() {
-        // Given a valid content spec wrapper
-        TestUtil.setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
-
-        // When transforming a content spec
-        ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecWrapper, providerFactory);
-
-        // Then check that the details were set
-        assertNotNull(contentSpec);
-        assertThat(contentSpec.getTitle(), is(randomAlphanumString));
-        assertThat(contentSpec.getId(), is(id));
-    }
-
-    @Test
     public void shouldGenerateEmptyStringForEmptySpecList() {
         // Given a SpecList with no data
         SpecList specList = new SpecList();

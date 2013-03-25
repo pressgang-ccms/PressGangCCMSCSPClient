@@ -6,17 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.TranslatedCSNodeProvider;
-import org.jboss.pressgang.ccms.provider.TranslatedCSNodeStringProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedTopicProvider;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
-import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeStringWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
@@ -55,8 +53,7 @@ public class TranslationUtilities {
             nodes.addAll(translatableString.getNodeCollections());
         }
 
-        final UpdateableCollectionWrapper<TranslatedCSNodeWrapper> translatedNodes = createCSTranslatedNodes(providerFactory,
-                contentSpecEntity, nodes);
+        final UpdateableCollectionWrapper<TranslatedCSNodeWrapper> translatedNodes = createCSTranslatedNodes(providerFactory, nodes);
         translatedContentSpec.setTranslatedNodes(translatedNodes);
 
         return translatedContentSpec;
@@ -66,16 +63,15 @@ public class TranslationUtilities {
      * Creates a list of Content Spec Translated Node entities from a list of Content Spec node entities.
      *
      * @param providerFactory The factory to produce entity providers to lookup entity details.
-     * @param contentSpec     The content spec object the nodes belong to.
      * @param nodes           The nodes to create the translated nodes for.
      * @return
      */
     public static UpdateableCollectionWrapper<TranslatedCSNodeWrapper> createCSTranslatedNodes(final DataProviderFactory providerFactory,
-            final ContentSpecWrapper contentSpec, final Collection<CSNodeWrapper> nodes) {
+            final Collection<CSNodeWrapper> nodes) {
         final UpdateableCollectionWrapper<TranslatedCSNodeWrapper> translatedNodes = providerFactory.getProvider(
                 TranslatedCSNodeProvider.class).newTranslatedCSNodeCollection();
         for (final CSNodeWrapper node : nodes) {
-            translatedNodes.addNewItem(createCSTranslatedNode(providerFactory, contentSpec, node));
+            translatedNodes.addNewItem(createCSTranslatedNode(providerFactory, node));
         }
 
         return translatedNodes;
@@ -85,34 +81,22 @@ public class TranslationUtilities {
      * Creates a Translated Content Spec Node based on an original Content Spec Node.
      *
      * @param providerFactory The factory to produce entity providers to lookup entity details.
-     * @param contentSpec     The content spec the nodes belong to.
      * @param node            The node to create a translated node for.
      * @return A CSTranslatedNode entity that contains the information from the original node.
      */
-    public static TranslatedCSNodeWrapper createCSTranslatedNode(final DataProviderFactory providerFactory,
-            final ContentSpecWrapper contentSpec, final CSNodeWrapper node) {
+    public static TranslatedCSNodeWrapper createCSTranslatedNode(final DataProviderFactory providerFactory, final CSNodeWrapper node) {
+        final String sourceString;
+        if (node.getNodeType() == CommonConstants.CS_NODE_META_DATA) {
+            sourceString = node.getAdditionalText();
+        } else {
+            sourceString = node.getTitle();
+        }
+
         final TranslatedCSNodeWrapper translatedNode = providerFactory.getProvider(TranslatedCSNodeProvider.class).newTranslatedCSNode();
         translatedNode.setNodeId(node.getId());
         translatedNode.setNodeRevision(node.getRevision());
-
-        final TranslatedCSNodeStringProvider translatedNodeStringProvider = providerFactory.getProvider(
-                TranslatedCSNodeStringProvider.class);
-        final UpdateableCollectionWrapper<TranslatedCSNodeStringWrapper> translatedStrings = translatedNodeStringProvider
-                .newCSTranslatedNodeStringCollection(translatedNode);
-
-        final TranslatedCSNodeStringWrapper translatedNodeString = translatedNodeStringProvider.newTranslatedCSNodeString(translatedNode);
-        translatedNodeString.setLocale(contentSpec.getLocale());
-        translatedNodeString.setOriginalString(node.getAdditionalText());
-        translatedNodeString.setTranslatedString(node.getAdditionalText());
-        translatedNodeString.setFuzzy(false);
-        translatedStrings.addNewItem(translatedNodeString);
-
-        translatedNode.setTranslatedStrings(translatedStrings);
+        translatedNode.setOriginalString(sourceString);
 
         return translatedNode;
-    }
-
-    public static void processConditionsForTopic(final SpecTopic specTopic) {
-
     }
 }

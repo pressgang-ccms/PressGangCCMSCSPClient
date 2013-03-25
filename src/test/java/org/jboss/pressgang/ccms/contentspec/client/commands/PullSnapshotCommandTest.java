@@ -35,6 +35,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
@@ -53,7 +54,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, CSTransformer.class})
 public class PullSnapshotCommandTest extends BaseUnitTest {
     private static final String CONTENTSPEC_TITLE = "ContentSpec";
 
@@ -182,7 +183,8 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
         // and the transformer returns a content spec
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the content spec will return some string
         given(contentSpec.toString()).willReturn(randomString);
 
@@ -223,7 +225,8 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
         // and the transformer returns a content spec
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the content spec will return some string
         given(contentSpec.toString()).willReturn(randomString);
         // and the command should call some real methods in ClientUtilities

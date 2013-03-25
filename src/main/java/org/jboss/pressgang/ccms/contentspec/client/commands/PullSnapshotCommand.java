@@ -18,6 +18,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -114,7 +115,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Transform the content spec
-        final ContentSpec contentSpec = ClientUtilities.transformContentSpec(contentSpecEntity, getProviderFactory());
+        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();

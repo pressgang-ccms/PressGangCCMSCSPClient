@@ -29,9 +29,9 @@ import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
@@ -49,7 +49,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, CSTransformer.class})
 public class SnapshotCommandTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -164,8 +164,8 @@ public class SnapshotCommandTest extends BaseUnitTest {
         // And a matching content spec
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works successfully
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(spec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(spec);
         // and the content spec has some data
         spec.setId(id);
         spec.setChecksum(checksum);
@@ -199,8 +199,8 @@ public class SnapshotCommandTest extends BaseUnitTest {
         // And a matching content spec
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works successfully
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the processing fails
         given(command.getProcessor()).willReturn(processor);
         given(processor.processContentSpec(eq(contentSpec), any(UserWrapper.class), eq(ContentSpecParser.ParsingMode.EDITED))).willReturn(
@@ -231,8 +231,8 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getId()).willReturn(id);
         given(contentSpecWrapper.getRevision()).willReturn(revision);
         // and the transform works successfully
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the content spec has some data
         given(contentSpec.getId()).willReturn(id);
         given(contentSpec.getChecksum()).willReturn(checksum);

@@ -13,7 +13,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -53,6 +52,7 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.BlobConstantProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
@@ -77,7 +77,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class, CSTransformer.class})
 public class BuildCommandTest extends BaseUnitTest {
     private static final String BOOK_TITLE = "Test";
     private static final String DUMMY_SPEC_FILE = "Test.contentspec";
@@ -195,8 +195,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // Given a content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
 
         // When getting the content spec
         final ContentSpec contentSpec = command.getContentSpec(id.toString());
@@ -260,8 +260,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and an invalid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(false);
@@ -285,15 +285,16 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the fetch pubsnumber is set
         command.setFetchPubsnum(true);
+        PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenReturn(randomNumber);
         // and we want to inject a place to stop processing
         command.setZanataUrl("test");
@@ -321,15 +322,16 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the fetch pubsnumber is set
         command.setFetchPubsnum(true);
+        PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new KojiException(""));
 
         // When processing the command
@@ -354,15 +356,16 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the fetch pubsnumber is set
         command.setFetchPubsnum(true);
+        PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new MalformedURLException());
 
         // When processing the command
@@ -389,9 +392,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -403,6 +406,7 @@ public class BuildCommandTest extends BaseUnitTest {
         command.setZanataProject(randomString);
         command.setZanataVersion(randomNumber.toString());
         // and the fixHostURL will return the input string
+        PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.fixHostURL(anyString())).thenReturn(randomString);
         // and we make a way to kill the processing after the setup
         doThrow(new CheckExitCalled(-2)).when(command).getBuilder();
@@ -455,9 +459,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -490,9 +494,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -526,9 +530,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -573,10 +577,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -623,9 +626,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -670,9 +673,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -689,8 +692,6 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
         FileUtilities.saveFile(any(File.class), any(byte[].class));
-        // and some real methods should be called
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
 
         // When the command is processing
         try {
@@ -719,8 +720,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.transformContentSpec(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        PowerMockito.mockStatic(CSTransformer.class);
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and the content spec has a title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and a valid content spec
@@ -739,10 +740,6 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(FileUtilities.class);
         FileUtilities.saveFile(any(File.class), any(byte[].class));
-        // and some real methods should be called
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.prepareAndValidateStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
-        when(ClientUtilities.prepareStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
 
         // When the command is processing
         try {
