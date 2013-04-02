@@ -17,7 +17,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.client.utils.TranslationUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.TranslationUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
@@ -38,6 +38,7 @@ import org.jboss.pressgang.ccms.utils.structures.Pair;
 import org.jboss.pressgang.ccms.utils.structures.StringToNodeCollection;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
@@ -68,9 +69,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM,
             description = "The Zanata project version to be associated with the Content Specification.")
     private String zanataVersion = null;
-
-    @Parameter(names = Constants.TOPICS_ONLY_LONG_PARAM, description = "Only push the topics in the content specification to Zanata.")
-    private Boolean topicsOnly = false;
 
     @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
             description = "Answer \"yes\" to any and all questions that might be asked.")
@@ -126,14 +124,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     public void setAnswerYes(Boolean answerYes) {
         this.answerYes = answerYes;
-    }
-
-    public Boolean getTopicsOnly() {
-        return topicsOnly;
-    }
-
-    public void setTopicsOnly(Boolean topicsOnly) {
-        this.topicsOnly = topicsOnly;
     }
 
     @Override
@@ -346,7 +336,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        final float total = topics.size() + (topicsOnly ? 0 : 1);
+        final float total = topics.size() + 1;
         float current = 0;
         final int showPercent = 5;
         int lastPercent = 0;
@@ -365,24 +355,35 @@ public class PushTranslationCommand extends BaseCommandImpl {
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             JCommander.getConsole().println("Starting to push topics to zanata...");
 
-            // Loop through each topic and upload it to zanata
-            for (final Entry<TopicWrapper, SpecTopic> topicEntry : topicToSpecTopic.entrySet()) {
-                ++current;
-                final int percent = Math.round(current / total * 100);
-                if (percent - lastPercent >= showPercent) {
-                    lastPercent = percent;
-                    JCommander.getConsole().println("\tPushing topics to zanata " + percent + "% Done");
-                }
+            // Upload the content specification to zanata first so we can reference the nodes when pushing topics
+            final TranslatedContentSpecWrapper translatedContentSpec = pushContentSpecToZanata(providerFactory, contentSpecEntity,
+                    zanataInterface, messages);
+            if (translatedContentSpec == null) {
+                error = true;
+            } else {
+                // Loop through each topic and upload it to zanata
+                for (final Entry<TopicWrapper, SpecTopic> topicEntry : topicToSpecTopic.entrySet()) {
+                    ++current;
+                    final int percent = Math.round(current / total * 100);
+                    if (percent - lastPercent >= showPercent) {
+                        lastPercent = percent;
+                        JCommander.getConsole().println("\tPushing topics to zanata " + percent + "% Done");
+                    }
 
-                if (!pushTopicToZanata(providerFactory, topicEntry.getValue(), zanataInterface, messages)) {
-                    error = true;
-                }
-            }
+                    final SpecTopic specTopic = topicEntry.getValue();
 
-            // Upload the content specification to zanata
-            if (!getTopicsOnly()) {
-                if (!pushContentSpecToZanata(providerFactory, contentSpecEntity, zanataInterface, messages)) {
-                    error = true;
+                    // Find the matching translated CSNode and if one can't be found then produce an error.
+                    final TranslatedCSNodeWrapper translatedCSNode = findTopicTranslatedCSNode(translatedContentSpec, specTopic);
+                    if (translatedCSNode == null) {
+                        final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+                        messages.add(
+                                "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+                        error = true;
+                    } else {
+                        if (!pushTopicToZanata(providerFactory, specTopic, translatedCSNode, zanataInterface, messages)) {
+                            error = true;
+                        }
+                    }
                 }
             }
         }
@@ -398,6 +399,18 @@ public class PushTranslationCommand extends BaseCommandImpl {
         return !error;
     }
 
+    protected TranslatedCSNodeWrapper findTopicTranslatedCSNode(final TranslatedContentSpecWrapper translatedContentSpec,
+            final SpecTopic specTopic) {
+        final List<TranslatedCSNodeWrapper> translatedCSNodes = translatedContentSpec.getTranslatedNodes().getItems();
+        for (final TranslatedCSNodeWrapper translatedCSNode : translatedCSNodes) {
+            if (translatedCSNode.getNodeId().equals(specTopic.getUniqueId())) {
+                return translatedCSNode;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @param providerFactory
      * @param specTopic
@@ -406,7 +419,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
      * @return True if the topic was pushed successful otherwise false.
      */
     protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, final SpecTopic specTopic,
-            final ZanataInterface zanataInterface, final List<String> messages) {
+            final TranslatedCSNodeWrapper translatedCSNode, final ZanataInterface zanataInterface, final List<String> messages) {
         final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
         final Document doc = specTopic.getXmlDocument();
         boolean error = false;
@@ -414,7 +427,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
 
         // Create the zanata id based on whether a condition has been specified or not
-        final String zanataId = getTopicZanataId(specTopic);
+        final String zanataId = getTopicZanataId(specTopic, translatedCSNode);
 
         // Check if the zanata document already exists, if it does than the topic can be ignored.
         final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
@@ -457,7 +470,15 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
                 error = true;
             } else if (!translatedTopicExists) {
-                final TranslatedTopicWrapper translatedTopic = TranslationUtilities.createTranslatedTopic(providerFactory, topic);
+                // Create the Translated Topic based on if it has a condition or not.
+                final TranslatedTopicWrapper translatedTopic;
+                if (condition == null) {
+                    translatedTopic = TranslationUtilities.createTranslatedTopic(providerFactory, topic, null, null);
+                } else {
+                    translatedTopic = TranslationUtilities.createTranslatedTopic(providerFactory, topic, translatedCSNode, condition);
+                }
+
+                // Save the Translated Topic
                 try {
                     if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
                         messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
@@ -480,17 +501,18 @@ public class PushTranslationCommand extends BaseCommandImpl {
     /**
      * Gets the Zanata ID for a topic based on whether or not the topic has any conditional text.
      *
-     * @param specTopic The topic to create the Zanata ID for.
+     * @param specTopic        The topic to create the Zanata ID for.
+     * @param translatedCSNode
      * @return The unique Zanata ID that can be used to create a document in Zanata.
      */
-    protected String getTopicZanataId(final SpecTopic specTopic) {
+    protected String getTopicZanataId(final SpecTopic specTopic, final TranslatedCSNodeWrapper translatedCSNode) {
         final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
         Map<Node, List<String>> conditionNodes = DocBookUtilities.getConditionNodes(specTopic.getXmlDocument());
 
         // Create the zanata id based on whether a condition has been specified or not
         final String zanataId;
         if (specTopic.getConditionStatement(true) != null && !conditionNodes.isEmpty()) {
-            zanataId = topic.getId() + "-" + topic.getRevision() + "-" + specTopic.getUniqueId();
+            zanataId = topic.getId() + "-" + topic.getRevision() + "-" + translatedCSNode.getId();
         } else {
             zanataId = topic.getId() + "-" + topic.getRevision();
         }
@@ -503,21 +525,18 @@ public class PushTranslationCommand extends BaseCommandImpl {
      * @param contentSpecEntity
      * @param zanataInterface
      * @param messages
-     * @return True if the content spec was pushed successful otherwise false.
+     * @return
      */
-    protected boolean pushContentSpecToZanata(final DataProviderFactory providerFactory, final ContentSpecWrapper contentSpecEntity,
-            final ZanataInterface zanataInterface, final List<String> messages) {
-        boolean error = false;
-
+    protected TranslatedContentSpecWrapper pushContentSpecToZanata(final DataProviderFactory providerFactory,
+            final ContentSpecWrapper contentSpecEntity, final ZanataInterface zanataInterface, final List<String> messages) {
         final TranslatedContentSpecProvider translatedContentSpecProvider = providerFactory.getProvider(
                 TranslatedContentSpecProvider.class);
         final String zanataId = "CS" + contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
         final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
+        TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getTranslatedContentSpecById(providerFactory,
+                contentSpecEntity.getId(), contentSpecEntity.getRevision());
 
         if (zanataFile == null) {
-            final boolean translatedContentSpecExists = EntityUtilities.getTranslatedContentSpecById(providerFactory,
-                    contentSpecEntity.getId(), contentSpecEntity.getRevision()) != null;
-
             final Resource resource = new Resource();
 
             resource.setContentType(ContentType.TextPlain);
@@ -542,24 +561,27 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 }
             }
 
+            // Create the document in Zanata
             if (!zanataInterface.createFile(resource)) {
                 messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
                         "failed to be created in Zanata.");
-                error = true;
-            } else if (!translatedContentSpecExists) {
-                // Save the translated content spec
-                final TranslatedContentSpecWrapper translatedContentSpec = TranslationUtilities.createTranslatedContentSpec(providerFactory,
-                        contentSpecEntity, translatableStrings);
+                return null;
+            } else if (translatedContentSpec == null) {
+                // Create the Translated Content Spec and it's nodes
+                final TranslatedContentSpecWrapper newTranslatedContentSpec = TranslationUtilities.createTranslatedContentSpec(
+                        providerFactory, contentSpecEntity);
                 try {
-                    if (translatedContentSpecProvider.createTranslatedContentSpec(translatedContentSpec) == null) {
+                    // Save the translated content spec
+                    translatedContentSpec = translatedContentSpecProvider.createTranslatedContentSpec(newTranslatedContentSpec);
+                    if (translatedContentSpec == null) {
                         messages.add("Content Spec ID " + contentSpecEntity.getId() + ", " +
                                 "Revision " + contentSpecEntity.getRevision() + " failed to be created in PressGang.");
-                        error = true;
+                        return null;
                     }
                 } catch (Exception e) {
                     messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
                             "failed to be created in PressGang.");
-                    error = true;
+                    return null;
                 }
             }
         } else {
@@ -567,7 +589,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     "exists - Skipping.");
         }
 
-        return !error;
+        return translatedContentSpec;
     }
 
     @Override
