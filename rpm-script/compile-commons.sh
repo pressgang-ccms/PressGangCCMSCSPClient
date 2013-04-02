@@ -3,7 +3,7 @@
 # The projects need a higher version of maven than is available 
 # as an RPM in RHEL, so allow an override
 if [ -z "$MAVEN_BIN" ] && [ -z "$MAVEN_HOME" ]; then
-	MAVEN_BIN=/opt/apache-maven-3.0.4/bin/mvn
+	MAVEN_BIN=/usr/bin/mvn
 elif [ -z "$MAVEN_BIN" ]; then
 	MAVEN_BIN="$MAVEN_HOME"/bin/mvn
 fi
@@ -14,7 +14,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 function error()
 {
-  echo "An Error occured. Exiting..."
+  echo "An Error occurred. Exiting..."
   popd
   exit 1
 }
