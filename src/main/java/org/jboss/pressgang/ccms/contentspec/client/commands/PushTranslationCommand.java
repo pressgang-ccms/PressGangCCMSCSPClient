@@ -128,6 +128,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     @Override
     public boolean validateServerUrl() {
+        setupZanataOptions();
         if (!super.validateServerUrl()) return false;
 
         final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
@@ -176,7 +177,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     protected boolean isValid() {
-        setupZanataOptions();
         final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Check that we even have some zanata details.
@@ -319,7 +319,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                             "ERROR: Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " does not have valid XML");
                     error = true;
                 } else {
-                    specTopic.setXmlDocument(doc);
+                    specTopic.setXMLDocument(doc);
                     topicToSpecTopic.put(topic, specTopic);
                 }
             }
@@ -421,7 +421,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, final SpecTopic specTopic,
             final TranslatedCSNodeWrapper translatedCSNode, final ZanataInterface zanataInterface, final List<String> messages) {
         final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
-        final Document doc = specTopic.getXmlDocument();
+        final Document doc = specTopic.getXMLDocument();
         boolean error = false;
 
         final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
@@ -507,7 +507,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
      */
     protected String getTopicZanataId(final SpecTopic specTopic, final TranslatedCSNodeWrapper translatedCSNode) {
         final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
-        Map<Node, List<String>> conditionNodes = DocBookUtilities.getConditionNodes(specTopic.getXmlDocument());
+        Map<Node, List<String>> conditionNodes = DocBookUtilities.getConditionNodes(specTopic.getXMLDocument());
 
         // Create the zanata id based on whether a condition has been specified or not
         final String zanataId;
