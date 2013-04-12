@@ -43,6 +43,7 @@ import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.config.ZanataServerConfiguration;
 import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.entities.RESTVersionDecorator;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
 import org.apache.commons.configuration.ConfigurationException;
@@ -221,6 +222,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // Create the REST Manager
             restManager = new RESTManager(command.getPressGangServerUrl());
+            restManager.getProxyFactory().registerProvider(RESTVersionDecorator.class);
 
             // Good point to check for a shutdown
             if (isAppShuttingDown()) {

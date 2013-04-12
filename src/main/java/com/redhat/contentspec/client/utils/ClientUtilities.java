@@ -46,6 +46,7 @@ import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.utils.common.StringUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -487,6 +488,19 @@ public class ClientUtilities {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Fixes a Content Specs CHECKSUM to match the content of the Content Spec.
+     *
+     * @param contentSpec The content spec to be fixed.
+     * @return The fixed Content Specifcation.
+     */
+    public static String fixContentSpecChecksum(final String contentSpec) {
+        String contentSpecData = contentSpec.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
+        final String checksum = HashUtilities.generateMD5(contentSpecData);
+
+        return "CHECKSUM=" + checksum + "\n" + contentSpecData;
     }
 }
 

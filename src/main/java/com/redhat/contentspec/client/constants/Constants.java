@@ -255,6 +255,8 @@ public class Constants {
 
     public static final String BUG_REPORTING_LONG_PARM = "--hide-bug-links";
 
+    public static final String FORCE_BUG_REPORTING_LONG_PARM = "--force-bug-links";
+
     public static final String POST_LONG_PARAM = "--post";
 
     public static final String NO_BUILD_LONG_PARAM = "--no-build";
