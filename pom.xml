@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>0.29.5</version>
+    <version>0.31.0</version>
     <name>Content Specification Processor Client</name>
 
     <properties>
@@ -117,6 +117,35 @@
     </build>
 
     <dependencies>
+        <!-- Custom classes from internal repo -->
+        <dependency>
+            <groupId>org.jboss.pressgang.ccms.contentspec</groupId>
+            <artifactId>csbuilder</artifactId>
+            <version>0.1.8-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.pressgang.ccms.contentspec</groupId>
+            <artifactId>csprocessor</artifactId>
+            <version>0.0.5-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.pressgang.ccms</groupId>
+            <artifactId>j2koji</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.pressgang.ccms</groupId>
+            <artifactId>jcommander-extended</artifactId>
+            <version>1.24-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Apache Commons Libraries -->
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>${commonsconfiguration.version}</version>
+        </dependency>
+
         <!-- Jackson Libraries -->
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
@@ -176,7 +205,7 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.pressgang.ccms</groupId>
-            <artifactId>jcommander-extended</artifactId>
+            <artifactId>jcommander-pressgang</artifactId>
             <version>${jcommander.version}</version>
         </dependency>
 

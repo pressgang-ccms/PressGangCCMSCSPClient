@@ -1,6 +1,7 @@
-package org.jboss.pressgang.ccms.contentspec.client;
+package com.redhat.contentspec.client;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -205,6 +206,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                 // Create the Provider Factory
                 providerFactory = RESTProviderFactory.create(command.getPressGangServerUrl());
+                providerFactory.getRESTManager().getProxyFactory().registerProvider(RESTVersionDecorator.class);
             }
 
             // Print a line to separate content
@@ -919,8 +921,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Override
     public boolean isShutdown() {
-        // If a command is processing check if its shutdown, otherwise check the root client if it's okay to shutdown
-        return command != null && command != this && isProcessingCommand.get() ? command.isShutdown() : shutdown.get();
+        boolean processingSubCommand = command != null && command != this && isProcessingCommand.get();
+        return processingSubCommand ? command.isShutdown() : shutdown.get();
     }
 
     @Override
