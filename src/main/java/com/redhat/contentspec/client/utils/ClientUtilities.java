@@ -15,6 +15,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -278,7 +279,7 @@ public class ClientUtilities {
             }
             fixedEnvVariables = envVars.toArray(new String[envVars.size()]);
 
-            final Process p = Runtime.getRuntime().exec(command, fixedEnvVariables, dir);
+            final Process p = Runtime.getRuntime().exec(splitCommandArguments(command), fixedEnvVariables, dir);
 
             // Create a separate thread to read the stderr stream
             final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
@@ -325,6 +326,35 @@ public class ClientUtilities {
             e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * Split a command into an array of arguments that can be passed to Runtime.exec().
+     *
+     * @param command The command to be split
+     * @return The split command.
+     */
+    protected static String[] splitCommandArguments(String command) {
+        String[] args = command.split(" ");
+        List<String> commandArgs = new LinkedList<String>();
+        boolean quotes = false;
+        StringBuilder quotesString = null;
+        for (final String arg : args) {
+            if (arg.startsWith("\"") && !quotes) {
+                quotes = true;
+                quotesString = new StringBuilder(arg.substring(1)).append(" ");
+            } else if (arg.endsWith("\"") && quotes) {
+                quotes = false;
+                quotesString.append(arg.substring(0, arg.length() - 1));
+                commandArgs.add(quotesString.toString());
+            } else if (quotes) {
+                quotesString.append(arg).append(" ");
+            } else {
+                commandArgs.add(arg);
+            }
+        }
+
+        return commandArgs.toArray(new String[commandArgs.size()]);
     }
 
     /**

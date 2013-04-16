@@ -192,9 +192,9 @@ public class AssembleCommand extends BuildCommand {
 		
 		// Replace the locale in the build options if the locale has been set
 		if (getOutputLocale() != null)
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
 		else if (getLocale() != null)
-			publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+			publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
 		
 		try
 		{

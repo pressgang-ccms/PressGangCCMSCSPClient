@@ -206,9 +206,9 @@ public class PublishCommand extends BuildCommand {
 
             // Replace the locale in the build options if the locale has been set
             if (getOutputLocale() != null)
-                publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
+                publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
             else if (getLocale() != null)
-                publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+                publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
 
             try {
                 JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
@@ -226,9 +226,11 @@ public class PublishCommand extends BuildCommand {
         String publishCommand = cspConfig.getPublishCommand();
 
         // Replace the locale in the build options if the locale has been set
-        if (getOutputLocale() != null)
-            publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
-        else if (getLocale() != null) publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+        if (getOutputLocale() != null) {
+            publishCommand = publishCommand.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--lang=" + getOutputLocale());
+        } else if (getLocale() != null) {
+            publishCommand = publishCommand.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--lang=" + getLocale());
+        }
 
         // Add the message to the script
         if (message != null) publishCommand += " -m \"" + message + "\"";
