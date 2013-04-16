@@ -73,6 +73,10 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.BUG_REPORTING_LONG_PARM, description = "Hide the bug reporting links in the output.")
     private Boolean hideBugLinks = false;
 
+    @Parameter(names = Constants.FORCE_BUG_REPORTING_LONG_PARM, description = "Forcibly show the bug reporting links in the output.",
+            hidden = true)
+    private Boolean forceBugLinks = false;
+
     @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM},
             description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
     private String outputPath;
@@ -249,6 +253,14 @@ public class BuildCommand extends BaseCommandImpl {
 
     public void setInsertEditorLinks(final Boolean insertEditorLinks) {
         this.insertEditorLinks = insertEditorLinks;
+    }
+
+    public Boolean getForceBugLinks() {
+        return forceBugLinks;
+    }
+
+    public void setForceBugLinks(final Boolean forceBugLinks) {
+        this.forceBugLinks = forceBugLinks;
     }
 
     public String getLocale() {
@@ -497,6 +509,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setRevisionMessages(getMessage());
         buildOptions.setUseLatestVersions(getUseLatestVersions());
         buildOptions.setFlattenTopics(getFlattenTopics());
+        buildOptions.setForceInjectBugzillaLinks(getForceBugLinks());
 
         return buildOptions;
     }

@@ -1,4 +1,4 @@
-package com.redhat.contentspec.client.entities;
+package org.jboss.pressgang.ccms.contentspec.client.entities;
 
 import javax.ws.rs.ext.Provider;
 

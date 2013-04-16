@@ -71,9 +71,9 @@ public class PublishCommand extends AssembleCommand {
 
         // Replace the locale in the build options if the locale has been set
         if (getTargetLocale() != null) {
-            publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
+            publishCommand = publishCommand.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--lang=" + getTargetLocale());
         } else if (getLocale() != null) {
-            publishCommand = publishCommand.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+            publishCommand = publishCommand.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--lang=" + getLocale());
         }
 
         // Add the message to the script

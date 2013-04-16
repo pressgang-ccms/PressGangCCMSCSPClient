@@ -1,7 +1,6 @@
-package com.redhat.contentspec.client;
+package org.jboss.pressgang.ccms.contentspec.client;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -16,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import org.jboss.pressgang.ccms.contentspec.client.entities.RESTVersionDecorator;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;

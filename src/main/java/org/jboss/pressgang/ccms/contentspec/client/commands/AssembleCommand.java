@@ -232,9 +232,9 @@ public class AssembleCommand extends BuildCommand {
 
         // Replace the locale in the build options if the locale has been set
         if (getTargetLocale() != null) {
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
         } else if (getLocale() != null) {
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?=[A-Za-z\\-,]+", "--langs=" + getLocale());
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
         }
 
         try {

@@ -30,6 +30,7 @@ public class StatusCommand extends BaseCommandImpl {
     }
 
     @Override
+    // TODO Port through the fix to allow this command to work on any file
     public void process() {
         final List<Integer> ids = new ArrayList<Integer>();
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
