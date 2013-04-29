@@ -3,8 +3,8 @@ Summary: Content Specification Processor client application
 License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 0.30.1
-Release: 3
+Version: 0.30.2
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,6 +38,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
+* Mon Apr 22 2013 lnewson
+- Added a way to compress build output to speed up publican builds
 * Tue Apr 16 2013 lnewson
 - Fixed a bug that was causing "create" actions to fail
 - Fixed a bug where assembling translations would fail under certain configs

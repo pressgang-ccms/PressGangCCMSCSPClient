@@ -135,6 +135,9 @@ public class BuildCommand extends BaseCommandImpl {
             description = "Automatically answer \"yes\" to any questions.")
     private Boolean answerYes = false;
 
+    @Parameter(names = Constants.SERVER_BUILD_LONG_PARAM, hidden = true)
+    private Boolean serverBuild = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -350,6 +353,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.answerYes = answerYes;
     }
 
+    public Boolean getServerBuild() {
+        return serverBuild;
+    }
+
+    public void setServerBuild(Boolean serverBuild) {
+        this.serverBuild = serverBuild;
+    }
+
     public CSDocbookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
@@ -375,6 +386,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setUseLatestVersions(update);
         buildOptions.setFlattenTopics(getFlattenTopics());
         buildOptions.setForceInjectBugzillaLinks(forceBugLinks);
+        buildOptions.setServerBuild(serverBuild);
 
         return buildOptions;
     }
@@ -679,7 +691,17 @@ public class BuildCommand extends BaseCommandImpl {
 
     @Override
     public RESTUserV1 authenticate(final RESTReader reader) {
-        return authenticate(getUsername(), reader);
+        final String username = getUsername();
+        RESTUserV1 user = null;
+        if (username != null && !username.equals("")) {
+            user = ClientUtilities.authenticateUser(username, reader);
+        }
+
+        if (user == null) {
+            return ClientUtilities.authenticateUser("Unknown", reader);
+        } else {
+            return user;
+        }
     }
 
     @Override
@@ -708,7 +730,7 @@ public class BuildCommand extends BaseCommandImpl {
         JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
 
         // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(getServerUrl())) {
+        if (!ClientUtilities.validateServerExists(getPressGangServerUrl())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
@@ -718,8 +740,8 @@ public class BuildCommand extends BaseCommandImpl {
 
         /*
          * Check the KojiHub server url to ensure that it exists
-		 * if the user wants to fetch the pubsnumber from koji.
-		 */
+         * if the user wants to fetch the pubsnumber from koji.
+         */
         if (fetchPubsnum) {
             // Print the kojihub server url
             JCommander.getConsole().println(String.format(Constants.KOJI_WEBSERVICE_MSG, cspConfig.getKojiHubUrl()));
@@ -735,9 +757,9 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         /*
-		 * Check the Zanata server url and Project/Version to ensure that it
-		 * exists if the user wants to insert editor links for translations.
-		 */
+         * Check the Zanata server url and Project/Version to ensure that it
+         * exists if the user wants to insert editor links for translations.
+         */
         if (insertEditorLinks && locale != null) {
             setupZanataOptions();
 

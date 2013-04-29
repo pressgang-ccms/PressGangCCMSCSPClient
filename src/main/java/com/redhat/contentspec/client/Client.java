@@ -34,6 +34,7 @@ import com.redhat.contentspec.client.commands.SearchCommand;
 import com.redhat.contentspec.client.commands.SetupCommand;
 import com.redhat.contentspec.client.commands.SnapshotCommand;
 import com.redhat.contentspec.client.commands.StatusCommand;
+import com.redhat.contentspec.client.commands.SyncTranslationCommand;
 import com.redhat.contentspec.client.commands.TemplateCommand;
 import com.redhat.contentspec.client.commands.ValidateCommand;
 import com.redhat.contentspec.client.commands.base.BaseCommand;
@@ -43,7 +44,6 @@ import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.config.ZanataServerConfiguration;
 import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
-import com.redhat.contentspec.client.entities.RESTVersionDecorator;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
 import org.apache.commons.configuration.ConfigurationException;
@@ -213,6 +213,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             }
 
             // Check that the server Urls are valid
+            isProcessing.set(true);
             command.validateServerUrl();
             final String uiServerURL = command.getServerUrl().replace("/TopicIndex/", "/pressgang-ccms-ui/");
             System.setProperty(CommonConstants.PRESS_GANG_UI_SYSTEM_PROPERTY, uiServerURL);
@@ -222,7 +223,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // Create the REST Manager
             restManager = new RESTManager(command.getPressGangServerUrl());
-            restManager.getProxyFactory().registerProvider(RESTVersionDecorator.class);
+            //restManager.getProxyFactory().registerProvider(RESTVersionDecorator.class);
 
             // Good point to check for a shutdown
             if (isAppShuttingDown()) {
@@ -231,7 +232,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             }
 
             // Process the commands
-            isProcessing.set(true);
             final RESTUserV1 user = command.authenticate(restManager.getReader());
             command.process(restManager, elm, user);
             isProcessing.set(false);
@@ -274,6 +274,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final SetupCommand setup = new SetupCommand(parser, cspConfig, clientConfig);
         final SnapshotCommand snapshot = new SnapshotCommand(parser, cspConfig, clientConfig);
         final StatusCommand status = new StatusCommand(parser, cspConfig, clientConfig);
+        final SyncTranslationCommand syncTranslation = new SyncTranslationCommand(parser, cspConfig, clientConfig);
         final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
         final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
 
@@ -330,6 +331,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
         parser.addCommand(Constants.STATUS_COMMAND_NAME, status);
         commands.put(Constants.STATUS_COMMAND_NAME, status);
+
+        parser.addCommand(Constants.SYNC_TRANSLATION_COMMAND_NAME, syncTranslation);
+        commands.put(Constants.SYNC_TRANSLATION_COMMAND_NAME, syncTranslation);
 
         parser.addCommand(Constants.TEMPLATE_COMMAND_NAME, template);
         commands.put(Constants.TEMPLATE_COMMAND_NAME, template);

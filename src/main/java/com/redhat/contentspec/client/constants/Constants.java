@@ -71,6 +71,7 @@ public class Constants {
     public static final String SETUP_COMMAND_NAME = "setup";
     public static final String SNAPSHOT_COMMAND_NAME = "snapshot";
     public static final String STATUS_COMMAND_NAME = "status";
+    public static final String SYNC_TRANSLATION_COMMAND_NAME = "sync-translation";
     public static final String TEMPLATE_COMMAND_NAME = "template";
     public static final String VALIDATE_COMMAND_NAME = "validate";
 
@@ -86,12 +87,12 @@ public class Constants {
     public static final String NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER = "No Zanata server was found for the specified default.";
     public static final String NO_SERVER_USERNAME_MSG = "No Username was specified for the \"%s\" server in the configuration files.";
     public static final String NO_SERVER_URL_MSG = "No Server URL was specified for the \"%s\" server in the configuration files.";
-    public static final String NO_ZANATA_SERVER_URL_MSG = "No Zanata Server URL was specified for the \"%s\" zanat server in the " +
+    public static final String NO_ZANATA_SERVER_URL_MSG = "No Zanata Server URL was specified for the \"%s\" zanata server in the " +
             "configuration files.";
     public static final String UNABLE_TO_FIND_SERVER_MSG = "Cannot connect to the server, as the server address can't be resolved.";
     public static final String FILE_EXISTS_OVERWRITE_MSG = "%s already exists! Overwrite existing file (y/n)? ";
-    public static final String ERROR_FAILED_SAVING = "An error occured while trying to save the file.";
-    public static final String ERROR_FAILED_SAVING_FILE = "An error occured while trying to save %s.";
+    public static final String ERROR_FAILED_SAVING = "An error occurred while trying to save the file.";
+    public static final String ERROR_FAILED_SAVING_FILE = "An error occurred while trying to save %s.";
     public static final String LIST_ERROR_MSG = "There are %s Content Specs on this server. You should probably use \"csprocessor " +
             "search\" if you have an idea what you are looking for. Otherwise, rerun the list command, " +
             "and this time use the --limit <NUMBER>";
@@ -110,8 +111,8 @@ public class Constants {
     public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG = "Unable to assemble the Content Specification because the \"%s\" file " +
             "couldn't be found.";
     public static final String ERROR_FAILED_TO_ASSEMBLE_MSG = "The content specification failed to be assembled.";
-    public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occured while " +
-            "running Publican.";
+    public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
+            " running Publican.";
     public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
             "occured while running Publican. (exit code: %d)";
     public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG = "Unable to preview the Content Specification because the \"%s\" " +
@@ -141,13 +142,13 @@ public class Constants {
             "snapshot couldn't be pulled.";
     public static final String ERROR_FAILED_TO_CLEAN_ASSEMBLY = "The assembly directory was unable to be emptied. Please close an open " +
             "previews and try again.";
-    public static final String ERROR_FAILED_FETCH_PUBSNUM = "An error occured when fetching the pubsnumber from " + Constants.KOJI_NAME +
+    public static final String ERROR_FAILED_FETCH_PUBSNUM = "An error occurred when fetching the pubsnumber from " + Constants.KOJI_NAME +
             ".";
     public static final String ERROR_INVALID_KOJIHUB_URL = "The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure" +
             " that the URL is valid.";
-    public static final String ERROR_RUNNING_PUBLISH_MSG = "Unable to publish the Content Specification because an error occured while " +
+    public static final String ERROR_RUNNING_PUBLISH_MSG = "Unable to publish the Content Specification because an error occurred while " +
             "running the publish command.";
-    public static final String ERROR_NO_PUBLISH_COMMAND = "No publish comand or options were found. Please configure these options via " +
+    public static final String ERROR_NO_PUBLISH_COMMAND = "No publish command or options were found. Please configure these options via " +
             "the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
     public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG = "No credentials are setup for the \"%s\" zanata server specified in the" +
             " csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
@@ -157,6 +158,7 @@ public class Constants {
     public static final String ERROR_INVALID_ZANATA_CONFIG_MSG = "No Zanata Project exists for the \"%s\" project at version \"%s\" from:" +
             " %s";
     public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG = "Failed to load the formatting XML Element Properties.";
+    public static final String ERROR_NO_LOCALES_MSG = "No Languages were specified by the command line.";
 
     // Info Messages
     public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
@@ -279,6 +281,8 @@ public class Constants {
 
     public static final String LOCALE_LONG_PARAM = "--lang";
 
+    public static final String LOCALES_LONG_PARAM = "--langs";
+
     public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
 
     public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
@@ -321,4 +325,6 @@ public class Constants {
 
     public static final String YES_LONG_PARAM = "--yes";
     public static final String YES_SHORT_PARAM = "-y";
+
+    public static final String SERVER_BUILD_LONG_PARAM = "--server";
 }

@@ -135,7 +135,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
 
         // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(getServerUrl())) {
+        if (!ClientUtilities.validateServerExists(getPressGangServerUrl())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
@@ -143,6 +143,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_NO_SERVER);
         }
 
+        setupZanataOptions();
         final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
 
         // Print the zanata server url
@@ -188,7 +189,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     protected boolean isValid() {
-        setupZanataOptions();
         final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
 
         // Check that we even have some zanata details.

@@ -8,12 +8,13 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>0.30.1</version>
+    <version>0.31.0</version>
     <name>Content Specification Processor Client</name>
     <url>http://www.github.com/lnewson/csprocessor</url>
 
     <properties>
         <pressgang.ccms.version>1.0-SNAPSHOT</pressgang.ccms.version>
+        <zanata-sync.version>0.0.1-SNAPSHOT</zanata-sync.version>
         <commonsconfiguration.version>1.7</commonsconfiguration.version>
         <jackson.version>1.9.8</jackson.version>
         <resteasy.version>2.3.4.Final</resteasy.version>
@@ -99,6 +100,11 @@
             <groupId>org.jboss.pressgang.ccms</groupId>
             <artifactId>jcommander-pressgang</artifactId>
             <version>1.24-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.pressgang.ccms.services</groupId>
+            <artifactId>zanata-sync-service</artifactId>
+            <version>${zanata-sync.version}</version>
         </dependency>
 
         <!-- Apache Commons Libraries -->
