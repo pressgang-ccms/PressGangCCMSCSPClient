@@ -16,6 +16,7 @@ import org.jboss.pressgang.ccms.contentspec.client.converter.FileConverter;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
+import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
@@ -145,16 +146,15 @@ public class CreateCommand extends BaseCommandImpl {
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(loggerManager.generateLogs());
-        if (success) {
-            Integer revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
-        } else {
-            shutdown(Constants.EXIT_FAILURE);
-        }
-
         // Print the command execution time as saving files shouldn't be included
         if (executionTime) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
+        }
+        if (!success) {
+            shutdown(Constants.EXIT_FAILURE);
+        } else {
+            final Integer revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
+            JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
         }
 
         // Good point to check for a shutdown
