@@ -19,12 +19,14 @@ import com.redhat.contentspec.processor.ContentSpecParser.ParsingMode;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.collections.RESTTopicCollectionV1;
+import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTranslatedTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
@@ -329,10 +331,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Convert all the topics to DOM Documents first so we know if any are invalid
         final List<RESTTopicV1> topicItems = topics.returnItems();
         for (final RESTTopicV1 topic : topicItems) {
-            /*
-             * make sure the section title is the same as the
-             * topic title
-             */
+            // Legal Notices should not be translated, so continue if the topic is one
+            if (ComponentTopicV1.hasTag(topic, CSConstants.LEGAL_NOTICE_TAG_ID)) continue;
+
+            // Convert the string into a DOM Document to allow us to find the translatable nodes
             Document doc = null;
             try {
                 doc = XMLUtilities.convertStringToDocument(topic.getXml());

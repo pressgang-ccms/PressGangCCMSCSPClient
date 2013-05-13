@@ -313,7 +313,6 @@ public class Constants {
     public static final String SHOW_REMARKS_LONG_PARAM = "--show-remarks";
 
     public static final String REV_MESSAGE_LONG_PARAM = "--rev-message";
-    public static final String REV_MESSAGE_SHORT_PARAM = "-m";
 
     public static final String TOPICS_ONLY_LONG_PARAM = "--topics-only";
 
@@ -327,4 +326,8 @@ public class Constants {
     public static final String YES_SHORT_PARAM = "-y";
 
     public static final String SERVER_BUILD_LONG_PARAM = "--server";
+
+    public static final String MESSAGE_SHORT_PARAM = "-m";
+    public static final String MESSAGE_LONG_PARAM = "--message";
+    public static final String REVISION_MESSAGE_FLAG_LONG_PARAMETER = "--rev-history";
 }

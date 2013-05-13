@@ -46,6 +46,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.utils.common.StringUtilities;
@@ -531,6 +532,22 @@ public class ClientUtilities {
         final String checksum = HashUtilities.generateMD5(contentSpecData);
 
         return "CHECKSUM=" + checksum + "\n" + contentSpecData;
+    }
+
+    public static RESTLogDetailsV1 createLogDetails(final RESTUserV1 user, final String message, final boolean isRevisionHistoryMessage) {
+        RESTLogDetailsV1 logDetails = null;
+        if (message != null) {
+            logDetails = new RESTLogDetailsV1();
+            logDetails.setMessage(message);
+            logDetails.setUser(user);
+            if (isRevisionHistoryMessage) {
+                logDetails.setFlag(0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT);
+            } else {
+                logDetails.setFlag(0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT);
+            }
+        }
+
+        return logDetails;
     }
 }
 
