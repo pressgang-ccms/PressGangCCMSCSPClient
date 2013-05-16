@@ -202,6 +202,7 @@ public class Constants {
     public static final int EXIT_TOPIC_INVALID = 8;
     public static final int EXIT_OUT_OF_DATE = 9;
     public static final int EXIT_SHUTDOWN_REQUEST = 10;
+    public static final int EXIT_UPGRADE_REQUIRED = 11;
 
     // Parameter names
     public static final String CONTENT_SPEC_LONG_PARAM = "--content-spec";

@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,6 +45,7 @@ import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.config.ZanataServerConfiguration;
 import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.entities.RESTVersionDecorator;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
 import org.apache.commons.configuration.ConfigurationException;
@@ -55,8 +57,11 @@ import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 
 public class Client implements BaseCommand, ShutdownAbleApp {
     private final JCommander parser = new JCommander(this);
@@ -222,8 +227,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             JCommander.getConsole().println("");
 
             // Create the REST Manager
-            restManager = new RESTManager(command.getPressGangServerUrl());
-            //restManager.getProxyFactory().registerProvider(RESTVersionDecorator.class);
+            restManager = new RESTManager(command.getPressGangServerUrl(), Arrays.<Class<?>>asList(RESTVersionDecorator.class));
+
+            // Check that the version is valid
+            if (!doVersionCheck(restManager.getRESTClient())) {
+                shutdown(Constants.EXIT_UPGRADE_REQUIRED);
+            }
 
             // Good point to check for a shutdown
             if (isAppShuttingDown()) {
@@ -986,5 +995,33 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
             shutdown(Constants.EXIT_NO_SERVER);
         }
+    }
+
+    /**
+     * Checks to make sure this version of the csprocessor is up to date with what is allowed on the server.
+     *
+     * @param client The REST Proxy Client to make calls to the REST Server.
+     * @return True if this version is compatible with the REST Server, otherwise false.
+     */
+    protected boolean doVersionCheck(final RESTInterfaceV1 client) {
+        try {
+            client.getJSONExpandTrunkExample();
+        } catch (ClientResponseFailure e) {
+            ClientResponse<?> response = null;
+            try {
+                response = e.getResponse();
+                if (response.getStatus() == 426) {
+                    JCommander.getConsole().println("This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
+                            " again.");
+                    return false;
+                }
+            } finally {
+                if (response != null) {
+                    response.releaseConnection();
+                }
+            }
+        }
+
+        return true;
     }
 }
