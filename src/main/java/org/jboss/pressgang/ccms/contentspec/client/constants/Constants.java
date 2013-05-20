@@ -74,6 +74,7 @@ public class Constants {
     public static final String SETUP_COMMAND_NAME = "setup";
     public static final String SNAPSHOT_COMMAND_NAME = "snapshot";
     public static final String STATUS_COMMAND_NAME = "status";
+    public static final String SYNC_TRANSLATION_COMMAND_NAME = "sync-translation";
     public static final String TEMPLATE_COMMAND_NAME = "template";
     public static final String VALIDATE_COMMAND_NAME = "validate";
 
@@ -113,8 +114,8 @@ public class Constants {
     public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG = "Unable to assemble the Content Specification because the \"%s\" file " +
             "couldn't be found.";
     public static final String ERROR_FAILED_TO_ASSEMBLE_MSG = "The content specification failed to be assembled.";
-    public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred " +
-            "while" + " running Publican.";
+    public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
+            " running Publican.";
     public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
             "occurred while running Publican. (exit code: %d)";
     public static final String ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG = "Unable to preview the Content Specification because the \"%s\" "
@@ -132,15 +133,15 @@ public class Constants {
     public static final String ERROR_FAILED_CREATING_CONFIG_MSG = "Failed to create the default configuration file.";
     public static final String ERROR_OUT_OF_DATE_MSG = "The local copy of the Content Specification is out of date. Please use " +
             "\"csprocessor pull\" to download the latest copy.";
-    public static final String ERROR_LOCAL_COPY_UPDATED_MSG = "The local copy of the Content Specification has been updated and is out " +
-            "of" + " sync with the server. Please use \"csprocessor push\" to update the server copy.";
+    public static final String ERROR_LOCAL_COPY_UPDATED_MSG = "The local copy of the Content Specification has been updated and is out of" +
+            " sync with the server. Please use \"csprocessor push\" to update the server copy.";
     public static final String ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG = "The local copy and server copy of the Content Specification has" +
             " been updated. Please use \"csprocessor pull\" to update your local copy. Your unsaved local changes will be saved as %s" +
             ".backup.";
     public static final String ERROR_NO_FILE_OUT_OF_DATE_MSG = "The \"%s\" file couldn't be found. This could mean the title has changed " +
-            "" + "on the server or the ID is wrong.";
-    public static final String ERROR_NO_USERNAME = "No username was specified for the server. Please check your configuration files and "
-            + "make sure a username exists.";
+            "on the server or the ID is wrong.";
+    public static final String ERROR_NO_USERNAME = "No username was specified for the server. Please check your configuration files and " +
+            "make sure a username exists.";
     public static final String ERROR_PULL_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
             "snapshot couldn't be pulled.";
     public static final String ERROR_CREATE_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
@@ -156,13 +157,14 @@ public class Constants {
     public static final String ERROR_NO_PUBLISH_COMMAND = "No publish command or options were found. Please configure these options via "
             + "the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
     public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG = "No credentials are setup for the \"%s\" zanata server specified in " +
-            "the" + " csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
+            "the csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
     public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG = "The zanata details specified in the csprocessor.cfg and/or zanata " +
             "authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
     public static final String ERROR_ZANATA_PUSH_FAILED_MSG = "Pushing topics to zanata failed.";
-    public static final String ERROR_INVALID_ZANATA_CONFIG_MSG = "No Zanata Project exists for the \"%s\" project at version \"%s\" " +
-            "from:" + " %s";
+    public static final String ERROR_INVALID_ZANATA_CONFIG_MSG = "No Zanata Project exists for the \"%s\" project at version \"%s\" from:" +
+            " %s";
     public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG = "Failed to load the formatting XML Element Properties.";
+    public static final String ERROR_NO_LOCALES_MSG = "No Languages were specified by the command line.";
 
     // Info Messages
     public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
@@ -206,6 +208,7 @@ public class Constants {
     public static final int EXIT_TOPIC_INVALID = 8;
     public static final int EXIT_OUT_OF_DATE = 9;
     public static final int EXIT_SHUTDOWN_REQUEST = 10;
+    public static final int EXIT_UPGRADE_REQUIRED = 11;
 
     // Parameter names
     public static final String CONTENT_SPEC_LONG_PARAM = "--content-spec";
@@ -285,6 +288,8 @@ public class Constants {
 
     public static final String LOCALE_LONG_PARAM = "--lang";
 
+    public static final String LOCALES_LONG_PARAM = "--langs";
+
     public static final String EDITOR_LINKS_LONG_PARAM = "--editor-links";
 
     public static final String FETCH_PUBSNUM_LONG_PARAM = "--fetch-pubsnum";
@@ -315,7 +320,6 @@ public class Constants {
     public static final String SHOW_REMARKS_LONG_PARAM = "--show-remarks";
 
     public static final String REV_MESSAGE_LONG_PARAM = "--rev-message";
-    public static final String REV_MESSAGE_SHORT_PARAM = "-m";
 
     public static final String TOPICS_ONLY_LONG_PARAM = "--topics-only";
 
@@ -330,4 +334,10 @@ public class Constants {
 
     public static final String NO_SHORT_PARAM = "-n";
     public static final String NO_LONG_PARAM = "--no";
+
+    public static final String SERVER_BUILD_LONG_PARAM = "--server";
+
+    public static final String MESSAGE_SHORT_PARAM = "-m";
+    public static final String MESSAGE_LONG_PARAM = "--message";
+    public static final String REVISION_MESSAGE_FLAG_LONG_PARAMETER = "--rev-history";
 }

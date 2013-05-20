@@ -3,8 +3,8 @@ Summary: Content Specification Processor client application
 License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 0.30.1
-Release: 3
+Version: 0.31.0
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,6 +38,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
+* Tue Apr 30 2013 lnewson
+- Added the sync-translation command.
+- Fixed a bug that was causing push-translation to use the wrong zanata server.
+* Mon Apr 22 2013 lnewson
+- Added a way to compress build output to speed up publican builds
 * Tue Apr 16 2013 lnewson
 - Fixed a bug that was causing "create" actions to fail
 - Fixed a bug where assembling translations would fail under certain configs

@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -51,9 +52,12 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 
 public class Client implements BaseCommand, ShutdownAbleApp {
     private final JCommander parser = new JCommander(this);
@@ -201,12 +205,23 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // Check if an external connection is required by the command
             if (command.requiresExternalConnection()) {
+                isProcessingCommand.set(true);
                 // Check that the server Urls are valid
                 command.validateServerUrl();
-
+                final String uiServerURL = command.getServerUrl().replace("/TopicIndex/", "/pressgang-ccms-ui/");
+                System.setProperty(CommonConstants.PRESS_GANG_UI_SYSTEM_PROPERTY, uiServerURL);
+                
                 // Create the Provider Factory
                 providerFactory = RESTProviderFactory.create(command.getPressGangServerUrl());
-                providerFactory.getRESTManager().getProxyFactory().registerProvider(RESTVersionDecorator.class);
+                // Arrays.<Class<?>>asList(RESTVersionDecorator.class)
+                // providerFactory.getRESTManager().getProxyFactory().registerProvider(RESTVersionDecorator.class);
+
+                // Check that the version is valid
+                if (!doVersionCheck(providerFactory.getRESTManager().getRESTClient())) {
+                    shutdown(Constants.EXIT_UPGRADE_REQUIRED);
+                }
+
+                isProcessingCommand.set(false);
             }
 
             // Print a line to separate content
@@ -255,6 +270,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final SetupCommand setup = new SetupCommand(parser, cspConfig, clientConfig);
         final SnapshotCommand snapshot = new SnapshotCommand(parser, cspConfig, clientConfig);
         final StatusCommand status = new StatusCommand(parser, cspConfig, clientConfig);
+        final SyncTranslationCommand syncTranslation = new SyncTranslationCommand(parser, cspConfig, clientConfig);
         final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
         final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
 
@@ -311,6 +327,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
         parser.addCommand(status.getCommandName(), status);
         commands.put(status.getCommandName(), status);
+
+        parser.addCommand(syncTranslation.getCommandName(), syncTranslation);
+        commands.put(syncTranslation.getCommandName(), syncTranslation);
 
         parser.addCommand(template.getCommandName(), template);
         commands.put(template.getCommandName(), template);
@@ -969,6 +988,34 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             JCommander.getConsole().println("");
 
             printErrorAndShutdown(Constants.EXIT_NO_SERVER, Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks to make sure this version of the csprocessor is up to date with what is allowed on the server.
+     *
+     * @param client The REST Proxy Client to make calls to the REST Server.
+     * @return True if this version is compatible with the REST Server, otherwise false.
+     */
+    protected boolean doVersionCheck(final RESTInterfaceV1 client) {
+        try {
+            client.getJSONExpandTrunkExample();
+        } catch (ClientResponseFailure e) {
+            ClientResponse<?> response = null;
+            try {
+                response = e.getResponse();
+                if (response.getStatus() == 426) {
+                    JCommander.getConsole().println("This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
+                            " again.");
+                    return false;
+                }
+            } finally {
+                if (response != null) {
+                    response.releaseConnection();
+                }
+            }
         }
 
         return true;
