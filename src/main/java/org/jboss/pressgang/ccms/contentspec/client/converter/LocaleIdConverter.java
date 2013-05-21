@@ -1,4 +1,4 @@
-package com.redhat.contentspec.client.converter;
+package org.jboss.pressgang.ccms.contentspec.client.converter;
 
 import com.beust.jcommander.IStringConverter;
 import org.zanata.common.LocaleId;

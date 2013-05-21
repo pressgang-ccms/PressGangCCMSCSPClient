@@ -1,4 +1,4 @@
-package com.redhat.contentspec.client.commands;
+package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,24 +8,26 @@ import java.util.Set;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
-import com.redhat.contentspec.client.config.ClientConfiguration;
-import com.redhat.contentspec.client.config.ContentSpecConfiguration;
-import com.redhat.contentspec.client.constants.Constants;
-import com.redhat.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.rest.v1.collections.RESTTopicCollectionV1;
-import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.components.ComponentTranslatedTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTTranslatedTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.SpecTopic;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
+import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
+import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TopicProvider;
+import org.jboss.pressgang.ccms.rest.RESTManager;
 import org.jboss.pressgang.ccms.services.zanatasync.SyncMaster;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
-import org.jboss.pressgang.ccms.utils.structures.Pair;
+import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataConstants;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
@@ -56,19 +58,8 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         super(parser, cspConfig, clientConfig);
     }
 
-    @Override
-    public void printHelp() {
-        printHelp(Constants.SYNC_TRANSLATION_COMMAND_NAME);
-    }
-
-    @Override
-    public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.SYNC_TRANSLATION_COMMAND_NAME);
-    }
-
-    @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        return null;
+    public String getCommandName() {
+        return Constants.SYNC_TRANSLATION_COMMAND_NAME;
     }
 
     public List<Integer> getIds() {
@@ -112,12 +103,14 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(RESTManager restManager, ErrorLoggerManager elm, RESTUserV1 user) {
+    public void process() {
+        final RESTManager restManager = ((RESTProviderFactory) getProviderFactory()).getRESTManager();
+
         // Load the data from the config data if no ids were specified
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
-            if (cspConfig != null && cspConfig.getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(cspConfig.getContentSpecId()));
+            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
+                setIds(CollectionUtilities.toArrayList(getCspConfig().getContentSpecId()));
             }
         }
 
@@ -145,8 +138,8 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_CONFIG_ERROR);
         }
 
-        final ZanataInterface zanataInterface = intialiseZanataInterface();
-        final SyncMaster syncMaster = new SyncMaster(getServerUrl(), restManager.getRESTClient(), zanataInterface);
+        final ZanataInterface zanataInterface = initialiseZanataInterface();
+        final SyncMaster syncMaster = new SyncMaster(getProviderFactory(), zanataInterface);
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
@@ -155,13 +148,13 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         }
 
         // Process the ids
-        final Set<String> zanataIds = getZanataIds(restManager, ids);
+        final Set<String> zanataIds = getZanataIds(getProviderFactory(), ids);
         JCommander.getConsole().println("Syncing the topics...");
         syncMaster.processZanataResources(zanataIds);
     }
 
     protected boolean isValid() {
-        final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Check that we even have some zanata details.
         if (zanataDetails == null) return false;
@@ -189,26 +182,26 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      */
     protected void setupZanataOptions() {
         // Set the zanata url
-        if (this.zanataUrl != null) {
+        if (getZanataUrl() != null) {
             // Find the zanata server if the url is a reference to the zanata server name
-            for (final String serverName : clientConfig.getZanataServers().keySet()) {
-                if (serverName.equals(zanataUrl)) {
-                    zanataUrl = clientConfig.getZanataServers().get(serverName).getUrl();
+            for (final String serverName : getClientConfig().getZanataServers().keySet()) {
+                if (serverName.equals(getZanataUrl())) {
+                    setZanataUrl(getClientConfig().getZanataServers().get(serverName).getUrl());
                     break;
                 }
             }
 
-            cspConfig.getZanataDetails().setServer(ClientUtilities.validateHost(zanataUrl));
+            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
         }
 
         // Set the zanata project
-        if (this.zanataProject != null) {
-            cspConfig.getZanataDetails().setProject(zanataProject);
+        if (getZanataProject() != null) {
+            getCspConfig().getZanataDetails().setProject(getZanataProject());
         }
 
         // Set the zanata version
-        if (this.zanataVersion != null) {
-            cspConfig.getZanataDetails().setVersion(zanataVersion);
+        if (getZanataVersion() != null) {
+            getCspConfig().getZanataDetails().setVersion(getZanataVersion());
         }
     }
 
@@ -217,11 +210,11 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      *
      * @return The initialised Zanata Interface.
      */
-    protected ZanataInterface intialiseZanataInterface() {
+    protected ZanataInterface initialiseZanataInterface() {
         final ZanataInterface zanataInterface = new ZanataInterface(0.2);
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
-        final String[] splitLocales = locales.split(",");
+        final String[] splitLocales = getLocales().split(",");
         for (final String locale : splitLocales) {
             localeIds.add(LocaleId.fromJavaName(locale));
         }
@@ -234,58 +227,39 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     /**
      * Get the Zanata IDs to be synced from a list of content specifications.
      *
-     * @param restManager    The REST Manager to lookup entities from the REST API.
-     * @param contentSpecIds The list of Content Spec IDs to sync.
+     * @param providerFactory
+     * @param contentSpecIds  The list of Content Spec IDs to sync.
      * @return A Set of Zanata IDs that represent the topics to be synced from the list of Content Specs.
      */
-    protected Set<String> getZanataIds(final RESTManager restManager, final List<Integer> contentSpecIds) {
+    protected Set<String> getZanataIds(final DataProviderFactory providerFactory, final List<Integer> contentSpecIds) {
         JCommander.getConsole().println("Downloading topics...");
-        final ContentSpecParser parser = new ContentSpecParser(new ErrorLoggerManager(), restManager);
-        final RESTReader restReader = restManager.getReader();
+        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
 
-        final RESTTopicCollectionV1 topics = new RESTTopicCollectionV1();
+        final List<TopicWrapper> topics = new ArrayList<TopicWrapper>();
+        final List<ContentSpecWrapper> contentSpecs = new ArrayList<ContentSpecWrapper>();
         for (final Integer contentSpecId : contentSpecIds) {
-            final RESTTopicV1 contentspec = restReader.getTopicById(contentSpecId, null, true);
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpecId);
 
-            if (contentspec == null) {
+            if (contentSpecEntity == null) {
                 printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
                 shutdown(Constants.EXIT_ARGUMENT_ERROR);
             }
 
-            try {
-                parser.parse(contentspec.getXml());
-            } catch (Exception e) {
-                printError("Content Spec " + contentSpecId + " is not valid!", false);
-                shutdown(Constants.EXIT_FAILURE);
-            }
+            final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory);
+            contentSpecs.add(contentSpecEntity);
 
-            // Create the query to get the latest topics
-            RESTTopicCollectionV1 tempTopics = null;
-            final List<Integer> topicIds = parser.getReferencedLatestTopicIds();
-            if (topicIds != null && !topicIds.isEmpty()) {
-                // Get the latest topics
-                tempTopics = restReader.getTopicsByIds(topicIds, false);
-            }
-
-            // Copy the topics to the primary topic list
-            if (tempTopics != null && tempTopics.getItems() != null) {
-                for (final RESTTopicV1 topic : tempTopics.returnItems()) {
-                    topics.addItem(topic);
+            // Iterate over the spec topics and get their topics
+            final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
+            if (specTopics != null && !specTopics.isEmpty()) {
+                for (final SpecTopic specTopic : specTopics) {
+                    final TopicWrapper topic = topicProvider.getTopic(specTopic.getDBId(), specTopic.getRevision());
+                    topics.add(topic);
                 }
             }
-
-            // Get the revision topics
-            final List<Pair<Integer, Integer>> revTopicIds = parser.getReferencedRevisionTopicIds();
-            for (final Pair<Integer, Integer> revTopicId : revTopicIds) {
-                final RESTTopicV1 revTopic = restReader.getTopicById(revTopicId.getFirst(), revTopicId.getSecond(), true);
-                topics.addItem(revTopic);
-            }
-
-            // Add the content spec itself to be deleted
-            topics.addItem(contentspec);
         }
 
-        return getZanataIds(topics);
+        return getZanataIds(contentSpecs, topics);
     }
 
     /**
@@ -294,15 +268,22 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      * @param topics The topics to get the Zanata IDs for.
      * @return The Set of Zanata IDs that represent the topics.
      */
-    protected Set<String> getZanataIds(final RESTTopicCollectionV1 topics) {
+    protected Set<String> getZanataIds(final List<ContentSpecWrapper> contentSpecs, final List<TopicWrapper> topics) {
         final Set<String> zanataIds = new HashSet<String>();
 
-        final List<RESTTopicV1> topicList = topics.returnItems();
-        for (final RESTTopicV1 topic : topicList) {
+        // Get the zanata ids for each content spec
+        for (final ContentSpecWrapper contentSpec : contentSpecs) {
+            final TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getTranslatedContentSpecById(getProviderFactory(),
+                    contentSpec.getId(), contentSpec.getRevision());
+            zanataIds.add(translatedContentSpec.getZanataId());
+        }
+
+        // Get the zanata ids for each topics
+        for (final TopicWrapper topic : topics) {
             // Find the latest pushed translated topic
-            final RESTTranslatedTopicV1 translatedTopic = ComponentTopicV1.returnPushedTranslatedTopic(topic);
+            final TranslatedTopicWrapper translatedTopic = EntityUtilities.returnPushedTranslatedTopic(topic);
             if (translatedTopic != null) {
-                zanataIds.add(ComponentTranslatedTopicV1.returnZanataId(translatedTopic));
+                zanataIds.add(translatedTopic.getZanataId());
             }
         }
 
@@ -310,21 +291,11 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void validateServerUrl() {
-        // Print the server url
-        JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
-
-        // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(getPressGangServerUrl())) {
-            // Print a line to separate content
-            JCommander.getConsole().println("");
-
-            printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
-            shutdown(Constants.EXIT_NO_SERVER);
-        }
+    public boolean validateServerUrl() {
+        if (!super.validateServerUrl()) return false;
 
         setupZanataOptions();
-        final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
+        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Print the zanata server url
         JCommander.getConsole().println(String.format(Constants.ZANATA_WEBSERVICE_MSG, zanataDetails.getServer()));
@@ -337,10 +308,17 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
             shutdown(Constants.EXIT_NO_SERVER);
         }
+
+        return true;
     }
 
     @Override
     public boolean loadFromCSProcessorCfg() {
         return ids.size() == 0;
+    }
+
+    @Override
+    public boolean requiresExternalConnection() {
+        return true;
     }
 }

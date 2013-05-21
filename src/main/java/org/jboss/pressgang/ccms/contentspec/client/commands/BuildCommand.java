@@ -128,7 +128,7 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.SHOW_REMARKS_LONG_PARAM, description = "Build the book with remarks visible.")
     private Boolean showRemarks = false;
 
-    @Parameter(names = {Constants.REV_MESSAGE_LONG_PARAM, Constants.REV_MESSAGE_SHORT_PARAM},
+    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM,
             description = "Add a message for the revision history.")
     private List<String> messages = Lists.newArrayList();
 

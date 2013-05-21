@@ -25,6 +25,7 @@ import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 
 @Parameters(commandDescription = "Push an updated Content Specification to the server")
@@ -41,6 +42,14 @@ public class PushCommand extends BaseCommandImpl {
     @Parameter(names = Constants.PUSH_ONLY_LONG_PARAM,
             description = "Only push the Content Specification and don't save the Post Processed Content Specification.")
     private Boolean pushOnly = false;
+
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, description = "A commit message about what was " +
+            "changed.")
+    private String message = null;
+
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, description = "The commit message should be set to be included in " +
+            "the Revision History.")
+    private Boolean revisionHistoryMessage = false;
 
     private ContentSpecProcessor csp = null;
 
@@ -91,6 +100,22 @@ public class PushCommand extends BaseCommandImpl {
 
     public void setPushOnly(final boolean pushOnly) {
         this.pushOnly = pushOnly;
+    }
+
+    public Boolean getRevisionHistoryMessage() {
+        return revisionHistoryMessage;
+    }
+
+    public void setRevisionHistoryMessage(Boolean revisionHistoryMessage) {
+        this.revisionHistoryMessage = revisionHistoryMessage;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     /**
@@ -223,8 +248,11 @@ public class PushCommand extends BaseCommandImpl {
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setAllowEmptyLevels(true);
 
+        // Setup the log message
+        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), user, message, revisionHistoryMessage);
+
         setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
-        return getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+        return getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED, logMessage);
     }
 
     /**

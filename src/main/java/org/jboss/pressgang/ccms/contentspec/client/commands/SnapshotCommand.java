@@ -19,6 +19,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 
 @Parameters(
@@ -37,6 +38,14 @@ public class SnapshotCommand extends BaseCommandImpl {
 
     @Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new content specification")
     private Boolean createNew = false;
+
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, description = "A commit message about what was " +
+            "changed.")
+    private String message = null;
+
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, description = "The commit message should be set to be included in " +
+            "the Revision History.")
+    private Boolean revisionHistoryMessage = false;
 
     private ContentSpecProcessor csp = null;
 
@@ -89,6 +98,22 @@ public class SnapshotCommand extends BaseCommandImpl {
         this.createNew = createNew;
     }
 
+    public Boolean getRevisionHistoryMessage() {
+        return revisionHistoryMessage;
+    }
+
+    public void setRevisionHistoryMessage(Boolean revisionHistoryMessage) {
+        this.revisionHistoryMessage = revisionHistoryMessage;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     @Override
     public void process() {
         // Authenticate the user
@@ -133,14 +158,17 @@ public class SnapshotCommand extends BaseCommandImpl {
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setRevision(getRevision());
 
+        // Setup the log message
+        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), user, message, revisionHistoryMessage);
+
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
         Integer revision = null;
         if (getCreateNew()) {
-            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
+            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW, logMessage);
         } else {
-            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED);
+            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED, logMessage);
         }
         if (success) {
             revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();

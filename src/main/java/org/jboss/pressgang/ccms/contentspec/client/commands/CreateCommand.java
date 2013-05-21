@@ -23,6 +23,7 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
@@ -43,6 +44,14 @@ public class CreateCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM},
             description = "Force the Content Specification directories to be created.")
     private Boolean force = false;
+
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, description = "A commit message about what was " +
+            "changed.")
+    private String message = null;
+
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, description = "The commit message should be set to be included in " +
+            "the Revision History.")
+    private Boolean revisionHistoryMessage = false;
 
     private ContentSpecProcessor csp = null;
 
@@ -101,6 +110,22 @@ public class CreateCommand extends BaseCommandImpl {
 
     public void setForce(final Boolean force) {
         this.force = force;
+    }
+
+    public Boolean getRevisionHistoryMessage() {
+        return revisionHistoryMessage;
+    }
+
+    public void setRevisionHistoryMessage(Boolean revisionHistoryMessage) {
+        this.revisionHistoryMessage = revisionHistoryMessage;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public boolean isValid() {
@@ -219,8 +244,11 @@ public class CreateCommand extends BaseCommandImpl {
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
 
+        // Setup the log message
+        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), user, message, revisionHistoryMessage);
+
         setContentSpecProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        return getContentSpecProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW);
+        return getContentSpecProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW, logMessage);
     }
 
     @Override

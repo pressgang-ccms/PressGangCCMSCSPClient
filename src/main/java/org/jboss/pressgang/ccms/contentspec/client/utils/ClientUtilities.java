@@ -42,11 +42,14 @@ import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -747,6 +750,28 @@ public class ClientUtilities {
         } catch (IOException e) {
             command.printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
         }
+    }
+
+    public static LogMessageWrapper createLogDetails(final DataProviderFactory providerFactory, final UserWrapper user,
+            final String message, final boolean isRevisionHistoryMessage) {
+        return createLogDetails(providerFactory, user.getUsername(), message, isRevisionHistoryMessage);
+    }
+
+    public static LogMessageWrapper createLogDetails(final DataProviderFactory providerFactory, final String user,
+            final String message, final boolean isRevisionHistoryMessage) {
+        LogMessageWrapper logDetails = null;
+        if (message != null) {
+            logDetails = providerFactory.getProvider(LogMessageProvider.class).createLogMessage();
+            logDetails.setMessage(message);
+            logDetails.setUser(user);
+            if (isRevisionHistoryMessage) {
+                logDetails.setFlags(0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT);
+            } else {
+                logDetails.setFlags(0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT);
+            }
+        }
+
+        return logDetails;
     }
 }
 
