@@ -62,10 +62,10 @@
     <orderEntry type="library" name="Maven: org.jboss.resteasy:resteasy-jackson-provider:2.3.4.Final" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-jaxrs:1.8.5" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.1" level="project" />
-    <orderEntry type="library" name="Maven: org.jboss.pressgang.ccms:pressgang-ccms-contentspec:1.0-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="pressgang-ccms-contentspec" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-log4j12:1.6.4" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.16" level="project" />
-    <orderEntry type="library" name="Maven: org.jboss.pressgang.ccms.contentspec:processor:0.0.6-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="processor" />
     <orderEntry type="module" module-name="j2koji" />
     <orderEntry type="library" name="Maven: org.apache.xmlrpc:xmlrpc-client:3.1.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.xmlrpc:xmlrpc-common:3.1.3" level="project" />
@@ -73,6 +73,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.9" level="project" />
     <orderEntry type="module" module-name="jcommander-pressgang" />
     <orderEntry type="module" module-name="zanata-sync-service" />
+    <orderEntry type="library" name="Maven: org.jboss.pressgang.ccms.contentspec:csprocessor:0.0.3-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: commons-configuration:commons-configuration:1.7" level="project" />
     <orderEntry type="library" name="Maven: commons-digester:commons-digester:1.8.1" level="project" />
     <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.3" level="project" />

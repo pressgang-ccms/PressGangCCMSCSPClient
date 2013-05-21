@@ -50,6 +50,9 @@ public class PushCommand extends BaseCommandImpl {
             "the Revision History.")
     private Boolean revisionHistoryMessage = false;
 
+    @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
+    protected Boolean strictLevelTitles = false;
+
     private ContentSpecProcessor csp = null;
 
     public PushCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -102,6 +105,14 @@ public class PushCommand extends BaseCommandImpl {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Boolean getStrictLevelTitles() {
+        return strictLevelTitles;
+    }
+
+    public void setStrictLevelTitles(Boolean strictLevelTitles) {
+        this.strictLevelTitles = strictLevelTitles;
     }
 
     @Override
@@ -190,7 +201,7 @@ public class PushCommand extends BaseCommandImpl {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
-        processingOptions.setAllowEmptyLevels(true);
+        processingOptions.setStrictLevelTitles(strictLevelTitles);
 
         csp = new ContentSpecProcessor(restManager, elm, processingOptions);
         Integer revision = null;
