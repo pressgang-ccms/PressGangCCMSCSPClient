@@ -4,7 +4,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 0.32.1
-Release: 1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -39,7 +39,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Tue May 22 2013 lnewson - 0.32.1
-- Changed the Validator to allow empty levels where an intro topic is specified.
+- Changed the Validator to allow empty levels where an intro topic is specified, except on Part and Section.
 * Tue May 14 2013 lnewson
 - Added RFEs: BZ #959807, BZ #913061, BZ #809802 & BZ #799924.
 - Added the ability to push/create using log messages.

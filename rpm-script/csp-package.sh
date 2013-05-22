@@ -16,9 +16,15 @@ fi
 
 PREV_VERSION=$1
 VERSION=$2
+if [ ! -z $3 ]; then
+	RELEASE=$3
+else
+	RELEASE="1"
+fi
 
 echo "Previous Version: $PREV_VERSION"
 echo "New Version: $VERSION"
+echo "Release: $RELEASE"
 
 FILE_NAME=cspclient-"$VERSION"
 
@@ -45,10 +51,10 @@ rm -r $FILE_NAME
 
 echo "Finished making the RPM package"
 
-scp ${DIR}/rpm/RPMS/noarch/"$FILE_NAME"-1.noarch.rpm root@csprocessor.cloud.lab.eng.bne.redhat.com:/root/
+scp ${DIR}/rpm/RPMS/noarch/${FILE_NAME}-${RELEASE}.noarch.rpm root@csprocessor.cloud.lab.eng.bne.redhat.com:/root/
 
 popd
 
 echo Run the following commands on the YUM server
-echo "cp ~/${FILE_NAME}-1.noarch.rpm /var/www/html/yum/updates/noarch/" 
+echo "cp ~/${FILE_NAME}-${RELEASE}.noarch.rpm /var/www/html/yum/updates/noarch/" 
 echo createrepo --update --no-database /var/www/html/yum/updates/
