@@ -52,7 +52,7 @@ public class BuildCommand extends BaseCommandImpl {
     private Boolean hideErrors = false;
 
     @Parameter(names = Constants.SHOW_CONTENT_SPEC_LONG_PARAM, description = "Show the content spec page in the output.")
-    private Boolean hideContentSpec = true;
+    private Boolean hideContentSpec = false;
 
     @Parameter(names = Constants.INLINE_INJECTION_LONG_PARAM, description = "Stop injections from being processed when building.")
     private Boolean inlineInjection = true;
@@ -497,7 +497,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setSuppressErrorsPage(getHideErrors());
         buildOptions.setInsertBugzillaLinks(!getHideErrors());
         buildOptions.setOverrides(getOverrides());
-        buildOptions.setSuppressContentSpecPage(getHideContentSpecPage());
+        buildOptions.setSuppressContentSpecPage(!getHideContentSpecPage());
         buildOptions.setInsertEditorLinks(getInsertEditorLinks());
         buildOptions.setShowReportPage(getShowReport());
         buildOptions.setLocale(getLocale());

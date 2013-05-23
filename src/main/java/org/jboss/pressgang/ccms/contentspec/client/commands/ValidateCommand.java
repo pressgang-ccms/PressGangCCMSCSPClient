@@ -33,6 +33,9 @@ public class ValidateCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.PERMISSIVE_LONG_PARAM, Constants.PERMISSIVE_SHORT_PARAM}, description = "Turn on permissive processing.")
     private Boolean permissive = false;
 
+    @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
+    protected Boolean strictLevelTitles = false;
+
     private ContentSpecProcessor csp = null;
 
     public ValidateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -66,6 +69,14 @@ public class ValidateCommand extends BaseCommandImpl {
 
     public void setPermissive(final Boolean permissive) {
         this.permissive = permissive;
+    }
+
+    public Boolean getStrictLevelTitles() {
+        return strictLevelTitles;
+    }
+
+    public void setStrictLevelTitles(Boolean strictLevelTitles) {
+        this.strictLevelTitles = strictLevelTitles;
     }
 
     public boolean isValid() {
@@ -178,7 +189,7 @@ public class ValidateCommand extends BaseCommandImpl {
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setValidating(true);
-        processingOptions.setAllowEmptyLevels(true);
+        processingOptions.setStrictLevelTitles(strictLevelTitles);
 
         // Process the content spec to see if it's valid
         setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));

@@ -53,6 +53,9 @@ public class CreateCommand extends BaseCommandImpl {
             "the Revision History.")
     private Boolean revisionHistoryMessage = false;
 
+    @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
+    protected Boolean strictLevelTitles = false;
+
     private ContentSpecProcessor csp = null;
 
     public CreateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -126,6 +129,14 @@ public class CreateCommand extends BaseCommandImpl {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Boolean getStrictLevelTitles() {
+        return strictLevelTitles;
+    }
+
+    public void setStrictLevelTitles(Boolean strictLevelTitles) {
+        this.strictLevelTitles = strictLevelTitles;
     }
 
     public boolean isValid() {
@@ -243,6 +254,7 @@ public class CreateCommand extends BaseCommandImpl {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
+        processingOptions.setStrictLevelTitles(strictLevelTitles);
 
         // Setup the log message
         final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), user, message, revisionHistoryMessage);
