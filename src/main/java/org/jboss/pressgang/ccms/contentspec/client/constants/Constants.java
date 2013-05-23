@@ -340,4 +340,6 @@ public class Constants {
     public static final String MESSAGE_SHORT_PARAM = "-m";
     public static final String MESSAGE_LONG_PARAM = "--message";
     public static final String REVISION_MESSAGE_FLAG_LONG_PARAMETER = "--rev-history";
+
+    public static final String STRICT_LEVEL_TITLES_LONG_PARAM = "--strict-level-titles";
 }

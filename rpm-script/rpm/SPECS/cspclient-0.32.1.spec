@@ -3,8 +3,8 @@ Summary: Content Specification Processor client application
 License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 0.32.0
-Release: 3
+Version: 0.32.1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,11 +38,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
+* Tue May 22 2013 lnewson - 0.32.1
+- Changed the Validator to allow empty levels where an intro topic is specified, except on Part and Section.
 * Tue May 14 2013 lnewson
 - Added RFEs: BZ #959807, BZ #913061, BZ #809802 & BZ #799924.
 - Added the ability to push/create using log messages.
 - Fixed a few other minor bugs.
-* Tue Apr 30 2013 lnewson
+* Tue Apr 30 2013 lnewson - 0.32.0
 - Added the sync-translation command.
 - Fixed a bug that was causing push-translation to use the wrong zanata server.
 * Mon Apr 22 2013 lnewson
