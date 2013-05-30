@@ -60,7 +60,13 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
     @Override
     public String getPressGangServerUrl() {
-        return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest/");
+        if (serverUrl == null) {
+            return null;
+        } else if (serverUrl.contains("TopicIndex")) {
+            return ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest/");
+        } else {
+            return serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/");
+        }
     }
 
     @Override

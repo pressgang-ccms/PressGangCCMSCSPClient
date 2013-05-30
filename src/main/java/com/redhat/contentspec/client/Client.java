@@ -179,6 +179,19 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 return;
             }
 
+            // Move the main parameters into the sub command
+            if (getConfigLocation() != null) {
+                command.setConfigLocation(getConfigLocation());
+            }
+
+            if (getServerUrl() != null) {
+                command.setServerUrl(getServerUrl());
+            }
+
+            if (getUsername() != null) {
+                command.setUsername(getUsername());
+            }
+
             // Load the configuration options. If it fails then stop the program
             if (!setConfigOptions(command.getConfigLocation())) {
                 shutdown(Constants.EXIT_CONFIG_ERROR);
@@ -220,7 +233,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             // Check that the server Urls are valid
             isProcessing.set(true);
             command.validateServerUrl();
-            final String uiServerURL = command.getServerUrl().replace("/TopicIndex/", "/pressgang-ccms-ui/");
+            final String uiServerURL = command.getServerUrl().replaceFirst("/TopicIndex.*", "/pressgang-ccms-ui/").replaceFirst(
+                    "/pressgang-ccms.*", "/pressgang-ccms-ui/");
             System.setProperty(CommonConstants.PRESS_GANG_UI_SYSTEM_PROPERTY, uiServerURL);
 
             // Print a line to separate content
@@ -632,7 +646,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             shutdown.set(true);
             return false;
         }
-		
+
 		/* Read in the servers from the config file */
         if (!readServersFromConfig(configReader)) {
             return false;
@@ -881,7 +895,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Override
     public String getPressGangServerUrl() {
-        return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest");
+        if (serverUrl == null) {
+            return null;
+        } else if (serverUrl.contains("TopicIndex")) {
+            return ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest/");
+        } else {
+            return ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")));
+        }
     }
 
     @Override
@@ -1011,8 +1031,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             try {
                 response = e.getResponse();
                 if (response.getStatus() == 426) {
-                    JCommander.getConsole().println("This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
-                            " again.");
+                    JCommander.getConsole().println(
+                            "This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
+                                    " again.");
                     return false;
                 }
             } finally {
