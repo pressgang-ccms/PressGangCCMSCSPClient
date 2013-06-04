@@ -369,19 +369,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
      * Apply the settings of the from the various configuration files and command line parameters to the used command.
      */
     protected void applySettings() {
-        // Move the main parameters into the sub command
-        if (getConfigLocation() != null) {
-            command.setConfigLocation(getConfigLocation());
-        }
-
-        if (getServerUrl() != null) {
-            command.setServerUrl(getServerUrl());
-        }
-
-        if (getUsername() != null) {
-            command.setUsername(getUsername());
-        }
-
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
             shutdown.set(true);
