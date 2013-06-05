@@ -53,12 +53,12 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
     @Override
     public String getServerUrl() {
-        return ClientUtilities.validateHost(serverUrl);
+        return serverUrl;
     }
 
     @Override
     public String getPressGangServerUrl() {
-        final String serverUrl = getServerUrl();
+        final String serverUrl = ClientUtilities.validateHost(getServerUrl());
         if (serverUrl == null) {
             return null;
         } else if (serverUrl.contains("TopicIndex")) {

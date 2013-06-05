@@ -879,12 +879,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Override
     public String getPressGangServerUrl() {
+        final String serverUrl = ClientUtilities.validateHost(getServerUrl());
         if (serverUrl == null) {
             return null;
         } else if (serverUrl.contains("TopicIndex")) {
-            return ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest/");
+            return serverUrl + "seam/resource/rest/";
         } else {
-            return ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")));
+            return serverUrl;
         }
     }
 
