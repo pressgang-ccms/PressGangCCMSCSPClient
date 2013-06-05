@@ -534,6 +534,10 @@ public class ClientUtilities {
         return "CHECKSUM=" + checksum + "\n" + contentSpecData;
     }
 
+    public static RESTLogDetailsV1 createLogDetails(final String message, final boolean isRevisionHistoryMessage) {
+        return createLogDetails(null, message, isRevisionHistoryMessage);
+    }
+
     public static RESTLogDetailsV1 createLogDetails(final RESTUserV1 user, final String message, final boolean isRevisionHistoryMessage) {
         RESTLogDetailsV1 logDetails = null;
         if (message != null) {

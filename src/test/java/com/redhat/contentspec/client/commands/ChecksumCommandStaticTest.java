@@ -72,7 +72,7 @@ public class ChecksumCommandStaticTest extends BaseUnitTest {
         when(HashUtilities.generateMD5(anyString())).thenCallRealMethod();
 
         // When process is called
-        command.process(restManager, elm, user);
+        command.process(restManager, elm);
 
         // Then the checksum is removed from the content spec content before a new checksum is calculated
         ArgumentCaptor<String> alteredContentSpec = ArgumentCaptor.forClass(String.class);

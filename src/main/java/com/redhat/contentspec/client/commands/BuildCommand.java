@@ -32,7 +32,6 @@ import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTBaseTopicV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -453,7 +452,7 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user) {
+    public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
         final long startTime = System.currentTimeMillis();
         final RESTReader reader = restManager.getReader();
         boolean buildingFromConfig = false;
@@ -493,7 +492,7 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Validate that the content spec is valid
-        boolean success = validateContentSpec(restManager, elm, user, contentSpec);
+        boolean success = validateContentSpec(restManager, elm, contentSpec);
 
         // Print the error/warning messages
         JCommander.getConsole().println(elm.generateLogs());
@@ -539,9 +538,9 @@ public class BuildCommand extends BaseCommandImpl {
         try {
             builder = new ContentSpecBuilder(restManager);
             if (locale == null) {
-                builderOutput = builder.buildBook(csp.getContentSpec(), user, getBuildOptions());
+                builderOutput = builder.buildBook(csp.getContentSpec(), getUsername(), getBuildOptions());
             } else {
-                builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), user, getBuildOptions(), cspConfig.getZanataDetails());
+                builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), getUsername(), getBuildOptions(), cspConfig.getZanataDetails());
             }
         } catch (Exception e) {
             JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
@@ -581,8 +580,7 @@ public class BuildCommand extends BaseCommandImpl {
         saveBuildToFile(builderOutput, outputFile, buildingFromConfig);
     }
 
-    protected boolean validateContentSpec(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user,
-            final String contentSpec) {
+    protected boolean validateContentSpec(final RESTManager restManager, final ErrorLoggerManager elm, final String contentSpec) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
@@ -600,7 +598,7 @@ public class BuildCommand extends BaseCommandImpl {
         csp = new ContentSpecProcessor(restManager, elm, processingOptions);
         boolean success = false;
         try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, locale);
+            success = csp.processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.EITHER, locale);
         } catch (Exception e) {
             JCommander.getConsole().println(elm.generateLogs());
             shutdown(Constants.EXIT_FAILURE);
@@ -686,21 +684,6 @@ public class BuildCommand extends BaseCommandImpl {
     @Override
     public void printHelp() {
         printHelp(Constants.BUILD_COMMAND_NAME);
-    }
-
-    @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        final String username = getUsername();
-        RESTUserV1 user = null;
-        if (username != null && !username.equals("")) {
-            user = ClientUtilities.authenticateUser(username, reader);
-        }
-
-        if (user == null) {
-            return ClientUtilities.authenticateUser("Unknown", reader);
-        } else {
-            return user;
-        }
     }
 
     @Override

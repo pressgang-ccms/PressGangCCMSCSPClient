@@ -29,7 +29,6 @@ import org.jboss.pressgang.ccms.rest.v1.collections.RESTTopicCollectionV1;
 import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTranslatedTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
@@ -127,23 +126,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        return authenticate(getUsername(), reader);
-    }
-
-    @Override
     public void validateServerUrl() {
-        // Print the server url
-        JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
-
-        // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(getPressGangServerUrl())) {
-            // Print a line to separate content
-            JCommander.getConsole().println("");
-
-            printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
-            shutdown(Constants.EXIT_NO_SERVER);
-        }
+        super.validateServerUrl();
 
         setupZanataOptions();
         final ZanataDetails zanataDetails = cspConfig.getZanataDetails();
@@ -215,7 +199,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user) {
+    public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
         final RESTReader reader = restManager.getReader();
 
         // Add the details for the csprocessor.cfg if no ids are specified
@@ -265,7 +249,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         csp = new ContentSpecProcessor(restManager, elm, processingOptions);
         boolean success = false;
         try {
-            success = csp.processContentSpec(contentSpecTopic.getXml(), user, ParsingMode.EITHER);
+            success = csp.processContentSpec(contentSpecTopic.getXml(), getUsername(), ParsingMode.EITHER);
         } catch (Exception e) {
             JCommander.getConsole().println(elm.generateLogs());
             shutdown(Constants.EXIT_FAILURE);

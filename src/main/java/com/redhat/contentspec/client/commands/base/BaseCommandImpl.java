@@ -8,8 +8,6 @@ import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 
 public abstract class BaseCommandImpl implements BaseCommand {
     protected final JCommander parser;
@@ -158,27 +156,6 @@ public abstract class BaseCommandImpl implements BaseCommand {
         } else {
             parser.usage(true, new String[]{commandName});
         }
-    }
-
-    /**
-     * Authenticate a user to ensure that they exist on the server.
-     *
-     * @param username The username of the user.
-     * @param reader   The RESTReader that is used to connect via REST to the server.
-     * @return The user object if they existed otherwise false.
-     */
-    public RESTUserV1 authenticate(final String username, final RESTReader reader) {
-        if (username == null || username.equals("")) {
-            printError(Constants.ERROR_NO_USERNAME, false);
-            shutdown(Constants.EXIT_UNAUTHORISED);
-        }
-
-        final RESTUserV1 user = ClientUtilities.authenticateUser(username, reader);
-        if (user == null) {
-            printError(Constants.ERROR_UNAUTHORISED, false);
-            shutdown(Constants.EXIT_UNAUTHORISED);
-        }
-        return user;
     }
 
     /**

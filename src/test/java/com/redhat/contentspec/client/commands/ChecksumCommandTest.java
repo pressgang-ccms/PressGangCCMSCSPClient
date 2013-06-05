@@ -70,7 +70,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
         // When it is processed
         try {
-            command.process(restManager, elm, user);
+            command.process(restManager, elm);
         // Then an error is printed and the program is shut down
             fail(systemExitError);
         } catch (CheckExitCalled e) {
@@ -87,7 +87,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
         // When it is processed
         try {
-            command.process(restManager, elm, user);
+            command.process(restManager, elm);
         // Then an error is printed and the program is shut down
             fail(systemExitError);
         } catch (CheckExitCalled e) {
@@ -108,7 +108,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
         given(contentSpec.getXml()).willReturn(contentSpecXml);
 
         // When it is processed
-        command.process(restManager, elm, user);
+        command.process(restManager, elm);
 
         assertThat(command.getIds().get(0), is(id));
         assertThat(outputLog.getLog(), containsString("CHECKSUM="));
@@ -123,7 +123,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
         // When it is processed
         try {
-            command.process(restManager, elm, user);
+            command.process(restManager, elm);
             // Then an error is printed and the program is shut down
             fail(systemExitError);
         } catch (CheckExitCalled e) {
@@ -143,7 +143,7 @@ public class ChecksumCommandTest extends BaseUnitTest {
 
         // When it is processed
         try {
-            command.process(restManager, elm, user);
+            command.process(restManager, elm);
             // Then an error is printed and the program is shut down
             fail(systemExitError);
         } catch (CheckExitCalled e) {

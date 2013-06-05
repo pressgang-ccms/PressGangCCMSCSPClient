@@ -15,7 +15,6 @@ import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 
 @Parameters(commandDescription = "List the Content Specifications on the server")
 public class ListCommand extends BaseCommandImpl {
@@ -88,11 +87,6 @@ public class ListCommand extends BaseCommandImpl {
         printHelp(Constants.LIST_COMMAND_NAME);
     }
 
-    @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        return null;
-    }
-
     public boolean isValid() {
         if (contentSpec && snapshot) {
             return false;
@@ -101,7 +95,7 @@ public class ListCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user) {
+    public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
         if (!isValid()) {
             printError(Constants.INVALID_ARG_MSG, true);
             shutdown(Constants.EXIT_ARGUMENT_ERROR);

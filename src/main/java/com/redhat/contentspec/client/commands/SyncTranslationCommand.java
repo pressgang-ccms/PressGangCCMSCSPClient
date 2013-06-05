@@ -22,7 +22,6 @@ import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.components.ComponentTranslatedTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTranslatedTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.services.zanatasync.SyncMaster;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
@@ -66,11 +65,6 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         printError(errorMsg, displayHelp, Constants.SYNC_TRANSLATION_COMMAND_NAME);
     }
 
-    @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        return null;
-    }
-
     public List<Integer> getIds() {
         return ids;
     }
@@ -112,7 +106,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(RESTManager restManager, ErrorLoggerManager elm, RESTUserV1 user) {
+    public void process(RESTManager restManager, ErrorLoggerManager elm) {
         // Load the data from the config data if no ids were specified
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid

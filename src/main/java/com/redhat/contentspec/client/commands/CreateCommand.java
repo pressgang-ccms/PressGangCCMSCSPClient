@@ -19,10 +19,8 @@ import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -141,7 +139,7 @@ public class CreateCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user) {
+    public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
         if (!isValid()) {
             printError(Constants.ERROR_NO_FILE_MSG, true);
             shutdown(Constants.EXIT_FAILURE);
@@ -188,7 +186,7 @@ public class CreateCommand extends BaseCommandImpl {
         }
 
         // Create the log details
-        RESTLogDetailsV1 logDetails = ClientUtilities.createLogDetails(user, message, revisionHistoryMessage);
+        RESTLogDetailsV1 logDetails = ClientUtilities.createLogDetails(message, revisionHistoryMessage);
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -198,7 +196,7 @@ public class CreateCommand extends BaseCommandImpl {
         csp = new ContentSpecProcessor(restManager, elm, processingOptions);
         Integer revision = null;
         try {
-            success = csp.processContentSpec(contentSpec, user, logDetails, ContentSpecParser.ParsingMode.NEW);
+            success = csp.processContentSpec(contentSpec, getUsername(), logDetails, ContentSpecParser.ParsingMode.NEW);
             if (success) {
                 revision = restManager.getReader().getLatestCSRevById(csp.getContentSpec().getId());
             }
@@ -289,11 +287,6 @@ public class CreateCommand extends BaseCommandImpl {
     @Override
     public void printHelp() {
         printHelp(Constants.CREATE_COMMAND_NAME);
-    }
-
-    @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        return authenticate(getUsername(), reader);
     }
 
     @Override

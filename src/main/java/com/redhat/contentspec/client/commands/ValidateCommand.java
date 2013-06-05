@@ -16,10 +16,8 @@ import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
 import com.redhat.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
-import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
@@ -74,11 +72,6 @@ public class ValidateCommand extends BaseCommandImpl {
         printHelp(Constants.VALIDATE_COMMAND_NAME);
     }
 
-    @Override
-    public RESTUserV1 authenticate(final RESTReader reader) {
-        return authenticate(getUsername(), reader);
-    }
-
     public boolean isValid() {
         // We should have only one file
         if (files.size() != 1) return false;
@@ -91,7 +84,7 @@ public class ValidateCommand extends BaseCommandImpl {
     }
 
     @Override
-    public void process(final RESTManager restManager, final ErrorLoggerManager elm, final RESTUserV1 user) {
+    public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
         // If files is empty then we must be using a csprocessor.cfg file
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
@@ -148,7 +141,7 @@ public class ValidateCommand extends BaseCommandImpl {
         // Process the content spec to see if its valid
         csp = new ContentSpecProcessor(restManager, elm, processingOptions);
         try {
-            success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+            success = csp.processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.EITHER);
         } catch (Exception e) {
             printError(Constants.ERROR_INTERNAL_ERROR, false);
             shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
