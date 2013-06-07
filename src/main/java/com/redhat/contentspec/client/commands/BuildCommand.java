@@ -126,15 +126,16 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM, description = "Add a message for the revision history.")
     private List<String> messages = Lists.newArrayList();
 
-    @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM}, description = "Flatten the topics folder when building.")
+    @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM},
+            description = "Flatten the topics folder, so no subdirectories exist when building.")
     private Boolean flattenTopics = false;
 
     @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
             description = "Automatically answer \"yes\" to any questions.")
     private Boolean answerYes = false;
 
-    @Parameter(names = Constants.SERVER_BUILD_LONG_PARAM, hidden = true)
-    private Boolean serverBuild = false;
+    @Parameter(names = Constants.FLATTEN_LONG_PARAM, description = "Flatten the topics so only chapter/appendix/part files exist.")
+    private Boolean flatten = false;
 
     @Parameter(names = Constants.FORMAT_LONG_PARAM, description = "What format to build the content spec in.", metaVar = "<FORMAT>",
             converter = BuildTypeConverter.class, validateWith = BuildTypeValidator.class)
@@ -347,12 +348,12 @@ public class BuildCommand extends BaseCommandImpl {
         this.answerYes = answerYes;
     }
 
-    public Boolean getServerBuild() {
-        return serverBuild;
+    public Boolean getFlatten() {
+        return flatten;
     }
 
-    public void setServerBuild(Boolean serverBuild) {
-        this.serverBuild = serverBuild;
+    public void setFlatten(Boolean flatten) {
+        this.flatten = flatten;
     }
 
     public BuildType getBuildType() {
@@ -387,7 +388,8 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setUseLatestVersions(update);
         buildOptions.setFlattenTopics(getFlattenTopics());
         buildOptions.setForceInjectBugzillaLinks(forceBugLinks);
-        buildOptions.setServerBuild(serverBuild);
+        buildOptions.setFlatten(flatten);
+        buildOptions.setServerBuild(clientConfig.getDefaults().isServer());
 
         return buildOptions;
     }

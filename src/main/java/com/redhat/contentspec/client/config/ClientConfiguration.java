@@ -3,6 +3,8 @@ package com.redhat.contentspec.client.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.redhat.contentspec.client.entities.ConfigDefaults;
+
 public class ClientConfiguration {
     private String rootDirectory = "";
     private String publicanBuildOptions = null;
@@ -13,6 +15,8 @@ public class ClientConfiguration {
 
     private String defaultZanataProject = null;
     private String defaultZanataVersion = null;
+
+    private ConfigDefaults defaults =new ConfigDefaults();
 
     private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
     private Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
@@ -105,5 +109,13 @@ public class ClientConfiguration {
 
     public void setInstallPath(String installPath) {
         this.installPath = installPath;
+    }
+
+    public ConfigDefaults getDefaults() {
+        return defaults;
+    }
+
+    public void setDefaults(ConfigDefaults defaults) {
+        this.defaults = defaults;
     }
 }

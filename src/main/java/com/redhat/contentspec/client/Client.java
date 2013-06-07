@@ -45,6 +45,7 @@ import com.redhat.contentspec.client.config.ServerConfiguration;
 import com.redhat.contentspec.client.config.ZanataServerConfiguration;
 import com.redhat.contentspec.client.constants.ConfigConstants;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.entities.ConfigDefaults;
 import com.redhat.contentspec.client.entities.RESTVersionDecorator;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.client.utils.LoggingUtilities;
@@ -56,7 +57,6 @@ import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
-import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.resteasy.client.ClientResponse;
@@ -670,7 +670,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             clientConfig.setPublicanBuildOptions(Constants.DEFAULT_PUBLICAN_OPTIONS);
             clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
         }
-		
+
 		/* Read in the zanata details from the config file */
         if (!readZanataDetailsFromConfig(configReader)) {
             return false;
@@ -687,6 +687,18 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (configReader.getProperty("publish.command") != null && !configReader.getProperty("publish.command").equals("")) {
                 clientConfig.setPublishCommand(configReader.getProperty("publish.command").toString());
             }
+        }
+
+        // Read in the defaults
+        if (!configReader.getRootNode().getChildren("defaults").isEmpty()) {
+            final ConfigDefaults defaults = new ConfigDefaults();
+
+            // Load the server value
+            if (configReader.getProperty("defaults.server") != null && !configReader.getProperty("defaults.server").equals("")) {
+                defaults.setServer(Boolean.parseBoolean(configReader.getProperty("defaults.server").toString()));
+            }
+
+            clientConfig.setDefaults(defaults);
         }
 
         return true;

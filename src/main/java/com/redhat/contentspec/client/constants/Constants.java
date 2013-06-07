@@ -319,11 +319,10 @@ public class Constants {
     public static final String NEW_LONG_PARAM = "--new";
 
     public static final String FLATTEN_TOPICS_LONG_PARAM = "--flatten-topics";
+    public static final String FLATTEN_LONG_PARAM = "--flatten";
 
     public static final String YES_LONG_PARAM = "--yes";
     public static final String YES_SHORT_PARAM = "-y";
-
-    public static final String SERVER_BUILD_LONG_PARAM = "--server";
 
     public static final String MESSAGE_SHORT_PARAM = "-m";
     public static final String MESSAGE_LONG_PARAM = "--message";
