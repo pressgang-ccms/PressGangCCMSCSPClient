@@ -168,13 +168,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
         setAppShuttingDown(true);
     }
 
-    /**
-     * Shutdown the application with a specific exit
-     * status.
-     *
-     * @param exitStatus The exit status to shut the
-     *                   application down with.
-     */
+    @Override
     public void shutdown(final int exitStatus) {
         shutdown.set(true);
         System.exit(exitStatus);

@@ -27,6 +27,7 @@ import com.beust.jcommander.internal.Console;
 import com.google.code.regexp.Matcher;
 import com.google.code.regexp.Pattern;
 import com.redhat.contentspec.builder.utils.DocbookBuildUtilities;
+import com.redhat.contentspec.client.commands.base.BaseCommand;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -44,9 +45,11 @@ import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTStringConstantV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.utils.common.StringUtilities;
@@ -450,10 +453,11 @@ public class ClientUtilities {
 
             final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM yyyy");
             final String format = "%" + (sizes.get("ID") + 2) + "s%" + (sizes.get("TITLE") + 2) + "s%" + (sizes.get(
-                    "PRODUCT") + 2) + "s%" + (sizes.get("VERSION") + 2) + "s%" + (sizes.get(
-                    "CREATED BY") + 2) + "s%" + (sizes.get("LAST MODIFIED") + 2) + "s";
+                    "PRODUCT") + 2) + "s%" + (sizes.get("VERSION") + 2) + "s%" + (sizes.get("CREATED BY") + 2) + "s%" + (sizes.get(
+                    "LAST MODIFIED") + 2) + "s";
 
-            final StringBuilder output = new StringBuilder(String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
+            final StringBuilder output = new StringBuilder(
+                    String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
             for (final Spec spec : contentSpecs.getSpecs()) {
                 output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(),
                         spec.getCreator() == null ? "Unknown" : spec.getCreator(),
@@ -552,6 +556,43 @@ public class ClientUtilities {
         }
 
         return logDetails;
+    }
+
+    /**
+     * Validate that a Language is a valid language as defined by the server.
+     *
+     * @param restManager
+     * @param lang        The language to be validated.
+     * @return True if the language exists on the server otherwise false.
+     */
+    public static boolean validateLanguage(final BaseCommand command, final RESTManager restManager, final String lang) {
+        return validateLanguages(command, restManager, new String[]{lang});
+    }
+
+    /**
+     * Validate that a Language is a valid language as defined by the server.
+     *
+     * @param restManager
+     * @param langs       The languages to be validated.
+     * @return True if the language exists on the server otherwise false.
+     */
+    public static boolean validateLanguages(final BaseCommand command, final RESTManager restManager, final String[] langs) {
+        final RESTStringConstantV1 localesConstant = restManager.getRESTClient().getJSONStringConstant(
+                CommonConstants.LOCALES_STRING_CONSTANT_ID, "");
+        final List<String> locales = CollectionUtilities.replaceStrings(CollectionUtilities.sortAndReturn(
+                CollectionUtilities.toArrayList(localesConstant.getValue().split("[\\s\r\n]*,[\\s\r\n]*"))), "_", "-");
+
+        boolean valid = true;
+        for (final String lang : langs) {
+            if (!locales.contains(lang)) {
+                command.printError(
+                        String.format(Constants.ERROR_INVALID_LOCALE_MSG, lang, localesConstant.getValue().replaceAll("\r|\n", " ")),
+                        false);
+                valid = false;
+            }
+        }
+
+        return valid;
     }
 }
 

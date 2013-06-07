@@ -139,7 +139,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_CONFIG_ERROR);
         }
 
-        final ZanataInterface zanataInterface = intialiseZanataInterface();
+        final ZanataInterface zanataInterface = initialiseZanataInterface(restManager);
         final SyncMaster syncMaster = new SyncMaster(getServerUrl(), restManager.getRESTClient(), zanataInterface);
 
         // Good point to check for a shutdown
@@ -211,12 +211,19 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      *
      * @return The initialised Zanata Interface.
      */
-    protected ZanataInterface intialiseZanataInterface() {
+    protected ZanataInterface initialiseZanataInterface(final RESTManager restManager) {
         final ZanataInterface zanataInterface = new ZanataInterface(0.2);
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
         final String[] splitLocales = locales.split(",");
+
+        // Check to make sure the locales are valid
+        if (!ClientUtilities.validateLanguages(this, restManager, splitLocales)) {
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
+
         for (final String locale : splitLocales) {
+            // Covert the language into a LocaleId
             localeIds.add(LocaleId.fromJavaName(locale));
         }
 

@@ -156,6 +156,7 @@ public class Constants {
             " %s";
     public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG = "Failed to load the formatting XML Element Properties.";
     public static final String ERROR_NO_LOCALES_MSG = "No Languages were specified by the command line.";
+    public static final String ERROR_INVALID_LOCALE_MSG = "%s is not a valid language. The valid languages are: %s";
 
     // Info Messages
     public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";

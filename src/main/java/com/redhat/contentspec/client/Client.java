@@ -961,6 +961,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (command != null && command != this) command.shutdown();
     }
 
+    @Override
     public void shutdown(int exitStatus) {
         shutdown.set(true);
         if (command != null) command.setShutdown(true);

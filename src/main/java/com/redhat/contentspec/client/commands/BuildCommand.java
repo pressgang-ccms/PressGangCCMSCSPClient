@@ -488,6 +488,11 @@ public class BuildCommand extends BaseCommandImpl {
             return;
         }
 
+        // Check to make sure the lang is valid
+        if (locale != null && !ClientUtilities.validateLanguage(this, restManager, locale)) {
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
+
         final String contentSpec = getContentSpecString(reader, ids.get(0));
 
         // Good point to check for a shutdown

@@ -3,7 +3,6 @@ package com.redhat.contentspec.client.commands.base;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.rest.v1.entities.RESTUserV1;
 
 public interface BaseCommand extends ShutdownAbleApp {
     String getUsername();
@@ -70,4 +69,12 @@ public interface BaseCommand extends ShutdownAbleApp {
     boolean loadFromCSProcessorCfg();
 
     void validateServerUrl();
+
+    /**
+     * Shutdown the application with a specific exit status.
+     *
+     * @param exitStatus The exit status to shut the
+     *                   application down with.
+     */
+    void shutdown(int exitStatus);
 }
