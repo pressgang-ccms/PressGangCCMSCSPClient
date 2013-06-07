@@ -59,9 +59,25 @@ public class SetupCommand extends BaseCommandImpl {
 
         setupPublican(configFile);
 
+        // Get the jdocbook build options
+        JCommander.getConsole().println("Setup the jDocbook options? (Yes/No)");
+        String answer = JCommander.getConsole().readLine();
+
+        if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
+            // Good point to check for a shutdown
+            if (isAppShuttingDown()) {
+                shutdown.set(true);
+                return;
+            }
+
+            configFile.append("\n");
+
+            setupjDocbook(configFile);
+        }
+
         // Get the publishing options
         JCommander.getConsole().println("Setup the publishing options? (Yes/No)");
-        String answer = JCommander.getConsole().readLine();
+        answer = JCommander.getConsole().readLine();
 
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Good point to check for a shutdown
@@ -308,6 +324,29 @@ public class SetupCommand extends BaseCommandImpl {
         configFile.append("[publican]\n");
         configFile.append("build.parameters=" + (publicanParams.isEmpty() ? Constants.DEFAULT_PUBLICAN_OPTIONS : publicanParams) + "\n");
         configFile.append("preview.format=" + (publicanFormat.isEmpty() ? Constants.DEFAULT_PUBLICAN_FORMAT : publicanFormat) + "\n");
+    }
+
+    /**
+     * Setup the jDocbook configuration options by asking
+     * the user for specific details.
+     *
+     * @param configFile
+     */
+    protected void setupjDocbook(final StringBuilder configFile) {
+        String jDocbookParams = "";
+        String jDocbookFormat = "";
+
+        // Get the jDocbook options
+        JCommander.getConsole().println(
+                "Please enter the jDocbook build command line options. [" + Constants.DEFAULT_JDOCBOOK_OPTIONS + "]");
+        jDocbookParams = JCommander.getConsole().readLine();
+        JCommander.getConsole().println("Please enter the preferred jDocbook preview format. [" + Constants.DEFAULT_JDOCBOOK_FORMAT + "]");
+        jDocbookFormat = JCommander.getConsole().readLine();
+
+        // Create the publican options
+        configFile.append("[jDocbook]\n");
+        configFile.append("build.parameters=" + (jDocbookParams.isEmpty() ? Constants.DEFAULT_JDOCBOOK_OPTIONS : jDocbookParams) + "\n");
+        configFile.append("preview.format=" + (jDocbookFormat.isEmpty() ? Constants.DEFAULT_JDOCBOOK_FORMAT : jDocbookFormat) + "\n");
     }
 
     /**

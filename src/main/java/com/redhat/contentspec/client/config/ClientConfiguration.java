@@ -10,6 +10,10 @@ public class ClientConfiguration {
     private String publicanBuildOptions = null;
     private String publicanPreviewFormat = null;
     private String publicanCommonContentDirectory = null;
+
+    private String jDocbookBuildOptions = null;
+    private String jDocbookPreviewFormat = null;
+
     private String kojiHubUrl = null;
     private String publishCommand = null;
 
@@ -117,5 +121,21 @@ public class ClientConfiguration {
 
     public void setDefaults(ConfigDefaults defaults) {
         this.defaults = defaults;
+    }
+
+    public String getjDocbookBuildOptions() {
+        return jDocbookBuildOptions;
+    }
+
+    public void setjDocbookBuildOptions(String jDocbookBuildOptions) {
+        this.jDocbookBuildOptions = jDocbookBuildOptions;
+    }
+
+    public String getjDocbookPreviewFormat() {
+        return jDocbookPreviewFormat;
+    }
+
+    public void setjDocbookPreviewFormat(String jDocbookPreviewFormat) {
+        this.jDocbookPreviewFormat = jDocbookPreviewFormat;
     }
 }

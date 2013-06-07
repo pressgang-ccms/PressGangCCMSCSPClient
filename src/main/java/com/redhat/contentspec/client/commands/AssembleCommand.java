@@ -6,6 +6,7 @@ import java.io.IOException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.builder.BuildType;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
@@ -82,9 +83,14 @@ public class AssembleCommand extends BuildCommand {
                     "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
                     contentSpec.getTitle()) + File.separator));
 
-            fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
-            outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
-            fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
+            if (getBuildType() == BuildType.JDOCBOOK) {
+                outputDirectory = rootDir + Constants.DEFAULT_JDOCBOOK_LOCATION;
+                fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-jDocbook.zip";
+            } else {
+                outputDirectory = rootDir + Constants.DEFAULT_PUBLICAN_LOCATION;
+                fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
+            }
+            fileDirectory = rootDir + Constants.DEFAULT_ZIP_LOCATION;
         } else if (getIds() != null && getIds().size() == 1) {
             final String contentSpec = getContentSpecString(reader, getIds().get(0));
 
@@ -98,7 +104,7 @@ public class AssembleCommand extends BuildCommand {
             }
 
             // Create the fully qualified output path
-            if (getOutputPath() != null && getOutputPath().endsWith("/")) {
+            if (getOutputPath() != null && getOutputPath().endsWith(File.separator)) {
                 fileDirectory = this.getOutputPath();
                 fileName = DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + ".zip";
             } else if (getOutputPath() == null) {
@@ -155,27 +161,50 @@ public class AssembleCommand extends BuildCommand {
             return;
         }
 
-        String publicanOptions = clientConfig.getPublicanBuildOptions();
+        // Do the build
+        doBuild(outputDir);
 
-        // Replace the locale in the build options if the locale has been set
-        if (getOutputLocale() != null)
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
-        else if (getLocale() != null)
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
+        JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, outputDir.getAbsolutePath()));
+    }
 
-        try {
-            JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
-            final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, null, outputDir,
-                    JCommander.getConsole(), !hideOutput, false);
-            if (exitValue == null || exitValue != 0) {
-                printError(String.format(Constants.ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG, (exitValue == null ? 0 : exitValue)), false);
+    protected void doBuild(final File outputDir) {
+        if (getBuildType() == BuildType.JDOCBOOK) {
+            String jDocbookOptions = clientConfig.getjDocbookBuildOptions();
+
+            try {
+                JCommander.getConsole().println(Constants.STARTING_MAVEN_BUILD_MSG);
+                final Integer exitValue = ClientUtilities.runCommand("mvn " + jDocbookOptions, null, outputDir,
+                        JCommander.getConsole(), !hideOutput, false);
+                if (exitValue == null || exitValue != 0) {
+                    printError(String.format(Constants.ERROR_RUNNING_MAVEN_EXIT_CODE_MSG, (exitValue == null ? 0 : exitValue)), false);
+                    shutdown(Constants.EXIT_FAILURE);
+                }
+            } catch (IOException e) {
+                printError(Constants.ERROR_RUNNING_MAVEN_MSG, false);
                 shutdown(Constants.EXIT_FAILURE);
             }
-        } catch (IOException e) {
-            printError(Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
-            shutdown(Constants.EXIT_FAILURE);
+        } else {
+            String publicanOptions = clientConfig.getPublicanBuildOptions();
+
+            // Replace the locale in the build options if the locale has been set
+            if (getOutputLocale() != null)
+                publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getOutputLocale());
+            else if (getLocale() != null)
+                publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
+
+            try {
+                JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
+                final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, null, outputDir,
+                        JCommander.getConsole(), !hideOutput, false);
+                if (exitValue == null || exitValue != 0) {
+                    printError(String.format(Constants.ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG, (exitValue == null ? 0 : exitValue)), false);
+                    shutdown(Constants.EXIT_FAILURE);
+                }
+            } catch (IOException e) {
+                printError(Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
+                shutdown(Constants.EXIT_FAILURE);
+            }
         }
-        JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, outputDir.getAbsolutePath()));
     }
 
     @Override

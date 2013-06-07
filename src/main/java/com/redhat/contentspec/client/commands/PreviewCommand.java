@@ -5,11 +5,13 @@ import java.io.File;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.builder.BuildType;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
 import com.redhat.contentspec.client.utils.ClientUtilities;
 import com.redhat.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -34,24 +36,10 @@ public class PreviewCommand extends AssembleCommand {
         this.noAssemble = noAssemble;
     }
 
-    private boolean validateFormat(final String previewFormat) {
-        if (previewFormat == null) return false;
-
-        if (previewFormat.equals("html") || previewFormat.equals("html-single") || previewFormat.equals("pdf")) return true;
-        else return false;
-    }
-
     @Override
     public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
-        final RESTReader reader = restManager.getReader();
         final boolean previewFromConfig = loadFromCSProcessorCfg();
-        final String previewFormat = clientConfig.getPublicanPreviewFormat();
-
-        // Check that the format can be previewed
-        if (!validateFormat(previewFormat)) {
-            printError(String.format(Constants.ERROR_UNSUPPORTED_FORMAT, previewFormat), false);
-            shutdown(Constants.EXIT_FAILURE);
-        }
+        final String previewFormat = getPreviewFormat();
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
@@ -66,81 +54,7 @@ public class PreviewCommand extends AssembleCommand {
         }
 
         // Create the file object that will be opened
-        String previewFileName = null;
-        if (previewFromConfig) {
-            final RESTTopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
-
-            // Check that that content specification was found
-            if (contentSpec == null || contentSpec.getXml() == null) {
-                printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
-                shutdown(Constants.EXIT_FAILURE);
-            }
-
-            // Parse the content specification to get the product and versions
-            final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
-            try {
-                csp.parse(contentSpec.getXml());
-            } catch (Exception e) {
-                printError(Constants.ERROR_INTERNAL_ERROR, false);
-                shutdown(Constants.EXIT_ARGUMENT_ERROR);
-            }
-
-            final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                    "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
-                    contentSpec.getTitle()) + File.separator));
-            final String locale = getOutputLocale() == null ? (getLocale() == null ? (csp.getContentSpec().getLocale() == null ?
-                    CommonConstants.DEFAULT_LOCALE : csp.getContentSpec().getLocale()) : getLocale()) : getOutputLocale();
-
-            if (previewFormat.equals("pdf")) {
-                // Create the file
-                previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/" +
-                        DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(
-                        contentSpec.getTitle()) + "-en-US.pdf";
-            } else {
-                previewFileName = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp/" + locale + "/" + previewFormat + "/index" +
-                        ".html";
-            }
-        } else if (getIds() != null && getIds().size() == 1) {
-            // Create the file based on an ID passed from the command line
-            final String contentSpec = this.getContentSpecString(reader, getIds().get(0));
-
-            final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
-            try {
-                csp.parse(contentSpec);
-            } catch (Exception e) {
-                printError(Constants.ERROR_INTERNAL_ERROR, false);
-                shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
-            }
-
-            // Create the fully qualified output path
-            String fileDirectory = "";
-            if (getOutputPath() != null && getOutputPath().endsWith("/")) {
-                fileDirectory = ClientUtilities.validateDirLocation(this.getOutputPath());
-            } else if (this.getOutputPath() != null) {
-                final File file = new File(ClientUtilities.validateFilePath(this.getOutputPath()));
-                if (file.getParent() != null) fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
-            }
-
-            final String locale = getOutputLocale() == null ? (getLocale() == null ? (csp.getContentSpec().getLocale() == null ?
-                    CommonConstants.DEFAULT_LOCALE : csp.getContentSpec().getLocale()) : getLocale()) : getOutputLocale();
-
-            if (previewFormat.equals("pdf")) {
-                previewFileName = fileDirectory + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/" + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getProduct()) + "-" + csp.getContentSpec().getVersion() + "-" + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getTitle()) + "-en-US.pdf";
-            } else {
-                previewFileName = fileDirectory + DocBookUtilities.escapeTitle(
-                        csp.getContentSpec().getTitle()) + "/tmp/" + locale + "/" + previewFormat + "/index.html";
-            }
-        } else if (getIds().size() == 0) {
-            printError(Constants.ERROR_NO_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        } else {
-            printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        }
+        String previewFileName = getPreviewFileName(restManager, elm, previewFromConfig, previewFormat);
 
         // Good point to check for a shutdown
         if (isAppShuttingDown()) {
@@ -169,6 +83,139 @@ public class PreviewCommand extends AssembleCommand {
             printError(String.format(Constants.ERROR_UNABLE_TO_OPEN_FILE_MSG, previewFile.getAbsolutePath()), false);
             shutdown(Constants.EXIT_FAILURE);
         }
+    }
+
+    protected String getPreviewFormat() {
+        final String previewFormat;
+
+        if (getBuildType() == BuildType.JDOCBOOK) {
+            previewFormat= clientConfig.getjDocbookPreviewFormat();
+        } else {
+            previewFormat= clientConfig.getPublicanPreviewFormat();
+        }
+
+        // Check that the format can be previewed
+        if (!validateFormat(previewFormat)) {
+            printError(String.format(Constants.ERROR_UNSUPPORTED_FORMAT, previewFormat), false);
+            shutdown(Constants.EXIT_FAILURE);
+        }
+
+        return previewFormat;
+    }
+
+    protected boolean validateFormat(final String previewFormat) {
+        if (previewFormat == null) return false;
+
+        if (getBuildType() == BuildType.JDOCBOOK) {
+            return previewFormat.equals("html") || previewFormat.equals("html_single") || previewFormat.equals("pdf");
+        } else {
+            return previewFormat.equals("html") || previewFormat.equals("html-single") || previewFormat.equals("pdf");
+        }
+    }
+
+    protected String getPreviewFileName(final RESTManager restManager, final ErrorLoggerManager elm, final boolean previewFromConfig,
+            final String previewFormat) {
+        final RESTReader reader = restManager.getReader();
+        String previewFileName = null;
+
+        if (previewFromConfig) {
+            final RESTTopicV1 contentSpec = restManager.getReader().getContentSpecById(cspConfig.getContentSpecId(), null);
+
+            // Check that that content specification was found
+            if (contentSpec == null || contentSpec.getXml() == null) {
+                printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
+                shutdown(Constants.EXIT_FAILURE);
+            }
+
+            // Parse the content specification to get the product and versions
+            final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+            try {
+                csp.parse(contentSpec.getXml());
+            } catch (Exception e) {
+                printError(Constants.ERROR_INTERNAL_ERROR, false);
+                shutdown(Constants.EXIT_ARGUMENT_ERROR);
+            }
+
+            final String rootDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
+                    "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
+                    contentSpec.getTitle()) + File.separator));
+
+            if (getBuildType() == BuildType.JDOCBOOK) {
+                previewFileName = getJDocbookPreviewName(rootDir + Constants.DEFAULT_JDOCBOOK_LOCATION, csp.getContentSpec(), previewFormat);
+            } else {
+                previewFileName = getPublicanPreviewName(rootDir + Constants.DEFAULT_PUBLICAN_LOCATION, csp.getContentSpec(),
+                        previewFormat);
+            }
+        } else if (getIds() != null && getIds().size() == 1) {
+            // Create the file based on an ID passed from the command line
+            final String contentSpec = this.getContentSpecString(reader, getIds().get(0));
+
+            final ContentSpecParser csp = new ContentSpecParser(elm, restManager);
+            try {
+                csp.parse(contentSpec);
+            } catch (Exception e) {
+                printError(Constants.ERROR_INTERNAL_ERROR, false);
+                shutdown(Constants.EXIT_INTERNAL_SERVER_ERROR);
+            }
+
+            // Create the fully qualified output path
+            String fileDirectory = "";
+            if (getOutputPath() != null && getOutputPath().endsWith(File.separator)) {
+                fileDirectory = ClientUtilities.validateDirLocation(this.getOutputPath());
+            } else if (this.getOutputPath() != null) {
+                final File file = new File(ClientUtilities.validateFilePath(this.getOutputPath()));
+                if (file.getParent() != null) fileDirectory = ClientUtilities.validateDirLocation(file.getParent());
+            }
+
+            final String rootDir = fileDirectory + DocBookUtilities.escapeTitle(csp.getContentSpec().getTitle()) + File.separator;
+            if (getBuildType() == BuildType.JDOCBOOK) {
+                previewFileName = getJDocbookPreviewName(rootDir, csp.getContentSpec(), previewFormat);
+            } else {
+                previewFileName = getPublicanPreviewName(rootDir, csp.getContentSpec(), previewFormat);
+            }
+        } else if (getIds().size() == 0) {
+            printError(Constants.ERROR_NO_ID_MSG, false);
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        } else {
+            printError(Constants.ERROR_MULTIPLE_ID_MSG, false);
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
+
+        return previewFileName;
+    }
+
+    protected String getJDocbookPreviewName(final String rootDir, final ContentSpec contentSpec, final String previewFormat) {
+        final String locale = generateOutputLocale(contentSpec);
+
+        // Fix the root book directory to point to the root build directory
+        final String fixedRootDir = rootDir + "target" + File.separator + "docbook" + File.separator + "publish" + File.separator;
+
+        if (previewFormat.equals("pdf")) {
+            return  fixedRootDir + File.separator + locale + File.separator + previewFormat + File.separator +
+                    DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-" + locale + ".pdf";
+        } else {
+            return fixedRootDir + File.separator + locale + File.separator + previewFormat + File.separator + "index" +
+                    ".html";
+        }
+    }
+
+    protected String getPublicanPreviewName(final String rootDir, final ContentSpec contentSpec, final String previewFormat) {
+        final String locale = generateOutputLocale(contentSpec);
+
+        if (previewFormat.equals("pdf")) {
+            return rootDir + "tmp" + File.separator + locale + File.separator + previewFormat + File.separator +
+                    DocBookUtilities.escapeTitle(
+                            contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
+                    contentSpec.getTitle()) + "-" + locale + ".pdf";
+        } else {
+            return rootDir + "tmp" + File.separator + locale + File.separator + previewFormat + File.separator + "index" +
+                    ".html";
+        }
+    }
+
+    protected String generateOutputLocale(final ContentSpec contentSpec) {
+        return getOutputLocale() == null ? (getLocale() == null ? (contentSpec.getLocale() == null ? CommonConstants.DEFAULT_LOCALE :
+                contentSpec.getLocale()) : getLocale()) : getOutputLocale();
     }
 
     @Override

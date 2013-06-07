@@ -671,6 +671,22 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
         }
 
+        // Read in the jDocbook build options
+        if (!configReader.getRootNode().getChildren("jDocbook").isEmpty()) {
+            // Load the jDocbook setup values
+            if (configReader.getProperty("jDocbook.build..parameters") != null && !configReader.getProperty(
+                    "jDocbook.build..parameters").equals("")) {
+                clientConfig.setjDocbookBuildOptions(configReader.getProperty("jDocbook.build..parameters").toString());
+            }
+            if (configReader.getProperty("jDocbook.preview..format") != null && !configReader.getProperty(
+                    "jDocbook.preview..format").equals("")) {
+                clientConfig.setjDocbookPreviewFormat(configReader.getProperty("jDocbook.preview..format").toString());
+            }
+        } else {
+            clientConfig.setjDocbookBuildOptions(Constants.DEFAULT_JDOCBOOK_OPTIONS);
+            clientConfig.setjDocbookPreviewFormat(Constants.DEFAULT_JDOCBOOK_FORMAT);
+        }
+
 		/* Read in the zanata details from the config file */
         if (!readZanataDetailsFromConfig(configReader)) {
             return false;

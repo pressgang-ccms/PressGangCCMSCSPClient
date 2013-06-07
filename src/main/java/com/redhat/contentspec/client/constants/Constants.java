@@ -12,10 +12,13 @@ public class Constants {
     public static final String DEFAULT_SERVER_NAME = "default";
     public static final String PRODUCTION_SERVER_NAME = "production";
     public static final String TEST_SERVER_NAME = "test";
-    public static final String DEFAULT_CONFIG_ZIP_LOCATION = "assembly" + File.separator;
-    public static final String DEFAULT_CONFIG_PUBLICAN_LOCATION = "assembly" + File.separator + "publican" + File.separator;
+    public static final String DEFAULT_ZIP_LOCATION = "assembly" + File.separator;
+    public static final String DEFAULT_PUBLICAN_LOCATION = "assembly" + File.separator + "publican" + File.separator;
+    public static final String DEFAULT_JDOCBOOK_LOCATION = "assembly" + File.separator + "jDocbook" + File.separator;
     public static final String DEFAULT_PUBLICAN_OPTIONS = "--langs=en-US --formats=html-single";
     public static final String DEFAULT_PUBLICAN_FORMAT = "html-single";
+    public static final String DEFAULT_JDOCBOOK_OPTIONS = "clean compile";
+    public static final String DEFAULT_JDOCBOOK_FORMAT = "html_single";
     public static final String DEFAULT_SNAPSHOT_LOCATION = "snapshots";
     public static final String FILENAME_EXTENSION = "contentspec";
 
@@ -111,7 +114,7 @@ public class Constants {
     public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
             " running Publican.";
     public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
-            "occured while running Publican. (exit code: %d)";
+            "occurred while running Publican. (exit code: %d)";
     public static final String ERROR_UNABLE_TO_FIND_HTML_SINGLE_MSG = "Unable to preview the Content Specification because the \"%s\" " +
             "file couldn't be found.";
     public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG = "Unable to open the \"%s\" file.";
@@ -157,6 +160,10 @@ public class Constants {
     public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG = "Failed to load the formatting XML Element Properties.";
     public static final String ERROR_NO_LOCALES_MSG = "No Languages were specified by the command line.";
     public static final String ERROR_INVALID_LOCALE_MSG = "%s is not a valid language. The valid languages are: %s";
+    public static final String ERROR_RUNNING_MAVEN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
+            " running Maven.";
+    public static final String ERROR_RUNNING_MAVEN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
+            "occurred while running Maven. (exit code: %d)";
 
     // Info Messages
     public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
@@ -183,6 +190,7 @@ public class Constants {
     public static final String STARTING_ASSEMBLE_MSG = "Starting to assemble...";
     public static final String STARTING_BUILD_MSG = "Starting to build...";
     public static final String STARTING_PUBLICAN_BUILD_MSG = "Starting the publican build...";
+    public static final String STARTING_MAVEN_BUILD_MSG = "Starting the maven build...";
     public static final String STARTING_VALIDATE_MSG = "Starting to validate...";
     public static final String FETCHING_PUBSNUMBER_MSG = "Fetching the pubsnumber from " + Constants.KOJI_NAME + "...";
     public static final String PUBLISH_BUILD_MSG = "Publishing the Content Specification...";

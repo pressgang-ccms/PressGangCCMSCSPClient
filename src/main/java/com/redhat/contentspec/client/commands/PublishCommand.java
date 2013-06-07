@@ -134,8 +134,8 @@ public class PublishCommand extends BuildCommand {
                     "") ? "" : (cspConfig.getRootOutputDirectory() + DocBookUtilities.escapeTitle(
                     contentSpec.getTitle()) + File.separator));
 
-            fileDirectory = rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
-            outputDirectory = rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION;
+            fileDirectory = rootDir + Constants.DEFAULT_ZIP_LOCATION;
+            outputDirectory = rootDir + Constants.DEFAULT_PUBLICAN_LOCATION;
             fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-publican.zip";
         } else if (getIds() != null && getIds().size() == 1) {
             final String contentSpec = getContentSpecString(reader, getIds().get(0));

@@ -572,7 +572,7 @@ public class BuildCommand extends BaseCommandImpl {
         String outputDir = "";
         if (buildingFromConfig) {
             outputDir = (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                    "") ? "" : (fileName + File.separator)) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
+                    "") ? "" : (fileName + File.separator)) + Constants.DEFAULT_ZIP_LOCATION;
             fileName += "-publican.zip";
         } else {
             fileName += ".zip";
