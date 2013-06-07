@@ -586,7 +586,7 @@ public class ClientUtilities {
         for (final String lang : langs) {
             if (!locales.contains(lang)) {
                 command.printError(
-                        String.format(Constants.ERROR_INVALID_LOCALE_MSG, lang, localesConstant.getValue().replaceAll("\r|\n", " ")),
+                        String.format(Constants.ERROR_INVALID_LOCALE_MSG, lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")),
                         false);
                 valid = false;
             }
