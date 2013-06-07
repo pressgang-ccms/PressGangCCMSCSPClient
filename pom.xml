@@ -20,6 +20,7 @@
         <resteasy.version>2.3.4.Final</resteasy.version>
         <slf4j.version>1.6.4</slf4j.version>
         <shadeplugin.version>2.0</shadeplugin.version>
+        <commonsio.version>1.4</commonsio.version>
         <ipsedixit.version>1.0.2</ipsedixit.version>
         <!-- Can't move to Mockito 1.9.5 and PowerMock 1.5 yet due to bug -->
         <mockito.version>1.9.0</mockito.version>
@@ -112,6 +113,11 @@
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>${commonsconfiguration.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commonsio.version}</version>
         </dependency>
 
         <!-- Jackson Libraries -->

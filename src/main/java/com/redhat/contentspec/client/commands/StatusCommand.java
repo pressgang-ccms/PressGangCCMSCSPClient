@@ -1,25 +1,26 @@
 package com.redhat.contentspec.client.commands;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.code.regexp.NamedMatcher;
-import com.google.code.regexp.NamedPattern;
+import com.google.code.regexp.Matcher;
+import com.google.code.regexp.Pattern;
 import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
-import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 
 @Parameters(commandDescription = "Check the status of a local copy of a Content Specification compared to the server")
@@ -115,7 +116,12 @@ public class StatusCommand extends BaseCommandImpl {
         }
 
         // Get the content spec from the file
-        final String contentSpecData = FileUtilities.readFileContents(new File(fileName));
+        String contentSpecData = null;
+        try {
+            contentSpecData = FileUtils.readFileToString(new File(fileName));
+        } catch (IOException e) {
+            // Do nothing as this is handled below
+        }
 
         if (contentSpecData == null || contentSpecData.equals("")) {
             printError(Constants.ERROR_EMPTY_FILE_MSG, false);
@@ -144,8 +150,8 @@ public class StatusCommand extends BaseCommandImpl {
         final String serverChecksum = HashUtilities.generateMD5(serverContentSpecData);
 
         // Get the local checksum value
-        final NamedPattern pattern = NamedPattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
-        final NamedMatcher matcher = pattern.matcher(contentSpecData);
+        final Pattern pattern = Pattern.compile("CHECKSUM[ ]*=[ ]*(?<Checksum>[A-Za-z0-9]+)");
+        final Matcher matcher = pattern.matcher(contentSpecData);
         String localStringChecksum = "";
         while (matcher.find()) {
             final String temp = matcher.group();
@@ -171,8 +177,8 @@ public class StatusCommand extends BaseCommandImpl {
     }
 
     protected Integer getContentSpecId(String contentSpecFile) {
-        final NamedPattern pattern = NamedPattern.compile("ID[ ]*=[ ]*(?<ID>[0-9]+)");
-        final NamedMatcher matcher = pattern.matcher(contentSpecFile);
+        final Pattern pattern = Pattern.compile("ID[ ]*=[ ]*(?<ID>[0-9]+)");
+        final Matcher matcher = pattern.matcher(contentSpecFile);
         if (matcher.find()) {
             return Integer.parseInt(matcher.group("ID"));
         } else {

@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
-import com.google.code.regexp.NamedMatcher;
-import com.google.code.regexp.NamedPattern;
+import com.google.code.regexp.Matcher;
+import com.google.code.regexp.Pattern;
 import com.redhat.contentspec.builder.utils.DocbookBuildUtilities;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
@@ -505,8 +505,8 @@ public class ClientUtilities {
             for (final KojiBuild build : builds) {
                 final String buildName = build.getName();
                 final String matchString = buildName.replace(packageName, "");
-                final NamedPattern pattern = NamedPattern.compile("(?<Pubsnumber>[0-9]+).*");
-                final NamedMatcher matcher = pattern.matcher(matchString);
+                final Pattern pattern = Pattern.compile("(?<Pubsnumber>[0-9]+).*");
+                final Matcher matcher = pattern.matcher(matchString);
 
                 while (matcher.find()) {
                     final Integer buildPubsnumber = Integer.parseInt(matcher.group("Pubsnumber"));
