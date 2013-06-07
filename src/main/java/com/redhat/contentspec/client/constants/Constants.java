@@ -31,9 +31,6 @@ public class Constants {
     public static final String DEFAULT_PUBLISH_COMMAND = "";
     public static final String KOJI_NAME = "brew";
 
-    // Publican Common Content Defaults
-    public static final String LINUX_PUBLICAN_COMMON_CONTENT = "/usr/share/publican/Common_Content/";
-
     // Zanata Constants
     public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
     public static final String DEFAULT_ZANATA_VERSION = "1";
@@ -333,4 +330,6 @@ public class Constants {
     public static final String REVISION_MESSAGE_FLAG_LONG_PARAMETER = "--rev-history";
 
     public static final String STRICT_LEVEL_TITLES_LONG_PARAM = "--strict-level-titles";
+
+    public static final String FORMAT_LONG_PARAM = "--format";
 }

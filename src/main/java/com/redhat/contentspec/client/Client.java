@@ -56,6 +56,7 @@ import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.resteasy.client.ClientResponse;
@@ -142,9 +143,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             parser.parse(args);
         } catch (ParameterException e) {
             if (parser.getParsedCommand() != null) {
-                commands.get(parser.getParsedCommand()).printError("Invalid Argument! Error Message: " + e.getMessage(), true);
+                commands.get(parser.getParsedCommand()).printError("Invalid Argument! Error Message: \n    " + e.getMessage(), true);
             } else {
-                printError("Invalid Argument! Error Message: " + e.getMessage(), true);
+                printError("Invalid Argument! Error Message: \n\t" + e.getMessage(), true);
             }
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
@@ -664,8 +665,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                     "")) {
                 clientConfig.setPublicanCommonContentDirectory(
                         ClientUtilities.validateDirLocation(configReader.getProperty("publican.common_content").toString()));
-            } else {
-                clientConfig.setPublicanCommonContentDirectory(Constants.LINUX_PUBLICAN_COMMON_CONTENT);
             }
         } else {
             clientConfig.setPublicanBuildOptions(Constants.DEFAULT_PUBLICAN_OPTIONS);

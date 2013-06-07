@@ -16,12 +16,15 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.CommaParameterSplitter;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Lists;
+import com.redhat.contentspec.builder.BuildType;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
 import com.redhat.contentspec.client.commands.base.BaseCommandImpl;
 import com.redhat.contentspec.client.config.ClientConfiguration;
 import com.redhat.contentspec.client.config.ContentSpecConfiguration;
 import com.redhat.contentspec.client.constants.Constants;
+import com.redhat.contentspec.client.converter.BuildTypeConverter;
 import com.redhat.contentspec.client.utils.ClientUtilities;
+import com.redhat.contentspec.client.validator.BuildTypeValidator;
 import com.redhat.contentspec.client.validator.OverrideValidator;
 import com.redhat.contentspec.processor.ContentSpecParser;
 import com.redhat.contentspec.processor.ContentSpecProcessor;
@@ -104,10 +107,7 @@ public class BuildCommand extends BaseCommandImpl {
             description = "The zanata project version to be associated with the Content Specification.")
     private String zanataVersion = null;
 
-    @Parameter(names = Constants.COMMON_CONTENT_LONG_PARAM, hidden = true)
-    private String commonContentLocale = null;
-
-    @Parameter(names = Constants.TARGET_LANG_LONG_PARAM, hidden = true)
+    @Parameter(names = Constants.TARGET_LANG_LONG_PARAM, description = "The Publican language to output to.")
     private String outputLocale = null;
 
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
@@ -135,6 +135,10 @@ public class BuildCommand extends BaseCommandImpl {
 
     @Parameter(names = Constants.SERVER_BUILD_LONG_PARAM, hidden = true)
     private Boolean serverBuild = false;
+
+    @Parameter(names = Constants.FORMAT_LONG_PARAM, description = "What format to build the content spec in.", metaVar = "<FORMAT>",
+            converter = BuildTypeConverter.class, validateWith = BuildTypeValidator.class)
+    private BuildType buildType = null;
 
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
@@ -279,14 +283,6 @@ public class BuildCommand extends BaseCommandImpl {
         this.zanataVersion = zanataVersion;
     }
 
-    public String getCommonContentLocale() {
-        return commonContentLocale;
-    }
-
-    public void setCommonContentLocale(final String commonContentLocale) {
-        this.commonContentLocale = commonContentLocale;
-    }
-
     public String getOutputLocale() {
         return outputLocale;
     }
@@ -359,6 +355,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.serverBuild = serverBuild;
     }
 
+    public BuildType getBuildType() {
+        return buildType;
+    }
+
+    public void setBuildType(BuildType buildType) {
+        this.buildType = buildType;
+    }
+
     public CSDocbookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
@@ -375,7 +379,6 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setInsertEditorLinks(insertEditorLinks);
         buildOptions.setShowReportPage(showReport);
         buildOptions.setLocale(locale);
-        buildOptions.setCommonContentLocale(commonContentLocale);
         buildOptions.setCommonContentDirectory(clientConfig.getPublicanCommonContentDirectory());
         buildOptions.setOutputLocale(outputLocale);
         buildOptions.setDraft(draft);
@@ -537,10 +540,12 @@ public class BuildCommand extends BaseCommandImpl {
         byte[] builderOutput = null;
         try {
             builder = new ContentSpecBuilder(restManager);
+            BuildType buildType = getBuildType() == null ? BuildType.PUBLICAN : getBuildType();
             if (locale == null) {
-                builderOutput = builder.buildBook(csp.getContentSpec(), getUsername(), getBuildOptions());
+                builderOutput = builder.buildBook(csp.getContentSpec(), getUsername(), getBuildOptions(), buildType);
             } else {
-                builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), getUsername(), getBuildOptions(), cspConfig.getZanataDetails());
+                builderOutput = builder.buildTranslatedBook(csp.getContentSpec(), getUsername(), getBuildOptions(),
+                        cspConfig.getZanataDetails(), buildType);
             }
         } catch (Exception e) {
             JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
