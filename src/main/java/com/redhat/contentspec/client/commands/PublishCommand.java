@@ -104,11 +104,15 @@ public class PublishCommand extends BuildCommand {
         final RESTReader reader = restManager.getReader();
         final boolean publishFromConfig = loadFromCSProcessorCfg();
 
+        // Disable the server flag for publishes
+        clientConfig.getDefaults().setServer(false);
+
         if (!isValid()) {
             printError(Constants.ERROR_NO_PUBLISH_COMMAND, false);
             shutdown(Constants.EXIT_CONFIG_ERROR);
         }
 
+        // Build the Content Spec if required
         if (!noAssemble) {
             if (!noBuild) {
                 super.process(restManager, elm);
