@@ -43,7 +43,7 @@
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
-                                <Main-Class>com.redhat.contentspec.client.Client</Main-Class>
+                                <Main-Class>org.jboss.pressgang.ccms.contentspec.client.Client</Main-Class>
                             </manifestEntries>
                         </transformer>
                     </transformers>
@@ -214,6 +214,7 @@
             <groupId>com.github.stefanbirkner</groupId>
             <artifactId>system-rules</artifactId>
             <version>${systemrules.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
