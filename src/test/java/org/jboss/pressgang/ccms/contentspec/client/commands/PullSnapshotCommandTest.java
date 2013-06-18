@@ -176,8 +176,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // and assume the processing worked
         given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),
-                any(ContentSpecParser.ParsingMode.class))).willReturn(true);
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class))).willReturn(true);
         // And we don't actually want to save anything
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
@@ -218,8 +217,7 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // and assume the processing worked
         given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),
-                any(ContentSpecParser.ParsingMode.class))).willReturn(true);
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class))).willReturn(true);
         // And we don't actually want to save anything
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
@@ -253,12 +251,12 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
     public void shouldShutdownWhenSetContentSpecRevisionsFails() {
         // Given processing the spec will fail
         given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class),
-                any(ContentSpecParser.ParsingMode.class))).willReturn(false);
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class))).willReturn(
+                false);
 
         // When setting the content spec topic revisions
         try {
-            command.setRevisionsForContentSpec(contentSpec, user);
+            command.setRevisionsForContentSpec(contentSpec, username);
             // Then an error is printed and the program is shut down
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {

@@ -37,6 +37,7 @@ import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
@@ -172,7 +173,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         spec.setTitle(randomString);
         // and the processing fails
         given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(eq(spec), any(UserWrapper.class), eq(ContentSpecParser.ParsingMode.NEW))).willReturn(false);
+        given(processor.processContentSpec(eq(spec), anyString(), eq(ContentSpecParser.ParsingMode.NEW))).willReturn(false);
 
         // When setting the content spec topic revisions
         try {
@@ -203,7 +204,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the processing fails
         given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(eq(contentSpec), any(UserWrapper.class), eq(ContentSpecParser.ParsingMode.EDITED))).willReturn(
+        given(processor.processContentSpec(eq(contentSpec), anyString(), eq(ContentSpecParser.ParsingMode.EDITED))).willReturn(
                 false);
 
         // When setting the content spec topic revisions
@@ -239,7 +240,8 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpec.getTitle()).willReturn(randomString);
         // and the processing fails
         given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(eq(contentSpec), any(UserWrapper.class), eq(ContentSpecParser.ParsingMode.EDITED))).willReturn(
+        given(processor.processContentSpec(eq(contentSpec), anyString(), eq(ContentSpecParser.ParsingMode.EDITED),
+                any(LogMessageWrapper.class))).willReturn(
                 true);
 
         // When setting the content spec topic revisions

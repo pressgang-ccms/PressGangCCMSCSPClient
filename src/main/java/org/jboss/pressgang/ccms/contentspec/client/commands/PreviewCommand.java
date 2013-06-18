@@ -6,6 +6,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
@@ -38,26 +39,14 @@ public class PreviewCommand extends AssembleCommand {
         this.noAssemble = noAssemble;
     }
 
-    private boolean validateFormat(final String previewFormat) {
-        if (previewFormat == null) return false;
-
-        if (previewFormat.equals("html") || previewFormat.equals("html-single") || previewFormat.equals("pdf")) return true;
-        else return false;
-    }
-
     @Override
     public void process() {
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
         final boolean previewFromConfig = loadFromCSProcessorCfg();
-        final String previewFormat = getClientConfig().getPublicanPreviewFormat();
+        final String previewFormat = getPreviewFormat();
 
         // Validate that only one id or file was entered
         ClientUtilities.validateIdsOrFiles(this, getIds(), true);
-
-        // Check that the format can be previewed
-        if (!validateFormat(previewFormat)) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, String.format(Constants.ERROR_UNSUPPORTED_FORMAT, previewFormat), false);
-        }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -89,6 +78,44 @@ public class PreviewCommand extends AssembleCommand {
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     String.format(Constants.ERROR_UNABLE_TO_OPEN_FILE_MSG, previewFile.getAbsolutePath()), false);
+        }
+    }
+
+    /**
+     * Get the format to be previewed and validate it.
+     *
+     * @return The format to be previewed.
+     */
+    protected String getPreviewFormat() {
+        final String previewFormat;
+
+        if (getBuildType() == BuildType.JDOCBOOK) {
+            previewFormat = getClientConfig().getjDocbookPreviewFormat();
+        } else {
+            previewFormat = getClientConfig().getPublicanPreviewFormat();
+        }
+
+        // Check that the format can be previewed
+        if (!validateFormat(previewFormat)) {
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, String.format(Constants.ERROR_UNSUPPORTED_FORMAT, previewFormat), false);
+        }
+
+        return previewFormat;
+    }
+
+    /**
+     * Check that the preview format is a valid format.
+     *
+     * @param previewFormat The format to be previewed.
+     * @return True if the format is valid, otherwise false.
+     */
+    protected boolean validateFormat(final String previewFormat) {
+        if (previewFormat == null) return false;
+
+        if (getBuildType() == BuildType.JDOCBOOK) {
+            return previewFormat.equals("html") || previewFormat.equals("html_single") || previewFormat.equals("pdf");
+        } else {
+            return previewFormat.equals("html") || previewFormat.equals("html-single") || previewFormat.equals("pdf");
         }
     }
 
@@ -128,17 +155,13 @@ public class PreviewCommand extends AssembleCommand {
             // If using a content spec project directory the file names/locations are static based on the root directory
             if (previewFromConfig) {
                 final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
-                final String locale = generateOutputLocale();
 
-                final String FS = File.separator;
-                if (previewFormat.equals("pdf")) {
-                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp" + FS + locale + FS + previewFormat + FS +
-                            DocBookUtilities.escapeTitle(
-                                    contentSpec.getProduct()) + "-" + contentSpec.getVersion() + "-" + DocBookUtilities.escapeTitle(
-                            contentSpec.getTitle()) + "-" + locale + ".pdf";
+                if (getBuildType() == BuildType.JDOCBOOK) {
+                    return getJDocbookPreviewName(rootDir + Constants.DEFAULT_CONFIG_JDOCBOOK_LOCATION, contentSpec.getTitle(),
+                            previewFormat);
                 } else {
-                    return rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION + "tmp" + FS + locale + FS + previewFormat + FS + "index" +
-                            ".html";
+                    return getPublicanPreviewName(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION, contentSpec.getTitle(),
+                            contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
                 }
             } else {
                 return findFileToPreview(contentSpec.getTitle(), contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
@@ -173,16 +196,61 @@ public class PreviewCommand extends AssembleCommand {
             }
         }
 
+        // Add the book name to the path
+        fileDirectory += DocBookUtilities.escapeTitle(contentSpecTitle) + File.separator;
+
+        // Get the preview file name based on the build type
+        if (getBuildType() == BuildType.JDOCBOOK) {
+            return getJDocbookPreviewName(fileDirectory, contentSpecTitle, previewFormat);
+        } else {
+            return getPublicanPreviewName(fileDirectory, contentSpecTitle, contentSpecVersion, contentSpecProduct, previewFormat);
+        }
+    }
+
+    /**
+     * Get the filename to open for a jDocbook build.
+     *
+     * @param rootDir          The root directory of the build.
+     * @param contentSpecTitle The title of the content specification used for the build.
+     * @param previewFormat    The format to be previewed.
+     * @return The file name and location of the file to be previewed.
+     */
+    protected String getJDocbookPreviewName(final String rootDir, final String contentSpecTitle, final String previewFormat) {
+        final String FS = File.separator;
         final String locale = generateOutputLocale();
 
-        final String FS = File.separator;
+        // Fix the root book directory to point to the root build directory
+        final String fixedRootDir = rootDir + "target" + FS + "docbook" + FS + "publish" + FS;
+
         if (previewFormat.equals("pdf")) {
-            return fileDirectory + DocBookUtilities.escapeTitle(contentSpecTitle) + FS + "tmp" + FS + locale + FS + previewFormat + FS +
-                    DocBookUtilities.escapeTitle(contentSpecProduct) + "-" + contentSpecVersion + "-" + DocBookUtilities.escapeTitle(
-                    contentSpecTitle) + "-en-US.pdf";
+            return fixedRootDir + FS + locale + FS + previewFormat + FS +
+                    DocBookUtilities.escapeTitle(contentSpecTitle) + "-" + locale + ".pdf";
         } else {
-            return fileDirectory + DocBookUtilities.escapeTitle(
-                    contentSpecTitle) + FS + "tmp" + FS + locale + FS + previewFormat + FS + "index.html";
+            return fixedRootDir + FS + locale + FS + previewFormat + FS + "index.html";
+        }
+    }
+
+    /**
+     * Get the filename to open for a publican build.
+     *
+     * @param rootDir            The root directory of the build.
+     * @param contentSpecTitle   The title of the content specification used for the build.
+     * @param contentSpecVersion The product version of the content specification used for the build.
+     * @param contentSpecProduct The product of the content specification used for the build.
+     * @param previewFormat      The format to be previewed.
+     * @return The file name and location of the file to be previewed.
+     */
+    protected String getPublicanPreviewName(final String rootDir, final String contentSpecTitle, final String contentSpecVersion,
+            final String contentSpecProduct, final String previewFormat) {
+        final String FS = File.separator;
+        final String locale = generateOutputLocale();
+
+        if (previewFormat.equals("pdf")) {
+            return rootDir + "tmp" + FS + locale + FS + previewFormat + File.separator +
+                    DocBookUtilities.escapeTitle(contentSpecProduct) + "-" + contentSpecVersion + "-" + DocBookUtilities.escapeTitle(
+                    contentSpecTitle) + "-" + locale + ".pdf";
+        } else {
+            return rootDir + "tmp" + FS + locale + FS + previewFormat + FS + "index.html";
         }
     }
 

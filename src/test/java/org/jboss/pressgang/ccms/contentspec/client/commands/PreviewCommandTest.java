@@ -107,6 +107,8 @@ public class PreviewCommandTest extends BaseUnitTest {
         command.setIds(new ArrayList<String>());
         // and no csprocessor.cfg data
         given(cspConfig.getContentSpecId()).willReturn(null);
+        // and the command has a valid preview format
+        given(clientConfig.getPublicanPreviewFormat()).willReturn("html-single");
 
         // When it is processed
         try {
@@ -190,7 +192,7 @@ public class PreviewCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getId()).willReturn(id);
         // and the File won't open
         PowerMockito.mockStatic(FileUtilities.class);
-        PowerMockito.doThrow(new Exception()).when(FileUtilities.class);
+        PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
         FileUtilities.openFile(any(File.class));
 
         // When processing the command

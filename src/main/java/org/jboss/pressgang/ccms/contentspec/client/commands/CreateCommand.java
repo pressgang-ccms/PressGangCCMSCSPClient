@@ -24,7 +24,6 @@ import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Create a new Content Specification on the server")
@@ -150,9 +149,6 @@ public class CreateCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
 
         // Check that the options set are valid
@@ -177,7 +173,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Process/Save the content spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        boolean success = processContentSpec(contentSpec, loggerManager, user);
+        boolean success = processContentSpec(contentSpec, loggerManager, getUsername());
 
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
@@ -250,17 +246,17 @@ public class CreateCommand extends BaseCommandImpl {
      * @param user          The user who requested the content spec be saved.
      * @return True if the content spec was processed and saved successfully, otherwise false.
      */
-    protected boolean processContentSpec(final ContentSpec contentSpec, final ErrorLoggerManager loggerManager, final UserWrapper user) {
+    protected boolean processContentSpec(final ContentSpec contentSpec, final ErrorLoggerManager loggerManager, final String username) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
         processingOptions.setStrictLevelTitles(strictLevelTitles);
 
         // Setup the log message
-        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), user, message, revisionHistoryMessage);
+        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), username, getMessage(), getRevisionHistoryMessage());
 
         setContentSpecProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        return getContentSpecProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW, logMessage);
+        return getContentSpecProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.NEW, logMessage);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
@@ -27,7 +28,7 @@ public class AssembleCommand extends BuildCommand {
     private Boolean hideOutput = false;
 
     @Parameter(names = Constants.NO_PUBLICAN_BUILD_LONG_PARAM,
-            description = "Build the Content Specification with publican after unzipping.",
+            description = "Don't build the Content Specification after unzipping.",
             hidden = true)
     private Boolean noPublicanBuild = false;
 
@@ -139,7 +140,11 @@ public class AssembleCommand extends BuildCommand {
 
         // Run publican to assemble the book into the output format(s)
         if (!isNoPublicanBuild()) {
-            runPublican(buildOutputDirectory);
+            if (getBuildType() == BuildType.JDOCBOOK) {
+                runMaven(buildOutputDirectory);
+            } else {
+                runPublican(buildOutputDirectory);
+            }
             JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, buildOutputDirectory.getAbsolutePath()));
         }
     }
@@ -182,8 +187,17 @@ public class AssembleCommand extends BuildCommand {
                 final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
 
                 setBuildFileDirectory(rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION);
-                setOutputDirectory(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION);
-                setBuildFileName(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + Constants.DEFAULT_CONFIG_BUILD_POSTFIX + ".zip");
+                if (getBuildType() == BuildType.JDOCBOOK) {
+                    setOutputDirectory(rootDir + Constants.DEFAULT_CONFIG_JDOCBOOK_LOCATION);
+                    setBuildFileName(
+                            DocBookUtilities.escapeTitle(contentSpec.getTitle()) + Constants.DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX +
+                                    ".zip");
+                } else {
+                    setOutputDirectory(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION);
+                    setBuildFileName(
+                            DocBookUtilities.escapeTitle(contentSpec.getTitle()) + Constants.DEFAULT_CONFIG_PUBLICAN_BUILD_POSTFIX +
+                                    ".zip");
+                }
             } else {
                 // Find the build directories and files from the content spec
                 findBuildDirectoryAndFiles(contentSpec.getTitle());
@@ -247,6 +261,28 @@ public class AssembleCommand extends BuildCommand {
             }
         } catch (IOException e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
+        }
+    }
+
+    /**
+     * Run Maven to assemble the book from Docbook XML markup to the required format.
+     *
+     * @param jDocbookFilesDirectory The directory location that hosts the jDocbook files.
+     */
+    protected void runMaven(final File jDocbookFilesDirectory) {
+        String jDocbookOptions = getClientConfig().getjDocbookBuildOptions();
+
+        try {
+            JCommander.getConsole().println(Constants.STARTING_MAVEN_BUILD_MSG);
+            final Integer exitValue = ClientUtilities.runCommand("mvn " + jDocbookOptions, null, jDocbookFilesDirectory,
+                    JCommander.getConsole(), !hideOutput, false);
+            if (exitValue == null || exitValue != 0) {
+                printError(String.format(Constants.ERROR_RUNNING_MAVEN_EXIT_CODE_MSG, (exitValue == null ? 0 : exitValue)), false);
+                shutdown(Constants.EXIT_FAILURE);
+            }
+        } catch (IOException e) {
+            printError(Constants.ERROR_RUNNING_MAVEN_MSG, false);
+            shutdown(Constants.EXIT_FAILURE);
         }
     }
 

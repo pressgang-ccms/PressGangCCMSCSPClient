@@ -17,7 +17,6 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.utils.TranslationUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
@@ -25,6 +24,7 @@ import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
+import org.jboss.pressgang.ccms.contentspec.utils.TranslationUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
@@ -41,7 +41,6 @@ import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataConstants;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
@@ -70,8 +69,11 @@ public class PushTranslationCommand extends BaseCommandImpl {
             description = "The Zanata project version to be associated with the Content Specification.")
     private String zanataVersion = null;
 
+    @Parameter(names = Constants.TOPICS_ONLY_LONG_PARAM, description = "Only push the topics in the content specification to Zanata.")
+    private Boolean topicsOnly = false;
+
     @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
-            description = "Answer \"yes\" to any and all questions that might be asked.")
+            description = "Automatically answer \"yes\" to any questions.")
     private Boolean answerYes = false;
 
     private ContentSpecProcessor csp;
@@ -202,9 +204,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
         final TopicProvider topicProvider = getProviderFactory().getProvider(TopicProvider.class);
 
@@ -238,7 +237,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Validate and parse the Content Specification
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
-        boolean success = csp.processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+        boolean success = csp.processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.EITHER);
 
         // Print the error/warning messages
         JCommander.getConsole().println(loggerManager.generateLogs());

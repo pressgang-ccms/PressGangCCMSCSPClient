@@ -8,18 +8,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
@@ -67,83 +61,83 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         // Create an actual object and spy on it
         command = spy(new BaseCommandImplImpl(parser, cspConfig, clientConfig));
     }
-
-    @Test
-    public void shouldShutdownWhenAuthenticationFails() {
-        final List<UserWrapper> users = Collections.EMPTY_LIST;
-        // Given that authentication won't succeed
-        when(userProvider.getUsersByName(anyString())).thenReturn(usersCollection);
-        when(usersCollection.getItems()).thenReturn(users);
-        when(usersCollection.size()).thenReturn(users.size());
-
-        // When the authentication method is called
-        try {
-            command.authenticate(randomString, providerFactory);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(2));
-        }
-
-        // Then check that an error message was printed
-        verify(command, times(1)).shutdown(anyInt());
-        verify(command, times(1)).printError(anyString(), anyBoolean());
-        assertThat(getStdOutLogs(), containsString("Unauthorised Request! Please check your username and the server URL is correct."));
-    }
-
-    @Test
-    public void shouldReturnUserWhenAuthenticationSucceeds() {
-        final CollectionWrapper<UserWrapper> usersCollection = mock(CollectionWrapper.class);
-        final List<UserWrapper> users = Arrays.asList(user);
-        // Given that authentication succeeded
-        when(userProvider.getUsersByName(anyString())).thenReturn(usersCollection);
-        when(usersCollection.getItems()).thenReturn(users);
-        when(usersCollection.size()).thenReturn(users.size());
-
-        // When the authentication method is called
-        final UserWrapper user = command.authenticate(randomString, providerFactory);
-
-        // Then the user variable should be returned
-        verify(command, times(0)).shutdown(anyInt());
-        verify(command, times(0)).printError(anyString(), anyBoolean());
-        assertThat(user, is(this.user));
-    }
-
-    @Test
-    public void shouldShutdownWhenUsernameIsNull() {
-        // Given an invalid username
-        final String username = null;
-
-        // When the authentication method is called
-        try {
-            command.authenticate(username, providerFactory);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(2));
-        }
-
-        // Then check that an error message was printed
-        verify(command, times(1)).shutdown(anyInt());
-        verify(command, times(1)).printError(anyString(), anyBoolean());
-        assertThat(getStdOutLogs(), containsString(
-                "No username was specified for the server. Please check your configuration files and make sure a username exists."));
-    }
-
-    @Test
-    public void shouldShutdownWhenUsernameIsBlank() {
-        // Given an invalid username
-        final String username = "";
-
-        // When the authentication method is called
-        try {
-            command.authenticate(username, providerFactory);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(2));
-        }
-
-        // Then check that an error message was printed
-        verify(command, times(1)).shutdown(anyInt());
-        verify(command, times(1)).printError(anyString(), anyBoolean());
-        assertThat(getStdOutLogs(), containsString(
-                "No username was specified for the server. Please check your configuration files and make sure a username exists."));
-    }
+//
+//    @Test
+//    public void shouldShutdownWhenAuthenticationFails() {
+//        final List<UserWrapper> users = Collections.EMPTY_LIST;
+//        // Given that authentication won't succeed
+//        when(userProvider.getUsersByName(anyString())).thenReturn(usersCollection);
+//        when(usersCollection.getItems()).thenReturn(users);
+//        when(usersCollection.size()).thenReturn(users.size());
+//
+//        // When the authentication method is called
+//        try {
+//            command.authenticate(randomString, providerFactory);
+//        } catch (CheckExitCalled e) {
+//            assertThat(e.getStatus(), is(2));
+//        }
+//
+//        // Then check that an error message was printed
+//        verify(command, times(1)).shutdown(anyInt());
+//        verify(command, times(1)).printError(anyString(), anyBoolean());
+//        assertThat(getStdOutLogs(), containsString("Unauthorised Request! Please check your username and the server URL is correct."));
+//    }
+//
+//    @Test
+//    public void shouldReturnUserWhenAuthenticationSucceeds() {
+//        final CollectionWrapper<UserWrapper> usersCollection = mock(CollectionWrapper.class);
+//        final List<UserWrapper> users = Arrays.asList(user);
+//        // Given that authentication succeeded
+//        when(userProvider.getUsersByName(anyString())).thenReturn(usersCollection);
+//        when(usersCollection.getItems()).thenReturn(users);
+//        when(usersCollection.size()).thenReturn(users.size());
+//
+//        // When the authentication method is called
+//        final UserWrapper user = command.authenticate(randomString, providerFactory);
+//
+//        // Then the user variable should be returned
+//        verify(command, times(0)).shutdown(anyInt());
+//        verify(command, times(0)).printError(anyString(), anyBoolean());
+//        assertThat(user, is(this.user));
+//    }
+//
+//    @Test
+//    public void shouldShutdownWhenUsernameIsNull() {
+//        // Given an invalid username
+//        final String username = null;
+//
+//        // When the authentication method is called
+//        try {
+//            command.authenticate(username, providerFactory);
+//        } catch (CheckExitCalled e) {
+//            assertThat(e.getStatus(), is(2));
+//        }
+//
+//        // Then check that an error message was printed
+//        verify(command, times(1)).shutdown(anyInt());
+//        verify(command, times(1)).printError(anyString(), anyBoolean());
+//        assertThat(getStdOutLogs(), containsString(
+//                "No username was specified for the server. Please check your configuration files and make sure a username exists."));
+//    }
+//
+//    @Test
+//    public void shouldShutdownWhenUsernameIsBlank() {
+//        // Given an invalid username
+//        final String username = "";
+//
+//        // When the authentication method is called
+//        try {
+//            command.authenticate(username, providerFactory);
+//        } catch (CheckExitCalled e) {
+//            assertThat(e.getStatus(), is(2));
+//        }
+//
+//        // Then check that an error message was printed
+//        verify(command, times(1)).shutdown(anyInt());
+//        verify(command, times(1)).printError(anyString(), anyBoolean());
+//        assertThat(getStdOutLogs(), containsString(
+//                "No username was specified for the server. Please check your configuration files and make sure a username exists."));
+//    }
 
     @Test
     public void shouldAlterServerUrlForPressGang() {

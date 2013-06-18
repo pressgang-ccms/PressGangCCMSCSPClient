@@ -101,7 +101,8 @@ public class SearchCommand extends BaseCommandImpl {
     }
 
     @Override
-    public boolean loadFromCSProcessorCfg() {        /*
+    public boolean loadFromCSProcessorCfg() {
+        /*
          * Searching involves looking for a String so
          * there's no point in loading from the csprocessor.cfg
          */

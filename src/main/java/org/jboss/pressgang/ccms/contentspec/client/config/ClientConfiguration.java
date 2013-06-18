@@ -3,16 +3,24 @@ package org.jboss.pressgang.ccms.contentspec.client.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.pressgang.ccms.contentspec.client.entities.ConfigDefaults;
+
 public class ClientConfiguration {
     private String rootDirectory = "";
     private String publicanBuildOptions = null;
     private String publicanPreviewFormat = null;
     private String publicanCommonContentDirectory = null;
+
+    private String jDocbookBuildOptions = null;
+    private String jDocbookPreviewFormat = null;
+
     private String kojiHubUrl = null;
     private String publishCommand = null;
 
     private String defaultZanataProject = null;
     private String defaultZanataVersion = null;
+
+    private ConfigDefaults defaults =new ConfigDefaults();
 
     private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
     private Map<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
@@ -105,5 +113,29 @@ public class ClientConfiguration {
 
     public void setInstallPath(String installPath) {
         this.installPath = installPath;
+    }
+
+    public ConfigDefaults getDefaults() {
+        return defaults;
+    }
+
+    public void setDefaults(ConfigDefaults defaults) {
+        this.defaults = defaults;
+    }
+
+    public String getjDocbookBuildOptions() {
+        return jDocbookBuildOptions;
+    }
+
+    public void setjDocbookBuildOptions(String jDocbookBuildOptions) {
+        this.jDocbookBuildOptions = jDocbookBuildOptions;
+    }
+
+    public String getjDocbookPreviewFormat() {
+        return jDocbookPreviewFormat;
+    }
+
+    public void setjDocbookPreviewFormat(String jDocbookPreviewFormat) {
+        this.jDocbookPreviewFormat = jDocbookPreviewFormat;
     }
 }

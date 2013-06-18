@@ -101,23 +101,23 @@ public class ValidateCommandTest extends BaseUnitTest {
         }
     }
 
-    @Test
-    public void shouldFailIfUserUnauthorised() {
-        // Given a user who is unauthorised as they have no name
-        command.setUsername("");
-
-        // When the ValidateCommand is processed
-        try {
-            command.process();
-            // If we get here then the test failed
-            fail(SYSTEM_EXIT_ERROR);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(2));
-        }
-
-        // Then it should fail and the program should print an error and exit
-        assertThat(getStdOutLogs(), containsString("No username was specified for the server."));
-    }
+//    @Test
+//    public void shouldFailIfUserUnauthorised() {
+//        // Given a user who is unauthorised as they have no name
+//        command.setUsername("");
+//
+//        // When the ValidateCommand is processed
+//        try {
+//            command.process();
+//            // If we get here then the test failed
+//            fail(SYSTEM_EXIT_ERROR);
+//        } catch (CheckExitCalled e) {
+//            assertThat(e.getStatus(), is(2));
+//        }
+//
+//        // Then it should fail and the program should print an error and exit
+//        assertThat(getStdOutLogs(), containsString("No username was specified for the server."));
+//    }
 
     @Test
     public void shouldFailIfFileInvalid() {

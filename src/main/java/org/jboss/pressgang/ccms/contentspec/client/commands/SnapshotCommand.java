@@ -20,7 +20,6 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 
 @Parameters(
         commandDescription = "Pull a revision of a content specification that represents a snapshot in time and push it back to the " +
@@ -116,9 +115,6 @@ public class SnapshotCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
 
         // Load the ids and validate that one and only one exists
@@ -159,16 +155,16 @@ public class SnapshotCommand extends BaseCommandImpl {
         processingOptions.setRevision(getRevision());
 
         // Setup the log message
-        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), user, message, revisionHistoryMessage);
+        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), getUsername(), message, revisionHistoryMessage);
 
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
         Integer revision = null;
         if (getCreateNew()) {
-            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.NEW, logMessage);
+            success = getProcessor().processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.NEW, logMessage);
         } else {
-            success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EDITED, logMessage);
+            success = getProcessor().processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.EDITED, logMessage);
         }
         if (success) {
             revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();

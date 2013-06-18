@@ -2,7 +2,7 @@ package org.jboss.pressgang.ccms.contentspec.client.entities;
 
 import javax.ws.rs.ext.Provider;
 
-import com.redhat.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.rest.v1.constants.RESTv1Constants;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
 import org.jboss.resteasy.annotations.interception.ClientInterceptor;

@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,7 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-import org.jboss.pressgang.ccms.contentspec.client.entities.RESTVersionDecorator;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
@@ -39,6 +37,7 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.SearchCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.SetupCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.SnapshotCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.StatusCommand;
+import org.jboss.pressgang.ccms.contentspec.client.commands.SyncTranslationCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.TemplateCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.ValidateCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
@@ -48,6 +47,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.ConfigConstants;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.entities.ConfigDefaults;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
@@ -56,6 +56,7 @@ import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.VersionUtilities;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ClientResponseFailure;
 
@@ -140,9 +141,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             parser.parse(args);
         } catch (ParameterException e) {
             if (parser.getParsedCommand() != null) {
-                commands.get(parser.getParsedCommand()).printError("Invalid Argument! Error Message: " + e.getMessage(), true);
+                commands.get(parser.getParsedCommand()).printError("Invalid Argument! Error Message: \n    " + e.getMessage(), true);
             } else {
-                printError("Invalid Argument! Error Message: " + e.getMessage(), true);
+                printError("Invalid Argument! Error Message: \n\t" + e.getMessage(), true);
             }
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
@@ -162,7 +163,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             // Print the version details
             printVersionDetails(Constants.BUILD_MSG,
                     VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
-        } else if (command instanceof SetupCommand) {
+        } else if (command instanceof SetupCommand || command instanceof TemplateCommand) {
             command.process();
         } else {
             // Print the version details
@@ -171,6 +172,19 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // Good point to check for a shutdown
             allowShutdownToContinueIfRequested();
+
+            // Move the main parameters into the sub command
+            if (getConfigLocation() != null) {
+                command.setConfigLocation(getConfigLocation());
+            }
+
+            if (getServerUrl() != null) {
+                command.setServerUrl(getServerUrl());
+            }
+
+            if (getUsername() != null) {
+                command.setUsername(getUsername());
+            }
 
             // Load the configuration options. If it fails then stop the program
             if (!setConfigOptions(command.getConfigLocation())) {
@@ -208,13 +222,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 isProcessingCommand.set(true);
                 // Check that the server Urls are valid
                 command.validateServerUrl();
-                final String uiServerURL = command.getServerUrl().replace("/TopicIndex/", "/pressgang-ccms-ui/");
+                final String uiServerURL = command.getServerUrl().replaceFirst("/TopicIndex.*", "/pressgang-ccms-ui/").replaceFirst(
+                    "/pressgang-ccms.*", "/pressgang-ccms-ui/");
                 System.setProperty(CommonConstants.PRESS_GANG_UI_SYSTEM_PROPERTY, uiServerURL);
-                
+
                 // Create the Provider Factory
                 providerFactory = RESTProviderFactory.create(command.getPressGangServerUrl());
-                // Arrays.<Class<?>>asList(RESTVersionDecorator.class)
-                // providerFactory.getRESTManager().getProxyFactory().registerProvider(RESTVersionDecorator.class);
 
                 // Check that the version is valid
                 if (!doVersionCheck(providerFactory.getRESTManager().getRESTClient())) {
@@ -346,17 +359,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (getConfigLocation() != null) {
             command.setConfigLocation(getConfigLocation());
         }
-
-        if (getServerUrl() != null) {
-            command.setServerUrl(getServerUrl());
-        }
-
-        if (getUsername() != null) {
-            command.setUsername(getUsername());
-        }
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
 
         applyServerSettings();
 
@@ -608,13 +610,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (!configReader.getRootNode().getChildren("directory").isEmpty()) {
             // Load the root content specs directory
             if (configReader.getProperty("directory.root") != null && !configReader.getProperty("directory.root").equals("")) {
-                clientConfig.setRootDirectory(ClientUtilities.fixDirectoryPath(configReader.getProperty("directory" + ".root").toString()));
+                clientConfig.setRootDirectory(ClientUtilities.fixDirectoryPath(configReader.getProperty("directory.root").toString()));
             }
 
             // Load the install directory
-            if (configReader.getProperty("directory.install") != null && !configReader.getProperty("directory" + ".install").equals("")) {
-                clientConfig.setInstallPath(
-                        ClientUtilities.fixDirectoryPath(configReader.getProperty("directory" + ".install").toString()));
+            if (configReader.getProperty("directory.install") != null && !configReader.getProperty("directory.install").equals("")) {
+                clientConfig.setInstallPath(ClientUtilities.fixDirectoryPath(configReader.getProperty("directory.install").toString()));
             }
         }
 
@@ -622,23 +623,37 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (!configReader.getRootNode().getChildren("publican").isEmpty()) {
             // Load the publican setup values
             if (configReader.getProperty("publican.build..parameters") != null && !configReader.getProperty(
-                    "publican" + ".build..parameters").equals("")) {
+                    "publican.build..parameters").equals("")) {
                 clientConfig.setPublicanBuildOptions(configReader.getProperty("publican.build..parameters").toString());
             }
             if (configReader.getProperty("publican.preview..format") != null && !configReader.getProperty(
-                    "publican" + ".preview..format").equals("")) {
+                    "publican.preview..format").equals("")) {
                 clientConfig.setPublicanPreviewFormat(configReader.getProperty("publican.preview..format").toString());
             }
-            if (configReader.getProperty("publican.common_content") != null && !configReader.getProperty(
-                    "publican" + ".common_content").equals("")) {
+            if (configReader.getProperty("publican.common_content") != null && !configReader.getProperty("publican.common_content").equals(
+                    "")) {
                 clientConfig.setPublicanCommonContentDirectory(
                         ClientUtilities.fixDirectoryPath(configReader.getProperty("publican.common_content").toString()));
-            } else {
-                clientConfig.setPublicanCommonContentDirectory(Constants.LINUX_PUBLICAN_COMMON_CONTENT);
             }
         } else {
             clientConfig.setPublicanBuildOptions(Constants.DEFAULT_PUBLICAN_OPTIONS);
             clientConfig.setPublicanPreviewFormat(Constants.DEFAULT_PUBLICAN_FORMAT);
+        }
+
+        // Read in the jDocbook build options
+        if (!configReader.getRootNode().getChildren("jDocbook").isEmpty()) {
+            // Load the jDocbook setup values
+            if (configReader.getProperty("jDocbook.build..parameters") != null && !configReader.getProperty(
+                    "jDocbook.build..parameters").equals("")) {
+                clientConfig.setjDocbookBuildOptions(configReader.getProperty("jDocbook.build..parameters").toString());
+            }
+            if (configReader.getProperty("jDocbook.preview..format") != null && !configReader.getProperty(
+                    "jDocbook.preview..format").equals("")) {
+                clientConfig.setjDocbookPreviewFormat(configReader.getProperty("jDocbook.preview..format").toString());
+            }
+        } else {
+            clientConfig.setjDocbookBuildOptions(Constants.DEFAULT_JDOCBOOK_OPTIONS);
+            clientConfig.setjDocbookPreviewFormat(Constants.DEFAULT_JDOCBOOK_FORMAT);
         }
 
         /* Read in the zanata details from the config file */
@@ -649,8 +664,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         // Read in the publishing information
         if (!configReader.getRootNode().getChildren("publish").isEmpty()) {
             // Load the koji hub url
-            if (configReader.getProperty("publish.koji..huburl") != null && !configReader.getProperty("publish.koji." + ".huburl").equals(
-                    "")) {
+            if (configReader.getProperty("publish.koji..huburl") != null && !configReader.getProperty("publish.koji..huburl").equals("")) {
                 clientConfig.setKojiHubUrl(configReader.getProperty("publish.koji..huburl").toString());
             }
 
@@ -658,6 +672,18 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (configReader.getProperty("publish.command") != null && !configReader.getProperty("publish.command").equals("")) {
                 clientConfig.setPublishCommand(configReader.getProperty("publish.command").toString());
             }
+        }
+
+        // Read in the defaults
+        if (!configReader.getRootNode().getChildren("defaults").isEmpty()) {
+            final ConfigDefaults defaults = new ConfigDefaults();
+
+            // Load the server value
+            if (configReader.getProperty("defaults.server") != null && !configReader.getProperty("defaults.server").equals("")) {
+                defaults.setServer(Boolean.parseBoolean(configReader.getProperty("defaults.server").toString()));
+            }
+
+            clientConfig.setDefaults(defaults);
         }
 
         return true;
@@ -847,7 +873,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Override
     public String getPressGangServerUrl() {
-        return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest");
+        final String serverUrl = ClientUtilities.fixHostURL(getServerUrl());
+        if (serverUrl == null) {
+            return null;
+        } else if (serverUrl.contains("TopicIndex")) {
+            return serverUrl + "seam/resource/rest/";
+        } else {
+            return serverUrl;
+        }
     }
 
     @Override
@@ -919,6 +952,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         }
     }
 
+    @Override
     public void shutdown(int exitStatus) {
         shutdown.set(true);
         if (command != null) {

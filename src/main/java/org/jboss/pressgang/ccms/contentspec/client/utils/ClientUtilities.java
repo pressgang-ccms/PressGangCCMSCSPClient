@@ -24,14 +24,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.internal.Console;
-import com.google.code.regexp.NamedMatcher;
-import com.google.code.regexp.NamedPattern;
+import com.google.code.regexp.Matcher;
+import com.google.code.regexp.Pattern;
 import com.redhat.j2koji.base.KojiConnector;
 import com.redhat.j2koji.entities.KojiBuild;
 import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.j2koji.rpc.search.KojiBuildSearch;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.builder.utils.DocbookBuildUtilities;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
@@ -43,13 +44,16 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.LogMessageProvider;
+import org.jboss.pressgang.ccms.provider.StringConstantProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -462,8 +466,8 @@ public class ClientUtilities {
             for (final KojiBuild build : builds) {
                 final String buildName = build.getName();
                 final String matchString = buildName.replace(packageName, "");
-                final NamedPattern pattern = NamedPattern.compile("(?<Pubsnumber>[0-9]+).*");
-                final NamedMatcher matcher = pattern.matcher(matchString);
+                final Pattern pattern = Pattern.compile("(?<Pubsnumber>[0-9]+).*");
+                final Matcher matcher = pattern.matcher(matchString);
 
                 while (matcher.find()) {
                     final Integer buildPubsnumber = Integer.parseInt(matcher.group("Pubsnumber"));
@@ -650,7 +654,6 @@ public class ClientUtilities {
         } else if (ids.size() > 1) {
             command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_MULTIPLE_ID_MSG, false);
         }
-
     }
 
     /**
@@ -757,8 +760,8 @@ public class ClientUtilities {
         return createLogDetails(providerFactory, user.getUsername(), message, isRevisionHistoryMessage);
     }
 
-    public static LogMessageWrapper createLogDetails(final DataProviderFactory providerFactory, final String user,
-            final String message, final boolean isRevisionHistoryMessage) {
+    public static LogMessageWrapper createLogDetails(final DataProviderFactory providerFactory, final String user, final String message,
+            final boolean isRevisionHistoryMessage) {
         LogMessageWrapper logDetails = null;
         if (message != null) {
             logDetails = providerFactory.getProvider(LogMessageProvider.class).createLogMessage();
@@ -772,6 +775,43 @@ public class ClientUtilities {
         }
 
         return logDetails;
+    }
+
+    /**
+     * Validate that a Language is a valid language as defined by the server.
+     *
+     * @param providerFactory
+     * @param lang            The language to be validated.
+     * @return True if the language exists on the server otherwise false.
+     */
+    public static boolean validateLanguage(final BaseCommand command, final DataProviderFactory providerFactory, final String lang) {
+        return validateLanguages(command, providerFactory, new String[]{lang});
+    }
+
+    /**
+     * Validate that a Language is a valid language as defined by the server.
+     *
+     * @param providerFactory
+     * @param langs           The languages to be validated.
+     * @return True if the language exists on the server otherwise false.
+     */
+    public static boolean validateLanguages(final BaseCommand command, final DataProviderFactory providerFactory, final String[] langs) {
+        final StringConstantWrapper localesConstant = providerFactory.getProvider(StringConstantProvider.class).getStringConstant(
+                CommonConstants.LOCALES_STRING_CONSTANT_ID);
+        final List<String> locales = CollectionUtilities.replaceStrings(CollectionUtilities.sortAndReturn(
+                CollectionUtilities.toArrayList(localesConstant.getValue().split("[\\s\r\n]*,[\\s\r\n]*"))), "_", "-");
+
+        boolean valid = true;
+        for (final String lang : langs) {
+            if (!locales.contains(lang)) {
+                command.printError(
+                        String.format(Constants.ERROR_INVALID_LOCALE_MSG, lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")),
+                        false);
+                valid = false;
+            }
+        }
+
+        return valid;
     }
 }
 
@@ -787,21 +827,21 @@ class InputStreamHandler extends Thread implements ShutdownAbleApp {
     public InputStreamHandler(final InputStream stream, final StringBuffer buffer) {
         this.stream = stream;
         this.buffer = buffer;
-        this.console = null;
-        this.outStream = null;
+        console = null;
+        outStream = null;
     }
 
     public InputStreamHandler(final InputStream stream, final Console console) {
         this.stream = stream;
-        this.buffer = null;
+        buffer = null;
         this.console = console;
-        this.outStream = null;
+        outStream = null;
     }
 
     public InputStreamHandler(final InputStream stream, final OutputStream outStream) {
         this.stream = stream;
-        this.buffer = null;
-        this.console = null;
+        buffer = null;
+        console = null;
         this.outStream = outStream;
     }
 

@@ -215,7 +215,14 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
         final String[] splitLocales = getLocales().split(",");
+
+        // Check to make sure the locales are valid
+        if (!ClientUtilities.validateLanguages(this, getProviderFactory(), splitLocales)) {
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
+        
         for (final String locale : splitLocales) {
+            // Covert the language into a LocaleId
             localeIds.add(LocaleId.fromJavaName(locale));
         }
 

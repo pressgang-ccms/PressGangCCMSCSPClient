@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>0.33.0</version>
+    <version>0.34.0</version>
     <name>Content Specification Processor Client</name>
 
     <properties>
@@ -124,6 +124,11 @@
             <artifactId>commons-configuration</artifactId>
             <version>${commonsconfiguration.version}</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commonsio.version}</version>
+        </dependency>
 
         <!-- Jackson Libraries -->
         <dependency>
@@ -193,20 +198,7 @@
             <version>${jcommander.version}</version>
         </dependency>
 
-        <!-- Apache Commons Libraries -->
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
-            <version>${commonsconfiguration.version}</version>
-        </dependency>
-
         <!-- Testing Libraries -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commonsio.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

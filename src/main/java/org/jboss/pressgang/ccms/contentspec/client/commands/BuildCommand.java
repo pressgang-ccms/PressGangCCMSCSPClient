@@ -18,6 +18,7 @@ import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Lists;
 import com.redhat.j2koji.exceptions.KojiException;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
@@ -26,7 +27,9 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.converter.BuildTypeConverter;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.client.validator.BuildTypeValidator;
 import org.jboss.pressgang.ccms.contentspec.client.validator.OverrideValidator;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
@@ -40,7 +43,6 @@ import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
@@ -108,11 +110,8 @@ public class BuildCommand extends BaseCommandImpl {
             description = "The zanata project version to be associated with the Content Specification.")
     private String zanataVersion = null;
 
-    @Parameter(names = Constants.COMMON_CONTENT_LONG_PARAM, hidden = true)
-    private String commonContentLocale = null;
-
     @Parameter(names = Constants.TARGET_LANG_LONG_PARAM,
-            description = "The output target locale if it is different from the --lang " + "option.", metaVar = "<LOCALE>")
+            description = "The output target locale if it is different from the --lang option.", metaVar = "<LOCALE>")
     private String targetLocale = null;
 
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
@@ -128,16 +127,23 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.SHOW_REMARKS_LONG_PARAM, description = "Build the book with remarks visible.")
     private Boolean showRemarks = false;
 
-    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM,
-            description = "Add a message for the revision history.")
+    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM, description = "Add a message for the revision history.")
     private List<String> messages = Lists.newArrayList();
 
-    @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM}, description = "Flatten the topics folder when building.")
+    @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM},
+            description = "Flatten the topics folder, so no subdirectories exist when building.")
     private Boolean flattenTopics = false;
 
     @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
-            description = "Answer \"yes\" to any and all questions that might be asked.")
+            description = "Automatically answer \"yes\" to any questions.")
     private Boolean answerYes = false;
+
+    @Parameter(names = Constants.FLATTEN_LONG_PARAM, description = "Flatten the topics so only chapter/appendix/part files exist.")
+    private Boolean flatten = false;
+
+    @Parameter(names = Constants.FORMAT_LONG_PARAM, description = "What format to build the content spec in.", metaVar = "<FORMAT>",
+            converter = BuildTypeConverter.class, validateWith = BuildTypeValidator.class)
+    private BuildType buildType = null;
 
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
@@ -311,14 +317,6 @@ public class BuildCommand extends BaseCommandImpl {
         this.zanataVersion = zanataVersion;
     }
 
-    public String getCommonContentLocale() {
-        return commonContentLocale;
-    }
-
-    public void setCommonContentLocale(final String commonContentLocale) {
-        this.commonContentLocale = commonContentLocale;
-    }
-
     public String getTargetLocale() {
         return targetLocale;
     }
@@ -340,7 +338,7 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     public void setUseLatestVersions(final Boolean useLatestVersion) {
-        this.useLatestVersions = useLatestVersion;
+        useLatestVersions = useLatestVersion;
     }
 
     public Boolean getDraft() {
@@ -391,11 +389,24 @@ public class BuildCommand extends BaseCommandImpl {
         this.answerYes = answerYes;
     }
 
+    public Boolean getFlatten() {
+        return flatten;
+    }
+
+    public void setFlatten(Boolean flatten) {
+        this.flatten = flatten;
+    }
+
+    public BuildType getBuildType() {
+        return buildType;
+    }
+
+    public void setBuildType(BuildType buildType) {
+        this.buildType = buildType;
+    }
+
     @Override
     public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
         final long startTime = System.currentTimeMillis();
 
         // Add the details for the csprocessor.cfg if no ids are specified and then validate input
@@ -403,6 +414,11 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
+
+        // Check to make sure the lang is valid
+        if (getLocale() != null && !ClientUtilities.validateLanguage(this, getProviderFactory(), getLocale())) {
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
 
         // Get the content spec and make sure it exists
         final ContentSpec contentSpec = getContentSpec(getIds().get(0));
@@ -412,7 +428,7 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Validate that the content spec is valid
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        boolean success = validateContentSpec(getProviderFactory(), loggerManager, user, contentSpec);
+        boolean success = validateContentSpec(getProviderFactory(), loggerManager, getUsername(), contentSpec);
 
         // Print the error/warning messages
         JCommander.getConsole().println(loggerManager.generateLogs());
@@ -439,7 +455,7 @@ public class BuildCommand extends BaseCommandImpl {
         setupZanataOptions();
 
         // Build the Content Specification
-        byte[] builderOutput = buildContentSpec(contentSpec, user);
+        byte[] builderOutput = buildContentSpec(contentSpec, getUsername());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -460,7 +476,11 @@ public class BuildCommand extends BaseCommandImpl {
         String outputDir = "";
         if (buildingFromConfig) {
             outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
-            fileName += Constants.DEFAULT_CONFIG_BUILD_POSTFIX;
+            if (getBuildType() == BuildType.JDOCBOOK) {
+                fileName += Constants.DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX;
+            } else {
+                fileName += Constants.DEFAULT_CONFIG_PUBLICAN_BUILD_POSTFIX;
+            }
             setOutputPath(null);
         }
         fileName += ".zip";
@@ -501,7 +521,6 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setInsertEditorLinks(getInsertEditorLinks());
         buildOptions.setShowReportPage(getShowReport());
         buildOptions.setLocale(getLocale());
-        buildOptions.setCommonContentLocale(getCommonContentLocale());
         buildOptions.setCommonContentDirectory(getClientConfig().getPublicanCommonContentDirectory());
         buildOptions.setOutputLocale(getTargetLocale());
         buildOptions.setDraft(getDraft());
@@ -510,6 +529,8 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setUseLatestVersions(getUseLatestVersions());
         buildOptions.setFlattenTopics(getFlattenTopics());
         buildOptions.setForceInjectBugzillaLinks(getForceBugLinks());
+        buildOptions.setCommonContentDirectory(getClientConfig().getPublicanCommonContentDirectory());
+        buildOptions.setFlatten(getFlatten());
 
         return buildOptions;
     }
@@ -624,15 +645,15 @@ public class BuildCommand extends BaseCommandImpl {
      * @param user        The user who requested the build.
      * @return A ZIP archive as a byte array that is ready to be saved as a file.
      */
-    protected byte[] buildContentSpec(final ContentSpec contentSpec, final UserWrapper user) {
+    protected byte[] buildContentSpec(final ContentSpec contentSpec, final String username) {
         byte[] builderOutput = null;
         try {
             setBuilder(new ContentSpecBuilder(getProviderFactory()));
             if (getLocale() == null) {
-                builderOutput = getBuilder().buildBook(contentSpec, user, getBuildOptions(), getOverrideFiles());
+                builderOutput = getBuilder().buildBook(contentSpec, username, getBuildOptions(), getOverrideFiles(), getBuildType());
             } else {
-                builderOutput = getBuilder().buildTranslatedBook(contentSpec, user, getBuildOptions(), getOverrideFiles(),
-                        getCspConfig().getZanataDetails());
+                builderOutput = getBuilder().buildTranslatedBook(contentSpec, username, getBuildOptions(), getOverrideFiles(),
+                        getCspConfig().getZanataDetails(), getBuildType());
             }
         } catch (BuildProcessingException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
@@ -653,7 +674,7 @@ public class BuildCommand extends BaseCommandImpl {
      * @return True if the content spec is valid, otherwise false.
      */
     protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
-            final UserWrapper user, final ContentSpec contentSpec) {
+            final String username, final ContentSpec contentSpec) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(getPermissive() == null ? true : getPermissive());
@@ -671,7 +692,7 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
-        return getCsp().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER, getLocale());
+        return getCsp().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER, getLocale());
     }
 
     /**

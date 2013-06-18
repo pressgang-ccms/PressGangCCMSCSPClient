@@ -15,7 +15,7 @@ public class ShutdownInterceptor extends Thread {
 
     public ShutdownInterceptor(ShutdownAbleApp app) {
         this.app = app;
-        this.maxWaitTime = 5000;
+        maxWaitTime = 5000;
     }
 
     public ShutdownInterceptor(ShutdownAbleApp app, long maxWaitTime) {

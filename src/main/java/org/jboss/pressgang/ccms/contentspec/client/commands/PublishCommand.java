@@ -98,5 +98,4 @@ public class PublishCommand extends AssembleCommand {
     public boolean requiresExternalConnection() {
         return true;
     }
-
 }

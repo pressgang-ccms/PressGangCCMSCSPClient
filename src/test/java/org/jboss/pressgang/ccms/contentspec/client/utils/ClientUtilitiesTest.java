@@ -318,7 +318,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldSaveSpecAndConfig() {
+    public void shouldSaveSpecAndConfig() throws IOException {
         // Given the title of the book and an id
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpecWrapper.getId()).willReturn(id);
@@ -329,8 +329,8 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Then check that only the csprocessor.cfg and <TITLE>-post.contentspec exists
         assertArrayEquals(bookDir.list(), new String[]{"csprocessor.cfg", BOOK_TITLE + "-post.contentspec"});
         // and check that the file contents is correct
-        assertThat(FileUtilities.readFileContents(new File(bookDir, "csprocessor.cfg")), containsString("SPEC_ID=" + id));
-        assertThat(FileUtilities.readFileContents(new File(bookDir, BOOK_TITLE + "-post.contentspec")), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(new File(bookDir, "csprocessor.cfg")), containsString("SPEC_ID=" + id));
+        assertThat(FileUtils.readFileToString(new File(bookDir, BOOK_TITLE + "-post.contentspec")), Matchers.is(randomString));
     }
 
     @Test
@@ -362,7 +362,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldSaveFileWhenOutputPathIsDirectoryForSaveOutputFile() {
+    public void shouldSaveFileWhenOutputPathIsDirectoryForSaveOutputFile() throws IOException {
         // Given a filename
         String filename = BOOK_TITLE + "-post.contentspec";
         // and a output path that is a directory
@@ -374,11 +374,11 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Then check that the file exists and contains the right data
         File file = new File(bookDir, filename);
         assertTrue(file.exists());
-        assertThat(FileUtilities.readFileContents(file), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(file), Matchers.is(randomString));
     }
 
     @Test
-    public void shouldSaveFileWhenOutputPathIsFileForSaveOutputFile() {
+    public void shouldSaveFileWhenOutputPathIsFileForSaveOutputFile() throws IOException {
         // Given a filename
         String filename = BOOK_TITLE + "-post.contentspec";
         // and a output path that is a directory
@@ -392,11 +392,11 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         File incorrectFile = new File(bookDir, filename);
         assertTrue(file.exists());
         assertFalse(incorrectFile.exists());
-        assertThat(FileUtilities.readFileContents(file), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(file), Matchers.is(randomString));
     }
 
     @Test
-    public void shouldSaveFileAndCreateBackupIfFileExistsForSaveOutputFile() {
+    public void shouldSaveFileAndCreateBackupIfFileExistsForSaveOutputFile() throws IOException {
         // Given a filename
         String filename = BOOK_TITLE + "-post.contentspec";
         // and a output path that is a directory
@@ -409,8 +409,8 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         File backupFile = new File(emptyFile.getAbsolutePath() + ".backup");
         assertTrue(emptyFile.exists());
         assertTrue(backupFile.exists());
-        assertThat(FileUtilities.readFileContents(emptyFile), Matchers.is(randomString));
-        assertThat(FileUtilities.readFileContents(backupFile), Matchers.is(""));
+        assertThat(FileUtils.readFileToString(emptyFile), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(backupFile), Matchers.is(""));
     }
 
     @Test

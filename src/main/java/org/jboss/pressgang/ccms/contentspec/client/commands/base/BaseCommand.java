@@ -31,6 +31,12 @@ public interface BaseCommand extends ShutdownAbleApp {
 
     void setShutdown(boolean shutdown);
 
+    /**
+     * Shutdown the application with a specific exit status.
+     *
+     * @param exitStatus The exit status to shut the
+     *                   application down with.
+     */
     void shutdown(int exitStatus);
 
     /**

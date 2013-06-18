@@ -12,11 +12,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
+import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
@@ -25,7 +27,6 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
-import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.junit.Before;
@@ -38,7 +39,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
+@PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtils.class, ClientUtilities.class})
 public class StatusCommandTest extends BaseUnitTest {
     private static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
 
@@ -128,7 +129,7 @@ public class StatusCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenEmptyFileFound() throws URISyntaxException {
+    public void shouldShutdownWhenEmptyFileFound() throws URISyntaxException, IOException {
         URL specFileUrl = ClassLoader.getSystemResource("StatusCommand-post.contentspec");
         File specFile = new File(specFileUrl.toURI());
         String specFilePath = specFile.getParentFile().getAbsolutePath() + File.separator;
@@ -144,8 +145,8 @@ public class StatusCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(DocBookUtilities.class);
         when(DocBookUtilities.escapeTitle(anyString())).thenReturn(specFilePath + "StatusCommand");
         // and that file should read as empty
-        PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn("");
+        PowerMockito.mockStatic(FileUtils.class);
+        when(FileUtils.readFileToString(any(File.class))).thenReturn("");
 
         // When processing the command
         try {
@@ -193,7 +194,7 @@ public class StatusCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenLocalHasBeenModified() throws URISyntaxException {
+    public void shouldShutdownWhenLocalHasBeenModified() throws URISyntaxException, IOException {
         URL specFileUrl = ClassLoader.getSystemResource("StatusCommand-post.contentspec");
         File specFile = new File(specFileUrl.toURI());
         String specFilePath = specFile.getParentFile().getAbsolutePath() + File.separator;
@@ -209,8 +210,8 @@ public class StatusCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(DocBookUtilities.class);
         when(DocBookUtilities.escapeTitle(anyString())).thenReturn(specFilePath + "StatusCommand");
         // and that file should contain the server checksum
-        PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn("CHECKSUM=" + randomNumber + "\nTitle = Test Content " +
+        PowerMockito.mockStatic(FileUtils.class);
+        when(FileUtils.readFileToString(any(File.class))).thenReturn("CHECKSUM=" + randomNumber + "\nTitle = Test Content " +
                 "Specification\n");
 
         // When processing the command
@@ -229,7 +230,7 @@ public class StatusCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenServerHasBeenModified() throws URISyntaxException {
+    public void shouldShutdownWhenServerHasBeenModified() throws URISyntaxException, IOException {
         URL specFileUrl = ClassLoader.getSystemResource("StatusCommand-post.contentspec");
         File specFile = new File(specFileUrl.toURI());
         String specFilePath = specFile.getParentFile().getAbsolutePath() + File.separator;
@@ -245,8 +246,8 @@ public class StatusCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(DocBookUtilities.class);
         when(DocBookUtilities.escapeTitle(anyString())).thenReturn(specFilePath + "StatusCommand");
         // and that file should contain the server checksum
-        PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn(
+        PowerMockito.mockStatic(FileUtils.class);
+        when(FileUtils.readFileToString(any(File.class))).thenReturn(
                 "CHECKSUM=" + HashUtilities.generateMD5("Title = Test Content Specification\n") + "\nTitle = Test Content " +
                         "Specification\n");
 

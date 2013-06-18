@@ -23,7 +23,6 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 
 @Parameters(commandDescription = "Pull a revision of a content specification that represents a snapshot in time.")
 public class PullSnapshotCommand extends BaseCommandImpl {
@@ -94,9 +93,6 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
         // Load the ids and validate that only one exists
         final boolean pullForConfig = ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds());
 
@@ -121,7 +117,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process the content spec to set the snapshot revisions
-        setRevisionsForContentSpec(contentSpec, user);
+        setRevisionsForContentSpec(contentSpec, getUsername());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -147,9 +143,9 @@ public class PullSnapshotCommand extends BaseCommandImpl {
      * Processes a content spec object and adds the revision information for topics to the spec.
      *
      * @param contentSpec The content spec to be processed
-     * @param user        The user who requested the processing.
+     * @param username    The user who requested the processing.
      */
-    protected void setRevisionsForContentSpec(final ContentSpec contentSpec, final UserWrapper user) {
+    protected void setRevisionsForContentSpec(final ContentSpec contentSpec, final String username) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(true);
@@ -163,7 +159,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         // Process the content spec to make sure the spec is valid,
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        boolean success = getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+        boolean success = getProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER);
 
         if (!success) {
             JCommander.getConsole().println(loggerManager.generateLogs());

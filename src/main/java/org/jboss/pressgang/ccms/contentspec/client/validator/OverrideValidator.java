@@ -12,7 +12,8 @@ import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstan
 
 public class OverrideValidator implements IParameterValidator {
     private static final List<String> validNames = Arrays.asList(CSConstants.AUTHOR_GROUP_OVERRIDE, CSConstants.REVISION_HISTORY_OVERRIDE,
-            CSConstants.FEEDBACK_OVERRIDE, CSConstants.REVNUMBER_OVERRIDE, CSConstants.PUBSNUMBER_OVERRIDE, CSConstants.BRAND_OVERRIDE);
+            CSConstants.FEEDBACK_OVERRIDE, CSConstants.REVNUMBER_OVERRIDE, CSConstants.PUBSNUMBER_OVERRIDE, CSConstants.BRAND_OVERRIDE, 
+            CSConstants.POM_OVERRIDE);
 
     @Override
     public void validate(final String name, final String value) throws ParameterException {
@@ -23,8 +24,8 @@ public class OverrideValidator implements IParameterValidator {
 
             if (validNames.contains(varName)) {
                 if (varName.equals(CSConstants.AUTHOR_GROUP_OVERRIDE) || varName.equals(CSConstants.REVISION_HISTORY_OVERRIDE) ||
-                        varName.equals(CSConstants.FEEDBACK_OVERRIDE)) {
-                    final File file = new File(ClientUtilities.validateFilePath(varValue));
+                        varName.equals(CSConstants.FEEDBACK_OVERRIDE) || varName.equals(CSConstants.POM_OVERRIDE)) {
+                    final File file = new File(ClientUtilities.fixFilePath(varValue));
                     if (!(file.exists() && file.isFile())) {
                         throw new ParameterException("The \"" + varName + "\" override is not a valid file.");
                     }

@@ -81,7 +81,8 @@ public class TemplateCommand extends BaseCommandImpl {
     }
 
     @Override
-    public boolean loadFromCSProcessorCfg() {        /* Doesn't need an ID so no point in loading from csprocessor.cfg */
+    public boolean loadFromCSProcessorCfg() {
+        // Doesn't need an ID so no point in loading from csprocessor.cfg
         return false;
     }
 

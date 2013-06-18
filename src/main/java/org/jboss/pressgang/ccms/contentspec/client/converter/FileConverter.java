@@ -10,5 +10,4 @@ public class FileConverter implements IStringConverter<File> {
     public File convert(final String value) {
         return new File(ClientUtilities.fixFilePath(value));
     }
-
 }

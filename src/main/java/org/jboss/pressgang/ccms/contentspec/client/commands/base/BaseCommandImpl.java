@@ -10,9 +10,6 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.UserProvider;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
-import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
 public abstract class BaseCommandImpl implements BaseCommand {
     private final JCommander parser;
@@ -85,7 +82,14 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
     @Override
     public String getPressGangServerUrl() {
-        return serverUrl == null ? null : ((serverUrl.endsWith("/") ? serverUrl : (serverUrl + "/")) + "seam/resource/rest/");
+        final String serverUrl = ClientUtilities.fixHostURL(getServerUrl());
+        if (serverUrl == null) {
+            return null;
+        } else if (serverUrl.contains("TopicIndex")) {
+            return serverUrl + "seam/resource/rest/";
+        } else {
+            return serverUrl;
+        }
     }
 
     @Override
@@ -194,29 +198,6 @@ public abstract class BaseCommandImpl implements BaseCommand {
     }
 
     /**
-     * Authenticate a user to ensure that they exist on the server.
-     *
-     * @param username        The randomString of the user.
-     * @param providerFactory The Factory for the entity providers that provider data from an external datasource.
-     * @return The user object if they existed otherwise false.
-     */
-    public UserWrapper authenticate(final String username, final DataProviderFactory providerFactory) {
-        if (username == null || username.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_UNAUTHORISED, Constants.ERROR_NO_USERNAME, false);
-        }
-
-        // Get the user from the external Datasource
-        final CollectionWrapper<UserWrapper> users = providerFactory.getProvider(UserProvider.class).getUsersByName(username);
-        final UserWrapper user = users != null && users.size() == 1 ? users.getItems().get(0) : null;
-
-        // Check that a valid user was found
-        if (user == null) {
-            printErrorAndShutdown(Constants.EXIT_UNAUTHORISED, Constants.ERROR_UNAUTHORISED, false);
-        }
-        return user;
-    }
-
-    /**
      * Set the application to shutdown so that
      * any shutdown hooks know that the application
      * can be shutdown.
@@ -226,12 +207,8 @@ public abstract class BaseCommandImpl implements BaseCommand {
         setAppShuttingDown(true);
     }
 
-    /**
-     * Shutdown the application with a specific exit status.
-     *
-     * @param exitStatus The exit status to shut the application down with.
-     */
-    public void shutdown(int exitStatus) {
+    @Override
+    public void shutdown(final int exitStatus) {
         shutdown.set(true);
         System.exit(exitStatus);
     }

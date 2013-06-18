@@ -269,7 +269,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing fails
-        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), any(UserWrapper.class));
+        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
         ;
 
         // When it is processed
@@ -303,7 +303,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing fails
-        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), any(UserWrapper.class));
+        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
 
         // When it is processed
         try {
@@ -336,7 +336,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
-        doReturn(true).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), any(UserWrapper.class));
+        doReturn(true).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
         // and the content spec provider returns a content spec
         given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
         // and the wrapper will return a valid revision
@@ -371,7 +371,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
-        doReturn(true).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), any(UserWrapper.class));
+        doReturn(true).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
         // and the content spec provider returns a content spec
         given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
         // and the wrapper will return a valid revision

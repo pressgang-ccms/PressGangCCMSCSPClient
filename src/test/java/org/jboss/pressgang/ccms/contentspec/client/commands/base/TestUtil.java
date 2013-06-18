@@ -39,7 +39,7 @@ public class TestUtil {
     }
 
     public static void setValidLevelMocking(Level levelMock, String title) {
-        given(levelMock.getType()).willReturn(LevelType.BASE);
+        given(levelMock.getLevelType()).willReturn(LevelType.BASE);
         given(levelMock.getNumberOfSpecTopics()).willReturn(1);
         given(levelMock.getTitle()).willReturn(title);
     }
@@ -55,9 +55,9 @@ public class TestUtil {
     private static UpdateableCollectionWrapper<CSNodeWrapper> createValidContentSpecMetaDatasMocking(String randomAlphanumString) {
         final UpdateableCollectionWrapper<CSNodeWrapper> metaDatas = mock(UpdateableCollectionWrapper.class);
 
-        final CSNodeWrapper titleMetaData = createValidMetaDataMocking(1, "Title", randomAlphanumString, null, 2);
-        final CSNodeWrapper productMetaData = createValidMetaDataMocking(2, "Product", randomAlphanumString, 1, 3);
-        final CSNodeWrapper versionMetaData = createValidMetaDataMocking(3, "Version", randomAlphanumString, 2, null);
+        final CSNodeWrapper versionMetaData = createValidMetaDataMocking(3, "Version", randomAlphanumString, null);
+        final CSNodeWrapper productMetaData = createValidMetaDataMocking(2, "Product", randomAlphanumString, versionMetaData);
+        final CSNodeWrapper titleMetaData = createValidMetaDataMocking(1, "Title", randomAlphanumString, productMetaData);
 
         final List<CSNodeWrapper> metaData = Arrays.asList(titleMetaData, productMetaData, versionMetaData);
         given(metaDatas.size()).willReturn(metaData.size());
@@ -66,14 +66,13 @@ public class TestUtil {
         return metaDatas;
     }
 
-    private static CSNodeWrapper createValidMetaDataMocking(Integer id, String key, String value, Integer previousId, Integer nextId) {
+    private static CSNodeWrapper createValidMetaDataMocking(Integer id, String key, String value, CSNodeWrapper next) {
         final CSNodeWrapper metaDataMock = mock(CSNodeWrapper.class);
         given(metaDataMock.getId()).willReturn(id);
         given(metaDataMock.getNodeType()).willReturn(7);
         given(metaDataMock.getTitle()).willReturn(key);
         given(metaDataMock.getAdditionalText()).willReturn(value);
-        given(metaDataMock.getPreviousNodeId()).willReturn(previousId);
-        given(metaDataMock.getNextNodeId()).willReturn(nextId);
+        given(metaDataMock.getNextNode()).willReturn(next);
         return metaDataMock;
     }
 

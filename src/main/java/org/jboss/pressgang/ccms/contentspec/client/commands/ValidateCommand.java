@@ -23,7 +23,6 @@ import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 
 @Parameters(commandDescription = "Validate a Content Specification")
 public class ValidateCommand extends BaseCommandImpl {
@@ -90,9 +89,6 @@ public class ValidateCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        // Authenticate the user
-        final UserWrapper user = authenticate(getUsername(), getProviderFactory());
-
         // If files is empty then we must be using a csprocessor.cfg file
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
@@ -130,7 +126,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Validate the content spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        success = validateContentSpec(getProviderFactory(), loggerManager, contentSpec, user);
+        success = validateContentSpec(getProviderFactory(), loggerManager, contentSpec, getUsername());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -180,11 +176,11 @@ public class ValidateCommand extends BaseCommandImpl {
      * @param providerFactory The provider factory to create providers to lookup entity details.
      * @param loggerManager   The manager object that handles logging.
      * @param contentSpec     The content spec to be validated.
-     * @param user            The user who requested the content spec be validated.
+     * @param username        The user who requested the content spec be validated.
      * @return True if the content spec is valid, otherwise false.
      */
     protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
-            final ContentSpec contentSpec, final UserWrapper user) {
+            final ContentSpec contentSpec, final String username) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setPermissiveMode(permissive);
@@ -193,15 +189,15 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Process the content spec to see if it's valid
         setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
-        return getProcessor().processContentSpec(contentSpec, user, ContentSpecParser.ParsingMode.EITHER);
+        return getProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER);
     }
 
     @Override
     public void shutdown() {
-        super.shutdown();
         if (getProcessor() != null) {
             getProcessor().shutdown();
         }
+        super.shutdown();
     }
 
     @Override

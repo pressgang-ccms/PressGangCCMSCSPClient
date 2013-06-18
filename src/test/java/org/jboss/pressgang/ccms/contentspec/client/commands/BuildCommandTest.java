@@ -39,11 +39,13 @@ import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
 import org.jboss.pressgang.ccms.contentspec.builder.structures.CSDocbookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
@@ -263,7 +265,7 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(CSTransformer.class);
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and an invalid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(false);
         given(command.getCsp()).willReturn(processor);
 
@@ -289,7 +291,7 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the fetch pubsnumber is set
@@ -326,7 +328,7 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the fetch pubsnumber is set
@@ -360,7 +362,7 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the fetch pubsnumber is set
@@ -396,7 +398,7 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the cspconfig has some zanata details
@@ -463,12 +465,12 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap())).willThrow(
-                new BuildProcessingException(""));
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(),
+                any(BuildType.class))).willThrow(new BuildProcessingException(""));
         given(command.getBuilder()).willReturn(builder);
 
         // When the command is processing
@@ -498,12 +500,12 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap())).willThrow(
-                new BuilderCreationException(""));
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(),
+                any(BuildType.class))).willThrow(new BuilderCreationException(""));
         given(command.getBuilder()).willReturn(builder);
 
         // When the command is processing
@@ -534,11 +536,12 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+                bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
         given(builder.getNumErrors()).willReturn(randomNumber);
@@ -558,7 +561,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap());
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
@@ -581,11 +584,12 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+                bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
         given(builder.getNumErrors()).willReturn(randomNumber);
@@ -606,8 +610,8 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class),
-                overrideFileCaptor.capture());
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), overrideFileCaptor.capture(),
+                any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
@@ -630,11 +634,12 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+                bookData);
         given(command.getBuilder()).willReturn(builder);
         // and a locale is set
         command.setLocale("ja");
@@ -645,6 +650,10 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(DocBookUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
         DocBookUtilities.escapeTitle(anyString());
+        // and the languages is valid
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.doReturn(true).when(ClientUtilities.class);
+        ClientUtilities.validateLanguage(any(BaseCommand.class), eq(providerFactory), anyString());
 
         // When the command is processing
         try {
@@ -656,8 +665,8 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check that the translated build method was called
-        verify(builder).buildTranslatedBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class), anyMap(),
-                any(ZanataDetails.class));
+        verify(builder).buildTranslatedBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(),
+                any(ZanataDetails.class), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with 0 Errors and 0 Warnings - Flawless " + "Victory!"));
@@ -677,11 +686,12 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+                bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has no errors
         given(builder.getNumErrors()).willReturn(0);
@@ -725,11 +735,12 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec has a title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), any(UserWrapper.class), any(ContentSpecParser.ParsingMode.class),
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), any(UserWrapper.class), any(CSDocbookBuildingOptions.class))).willReturn(bookData);
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+                bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has no errors
         given(builder.getNumErrors()).willReturn(0);
