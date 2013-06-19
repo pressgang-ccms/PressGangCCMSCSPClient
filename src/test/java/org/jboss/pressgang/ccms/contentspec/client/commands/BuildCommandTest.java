@@ -156,6 +156,29 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldFailWithInvalidLanguage() {
+        // Given a command with no ids
+        command.setIds(new ArrayList<String>());
+        // and no csprocessor.cfg data
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // and a language is set
+        command.setLocale("blah");
+        // and the validation will fail
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.doReturn(false).when(ClientUtilities.class);
+        ClientUtilities.validateLanguage(eq(command), eq(providerFactory), anyString());
+
+        // When it is processed
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(5));
+        }
+    }
+
+    @Test
     public void shouldFailWhenContentSpecFileDoesntExist() {
         final String dummySpecFile = bookDir.getAbsolutePath() + File.separator + DUMMY_SPEC_FILE;
         // Given a command with a file that doesn't exist

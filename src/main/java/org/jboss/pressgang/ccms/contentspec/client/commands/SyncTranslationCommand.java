@@ -19,11 +19,8 @@ import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.rest.RESTManager;
 import org.jboss.pressgang.ccms.services.zanatasync.SyncMaster;
-import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
@@ -104,48 +101,27 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        final RESTManager restManager = ((RESTProviderFactory) getProviderFactory()).getRESTManager();
-
         // Load the data from the config data if no ids were specified
-        if (loadFromCSProcessorCfg()) {
-            // Check that the config details are valid
-            if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
-                setIds(CollectionUtilities.toArrayList(getCspConfig().getContentSpecId()));
-            }
-        }
-
-        // Check that only one ID exists
-        if (ids.size() == 0) {
-            printError(Constants.ERROR_NO_ID_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
-        }
+        ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds());
 
         // Check that at least one locale has been specified
-        if (locales.trim().length() == 0) {
-            printError(Constants.ERROR_NO_LOCALES_MSG, false);
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        if (getLocales().trim().length() == 0) {
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_LOCALES_MSG, false);
         }
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Check that the zanata details are valid
         if (!isValid()) {
-            printError(Constants.ERROR_PUSH_NO_ZANATA_DETAILS_MSG, false);
-            shutdown(Constants.EXIT_CONFIG_ERROR);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_PUSH_NO_ZANATA_DETAILS_MSG, false);
         }
 
         final ZanataInterface zanataInterface = initialiseZanataInterface();
         final SyncMaster syncMaster = new SyncMaster(getProviderFactory(), zanataInterface);
 
         // Good point to check for a shutdown
-        if (isAppShuttingDown()) {
-            shutdown.set(true);
-            return;
-        }
+        allowShutdownToContinueIfRequested();
 
         // Process the ids
         final Set<String> zanataIds = getZanataIds(getProviderFactory(), ids);
@@ -249,8 +225,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpecId);
 
             if (contentSpecEntity == null) {
-                printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
-                shutdown(Constants.EXIT_ARGUMENT_ERROR);
+                printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
             final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory);
@@ -312,8 +287,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printError(Constants.UNABLE_TO_FIND_SERVER_MSG, false);
-            shutdown(Constants.EXIT_NO_SERVER);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, Constants.UNABLE_TO_FIND_SERVER_MSG, false);
         }
 
         return true;
@@ -321,7 +295,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
     @Override
     public boolean loadFromCSProcessorCfg() {
-        return ids.size() == 0;
+        return getIds().size() == 0;
     }
 
     @Override

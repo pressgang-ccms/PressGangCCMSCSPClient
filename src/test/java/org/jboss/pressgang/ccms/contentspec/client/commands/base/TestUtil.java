@@ -19,6 +19,7 @@ import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
+import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 /**
  * Methods shared across tests.
@@ -95,5 +96,14 @@ public class TestUtil {
         given(usersMock.size()).willReturn(1);
         given(usersMock.getItems()).willReturn(Arrays.asList(userMock));
         given(userMock.getUsername()).willReturn(username);
+    }
+
+    public static void setUpZanataDetails(ZanataDetails zanataDetailsMock, String serverUrl, String project, String version,
+            String username, String token) {
+        given(zanataDetailsMock.getServer()).willReturn(serverUrl);
+        given(zanataDetailsMock.getProject()).willReturn(project);
+        given(zanataDetailsMock.getVersion()).willReturn(version);
+        given(zanataDetailsMock.getUsername()).willReturn(username);
+        given(zanataDetailsMock.getToken()).willReturn(token);
     }
 }
