@@ -4,7 +4,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 0.33.0
-Release: 1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,13 +38,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Jun 12 2013 lnewson - 0.33.0
-- BZ #971638: Fixed the status command.
+* Wed Jun 28 2013 lnewson - 0.33.0
 - BZ #967678: Added tech-preview for building jDocbook compatible output.
-- BZ #967677: Build books on a "file-per-chapter" basis.
-- BZ #966788: Disable the assignee on bugzilla links
-- BZ #968991: Fixed an issue to prevent HTTP timeouts when creating new topics with URL's
-- BZ #957995: Building with an invalid locale doesn't fail.
+- BZ #967677: Added the ability to build books on a "file-per-chapter" basis.
+- BZ #966788: Added the ability to disable the assignee on bugzilla links.
+- BZ #979208: Added a way to set the Bugzilla Keywords field.
+- BZ #971638: Fixed the status command.
+- BZ #968991: Fixed an issue to prevent HTTP timeouts when creating new topics with URL's.
+- BZ #957995: Fixed an issue where building with an invalid locale doesn't fail.
+- BZ #977587: Fixed Translated Revision Histories have default content inserted.
+- BZ #977332: Fixed levels cannot define a related topic.
+- Fixed an issue where server builds would set the Fixed URL for topics.
 - Removed all old references to the cloud build output.
 - Removed the dependency on the PressGang user table.
 * Thu May 30 2013 lnewson - 0.32.3
