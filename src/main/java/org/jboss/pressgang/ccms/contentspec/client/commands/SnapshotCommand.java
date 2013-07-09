@@ -30,8 +30,7 @@ public class SnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
-    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.",
-            hidden = true)
+    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.")
     private Boolean update = false;
 
     @Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new content specification")
@@ -101,12 +100,12 @@ public class SnapshotCommand extends BaseCommandImpl {
 
     @Override
     public void printError(final String errorMsg, final boolean displayHelp) {
-        printError(errorMsg, displayHelp, Constants.PULL_SNAPSHOT_COMMAND_NAME);
+        printError(errorMsg, displayHelp, Constants.SNAPSHOT_COMMAND_NAME);
     }
 
     @Override
     public void printHelp() {
-        printHelp(Constants.PULL_SNAPSHOT_COMMAND_NAME);
+        printHelp(Constants.SNAPSHOT_COMMAND_NAME);
     }
 
     @Override
