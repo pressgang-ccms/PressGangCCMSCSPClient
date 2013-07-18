@@ -3,8 +3,8 @@ Summary: Content Specification Processor client application
 License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 0.33.0
-Release: 3
+Version: 0.33.2
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,6 +38,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
+* Mon Jul 01 2013 lnewson - 0.33.2
+- BZ #979247: Versions shouldn't be allowed spaces.
+- BZ #979874: Builds fail with topics that have no tags and have errors.
+* Fri Jun 28 2013 lnewson - 0.33.1
+- Fixed a NPE that could occur when including a Revision History topic
 * Fri Jun 28 2013 lnewson - 0.33.0
 - BZ #967678: Added tech-preview for building jDocbook compatible output.
 - BZ #967677: Added the ability to build books on a "file-per-chapter" basis.

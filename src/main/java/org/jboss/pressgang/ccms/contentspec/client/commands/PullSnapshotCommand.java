@@ -36,8 +36,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
             description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
     private String outputPath;
 
-    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.",
-            hidden = true)
+    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.")
     private Boolean update = false;
 
     private ContentSpecProcessor csp = null;
