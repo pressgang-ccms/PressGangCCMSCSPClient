@@ -6,12 +6,12 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import com.redhat.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -107,7 +107,8 @@ public class SearchCommand extends BaseCommandImpl {
                     csList.add(contentSpec);
                 }
                 // Search on Version
-                else if (csp.getContentSpec().getVersion().toLowerCase().matches(".*" + searchText + ".*")) {
+                else if (csp.getContentSpec().getVersion() != null && csp.getContentSpec().getVersion().toLowerCase().matches(".*" +
+                        searchText + ".*")) {
                     csList.add(contentSpec);
                 }
                 // Search on created by
@@ -145,7 +146,7 @@ public class SearchCommand extends BaseCommandImpl {
     @Override
     public boolean loadFromCSProcessorCfg() {
         /*
-		 * Searching involves looking for a String so
+         * Searching involves looking for a String so
 		 * there's no point in loading from the csprocessor.cfg
 		 */
         return false;
