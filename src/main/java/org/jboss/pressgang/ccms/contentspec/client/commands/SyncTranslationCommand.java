@@ -265,7 +265,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             final List<Integer> topicIds = parser.getReferencedLatestTopicIds();
             if (topicIds != null && !topicIds.isEmpty()) {
                 // Get the latest topics
-                tempTopics = restReader.getTopicsByIds(topicIds, false);
+                tempTopics = restReader.getTopicsByIds(topicIds, true);
             }
 
             // Copy the topics to the primary topic list
