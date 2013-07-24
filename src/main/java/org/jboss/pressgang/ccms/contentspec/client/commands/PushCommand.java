@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -18,14 +20,18 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextCSProcessingOptionsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 
 @Parameters(commandDescription = "Push an updated Content Specification to the server")
 public class PushCommand extends BaseCommandImpl {
@@ -42,12 +48,12 @@ public class PushCommand extends BaseCommandImpl {
             description = "Only push the Content Specification and don't save the Post Processed Content Specification.")
     private Boolean pushOnly = false;
 
-    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, description = "A commit message about what was " +
-            "changed.")
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM},
+            description = "A commit message about what was " + "changed.")
     private String message = null;
 
-    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, description = "The commit message should be set to be included in " +
-            "the Revision History.")
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER,
+            description = "The commit message should be set to be included in " + "the Revision History.")
     private Boolean revisionHistoryMessage = false;
 
     @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
@@ -175,7 +181,6 @@ public class PushCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         long startTime = System.currentTimeMillis();
-        boolean success = false;
 
         // Load the content spec from the file and parse it into a ContentSpec object
         final ContentSpec contentSpec = getContentSpecFromFile(getFiles().get(0));
@@ -183,13 +188,13 @@ public class PushCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Process and save the content spec
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        success = processAndSaveContentSpec(getProviderFactory(), loggerManager, contentSpec, getUsername());
+        // Process/Save the content spec
+        final RESTTextContentSpecV1 output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername());
+        final boolean success = output.getErrors() != null && output.getErrors().contains(ProcessorConstants.INFO_SUCCESSFUL_SAVE_MSG);
 
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(loggerManager.generateLogs());
+        JCommander.getConsole().println(output.getErrors());
         if (getExecutionTime()) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
         }
@@ -198,15 +203,14 @@ public class PushCommand extends BaseCommandImpl {
         if (!success) {
             shutdown(Constants.EXIT_TOPIC_INVALID);
         } else {
-            final Integer revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
-            JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
+            JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, output.getId(), output.getRevision()));
         }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
         if (success && !pushOnly) {
-            savePostProcessedContentSpec(pushingFromConfig, contentSpec);
+            savePostProcessedContentSpec(pushingFromConfig, output);
         }
     }
 
@@ -243,23 +247,51 @@ public class PushCommand extends BaseCommandImpl {
      * Process a content specification and save it to the server.
      *
      * @param providerFactory The provider factory to create providers to lookup entity details.
-     * @param loggerManager   The manager object that handles logging.
      * @param contentSpec     The content spec to be processed and saved.
-     * @param user            The user who requested the content spec be processed and saved.
+     * @param username        The user who requested the content spec be processed and saved.
      * @return True if the content spec was processed and saved successfully, otherwise false.
      */
-    protected boolean processAndSaveContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
-            final ContentSpec contentSpec, final String username) {
-        // Setup the processing options
-        final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(permissive);
-        processingOptions.setStrictLevelTitles(strictLevelTitles);
+    protected RESTTextContentSpecV1 processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
+            final String username) {
+        final RESTTextCSProcessingOptionsV1 processingOptions = new RESTTextCSProcessingOptionsV1();
+        processingOptions.setPermissive(permissive);
 
-        // Setup the log message
-        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), username, message, revisionHistoryMessage);
+        // Create the task to update the content spec on the server
+        final FutureTask<RESTTextContentSpecV1> task = new FutureTask<RESTTextContentSpecV1>(new Callable<RESTTextContentSpecV1>() {
+            @Override
+            public RESTTextContentSpecV1 call() throws Exception {
+                int flag = 0;
+                if (getRevisionHistoryMessage()) {
+                    flag = 0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT;
+                } else {
+                    flag = 0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT;
+                }
 
-        setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
-        return getProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EDITED, logMessage);
+                RESTTextContentSpecV1 output = null;
+                try {
+                    final RESTInterfaceV1 restClient = providerFactory.getRESTManager().getRESTClient();
+                    final RESTTextContentSpecV1 contentSpecEntity = new RESTTextContentSpecV1();
+                    contentSpecEntity.explicitSetText(contentSpec.toString());
+                    contentSpecEntity.setProcessingOptions(processingOptions);
+                    output = restClient.updateJSONTextContentSpec("", contentSpecEntity, getMessage(), flag, username);
+                } catch (ClientResponseFailure e) {
+                    ClientResponse<String> response = null;
+                    try {
+                        response = e.getResponse();
+                        output = new RESTTextContentSpecV1();
+                        output.setErrors(response.getEntity());
+                    } finally {
+                        if (response != null) {
+                            response.releaseConnection();
+                        }
+                    }
+                }
+
+                return output;
+            }
+        });
+
+        return ClientUtilities.saveContentSpec(this, task);
     }
 
     /**
@@ -269,7 +301,7 @@ public class PushCommand extends BaseCommandImpl {
      * @param pushingFromConfig If the command is pushing from a CSP Project directory.
      * @param contentSpec       The post processed content spec object.
      */
-    protected void savePostProcessedContentSpec(boolean pushingFromConfig, final ContentSpec contentSpec) {
+    protected void savePostProcessedContentSpec(boolean pushingFromConfig, final RESTTextContentSpecV1 contentSpec) {
         // Save the post spec to file if the push was successful
         final File outputSpec;
         if (pushingFromConfig) {

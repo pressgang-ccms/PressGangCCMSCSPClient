@@ -2,6 +2,8 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -12,14 +14,19 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
+import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextCSProcessingOptionsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 
 @Parameters(
         commandDescription = "Pull a revision of a content specification that represents a snapshot in time and push it back to the " +
@@ -37,26 +44,26 @@ public class SnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new content specification")
     private Boolean createNew = false;
 
-    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, description = "A commit message about what was " +
-            "changed.")
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM},
+            description = "A commit message about what was " + "changed.")
     private String message = null;
 
-    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, description = "The commit message should be set to be included in " +
-            "the Revision History.")
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER,
+            description = "The commit message should be set to be included in " + "the Revision History.")
     private Boolean revisionHistoryMessage = false;
 
-    private ContentSpecProcessor csp = null;
+    private SnapshotProcessor processor = null;
 
     public SnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
     }
 
-    protected ContentSpecProcessor getProcessor() {
-        return csp;
+    protected SnapshotProcessor getProcessor() {
+        return processor;
     }
 
-    protected void setProcessor(final ContentSpecProcessor processor) {
-        csp = processor;
+    protected void setProcessor(final SnapshotProcessor processor) {
+        this.processor = processor;
     }
 
     @Override
@@ -136,6 +143,7 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         // Transform the content spec
         final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
+        final String originalChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpec);
 
         // If we want to create it as a new spec then remove the checksum and id
         if (getCreateNew()) {
@@ -144,41 +152,88 @@ public class SnapshotCommand extends BaseCommandImpl {
         }
 
         // Setup the processing options
-        final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(true);
-        processingOptions.setValidating(false);
-        processingOptions.setAllowEmptyLevels(true);
-        processingOptions.setAddRevisions(true);
-        processingOptions.setUpdateRevisions(getUpdate());
-        processingOptions.setIgnoreChecksum(true);
-        processingOptions.setRevision(getRevision());
+        final SnapshotOptions snapshotOptions = new SnapshotOptions();
+        snapshotOptions.setAddRevisions(true);
+        snapshotOptions.setUpdateRevisions(getUpdate());
+        snapshotOptions.setRevision(getRevision());
 
-        // Setup the log message
-        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), getUsername(), message, revisionHistoryMessage);
+        // Create the snapshot
+        setProcessor(new SnapshotProcessor(getProviderFactory()));
+        getProcessor().processContentSpec(contentSpec, snapshotOptions);
 
-        // Process the content spec to make sure the spec is valid,
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        Integer revision = null;
-        if (getCreateNew()) {
-            success = getProcessor().processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.NEW, logMessage);
-        } else {
-            success = getProcessor().processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.EDITED, logMessage);
-        }
-        if (success) {
-            revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
-        }
+        // Process and save the updated content spec.
+        final RESTTextContentSpecV1 output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), originalChecksum);
+        success = output != null && output.getFailedContentSpec() == null;
 
         if (!success) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
+            JCommander.getConsole().println(output.getErrors());
             JCommander.getConsole().println(Constants.ERROR_CREATE_SNAPSHOT_INVALID);
             JCommander.getConsole().println("");
             shutdown(Constants.EXIT_TOPIC_INVALID);
         } else {
             JCommander.getConsole().println(Constants.SUCCESSFUL_PUSH_SNAPSHOT_MSG);
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, output.getId(), output.getRevision()));
         }
 
+    }
+
+    /**
+     * Process a content specification and save it to the server.
+     *
+     * @param providerFactory  The provider factory to create providers to lookup entity details.
+     * @param contentSpec      The content spec to be processed and saved.
+     * @param username         The user who requested the content spec be processed and saved.
+     * @param originalChecksum The content specs original checksum value.
+     * @return True if the content spec was processed and saved successfully, otherwise false.
+     */
+    protected RESTTextContentSpecV1 processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
+            final String username, final String originalChecksum) {
+        final RESTTextCSProcessingOptionsV1 processingOptions = new RESTTextCSProcessingOptionsV1();
+        processingOptions.setPermissive(true);
+
+        // Create the task to update the content spec on the server
+        final FutureTask<RESTTextContentSpecV1> task = new FutureTask<RESTTextContentSpecV1>(new Callable<RESTTextContentSpecV1>() {
+            @Override
+            public RESTTextContentSpecV1 call() throws Exception {
+                int flag = 0;
+                if (getRevisionHistoryMessage()) {
+                    flag = 0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT;
+                } else {
+                    flag = 0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT;
+                }
+
+                // Create the input object to be saved
+                final RESTTextContentSpecV1 input = new RESTTextContentSpecV1();
+                input.explicitSetText(ContentSpecUtilities.replaceChecksum(contentSpec.toString(), originalChecksum));
+
+                final RESTInterfaceV1 restInterface = providerFactory.getRESTManager().getRESTClient();
+                RESTTextContentSpecV1 output = null;
+                try {
+                    if (getCreateNew()) {
+                        output = restInterface.createJSONTextContentSpec("", input, message, flag, username);
+                    } else {
+                        input.setId(contentSpec.getId());
+                        output = restInterface.updateJSONTextContentSpec("", input, message, flag, username);
+                    }
+                } catch (ClientResponseFailure e) {
+                    ClientResponse<String> response = null;
+                    try {
+                        response = e.getResponse();
+                        output = new RESTTextContentSpecV1();
+                        output.setErrors(response.getEntity());
+                        output.setFailedContentSpec(contentSpec.toString());
+                    } finally {
+                        if (response != null) {
+                            response.releaseConnection();
+                        }
+                    }
+                }
+
+                return output;
+            }
+        });
+
+        return ClientUtilities.saveContentSpec(this, task);
     }
 
     @Override
@@ -189,5 +244,16 @@ public class SnapshotCommand extends BaseCommandImpl {
     @Override
     public boolean requiresExternalConnection() {
         return true;
+    }
+
+    @Override
+    public void shutdown() {
+        // No need to wait as the ShutdownInterceptor is waiting
+        // on the whole program.
+        if (getProcessor() != null) {
+            getProcessor().shutdown();
+        }
+
+        super.shutdown();
     }
 }

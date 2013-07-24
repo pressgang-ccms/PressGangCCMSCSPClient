@@ -12,6 +12,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -29,17 +31,22 @@ import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
+import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
+import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.rest.RESTManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,6 +79,12 @@ public class SnapshotCommandTest extends BaseUnitTest {
     @Mock UserWrapper user;
     @Mock ContentSpec contentSpec;
     @Mock ContentSpecProcessor processor;
+    @Mock SnapshotProcessor snapshotProcessor;
+    @Mock RESTInterfaceV1 client;
+    @Mock RESTManager restManager;
+    @Mock RESTTextContentSpecV1 textContentSpec;
+    @Mock ClientResponseFailure clientResponseFailure;
+    @Mock ClientResponse response;
 
     SnapshotCommand command;
     File rootTestDirectory;
@@ -84,6 +97,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
+        when(providerFactory.getRESTManager()).thenReturn(restManager);
+        when(restManager.getRESTClient()).thenReturn(client);
+
         command = spy(new SnapshotCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid
@@ -171,9 +187,14 @@ public class SnapshotCommandTest extends BaseUnitTest {
         spec.setId(id);
         spec.setChecksum(checksum);
         spec.setTitle(randomString);
+        // and we don't want to create the content spec snapshot
+        given(command.getProcessor()).willReturn(snapshotProcessor);
+        doNothing().when(snapshotProcessor).processContentSpec(eq(spec), any(SnapshotOptions.class));
         // and the processing fails
-        given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(eq(spec), anyString(), eq(ContentSpecParser.ParsingMode.NEW))).willReturn(false);
+        doThrow(clientResponseFailure).when(client).createJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class),
+                anyString(), anyInt(), anyString());
+        given(clientResponseFailure.getResponse()).willReturn(response);
+        given(response.getEntity()).willReturn("");
 
         // When setting the content spec topic revisions
         try {
@@ -203,9 +224,14 @@ public class SnapshotCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(CSTransformer.class);
         when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the processing fails
-        given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(eq(contentSpec), anyString(), eq(ContentSpecParser.ParsingMode.EDITED))).willReturn(
-                false);
+        // and we don't want to create the content spec snapshot
+        given(command.getProcessor()).willReturn(snapshotProcessor);
+        doNothing().when(snapshotProcessor).processContentSpec(eq(contentSpec), any(SnapshotOptions.class));
+        // and the processing fails
+        doThrow(clientResponseFailure).when(client).updateJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class), anyString(),
+                anyInt(), anyString());
+        given(clientResponseFailure.getResponse()).willReturn(response);
+        given(response.getEntity()).willReturn("");
 
         // When setting the content spec topic revisions
         try {
@@ -238,11 +264,14 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpec.getId()).willReturn(id);
         given(contentSpec.getChecksum()).willReturn(checksum);
         given(contentSpec.getTitle()).willReturn(randomString);
-        // and the processing fails
-        given(command.getProcessor()).willReturn(processor);
-        given(processor.processContentSpec(eq(contentSpec), anyString(), eq(ContentSpecParser.ParsingMode.EDITED),
-                any(LogMessageWrapper.class))).willReturn(
-                true);
+        // and we don't want to create the content spec snapshot
+        given(command.getProcessor()).willReturn(snapshotProcessor);
+        doNothing().when(snapshotProcessor).processContentSpec(eq(contentSpec), any(SnapshotOptions.class));
+        // and the processing succeeds
+        given(client.updateJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class),
+                anyString(), anyInt(), anyString())).willReturn(textContentSpec);
+        given(textContentSpec.getId()).willReturn(id);
+        given(textContentSpec.getRevision()).willReturn(revision);
 
         // When setting the content spec topic revisions
         command.process();

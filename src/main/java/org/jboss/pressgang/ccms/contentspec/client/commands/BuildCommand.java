@@ -681,11 +681,6 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setValidating(true);
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);
-        processingOptions.setRevision(getRevision());
-        processingOptions.setUpdateRevisions(getUseLatestVersions());
-        if (getRevision() != null) {
-            processingOptions.setAddRevisions(true);
-        }
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }

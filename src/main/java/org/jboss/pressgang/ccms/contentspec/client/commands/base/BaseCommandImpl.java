@@ -8,14 +8,13 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 
 public abstract class BaseCommandImpl implements BaseCommand {
     private final JCommander parser;
     private final ContentSpecConfiguration cspConfig;
     private final ClientConfiguration clientConfig;
-    private DataProviderFactory providerFactory = null;
+    private RESTProviderFactory providerFactory = null;
 
     @Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, hidden = true)
     private String serverUrl;
@@ -48,7 +47,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
         this.clientConfig = clientConfig;
     }
 
-    public DataProviderFactory getProviderFactory() {
+    public RESTProviderFactory getProviderFactory() {
         if (providerFactory == null) {
             providerFactory = RESTProviderFactory.create(getPressGangServerUrl());
         }

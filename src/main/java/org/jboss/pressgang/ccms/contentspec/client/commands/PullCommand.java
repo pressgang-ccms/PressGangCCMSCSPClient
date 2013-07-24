@@ -28,12 +28,6 @@ public class PullCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.TOPIC_LONG_PARAM, Constants.TOPIC_SHORT_PARAM})
     private Boolean pullTopic = false;
 
-    @Parameter(names = {Constants.XML_LONG_PARAM, Constants.XML_SHORT_PARAM})
-    private Boolean useXml = false;
-
-    @Parameter(names = {Constants.HTML_LONG_PARAM, Constants.HTML_SHORT_PARAM})
-    private Boolean useHtml = false;
-
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision;
 
@@ -66,22 +60,6 @@ public class PullCommand extends BaseCommandImpl {
         pullTopic = topic;
     }
 
-    public Boolean isUseXml() {
-        return useXml;
-    }
-
-    public void setUseXml(final Boolean useXml) {
-        this.useXml = useXml;
-    }
-
-    public Boolean isUseHtml() {
-        return useHtml;
-    }
-
-    public void setUseHtml(final Boolean useHtml) {
-        this.useHtml = useHtml;
-    }
-
     public Integer getRevision() {
         return revision;
     }
@@ -106,20 +84,8 @@ public class PullCommand extends BaseCommandImpl {
         this.outputPath = outputPath;
     }
 
-    public boolean isValid() {
-        if (useTopic() && !useContentSpec()) {
-            if (isUseXml() && isUseHtml()) {
-                return false;
-            }
-
-        } else if (!useTopic()) {
-            if (isUseXml() || isUseHtml()) {
-                return false;
-            }
-        } else {
-            return false;
-        }
-        return true;
+    protected boolean isValid() {
+        return !(useContentSpec() && useTopic());
     }
 
     @Override
@@ -150,13 +116,8 @@ public class PullCommand extends BaseCommandImpl {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
                         getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
-                if (isUseXml()) {
-                    outputString = topic.getXml();
-                    fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
-                } else if (isUseHtml()) {
-                    outputString = topic.getHtml();
-                    fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".html";
-                }
+                outputString = topic.getXml();
+                fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
             }
             // Content Specification
         } else {

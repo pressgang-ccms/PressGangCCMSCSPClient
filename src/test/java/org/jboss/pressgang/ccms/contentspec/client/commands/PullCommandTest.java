@@ -232,7 +232,6 @@ public class PullCommandTest extends BaseUnitTest {
         command.setIds(Arrays.asList(id));
         // and pull topic xml
         command.setTopic(true);
-        command.setUseXml(true);
         // And a topic exists
         given(topicProvider.getTopic(anyInt(), anyInt())).willReturn(topicWrapper);
         // and the topic title/id/xml is set
@@ -259,70 +258,10 @@ public class PullCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldGenerateRightFilenameAndPathForTopicHTML() {
-        // Given a command called with an ID
-        command.setIds(Arrays.asList(id));
-        // and pull topic html
-        command.setTopic(true);
-        command.setUseHtml(true);
-        // And a topic exists
-        given(topicProvider.getTopic(anyInt(), anyInt())).willReturn(topicWrapper);
-        // and the topic title/id/xml is set
-        given(topicWrapper.getTitle()).willReturn(TOPIC_TITLE);
-        given(topicWrapper.getId()).willReturn(id);
-        given(topicWrapper.getXml()).willReturn(randomString);
-        // and a output file is specified
-        command.setOutputPath(rootTestDirectory.getAbsolutePath());
-        // And we don't actually want to save anything
-        PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.doNothing().when(ClientUtilities.class);
-        ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
-
-        // When processing the command
-        ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> outputPath = ArgumentCaptor.forClass(String.class);
-        command.process();
-
-        // Then verify that the filename and path are valid
-        PowerMockito.verifyStatic(times(1));
-        ClientUtilities.saveOutputFile(eq(command), fileName.capture(), outputPath.capture(), anyString());
-        assertThat(fileName.getValue(), is(TOPIC_TITLE + ".html"));
-        assertThat(outputPath.getValue(), is(rootTestDirectory.getAbsolutePath()));
-    }
-
-    @Test
     public void shouldReturnFalseWhenPullingContentSpecAndTopic() {
         // Given a command with invalid arguments
         command.setContentSpec(true);
         command.setTopic(true);
-
-        // When the command is validating
-        boolean valid = command.isValid();
-
-        // Then the command shouldn't be valid
-        assertFalse(valid);
-    }
-
-    @Test
-    public void shouldReturnFalseWhenPullingTopicXmlAndTopicHtml() {
-        // Given a command with invalid arguments
-        command.setTopic(true);
-        command.setUseHtml(true);
-        command.setUseXml(true);
-
-        // When the command is validating
-        boolean valid = command.isValid();
-
-        // Then the command shouldn't be valid
-        assertFalse(valid);
-    }
-
-    @Test
-    public void shouldReturnFalseWhenPullingContentSpecXmlOrHtml() {
-        // Given a command with invalid arguments
-        command.setContentSpec(true);
-        command.setUseHtml(true);
-        command.setUseXml(true);
 
         // When the command is validating
         boolean valid = command.isValid();

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
@@ -47,8 +49,10 @@ import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.StringConstantProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
@@ -548,6 +552,17 @@ public class ClientUtilities {
     /**
      * Gets the output root directory based on the configuration files and ContentSpec entity object.
      *
+     * @param cspConfig   The content spec configuration settings.
+     * @param contentSpec The content spec object to get details from for the output directory.
+     * @return A string that represents where the root folder is for content to be saved.
+     */
+    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final RESTTextContentSpecV1 contentSpec) {
+        return getOutputRootDirectory(cspConfig, contentSpec.getTitle());
+    }
+
+    /**
+     * Gets the output root directory based on the configuration files and ContentSpec entity object.
+     *
      * @param cspConfig        The content spec configuration settings.
      * @param contentSpecTitle The title of the content specification for the output directory.
      * @return A string that represents where the root folder is for content to be saved.
@@ -812,6 +827,48 @@ public class ClientUtilities {
         }
 
         return valid;
+    }
+
+    /**
+     * Saves the content specification to the server using the provided task.
+     *
+     * @param command The command the save event is occurring for.
+     * @param task The Task to be executed that will save the content spec to the server.
+     * @return The result from saving the content spec to the server.
+     */
+    public static RESTTextContentSpecV1 saveContentSpec(final BaseCommand command, final FutureTask<RESTTextContentSpecV1> task) {
+        // Run the task in a separate thread and output a waiting message every 10 seconds
+        JCommander.getConsole().println("Saving to the server...");
+        final Thread thread = new Thread(task);
+        thread.start();
+        int count = 0;
+        while (!task.isDone()) {
+            // Sleep for 2 seconds
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // Do nothing here as it's fine if this gets interrupted
+            }
+            count++;
+
+            if (count % 10 == 0) {
+                JCommander.getConsole().println("Waiting for a response from the server...");
+            }
+        }
+
+        // Get the response from the task
+        RESTTextContentSpecV1 retValue = null;
+        try {
+            retValue = task.get();
+        } catch (InterruptedException e) {
+            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
+            command.shutdown(Constants.EXIT_FAILURE);
+        } catch (ExecutionException e) {
+            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
+            command.shutdown(Constants.EXIT_FAILURE);
+        }
+
+        return retValue;
     }
 }
 

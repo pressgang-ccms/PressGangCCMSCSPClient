@@ -3,6 +3,8 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -15,16 +17,19 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.converter.FileConverter;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextCSProcessingOptionsV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 
 @Parameters(commandDescription = "Create a new Content Specification on the server")
 public class CreateCommand extends BaseCommandImpl {
@@ -55,8 +60,6 @@ public class CreateCommand extends BaseCommandImpl {
     @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
     protected Boolean strictLevelTitles = false;
 
-    private ContentSpecProcessor csp = null;
-
     public CreateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
     }
@@ -64,14 +67,6 @@ public class CreateCommand extends BaseCommandImpl {
     @Override
     public String getCommandName() {
         return Constants.CREATE_COMMAND_NAME;
-    }
-
-    protected ContentSpecProcessor getContentSpecProcessor() {
-        return csp;
-    }
-
-    protected void setContentSpecProcessor(final ContentSpecProcessor csp) {
-        this.csp = csp;
     }
 
     public List<File> getFiles() {
@@ -172,12 +167,12 @@ public class CreateCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process/Save the content spec
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        boolean success = processContentSpec(contentSpec, loggerManager, getUsername());
+        final RESTTextContentSpecV1 output = processContentSpec(contentSpec, getUsername());
+        final boolean success = output.getErrors() != null && output.getErrors().contains(ProcessorConstants.INFO_SUCCESSFUL_SAVE_MSG);
 
         // Print the logs
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(loggerManager.generateLogs());
+        JCommander.getConsole().println(output.getErrors());
         // Print the command execution time as saving files shouldn't be included
         if (executionTime) {
             JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
@@ -185,7 +180,7 @@ public class CreateCommand extends BaseCommandImpl {
         if (!success) {
             shutdown(Constants.EXIT_FAILURE);
         } else {
-            final Integer revision = contentSpecProvider.getContentSpec(contentSpec.getId()).getRevision();
+            final Integer revision = contentSpecProvider.getContentSpec(output.getId()).getRevision();
             JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
         }
 
@@ -199,11 +194,10 @@ public class CreateCommand extends BaseCommandImpl {
             zanataDetails.setProject(null);
             zanataDetails.setVersion(null);
 
-            // Get the content spec entity
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpec.getId());
+            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(output.getId());
 
             // Create the project directory and files
-            ClientUtilities.createContentSpecProject(this, getCspConfig(), directory, contentSpec.toString(), contentSpecEntity,
+            ClientUtilities.createContentSpecProject(this, getCspConfig(), directory, output.getText(), contentSpecEntity,
                     zanataDetails);
         }
     }
@@ -242,28 +236,53 @@ public class CreateCommand extends BaseCommandImpl {
      * Process and save a content specification to the server.
      *
      * @param contentSpec   The content spec to be saved.
-     * @param loggerManager The logging manager to handle logs from processing.
-     * @param user          The user who requested the content spec be saved.
-     * @return True if the content spec was processed and saved successfully, otherwise false.
+     * @param username      The user who requested the content spec be saved.
+     * @return
      */
-    protected boolean processContentSpec(final ContentSpec contentSpec, final ErrorLoggerManager loggerManager, final String username) {
-        // Setup the processing options
-        final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(permissive);
-        processingOptions.setStrictLevelTitles(strictLevelTitles);
+    protected RESTTextContentSpecV1 processContentSpec(final ContentSpec contentSpec, final String username) {
+        final RESTTextCSProcessingOptionsV1 processingOptions = new RESTTextCSProcessingOptionsV1();
+        processingOptions.setPermissive(permissive);
 
-        // Setup the log message
-        final LogMessageWrapper logMessage = ClientUtilities.createLogDetails(getProviderFactory(), username, getMessage(), getRevisionHistoryMessage());
+        // Create the task to create the content spec on the server
+        final FutureTask<RESTTextContentSpecV1> task = new FutureTask<RESTTextContentSpecV1>(new Callable<RESTTextContentSpecV1>() {
+            @Override
+            public RESTTextContentSpecV1 call() throws Exception {
+                int flag = 0;
+                if (getRevisionHistoryMessage()) {
+                    flag = 0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT;
+                } else {
+                    flag = 0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT;
+                }
 
-        setContentSpecProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        return getContentSpecProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.NEW, logMessage);
+                RESTTextContentSpecV1 output = null;
+                try {
+                    final RESTInterfaceV1 restClient = getProviderFactory().getRESTManager().getRESTClient();
+                    final RESTTextContentSpecV1 contentSpecEntity = new RESTTextContentSpecV1();
+                    contentSpecEntity.explicitSetText(contentSpec.toString());
+                    contentSpecEntity.setProcessingOptions(processingOptions);
+                    output = restClient.createJSONTextContentSpec("", contentSpecEntity, getMessage(), flag, username);
+                } catch (ClientResponseFailure e) {
+                    ClientResponse<String> response = null;
+                    try {
+                        response = e.getResponse();
+                        output = new RESTTextContentSpecV1();
+                        output.setErrors(response.getEntity());
+                    } finally {
+                        if (response != null) {
+                            response.releaseConnection();
+                        }
+                    }
+                }
+
+                return output;
+            }
+        });
+
+        return ClientUtilities.saveContentSpec(this, task);
     }
 
     @Override
     public void shutdown() {
-        if (csp != null) {
-            csp.shutdown();
-        }
         super.shutdown();
     }
 

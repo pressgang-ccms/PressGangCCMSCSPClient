@@ -40,6 +40,7 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
@@ -84,6 +85,7 @@ public class CreateCommandTest extends BaseUnitTest {
     @Mock TopicWrapper topicWrapper;
     @Mock ContentSpec contentSpec;
     @Mock Level level;
+    @Mock RESTTextContentSpecV1 textContentSpec;
 
     CreateCommand command;
     File rootTestDirectory;
@@ -269,8 +271,8 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing fails
-        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
-        ;
+        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
+        given(textContentSpec.getErrors()).willReturn("ERROR");
 
         // When it is processed
         try {
@@ -303,7 +305,8 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing fails
-        doReturn(false).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
+        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
+        given(textContentSpec.getErrors()).willReturn("ERROR");
 
         // When it is processed
         try {
@@ -336,7 +339,8 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
-        doReturn(true).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
+        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
+        given(textContentSpec.getErrors()).willReturn("The Content Specification saved successfully.");
         // and the content spec provider returns a content spec
         given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
         // and the wrapper will return a valid revision
@@ -371,7 +375,8 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
-        doReturn(true).when(command).processContentSpec(any(ContentSpec.class), any(ErrorLoggerManager.class), anyString());
+        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
+        given(textContentSpec.getErrors()).willReturn("The Content Specification saved successfully.");
         // and the content spec provider returns a content spec
         given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
         // and the wrapper will return a valid revision

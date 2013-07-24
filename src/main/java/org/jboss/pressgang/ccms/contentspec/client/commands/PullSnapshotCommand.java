@@ -15,11 +15,9 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
+import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
+import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
-import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
@@ -39,18 +37,18 @@ public class PullSnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.")
     private Boolean update = false;
 
-    private ContentSpecProcessor csp = null;
+    private SnapshotProcessor processor = null;
 
     public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
     }
 
-    protected ContentSpecProcessor getProcessor() {
-        return csp;
+    protected SnapshotProcessor getProcessor() {
+        return processor;
     }
 
-    protected void setProcessor(final ContentSpecProcessor processor) {
-        csp = processor;
+    protected void setProcessor(final SnapshotProcessor processor) {
+        this.processor = processor;
     }
 
     @Override
@@ -116,7 +114,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process the content spec to set the snapshot revisions
-        setRevisionsForContentSpec(contentSpec, getUsername());
+        setRevisionsForContentSpec(contentSpec);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -142,30 +140,17 @@ public class PullSnapshotCommand extends BaseCommandImpl {
      * Processes a content spec object and adds the revision information for topics to the spec.
      *
      * @param contentSpec The content spec to be processed
-     * @param username    The user who requested the processing.
      */
-    protected void setRevisionsForContentSpec(final ContentSpec contentSpec, final String username) {
+    protected void setRevisionsForContentSpec(final ContentSpec contentSpec) {
         // Setup the processing options
-        final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(true);
-        processingOptions.setValidating(true);
-        processingOptions.setAllowEmptyLevels(true);
-        processingOptions.setAddRevisions(true);
-        processingOptions.setUpdateRevisions(getUpdate());
-        processingOptions.setIgnoreChecksum(true);
-        processingOptions.setRevision(getRevision());
+        final SnapshotOptions snapshotOptions = new SnapshotOptions();
+        snapshotOptions.setAddRevisions(true);
+        snapshotOptions.setUpdateRevisions(getUpdate());
+        snapshotOptions.setRevision(getRevision());
 
         // Process the content spec to make sure the spec is valid,
-        final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        setProcessor(new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions));
-        boolean success = getProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER);
-
-        if (!success) {
-            JCommander.getConsole().println(loggerManager.generateLogs());
-            JCommander.getConsole().println(Constants.ERROR_PULL_SNAPSHOT_INVALID);
-            JCommander.getConsole().println("");
-            shutdown(Constants.EXIT_TOPIC_INVALID);
-        }
+        setProcessor(new SnapshotProcessor(getProviderFactory()));
+        getProcessor().processContentSpec(contentSpec, snapshotOptions);
     }
 
     @Override

@@ -47,6 +47,9 @@ import org.jboss.pressgang.ccms.provider.PropertyTagProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.rest.RESTManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
@@ -96,6 +99,9 @@ public class PushCommandTest extends BaseUnitTest {
     @Mock CollectionWrapper<TopicWrapper> topicWrapperCollection;
     @Mock File file;
     @Mock File file2;
+    @Mock RESTInterfaceV1 client;
+    @Mock RESTManager restManager;
+    @Mock RESTTextContentSpecV1 textContentSpec;
 
     private File realFile;
     private PushCommand command;
@@ -107,6 +113,11 @@ public class PushCommandTest extends BaseUnitTest {
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
+        when(providerFactory.getRESTManager()).thenReturn(restManager);
+        when(restManager.getRESTClient()).thenReturn(client);
+        when(client.updateJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class), anyString(), anyInt(),
+                anyString())).thenReturn(textContentSpec);
+
         this.command = spy(new PushCommand(parser, cspConfig, clientConfig));
     }
 
@@ -150,24 +161,6 @@ public class PushCommandTest extends BaseUnitTest {
         // Then the name should be "push"
         assertThat(commandName, is("push"));
     }
-
-//    @Test
-//    public void shouldFailIfUserUnauthorised() {
-//        // Given a user who is unauthorised as they have no name
-//        command.setUsername("");
-//
-//        // When the PushCommand is processed
-//        try {
-//            command.process();
-//            // If we get here then the test failed
-//            fail(SYSTEM_EXIT_ERROR);
-//        } catch (CheckExitCalled e) {
-//            assertThat(e.getStatus(), is(2));
-//        }
-//
-//        // Then it should fail and the program should print an error and exit
-//        assertThat(getStdOutLogs(), containsString("No username was specified for the server."));
-//    }
 
     @Test
     public void shouldFailIfNoFileOrIdInCspConfig() {
@@ -268,6 +261,8 @@ public class PushCommandTest extends BaseUnitTest {
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class), any(String.class),
                 any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
         given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
+        given(textContentSpec.getErrors()).willReturn("ERROR: Invalid Content Specification! No Title.\nERROR:The Content Specification " +
+                "is not valid.");
         // And an authorised user
         setUpAuthorisedUser(command, userProvider, users, user, username);
 
@@ -296,6 +291,8 @@ public class PushCommandTest extends BaseUnitTest {
         doReturn(processor).when(command).getProcessor();
         given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 any(LogMessageWrapper.class))).willReturn(true);
+        given(textContentSpec.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification ID: "
+                + id + "\nRevision: " + id);
         // And command is set to require execution time
         command.setExecutionTime(true);
         // And an authorised user
@@ -321,6 +318,8 @@ public class PushCommandTest extends BaseUnitTest {
         doReturn(processor).when(command).getProcessor();
         given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 any(LogMessageWrapper.class))).willReturn(true);
+        given(textContentSpec.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification ID: "
+                + id + "\nRevision: " + id);
         // And command is set to push only
         command.setPushOnly(true);
         // And an authorised user
@@ -369,7 +368,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(command.getFiles().get(0).getName(), is(testFilename));
         // And a file with the post-processing content spec is created
         PowerMockito.verifyStatic(Mockito.times(1));
-        ClientUtilities.getOutputRootDirectory(cspConfig, contentSpec);
+        ClientUtilities.getOutputRootDirectory(cspConfig, textContentSpec);
         PowerMockito.verifyStatic(Mockito.times(1));
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
     }
@@ -419,6 +418,8 @@ public class PushCommandTest extends BaseUnitTest {
         doReturn(processor).when(command).getProcessor();
         given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 any(LogMessageWrapper.class))).willReturn(true);
+        given(textContentSpec.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification ID: "
+                + id + "\nRevision: " + id);
 
         // When the command is processed
         command.process();
@@ -517,11 +518,13 @@ public class PushCommandTest extends BaseUnitTest {
                 any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
         setValidLevelMocking(level, randomAlphanumString);
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
+        given(textContentSpec.getErrors()).willReturn("The Content Specification saved successfully.");
     }
 
     private void mockSaveFileButNotReadFileContents() throws IOException {
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenCallRealMethod();
+        when(FileUtilities.readFileContentsAsByteArray(any(File.class))).thenCallRealMethod();
         PowerMockito.doNothing().when(FileUtilities.class);
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
     }
