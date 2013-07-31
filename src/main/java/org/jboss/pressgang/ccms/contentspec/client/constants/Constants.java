@@ -165,6 +165,9 @@ public class Constants {
     public static final String ERROR_RUNNING_MAVEN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
             "occurred while running Maven. (exit code: %d)";
 
+    // Warning messages
+    public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
+
     // Info Messages
     public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
     public static final String EXEC_TIME_MSG = "Request processed in %dms";
@@ -245,6 +248,8 @@ public class Constants {
     public static final String REVISION_SHORT_PARAM = "-r";
 
     public static final String OVERRIDE_LONG_PARAM = "--override";
+
+    public static final String PUBLICAN_CFG_OVERRIDE_LONG_PARAM = "--publican.cfg-override";
 
     public static final String HIDE_ERRORS_LONG_PARAM = "--hide-errors";
 

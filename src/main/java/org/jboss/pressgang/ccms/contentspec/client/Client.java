@@ -968,6 +968,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     }
 
     @Override
+    public void printWarn(final String warnMsg) {
+        JCommander.getConsole().println("WARN:  " + warnMsg);
+    }
+
+    @Override
     public void process(final RESTManager restManager, final ErrorLoggerManager elm) {
     }
 

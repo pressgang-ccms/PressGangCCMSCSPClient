@@ -139,10 +139,19 @@ public abstract class BaseCommandImpl implements BaseCommand {
         JCommander.getConsole().println("ERROR: " + errorMsg);
         if (displayHelp) {
             JCommander.getConsole().println("");
-            printHelp();
+            printHelp(commandName);
         } else {
             JCommander.getConsole().println("");
         }
+    }
+
+    /**
+     * Prints a warning message
+     *
+     * @param warnMsg     The warning message to be displayed.
+     */
+    public void printWarn(final String warnMsg) {
+        JCommander.getConsole().println("WARN:  " + warnMsg);
     }
 
     /**
