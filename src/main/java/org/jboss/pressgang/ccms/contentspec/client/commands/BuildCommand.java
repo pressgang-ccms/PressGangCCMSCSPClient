@@ -18,6 +18,11 @@ import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Lists;
 import com.redhat.contentspec.builder.BuildType;
 import com.redhat.contentspec.builder.ContentSpecBuilder;
+import com.redhat.contentspec.processor.ContentSpecParser;
+import com.redhat.contentspec.processor.ContentSpecProcessor;
+import com.redhat.contentspec.processor.structures.ProcessingOptions;
+import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
+import com.redhat.j2koji.exceptions.KojiException;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
@@ -26,16 +31,13 @@ import org.jboss.pressgang.ccms.contentspec.client.converter.BuildTypeConverter;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.validator.BuildTypeValidator;
 import org.jboss.pressgang.ccms.contentspec.client.validator.OverrideValidator;
-import com.redhat.contentspec.processor.ContentSpecParser;
-import com.redhat.contentspec.processor.ContentSpecProcessor;
-import com.redhat.contentspec.processor.structures.ProcessingOptions;
-import com.redhat.contentspec.structures.CSDocbookBuildingOptions;
-import com.redhat.j2koji.exceptions.KojiException;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTManager;
 import org.jboss.pressgang.ccms.contentspec.rest.RESTReader;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTBaseTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.components.ComponentTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTopicV1;
+import org.jboss.pressgang.ccms.rest.v1.entities.RESTTranslatedTopicV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
@@ -410,14 +412,19 @@ public class BuildCommand extends BaseCommandImpl {
     protected String getContentSpecString(final RESTReader reader, final String id) {
         final String contentSpec;
         if (id.matches("^\\d+$")) {
-            final RESTBaseTopicV1 contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
+            final RESTTopicV1 contentSpecTopic = reader.getPostContentSpecById(Integer.parseInt(id), revision, locale != null);
 
             if (contentSpecTopic == null || contentSpecTopic.getXml() == null) {
                 printError(Constants.ERROR_NO_ID_FOUND_MSG, false);
                 shutdown(Constants.EXIT_FAILURE);
             }
 
-            contentSpec = contentSpecTopic.getXml();
+            final RESTTranslatedTopicV1 translatedContentSpec = ComponentTopicV1.returnPushedTranslatedTopic(contentSpecTopic);
+            if (locale != null && translatedContentSpec != null) {
+                contentSpec = translatedContentSpec.getXml();
+            } else {
+                contentSpec = contentSpecTopic.getXml();
+            }
 
             if (permissive == null) {
                 permissive = true;
