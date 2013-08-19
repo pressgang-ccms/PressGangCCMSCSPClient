@@ -12,8 +12,6 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
@@ -38,11 +37,14 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
@@ -76,16 +78,18 @@ public class CreateCommandTest extends BaseUnitTest {
     @Mock ClientConfiguration clientConfig;
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
+    @Mock TextContentSpecProvider textContentSpecProvider;
+    @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
     @Mock TopicProvider topicProvider;
     @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock File mockFile;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TextContentSpecWrapper textContentSpecWrapper;
     @Mock TopicWrapper topicWrapper;
     @Mock ContentSpec contentSpec;
     @Mock Level level;
-    @Mock RESTTextContentSpecV1 textContentSpec;
 
     CreateCommand command;
     File rootTestDirectory;
@@ -97,9 +101,15 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
+        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
+        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
-        command = spy(new CreateCommand(parser, cspConfig, clientConfig));
+        command = new CreateCommand(parser, cspConfig, clientConfig);
+
+        when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);
+        when(textContentSpecProvider.newTextProcessingOptions()).thenReturn(textCSProcessingOptionsWrapper);
+        when(textContentSpecProvider.createTextContentSpec(any(TextContentSpecWrapper.class), any(TextCSProcessingOptionsWrapper.class),
+                any(LogMessageWrapper.class))).thenReturn(textContentSpecWrapper);
 
         // Authentication is tested in the base implementation so assume all users are valid
         TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
@@ -207,6 +217,7 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(null);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
 
         // When it is processed
         try {
@@ -235,6 +246,7 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
 
@@ -268,11 +280,11 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing fails
-        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
-        given(textContentSpec.getErrors()).willReturn("ERROR");
+        given(textContentSpecWrapper.getErrors()).willReturn("ERROR");
 
         // When it is processed
         try {
@@ -302,11 +314,11 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing fails
-        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
-        given(textContentSpec.getErrors()).willReturn("ERROR");
+        given(textContentSpecWrapper.getErrors()).willReturn("ERROR");
 
         // When it is processed
         try {
@@ -335,12 +347,12 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(contentSpec.getId()).willReturn(id);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
-        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
-        given(textContentSpec.getErrors()).willReturn("The Content Specification saved successfully.");
+        given(textContentSpecWrapper.getErrors()).willReturn("The Content Specification saved successfully.");
         // and the content spec provider returns a content spec
         given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
         // and the wrapper will return a valid revision
@@ -371,12 +383,12 @@ public class CreateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(contentSpec.getId()).willReturn(id);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
-        doReturn(textContentSpec).when(command).processContentSpec(any(ContentSpec.class), anyString());
-        given(textContentSpec.getErrors()).willReturn("The Content Specification saved successfully.");
+        given(textContentSpecWrapper.getErrors()).willReturn("The Content Specification saved successfully.");
         // and the content spec provider returns a content spec
         given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
         // and the wrapper will return a valid revision

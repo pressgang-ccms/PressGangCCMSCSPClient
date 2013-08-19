@@ -19,14 +19,15 @@ import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.exception.ProviderException;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextCSProcessingOptionsV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
-import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ClientResponseFailure;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 
 @Parameters(
         commandDescription = "Pull a revision of a content specification that represents a snapshot in time and push it back to the " +
@@ -162,8 +163,8 @@ public class SnapshotCommand extends BaseCommandImpl {
         getProcessor().processContentSpec(contentSpec, snapshotOptions);
 
         // Process and save the updated content spec.
-        final RESTTextContentSpecV1 output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), originalChecksum);
-        success = output != null && output.getFailedContentSpec() == null;
+        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), originalChecksum);
+        success = output != null && output.getFailed() == null;
 
         if (!success) {
             JCommander.getConsole().println(output.getErrors());
@@ -186,47 +187,46 @@ public class SnapshotCommand extends BaseCommandImpl {
      * @param originalChecksum The content specs original checksum value.
      * @return True if the content spec was processed and saved successfully, otherwise false.
      */
-    protected RESTTextContentSpecV1 processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
+    protected TextContentSpecWrapper processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
             final String username, final String originalChecksum) {
-        final RESTTextCSProcessingOptionsV1 processingOptions = new RESTTextCSProcessingOptionsV1();
+        final TextContentSpecProvider textContentSpecProvider = providerFactory.getProvider(TextContentSpecProvider.class);
+        final TextCSProcessingOptionsWrapper processingOptions = textContentSpecProvider.newTextProcessingOptions();
         processingOptions.setPermissive(true);
 
         // Create the task to update the content spec on the server
-        final FutureTask<RESTTextContentSpecV1> task = new FutureTask<RESTTextContentSpecV1>(new Callable<RESTTextContentSpecV1>() {
+        final FutureTask<TextContentSpecWrapper> task = new FutureTask<TextContentSpecWrapper>(new Callable<TextContentSpecWrapper>() {
             @Override
-            public RESTTextContentSpecV1 call() throws Exception {
+            public TextContentSpecWrapper call() throws Exception {
                 int flag = 0;
                 if (getRevisionHistoryMessage()) {
                     flag = 0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT;
                 } else {
                     flag = 0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT;
                 }
+                final LogMessageWrapper logMessage = providerFactory.getProvider(LogMessageProvider.class).createLogMessage();
+                logMessage.setFlags(flag);
+                logMessage.setMessage(getMessage());
+                logMessage.setUser(username);
 
                 // Create the input object to be saved
-                final RESTTextContentSpecV1 input = new RESTTextContentSpecV1();
-                input.explicitSetText(ContentSpecUtilities.replaceChecksum(contentSpec.toString(), originalChecksum));
 
-                final RESTInterfaceV1 restInterface = providerFactory.getRESTManager().getRESTClient();
-                RESTTextContentSpecV1 output = null;
+                TextContentSpecWrapper output = null;
                 try {
+                    final TextContentSpecWrapper input = textContentSpecProvider.newTextContentSpec();
                     if (getCreateNew()) {
-                        output = restInterface.createJSONTextContentSpec("", input, message, flag, username);
+                        contentSpec.setId(null);
+                        contentSpec.setChecksum(null);
+                        input.setText(contentSpec.toString());
+                        output = textContentSpecProvider.createTextContentSpec(input, processingOptions, logMessage);
                     } else {
+                        input.setText(ContentSpecUtilities.replaceChecksum(contentSpec.toString(), originalChecksum));
                         input.setId(contentSpec.getId());
-                        output = restInterface.updateJSONTextContentSpec("", input, message, flag, username);
+                        output = textContentSpecProvider.updateTextContentSpec(input, processingOptions, logMessage);
                     }
-                } catch (ClientResponseFailure e) {
-                    ClientResponse<String> response = null;
-                    try {
-                        response = e.getResponse();
-                        output = new RESTTextContentSpecV1();
-                        output.setErrors(response.getEntity());
-                        output.setFailedContentSpec(contentSpec.toString());
-                    } finally {
-                        if (response != null) {
-                            response.releaseConnection();
-                        }
-                    }
+                } catch (ProviderException e) {
+                    output = textContentSpecProvider.newTextContentSpec();
+                    output.setErrors(e.getMessage());
+                    output.setFailed(contentSpec.toString());
                 }
 
                 return output;

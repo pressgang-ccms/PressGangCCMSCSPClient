@@ -22,16 +22,17 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.exception.ProviderException;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextCSProcessingOptionsV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
-import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ClientResponseFailure;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 
 @Parameters(commandDescription = "Push an updated Content Specification to the server")
 public class PushCommand extends BaseCommandImpl {
@@ -63,14 +64,6 @@ public class PushCommand extends BaseCommandImpl {
 
     public PushCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
-    }
-
-    protected ContentSpecProcessor getProcessor() {
-        return csp;
-    }
-
-    protected void setProcessor(ContentSpecProcessor processor) {
-        csp = processor;
     }
 
     @Override
@@ -189,7 +182,7 @@ public class PushCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process/Save the content spec
-        final RESTTextContentSpecV1 output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername());
+        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername());
         final boolean success = output.getErrors() != null && output.getErrors().contains(ProcessorConstants.INFO_SUCCESSFUL_SAVE_MSG);
 
         // Print the logs
@@ -251,40 +244,35 @@ public class PushCommand extends BaseCommandImpl {
      * @param username        The user who requested the content spec be processed and saved.
      * @return True if the content spec was processed and saved successfully, otherwise false.
      */
-    protected RESTTextContentSpecV1 processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
+    protected TextContentSpecWrapper processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
             final String username) {
-        final RESTTextCSProcessingOptionsV1 processingOptions = new RESTTextCSProcessingOptionsV1();
+        final TextContentSpecProvider textContentSpecProvider = providerFactory.getProvider(TextContentSpecProvider.class);
+        final TextCSProcessingOptionsWrapper processingOptions = textContentSpecProvider.newTextProcessingOptions();
         processingOptions.setPermissive(permissive);
 
         // Create the task to update the content spec on the server
-        final FutureTask<RESTTextContentSpecV1> task = new FutureTask<RESTTextContentSpecV1>(new Callable<RESTTextContentSpecV1>() {
+        final FutureTask<TextContentSpecWrapper> task = new FutureTask<TextContentSpecWrapper>(new Callable<TextContentSpecWrapper>() {
             @Override
-            public RESTTextContentSpecV1 call() throws Exception {
+            public TextContentSpecWrapper call() throws Exception {
                 int flag = 0;
                 if (getRevisionHistoryMessage()) {
                     flag = 0 | RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT;
                 } else {
                     flag = 0 | RESTLogDetailsV1.MINOR_CHANGE_FLAG_BIT;
                 }
+                final LogMessageWrapper logMessage = providerFactory.getProvider(LogMessageProvider.class).createLogMessage();
+                logMessage.setFlags(flag);
+                logMessage.setMessage(getMessage());
+                logMessage.setUser(username);
 
-                RESTTextContentSpecV1 output = null;
+                TextContentSpecWrapper output = null;
                 try {
-                    final RESTInterfaceV1 restClient = providerFactory.getRESTManager().getRESTClient();
-                    final RESTTextContentSpecV1 contentSpecEntity = new RESTTextContentSpecV1();
-                    contentSpecEntity.explicitSetText(contentSpec.toString());
-                    contentSpecEntity.setProcessingOptions(processingOptions);
-                    output = restClient.updateJSONTextContentSpec("", contentSpecEntity, getMessage(), flag, username);
-                } catch (ClientResponseFailure e) {
-                    ClientResponse<String> response = null;
-                    try {
-                        response = e.getResponse();
-                        output = new RESTTextContentSpecV1();
-                        output.setErrors(response.getEntity());
-                    } finally {
-                        if (response != null) {
-                            response.releaseConnection();
-                        }
-                    }
+                    final TextContentSpecWrapper contentSpecEntity = textContentSpecProvider.newTextContentSpec();
+                    contentSpecEntity.setText(contentSpec.toString());
+                    output = textContentSpecProvider.updateTextContentSpec(contentSpecEntity, processingOptions, logMessage);
+                } catch (ProviderException e) {
+                    output = textContentSpecProvider.newTextContentSpec();
+                    output.setErrors(e.getMessage());
                 }
 
                 return output;
@@ -301,7 +289,7 @@ public class PushCommand extends BaseCommandImpl {
      * @param pushingFromConfig If the command is pushing from a CSP Project directory.
      * @param contentSpec       The post processed content spec object.
      */
-    protected void savePostProcessedContentSpec(boolean pushingFromConfig, final RESTTextContentSpecV1 contentSpec) {
+    protected void savePostProcessedContentSpec(boolean pushingFromConfig, final TextContentSpecWrapper contentSpec) {
         // Save the post spec to file if the push was successful
         final File outputSpec;
         if (pushingFromConfig) {

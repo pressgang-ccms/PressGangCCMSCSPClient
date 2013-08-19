@@ -85,8 +85,15 @@ public class TestUtil {
         given(contentSpecMock.getDtd()).willReturn("Docbook 4.5");
         given(contentSpecMock.getCopyrightHolder()).willReturn(randomAlphanumString);
         given(contentSpecMock.getId()).willReturn(id);
+        given(contentSpecMock.getRevision()).willReturn(null);
         given(contentSpecMock.getChecksum()).willReturn(HashUtilities.generateMD5("ID = " + id + "\nTitle = " + randomAlphanumString +
                 "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n"));
+    }
+
+    public static String createValidContentSpecString(String randomAlphanumString, Integer id) {
+        final String spec = "ID = " + id + "\nTitle = " + randomAlphanumString +
+                "\nProduct = " + randomAlphanumString + "\nVersion = " + randomAlphanumString + "\n";
+        return "CHECKSUM=" + HashUtilities.generateMD5(spec) + "\n" + spec;
     }
 
     public static void setUpAuthorisedUser(BaseCommand command, UserProvider userProviderMock, CollectionWrapper<UserWrapper> usersMock,

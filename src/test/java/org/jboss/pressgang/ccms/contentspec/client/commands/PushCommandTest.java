@@ -16,9 +16,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +25,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
@@ -45,16 +45,16 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.PropertyTagProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
-import org.jboss.pressgang.ccms.rest.RESTManager;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
-import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.PropertyTagInTopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
@@ -86,7 +86,10 @@ public class PushCommandTest extends BaseUnitTest {
     @Mock ClientConfiguration clientConfig;
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
+    @Mock TextContentSpecProvider textContentSpecProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TextContentSpecWrapper textContentSpecWrapper;
+    @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
     @Mock ContentSpec contentSpec;
     @Mock TopicProvider topicProvider;
     @Mock UserProvider userProvider;
@@ -99,9 +102,6 @@ public class PushCommandTest extends BaseUnitTest {
     @Mock CollectionWrapper<TopicWrapper> topicWrapperCollection;
     @Mock File file;
     @Mock File file2;
-    @Mock RESTInterfaceV1 client;
-    @Mock RESTManager restManager;
-    @Mock RESTTextContentSpecV1 textContentSpec;
 
     private File realFile;
     private PushCommand command;
@@ -112,13 +112,15 @@ public class PushCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
+        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
-        when(providerFactory.getRESTManager()).thenReturn(restManager);
-        when(restManager.getRESTClient()).thenReturn(client);
-        when(client.updateJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class), anyString(), anyInt(),
-                anyString())).thenReturn(textContentSpec);
 
-        this.command = spy(new PushCommand(parser, cspConfig, clientConfig));
+        when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);
+        when(textContentSpecProvider.newTextProcessingOptions()).thenReturn(textCSProcessingOptionsWrapper);
+        when(textContentSpecProvider.updateTextContentSpec(any(TextContentSpecWrapper.class), any(TextCSProcessingOptionsWrapper.class),
+                any(LogMessageWrapper.class))).thenReturn(textContentSpecWrapper);
+
+        command = new PushCommand(parser, cspConfig, clientConfig);
     }
 
     @After
@@ -246,7 +248,7 @@ public class PushCommandTest extends BaseUnitTest {
         }
 
         // Then error messages are printed, INVALID is written to the console and the program exits
-        assertThat(getStdOutLogs(), containsString("Invalid Content Specification! Incorrect file format."));
+        assertThat(getStdOutLogs(), containsString("Invalid Content Specification! Incorrect file format"));
     }
 
     @Test
@@ -260,9 +262,11 @@ public class PushCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class), any(String.class),
                 any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
-        given(textContentSpec.getErrors()).willReturn("ERROR: Invalid Content Specification! No Title.\nERROR:The Content Specification " +
-                "is not valid.");
+        // and the content spec is invalid
+        given(textContentSpecWrapper.getErrors()).willReturn(
+                "ERROR: Invalid Content Specification! No Title.\nERROR:The Content Specification" + " is not valid.");
         // And an authorised user
         setUpAuthorisedUser(command, userProvider, users, user, username);
 
@@ -287,12 +291,6 @@ public class PushCommandTest extends BaseUnitTest {
         setUpValidCspFromFileParameter();
         // And the wrapper has the basic data
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
-        // and the processor succeeds
-        doReturn(processor).when(command).getProcessor();
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
-                any(LogMessageWrapper.class))).willReturn(true);
-        given(textContentSpec.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification ID: "
-                + id + "\nRevision: " + id);
         // And command is set to require execution time
         command.setExecutionTime(true);
         // And an authorised user
@@ -309,17 +307,10 @@ public class PushCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldNotSaveValidSpecWhenPushOnly() throws Exception {
-        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         // Given a valid CSP
         setUpValidCspFromFileParameter();
         // And the wrapper has the basic data
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
-        // and the processor succeeds
-        doReturn(processor).when(command).getProcessor();
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
-                any(LogMessageWrapper.class))).willReturn(true);
-        given(textContentSpec.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification ID: "
-                + id + "\nRevision: " + id);
         // And command is set to push only
         command.setPushOnly(true);
         // And an authorised user
@@ -339,7 +330,6 @@ public class PushCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldProcessFileFromConfigAndCreateFileWhenSaving() throws Exception {
-        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         // Given no files are specified as a parameter
         // And there is a valid .contentspec file with its ID specified in the CSP config
         given(cspConfig.getContentSpecId()).willReturn(id);
@@ -355,10 +345,6 @@ public class PushCommandTest extends BaseUnitTest {
         setUpAuthorisedUser(command, userProvider, users, user, username);
         // And readFileContents will work but saveFile will not actually save (to keep our environment clean)
         mockSaveFileButNotReadFileContents();
-        // and the processor succeeds
-        doReturn(processor).when(command).getProcessor();
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
-                any(LogMessageWrapper.class))).willReturn(true);
 
         // When the command is processed
         command.process();
@@ -368,7 +354,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(command.getFiles().get(0).getName(), is(testFilename));
         // And a file with the post-processing content spec is created
         PowerMockito.verifyStatic(Mockito.times(1));
-        ClientUtilities.getOutputRootDirectory(cspConfig, textContentSpec);
+        ClientUtilities.getOutputRootDirectory(cspConfig, textContentSpecWrapper);
         PowerMockito.verifyStatic(Mockito.times(1));
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
     }
@@ -385,10 +371,6 @@ public class PushCommandTest extends BaseUnitTest {
         // And an IOException will be thrown when saveFile is called
         PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
-        // and the processor succeeds
-        doReturn(processor).when(command).getProcessor();
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
-                any(LogMessageWrapper.class))).willReturn(true);
 
         // When the command is processed
         try {
@@ -405,7 +387,6 @@ public class PushCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldCreateDirectoriesWhenSavingFileIfRequired() throws Exception {
-        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         // Given a valid CSP
         setUpValidCspFromFileParameter();
         // And the wrapper has the basic data
@@ -414,12 +395,6 @@ public class PushCommandTest extends BaseUnitTest {
         setUpAuthorisedUser(command, userProvider, users, user, username);
         // And an output spec parent file
         given(file.getParentFile()).willReturn(file2);
-        // and the processor succeeds
-        doReturn(processor).when(command).getProcessor();
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
-                any(LogMessageWrapper.class))).willReturn(true);
-        given(textContentSpec.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification ID: "
-                + id + "\nRevision: " + id);
 
         // When the command is processed
         command.process();
@@ -433,7 +408,6 @@ public class PushCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldProcessContentSpecFileFromCspConfigWithTxtExtension() throws Exception {
-        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         // Given no files are specified as a parameter
         // And there is a valid .txt file with its ID specified in the CSP config but no .contentspec version
         given(cspConfig.getContentSpecId()).willReturn(id);
@@ -450,10 +424,6 @@ public class PushCommandTest extends BaseUnitTest {
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
         // And no files will be actually written to disk to keep our environment clean
         mockSaveFileButNotReadFileContents();
-        // and the processor succeeds
-        doReturn(processor).when(command).getProcessor();
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
-                any(LogMessageWrapper.class))).willReturn(true);
 
         // When the command is processed
         command.process();
@@ -466,7 +436,7 @@ public class PushCommandTest extends BaseUnitTest {
     @Test
     public void shouldFailIfCspConfigSpecIdDoesNotMapToExistingFile() {
         // Given no files are specified as a parameter
-        // And there is an ID specifided in the CSP config but the spec file doesn't exist
+        // And there is an ID specified in the CSP config but the spec file doesn't exist
         given(cspConfig.getContentSpecId()).willReturn(id);
         given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
         PowerMockito.mockStatic(DocBookUtilities.class);
@@ -516,9 +486,11 @@ public class PushCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class), any(String.class),
                 any(ContentSpecParser.ParsingMode.class))).willReturn(contentSpec);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         setValidLevelMocking(level, randomAlphanumString);
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
-        given(textContentSpec.getErrors()).willReturn("The Content Specification saved successfully.");
+        given(textContentSpecWrapper.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification " +
+                "ID: " + id + "\nRevision: " + id);
     }
 
     private void mockSaveFileButNotReadFileContents() throws IOException {

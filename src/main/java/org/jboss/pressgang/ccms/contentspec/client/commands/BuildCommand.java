@@ -515,7 +515,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setInjectionTypes(getInjectionTypes());
         buildOptions.setIgnoreMissingCustomInjections(getHideErrors());
         buildOptions.setSuppressErrorsPage(getHideErrors());
-        buildOptions.setInsertBugzillaLinks(!getHideErrors());
+        buildOptions.setInsertBugLinks(!getHideErrors());
         buildOptions.setOverrides(getOverrides());
         buildOptions.setSuppressContentSpecPage(!getHideContentSpecPage());
         buildOptions.setInsertEditorLinks(getInsertEditorLinks());
@@ -528,7 +528,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setRevisionMessages(getMessage());
         buildOptions.setUseLatestVersions(getUseLatestVersions());
         buildOptions.setFlattenTopics(getFlattenTopics());
-        buildOptions.setForceInjectBugzillaLinks(getForceBugLinks());
+        buildOptions.setForceInjectBugLinks(getForceBugLinks());
         buildOptions.setCommonContentDirectory(getClientConfig().getPublicanCommonContentDirectory());
         buildOptions.setFlatten(getFlatten());
 

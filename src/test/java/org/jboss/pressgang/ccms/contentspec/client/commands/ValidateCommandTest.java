@@ -8,6 +8,7 @@ import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidContentSpecWrapperMocking;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidLevelMocking;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createValidContentSpecString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -182,7 +183,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         }
 
         // Then error messages are printed, INVALID is written to the console and the program exits
-        assertThat(getStdOutLogs(), containsString("Invalid Content Specification! Incorrect file format."));
+        assertThat(getStdOutLogs(), containsString("Invalid Content Specification! Incorrect file format"));
     }
 
     @Test
@@ -223,6 +224,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(createValidContentSpecString(randomAlphanumString, id));
         given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
@@ -269,6 +271,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         // And there is a valid .contentspec file with its ID specified in the CSP config
         given(cspConfig.getContentSpecId()).willReturn(id);
         given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
+        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(createValidContentSpecString(randomAlphanumString, id));
         PowerMockito.mockStatic(DocBookUtilities.class);
         given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
         String testFilename = filename + "-post.contentspec";
@@ -298,6 +301,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         // And there is a valid .txt file with its ID specified in the CSP config but no .contentspec version
         given(cspConfig.getContentSpecId()).willReturn(id);
         given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
+        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(createValidContentSpecString(randomAlphanumString, id));
         PowerMockito.mockStatic(DocBookUtilities.class);
         given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
         String testFilename = filename + "-post.txt";

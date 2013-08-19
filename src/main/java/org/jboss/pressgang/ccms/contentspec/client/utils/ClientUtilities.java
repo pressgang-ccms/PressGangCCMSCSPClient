@@ -49,7 +49,6 @@ import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.StringConstantProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
@@ -58,6 +57,7 @@ import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -556,7 +556,7 @@ public class ClientUtilities {
      * @param contentSpec The content spec object to get details from for the output directory.
      * @return A string that represents where the root folder is for content to be saved.
      */
-    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final RESTTextContentSpecV1 contentSpec) {
+    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final TextContentSpecWrapper contentSpec) {
         return getOutputRootDirectory(cspConfig, contentSpec.getTitle());
     }
 
@@ -836,7 +836,7 @@ public class ClientUtilities {
      * @param task The Task to be executed that will save the content spec to the server.
      * @return The result from saving the content spec to the server.
      */
-    public static RESTTextContentSpecV1 saveContentSpec(final BaseCommand command, final FutureTask<RESTTextContentSpecV1> task) {
+    public static TextContentSpecWrapper saveContentSpec(final BaseCommand command, final FutureTask<TextContentSpecWrapper> task) {
         // Run the task in a separate thread and output a waiting message every 10 seconds
         JCommander.getConsole().println("Saving to the server...");
         final Thread thread = new Thread(task);
@@ -857,7 +857,7 @@ public class ClientUtilities {
         }
 
         // Get the response from the task
-        RESTTextContentSpecV1 retValue = null;
+        TextContentSpecWrapper retValue = null;
         try {
             retValue = task.get();
         } catch (InterruptedException e) {

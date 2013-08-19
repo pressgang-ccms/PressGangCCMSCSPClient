@@ -13,13 +13,13 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
@@ -31,22 +31,22 @@ import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
-import org.jboss.pressgang.ccms.rest.RESTManager;
-import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
-import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ClientResponseFailure;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +57,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, CSTransformer.class})
+@PrepareForTest({RESTProviderFactory.class, CSTransformer.class, ClientUtilities.class})
 public class SnapshotCommandTest extends BaseUnitTest {
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -72,19 +72,17 @@ public class SnapshotCommandTest extends BaseUnitTest {
     @Mock ClientConfiguration clientConfig;
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
+    @Mock TextContentSpecProvider textContentSpecProvider;
     @Mock TopicProvider topicProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TextContentSpecWrapper textContentSpecWrapper;
+    @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
     @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock ContentSpec contentSpec;
     @Mock ContentSpecProcessor processor;
     @Mock SnapshotProcessor snapshotProcessor;
-    @Mock RESTInterfaceV1 client;
-    @Mock RESTManager restManager;
-    @Mock RESTTextContentSpecV1 textContentSpec;
-    @Mock ClientResponseFailure clientResponseFailure;
-    @Mock ClientResponse response;
 
     SnapshotCommand command;
     File rootTestDirectory;
@@ -95,12 +93,16 @@ public class SnapshotCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
+        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
-        when(providerFactory.getRESTManager()).thenReturn(restManager);
-        when(restManager.getRESTClient()).thenReturn(client);
 
         command = spy(new SnapshotCommand(parser, cspConfig, clientConfig));
+
+        when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);
+        when(textContentSpecProvider.newTextProcessingOptions()).thenReturn(textCSProcessingOptionsWrapper);
+        when(textContentSpecProvider.updateTextContentSpec(any(TextContentSpecWrapper.class), any(TextCSProcessingOptionsWrapper.class),
+                any(LogMessageWrapper.class))).thenReturn(textContentSpecWrapper);
 
         // Authentication is tested in the base implementation so assume all users are valid
         TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
@@ -191,10 +193,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(command.getProcessor()).willReturn(snapshotProcessor);
         doNothing().when(snapshotProcessor).processContentSpec(eq(spec), any(SnapshotOptions.class));
         // and the processing fails
-        doThrow(clientResponseFailure).when(client).createJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class),
-                anyString(), anyInt(), anyString());
-        given(clientResponseFailure.getResponse()).willReturn(response);
-        given(response.getEntity()).willReturn("");
+        PowerMockito.mockStatic(ClientUtilities.class);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
+        given(textContentSpecWrapper.getFailed()).willReturn("");
 
         // When setting the content spec topic revisions
         try {
@@ -228,10 +229,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(command.getProcessor()).willReturn(snapshotProcessor);
         doNothing().when(snapshotProcessor).processContentSpec(eq(contentSpec), any(SnapshotOptions.class));
         // and the processing fails
-        doThrow(clientResponseFailure).when(client).updateJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class), anyString(),
-                anyInt(), anyString());
-        given(clientResponseFailure.getResponse()).willReturn(response);
-        given(response.getEntity()).willReturn("");
+        PowerMockito.mockStatic(ClientUtilities.class);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
+        given(textContentSpecWrapper.getFailed()).willReturn("");
 
         // When setting the content spec topic revisions
         try {
@@ -268,10 +268,10 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(command.getProcessor()).willReturn(snapshotProcessor);
         doNothing().when(snapshotProcessor).processContentSpec(eq(contentSpec), any(SnapshotOptions.class));
         // and the processing succeeds
-        given(client.updateJSONTextContentSpec(anyString(), any(RESTTextContentSpecV1.class),
-                anyString(), anyInt(), anyString())).willReturn(textContentSpec);
-        given(textContentSpec.getId()).willReturn(id);
-        given(textContentSpec.getRevision()).willReturn(revision);
+        PowerMockito.mockStatic(ClientUtilities.class);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
+        given(textContentSpecWrapper.getId()).willReturn(id);
+        given(textContentSpecWrapper.getRevision()).willReturn(revision);
 
         // When setting the content spec topic revisions
         command.process();

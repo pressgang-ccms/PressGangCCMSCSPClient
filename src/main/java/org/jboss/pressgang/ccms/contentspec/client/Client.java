@@ -52,6 +52,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.exception.ProviderException;
 import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -245,7 +246,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // Process the commands
             isProcessingCommand.set(true);
-            command.process();
+            try {
+                command.process();
+            } catch (ProviderException e) {
+                printError(Constants.ERROR_INTERNAL_ERROR, false);
+                JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
+            }
             isProcessingCommand.set(false);
 
             // Add a newline just to separate the output
