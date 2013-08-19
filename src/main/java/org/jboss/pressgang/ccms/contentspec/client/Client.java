@@ -941,6 +941,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     }
 
     @Override
+    public void printWarn(final String warnMsg) {
+        JCommander.getConsole().println("WARN:  " + warnMsg);
+    }
+    
+    @Override
     public void printErrorAndShutdown(int exitStatus, final String errorMsg, boolean displayHelp) {
         printError(errorMsg, displayHelp);
         shutdown(exitStatus);

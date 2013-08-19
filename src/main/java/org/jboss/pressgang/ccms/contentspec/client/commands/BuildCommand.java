@@ -72,6 +72,9 @@ public class BuildCommand extends BaseCommandImpl {
     @DynamicParameter(names = Constants.OVERRIDE_LONG_PARAM, metaVar = "<variable>=<value>", validateWith = OverrideValidator.class)
     private Map<String, String> overrides = Maps.newHashMap();
 
+    @DynamicParameter(names = Constants.PUBLICAN_CFG_OVERRIDE_LONG_PARAM, metaVar = "<parameter>=<value>")
+    private Map<String, String> publicanCfgOverrides = Maps.newHashMap();
+
     @Parameter(names = Constants.BUG_REPORTING_LONG_PARM, description = "Hide the bug reporting links in the output.")
     private Boolean hideBugLinks = false;
 
@@ -227,6 +230,14 @@ public class BuildCommand extends BaseCommandImpl {
 
     public void setOverrides(final Map<String, String> overrides) {
         this.overrides = overrides;
+    }
+
+    public Map<String, String> getPublicanCfgOverrides() {
+        return publicanCfgOverrides;
+    }
+
+    public void setPublicanCfgOverrides(final Map<String, String> publicanCfgOverrides) {
+        this.publicanCfgOverrides = publicanCfgOverrides;
     }
 
     public Boolean getPermissive() {
@@ -420,6 +431,9 @@ public class BuildCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 
+        // Check the passed publican.cfg overrides
+        validatePublicanCfgOverride();
+
         // Get the content spec and make sure it exists
         final ContentSpec contentSpec = getContentSpec(getIds().get(0));
 
@@ -517,6 +531,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setSuppressErrorsPage(getHideErrors());
         buildOptions.setInsertBugLinks(!getHideErrors());
         buildOptions.setOverrides(getOverrides());
+        buildOptions.setPublicanCfgOverrides(getPublicanCfgOverrides());
         buildOptions.setSuppressContentSpecPage(!getHideContentSpecPage());
         buildOptions.setInsertEditorLinks(getInsertEditorLinks());
         buildOptions.setShowReportPage(getShowReport());
@@ -649,11 +664,12 @@ public class BuildCommand extends BaseCommandImpl {
         byte[] builderOutput = null;
         try {
             setBuilder(new ContentSpecBuilder(getProviderFactory()));
+            BuildType buildType = getBuildType() == null ? BuildType.PUBLICAN : getBuildType();
             if (getLocale() == null) {
-                builderOutput = getBuilder().buildBook(contentSpec, username, getBuildOptions(), getOverrideFiles(), getBuildType());
+                builderOutput = getBuilder().buildBook(contentSpec, username, getBuildOptions(), getOverrideFiles(), buildType);
             } else {
                 builderOutput = getBuilder().buildTranslatedBook(contentSpec, username, getBuildOptions(), getOverrideFiles(),
-                        getCspConfig().getZanataDetails(), getBuildType());
+                        getCspConfig().getZanataDetails(), buildType);
             }
         } catch (BuildProcessingException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
@@ -796,6 +812,17 @@ public class BuildCommand extends BaseCommandImpl {
             }
         } catch (IOException e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
+        }
+    }
+
+    /**
+     * Validates the passed publican.cfg overrides to check that they are valid.
+     */
+    protected void validatePublicanCfgOverride() {
+        for (final Entry<String, String> overrideEntry : getPublicanCfgOverrides().entrySet()) {
+            if (!CSConstants.PUBLICAN_CFG_PARAMETERS.contains(overrideEntry.getKey())) {
+                printWarn(String.format(Constants.WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE, overrideEntry.getKey()));
+            }
         }
     }
 

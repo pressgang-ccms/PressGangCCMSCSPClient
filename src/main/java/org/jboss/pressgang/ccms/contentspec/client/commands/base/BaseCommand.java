@@ -57,6 +57,13 @@ public interface BaseCommand extends ShutdownAbleApp {
     void printError(String errorMsg, boolean displayHelp);
 
     /**
+     * Print a warning message to the console.
+     *
+     * @param warnMsg     The warning message to display.
+     */
+    void printWarn(String warnMsg);
+
+    /**
      * Print an error and then shutdown the application.
      *
      * @param exitStatus  The exit status to shut the application down with.

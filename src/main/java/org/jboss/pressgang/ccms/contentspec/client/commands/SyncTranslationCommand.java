@@ -196,7 +196,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         if (!ClientUtilities.validateLanguages(this, getProviderFactory(), splitLocales)) {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
-        
+
         for (final String locale : splitLocales) {
             // Covert the language into a LocaleId
             localeIds.add(LocaleId.fromJavaName(locale));
