@@ -529,7 +529,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setInjectionTypes(getInjectionTypes());
         buildOptions.setIgnoreMissingCustomInjections(getHideErrors());
         buildOptions.setSuppressErrorsPage(getHideErrors());
-        buildOptions.setInsertBugLinks(!getHideErrors());
+        buildOptions.setInsertBugLinks(!getHideBugLinks());
         buildOptions.setOverrides(getOverrides());
         buildOptions.setPublicanCfgOverrides(getPublicanCfgOverrides());
         buildOptions.setSuppressContentSpecPage(!getHideContentSpecPage());
