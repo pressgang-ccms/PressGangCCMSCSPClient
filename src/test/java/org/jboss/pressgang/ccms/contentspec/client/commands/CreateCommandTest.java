@@ -348,7 +348,7 @@ public class CreateCommandTest extends BaseUnitTest {
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
-        given(contentSpec.getId()).willReturn(id);
+        given(textContentSpecWrapper.getId()).willReturn(id);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
@@ -384,7 +384,7 @@ public class CreateCommandTest extends BaseUnitTest {
         when(ClientUtilities.parseContentSpecString(any(RESTProviderFactory.class), any(ErrorLoggerManager.class), anyString(),
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
-        given(contentSpec.getId()).willReturn(id);
+        given(textContentSpecWrapper.getId()).willReturn(id);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds

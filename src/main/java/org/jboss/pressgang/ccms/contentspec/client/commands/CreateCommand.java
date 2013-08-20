@@ -183,7 +183,7 @@ public class CreateCommand extends BaseCommandImpl {
             shutdown(Constants.EXIT_FAILURE);
         } else {
             final Integer revision = contentSpecProvider.getContentSpec(output.getId()).getRevision();
-            JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, contentSpec.getId(), revision));
+            JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, output.getId(), revision));
         }
 
         // Good point to check for a shutdown
