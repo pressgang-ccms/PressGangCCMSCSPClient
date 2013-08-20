@@ -238,7 +238,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and no force
         command.setForce(false);
         // and should create the csprocessor cfg
-        command.setCreateCsprocessorCfg(true);
+        command.setNoCreateCsprocessorCfg(false);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
@@ -272,7 +272,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and the file is valid
         TestUtil.setValidFileProperties(mockFile);
         // and should create the csprocessor cfg
-        command.setCreateCsprocessorCfg(false);
+        command.setNoCreateCsprocessorCfg(false);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
@@ -306,7 +306,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and force to bypass the directory exists check
         command.setForce(true);
         // and should create the csprocessor cfg
-        command.setCreateCsprocessorCfg(true);
+        command.setNoCreateCsprocessorCfg(true);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
@@ -339,7 +339,7 @@ public class CreateCommandTest extends BaseUnitTest {
         // and force to bypass the directory exists check
         command.setForce(true);
         // and should create the csprocessor cfg
-        command.setCreateCsprocessorCfg(true);
+        command.setNoCreateCsprocessorCfg(false);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
@@ -374,8 +374,8 @@ public class CreateCommandTest extends BaseUnitTest {
         command.setFiles(Arrays.asList(mockFile));
         // and the file is valid
         TestUtil.setValidFileProperties(mockFile);
-        // and should create the csprocessor cfg
-        command.setCreateCsprocessorCfg(false);
+        // and should not create the csprocessor cfg
+        command.setNoCreateCsprocessorCfg(true);
         // that is empty
         PowerMockito.mockStatic(FileUtilities.class);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);

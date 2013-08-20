@@ -45,7 +45,7 @@ public class CreateCommand extends BaseCommandImpl {
     private Boolean executionTime = false;
 
     @Parameter(names = Constants.NO_CREATE_CSPROCESSOR_CFG_LONG_PARAM, description = "Don't create the csprocessor.cfg and other files.")
-    private Boolean createCsprocessorCfg = true;
+    private Boolean noCreateCsprocessorCfg = false;
 
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM},
             description = "Force the Content Specification directories to be created.")
@@ -95,12 +95,12 @@ public class CreateCommand extends BaseCommandImpl {
         this.executionTime = executionTime;
     }
 
-    public Boolean getCreateCsprocessorCfg() {
-        return createCsprocessorCfg;
+    public Boolean getNoCreateCsprocessorCfg() {
+        return noCreateCsprocessorCfg;
     }
 
-    public void setCreateCsprocessorCfg(final Boolean createCsprocessorCfg) {
-        this.createCsprocessorCfg = createCsprocessorCfg;
+    public void setNoCreateCsprocessorCfg(final Boolean noCreateCsprocessorCfg) {
+        this.noCreateCsprocessorCfg = noCreateCsprocessorCfg;
     }
 
     public Boolean getForce() {
@@ -160,7 +160,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Check that the output directory doesn't already exist
         final File directory = new File(getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
-        if (directory.exists() && !getForce() && getCreateCsprocessorCfg() && directory.isDirectory()) {
+        if (directory.exists() && !getForce() && !getNoCreateCsprocessorCfg() && directory.isDirectory()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
         }
@@ -189,7 +189,7 @@ public class CreateCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        if (success && getCreateCsprocessorCfg()) {
+        if (success && !getNoCreateCsprocessorCfg()) {
             // Create the blank zanata details as we shouldn't have a zanata setup at creation time
             final ZanataDetails zanataDetails = new ZanataDetails();
             zanataDetails.setServer(null);
