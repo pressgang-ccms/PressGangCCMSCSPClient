@@ -176,13 +176,15 @@ public class PushCommand extends BaseCommandImpl {
         long startTime = System.currentTimeMillis();
 
         // Load the content spec from the file and parse it into a ContentSpec object
-        final ContentSpec contentSpec = getContentSpecFromFile(getFiles().get(0));
+        final String contentSpecString = getContentSpecFromFile(getFiles().get(0));
+        final ContentSpec contentSpec = parseContentSpec(contentSpecString);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
         // Process/Save the content spec
-        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername());
+        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, contentSpecString,
+                getUsername());
         final boolean success = output.getErrors() != null && output.getErrors().contains(ProcessorConstants.INFO_SUCCESSFUL_SAVE_MSG);
 
         // Print the logs
@@ -208,12 +210,12 @@ public class PushCommand extends BaseCommandImpl {
     }
 
     /**
-     * Get a content specification from a file and parse it into a ContentSpec object, so that ti can be used for processing.
+     * Get a content specification from a file.
      *
      * @param file The file to load the content spec from.
-     * @return The parsed content specification object.
+     * @return The content specification string.
      */
-    protected ContentSpec getContentSpecFromFile(File file) {
+    protected String getContentSpecFromFile(File file) {
         // Read in the file contents
         String contentSpecString = FileUtilities.readFileContents(file);
 
@@ -221,6 +223,16 @@ public class PushCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
         }
 
+        return contentSpecString;
+    }
+
+    /**
+     * Get a content specification from a file and parse it into a ContentSpec object, so that ti can be used for processing.
+     *
+     * @param contentSpecString The content spec string to parse.
+     * @return The parsed content specification object.
+     */
+    protected ContentSpec parseContentSpec(final String contentSpecString) {
         // Parse the spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
         JCommander.getConsole().println("Starting to parse...");
@@ -239,13 +251,14 @@ public class PushCommand extends BaseCommandImpl {
     /**
      * Process a content specification and save it to the server.
      *
-     * @param providerFactory The provider factory to create providers to lookup entity details.
-     * @param contentSpec     The content spec to be processed and saved.
-     * @param username        The user who requested the content spec be processed and saved.
+     * @param providerFactory   The provider factory to create providers to lookup entity details.
+     * @param contentSpec       The content spec to be processed and saved.
+     * @param contentSpecString The original content spec string that was parsed.
+     * @param username          The user who requested the content spec be processed and saved.
      * @return True if the content spec was processed and saved successfully, otherwise false.
      */
     protected TextContentSpecWrapper processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
-            final String username) {
+            final String contentSpecString, final String username) {
         final TextContentSpecProvider textContentSpecProvider = providerFactory.getProvider(TextContentSpecProvider.class);
         final TextCSProcessingOptionsWrapper processingOptions = textContentSpecProvider.newTextProcessingOptions();
         processingOptions.setPermissive(permissive);
@@ -268,7 +281,7 @@ public class PushCommand extends BaseCommandImpl {
                 TextContentSpecWrapper output = null;
                 try {
                     final TextContentSpecWrapper contentSpecEntity = textContentSpecProvider.newTextContentSpec();
-                    contentSpecEntity.setText(contentSpec.toString());
+                    contentSpecEntity.setText(contentSpecString);
                     contentSpecEntity.setId(contentSpec.getId());
                     output = textContentSpecProvider.updateTextContentSpec(contentSpecEntity, processingOptions, logMessage);
                 } catch (ProviderException e) {
