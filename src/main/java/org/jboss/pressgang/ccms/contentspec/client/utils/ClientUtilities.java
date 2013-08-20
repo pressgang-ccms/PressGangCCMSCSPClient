@@ -188,15 +188,28 @@ public class ClientUtilities {
      * @throws IOException
      */
     public static ContentSpecConfiguration readFromCsprocessorCfg(final File csprocessorcfg) throws IOException {
+        final ContentSpecConfiguration cspConfig = new ContentSpecConfiguration();
+        readFromCsprocessorCfg(csprocessorcfg, cspConfig);
+        return cspConfig;
+    }
+
+    /**
+     * Read from a csprocessor.cfg file and intitialise the variables into a configuration object.
+     *
+     * @param csprocessorcfg The csprocessor.cfg file.
+     * @param cspConfig      The content spec configuration object to load the settings into
+     * @throws FileNotFoundException The csprocessor.cfg couldn't be found
+     * @throws IOException
+     */
+    public static void readFromCsprocessorCfg(final File csprocessorcfg, final ContentSpecConfiguration cspConfig) throws IOException {
         final Properties prop = new Properties();
         prop.load(new FileInputStream(csprocessorcfg));
 
         // If the file contains no properties then return an empty config
         if (prop.isEmpty()) {
-            return new ContentSpecConfiguration();
+            return;
         }
 
-        final ContentSpecConfiguration cspConfig = new ContentSpecConfiguration();
         final String specId = prop.getProperty("SPEC_ID");
         cspConfig.setContentSpecId(Integer.parseInt(specId == null ? null : specId));
         cspConfig.setServerUrl(fixHostURL(prop.getProperty("SERVER_URL")));
@@ -205,7 +218,6 @@ public class ClientUtilities {
         cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
         cspConfig.setKojiHubUrl(fixHostURL(prop.getProperty("KOJI_HUB_URL")));
         cspConfig.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
-        return cspConfig;
     }
 
     /**
@@ -833,7 +845,7 @@ public class ClientUtilities {
      * Saves the content specification to the server using the provided task.
      *
      * @param command The command the save event is occurring for.
-     * @param task The Task to be executed that will save the content spec to the server.
+     * @param task    The Task to be executed that will save the content spec to the server.
      * @return The result from saving the content spec to the server.
      */
     public static TextContentSpecWrapper saveContentSpec(final BaseCommand command, final FutureTask<TextContentSpecWrapper> task) {

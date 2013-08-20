@@ -73,10 +73,10 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     private BaseCommand command;
 
-    private File csprocessorcfg = new File("csprocessor.cfg");
-    private ContentSpecConfiguration cspConfig = new ContentSpecConfiguration();
+    private final File csprocessorcfg = new File("csprocessor.cfg");
+    private final ContentSpecConfiguration cspConfig = new ContentSpecConfiguration();
 
-    private ClientConfiguration clientConfig = new ClientConfiguration();
+    private final ClientConfiguration clientConfig = new ClientConfiguration();
     private boolean firstRun = false;
 
     @Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, metaVar = "<URL>")
@@ -202,7 +202,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 // Load the csprocessor.cfg file from the current directory
                 try {
                     if (csprocessorcfg.exists() && csprocessorcfg.isFile()) {
-                        cspConfig = ClientUtilities.readFromCsprocessorCfg(csprocessorcfg);
+                        ClientUtilities.readFromCsprocessorCfg(csprocessorcfg, cspConfig);
                         if (cspConfig.getContentSpecId() == null) {
                             printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_INVALID_CSPROCESSOR_CFG_MSG, false);
                         }
