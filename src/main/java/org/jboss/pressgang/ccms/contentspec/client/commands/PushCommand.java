@@ -269,6 +269,7 @@ public class PushCommand extends BaseCommandImpl {
                 try {
                     final TextContentSpecWrapper contentSpecEntity = textContentSpecProvider.newTextContentSpec();
                     contentSpecEntity.setText(contentSpec.toString());
+                    contentSpecEntity.setId(contentSpec.getId());
                     output = textContentSpecProvider.updateTextContentSpec(contentSpecEntity, processingOptions, logMessage);
                 } catch (ProviderException e) {
                     output = textContentSpecProvider.newTextContentSpec();
