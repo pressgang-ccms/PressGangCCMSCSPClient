@@ -37,12 +37,14 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstants;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 @Parameters(commandDescription = "Build a Content Specification from the server")
@@ -716,8 +718,22 @@ public class BuildCommand extends BaseCommandImpl {
         // Get the Content Spec either from file or from the REST API
         final ContentSpec contentSpec;
         if (fileOrId.matches("^\\d+$")) {
+            final Integer id = Integer.parseInt(fileOrId);
             final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(Integer.parseInt(fileOrId), getRevision());
+
+            // Get the Content Spec from the server. If the locale is set then find the closest translated spec and load it from there.
+            final ContentSpecWrapper contentSpecEntity;
+            if (getLocale() != null) {
+                final TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getClosestTranslatedContentSpecById
+                        (getProviderFactory(), id, getRevision());
+                if (translatedContentSpec != null) {
+                    contentSpecEntity = translatedContentSpec.getContentSpec();
+                } else {
+                    contentSpecEntity = contentSpecProvider.getContentSpec(id, getRevision());
+                }
+            } else {
+                contentSpecEntity = contentSpecProvider.getContentSpec(id, getRevision());
+            }
 
             // Check that the content spec entity exists.
             if (contentSpecEntity == null) {
