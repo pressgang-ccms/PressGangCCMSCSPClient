@@ -68,8 +68,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
             description = "The Zanata project version to be associated with the Content Specification.")
     private String zanataVersion = null;
 
-    @Parameter(names = Constants.TOPICS_ONLY_LONG_PARAM, description = "Only push the topics in the content specification to Zanata.")
-    private Boolean topicsOnly = false;
+    @Parameter(names = Constants.CONTENT_SPEC_ONLY_LONG_PARAM, description = "Only push the the content specification to Zanata.")
+    private Boolean contentSpecOnly = false;
 
     @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM},
             description = "Automatically answer \"yes\" to any questions.")
@@ -125,6 +125,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     public void setAnswerYes(Boolean answerYes) {
         this.answerYes = answerYes;
+    }
+
+    public Boolean getContentSpecOnly() {
+        return contentSpecOnly;
+    }
+
+    public void setContentSpecOnly(Boolean contentSpecOnly) {
+        this.contentSpecOnly = contentSpecOnly;
     }
 
     @Override
@@ -358,7 +366,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     zanataInterface, messages);
             if (translatedContentSpec == null) {
                 error = true;
-            } else {
+            } else if (!getContentSpecOnly()) {
                 // Loop through each topic and upload it to zanata
                 for (final Entry<TopicWrapper, SpecTopic> topicEntry : topicToSpecTopic.entrySet()) {
                     ++current;

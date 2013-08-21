@@ -335,6 +335,8 @@ public class Constants {
 
     public static final String TOPICS_ONLY_LONG_PARAM = "--topics-only";
 
+    public static final String CONTENT_SPEC_ONLY_LONG_PARAM = "--contentspec-only";
+
     public static final String PATH_LONG_PARAM = "--path";
 
     public static final String NEW_LONG_PARAM = "--new";
