@@ -29,11 +29,8 @@ public class ValidateCommand extends BaseCommandImpl {
     @Parameter(converter = FileConverter.class, metaVar = "[FILE]")
     private List<File> files = new ArrayList<File>();
 
-    @Parameter(names = {Constants.PERMISSIVE_LONG_PARAM, Constants.PERMISSIVE_SHORT_PARAM}, description = "Turn on permissive processing.")
-    private Boolean permissive = false;
-
-    @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
-    protected Boolean strictLevelTitles = false;
+    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, description = "Enforce that all titles match their matching topic titles.")
+    protected Boolean strictTitles = false;
 
     private ContentSpecProcessor csp = null;
 
@@ -62,20 +59,12 @@ public class ValidateCommand extends BaseCommandImpl {
         this.files = files;
     }
 
-    public Boolean getPermissive() {
-        return permissive;
+    public Boolean getStrictTitles() {
+        return strictTitles;
     }
 
-    public void setPermissive(final Boolean permissive) {
-        this.permissive = permissive;
-    }
-
-    public Boolean getStrictLevelTitles() {
-        return strictLevelTitles;
-    }
-
-    public void setStrictLevelTitles(Boolean strictLevelTitles) {
-        this.strictLevelTitles = strictLevelTitles;
+    public void setStrictTitles(Boolean strictTitles) {
+        this.strictTitles = strictTitles;
     }
 
     public boolean isValid() {
@@ -183,9 +172,8 @@ public class ValidateCommand extends BaseCommandImpl {
             final ContentSpec contentSpec, final String username) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(permissive);
         processingOptions.setValidating(true);
-        processingOptions.setStrictLevelTitles(strictLevelTitles);
+        processingOptions.setStrictTitles(strictTitles);
 
         // Process the content spec to see if it's valid
         setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));

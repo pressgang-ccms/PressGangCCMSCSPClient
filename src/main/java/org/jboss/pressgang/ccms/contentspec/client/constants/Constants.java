@@ -239,9 +239,6 @@ public class Constants {
     public static final String OUTPUT_LONG_PARAM = "--output";
     public static final String OUTPUT_SHORT_PARAM = "-o";
 
-    public static final String PERMISSIVE_LONG_PARAM = "--permissive";
-    public static final String PERMISSIVE_SHORT_PARAM = "-p";
-
     public static final String FORCE_LONG_PARAM = "--force";
     public static final String FORCE_SHORT_PARAM = "--f";
 
@@ -354,7 +351,7 @@ public class Constants {
     public static final String MESSAGE_LONG_PARAM = "--message";
     public static final String REVISION_MESSAGE_FLAG_LONG_PARAMETER = "--rev-history";
 
-    public static final String STRICT_LEVEL_TITLES_LONG_PARAM = "--strict-level-titles";
+    public static final String STRICT_TITLES_LONG_PARAM = "--strict-titles";
 
     public static final String FORMAT_LONG_PARAM = "--format";
 }

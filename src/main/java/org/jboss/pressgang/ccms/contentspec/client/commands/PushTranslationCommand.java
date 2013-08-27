@@ -236,7 +236,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(true);
         processingOptions.setValidating(true);
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);

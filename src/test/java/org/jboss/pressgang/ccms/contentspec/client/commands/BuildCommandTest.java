@@ -248,7 +248,6 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // Then verify that the content spec isn't null and permissive is false
         assertNotNull(contentSpec);
-        assertFalse(command.getPermissive());
     }
 
     @Test

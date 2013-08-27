@@ -191,7 +191,7 @@ public class SnapshotCommand extends BaseCommandImpl {
             final String username, final String originalChecksum) {
         final TextContentSpecProvider textContentSpecProvider = providerFactory.getProvider(TextContentSpecProvider.class);
         final TextCSProcessingOptionsWrapper processingOptions = textContentSpecProvider.newTextProcessingOptions();
-        processingOptions.setPermissive(true);
+        processingOptions.setStrictTitles(true);
 
         // Create the task to update the content spec on the server
         final FutureTask<TextContentSpecWrapper> task = new FutureTask<TextContentSpecWrapper>(new Callable<TextContentSpecWrapper>() {

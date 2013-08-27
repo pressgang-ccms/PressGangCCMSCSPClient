@@ -68,9 +68,6 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.EXEC_TIME_LONG_PARAM, description = "Show the execution time of the command.", hidden = true)
     private Boolean executionTime = false;
 
-    @Parameter(names = {Constants.PERMISSIVE_LONG_PARAM, Constants.PERMISSIVE_SHORT_PARAM}, description = "Turn on permissive processing.")
-    private Boolean permissive = null;
-
     @DynamicParameter(names = Constants.OVERRIDE_LONG_PARAM, metaVar = "<variable>=<value>", validateWith = OverrideValidator.class)
     private Map<String, String> overrides = Maps.newHashMap();
 
@@ -240,14 +237,6 @@ public class BuildCommand extends BaseCommandImpl {
 
     public void setPublicanCfgOverrides(final Map<String, String> publicanCfgOverrides) {
         this.publicanCfgOverrides = publicanCfgOverrides;
-    }
-
-    public Boolean getPermissive() {
-        return permissive;
-    }
-
-    public void setPermissive(final Boolean permissive) {
-        this.permissive = permissive;
     }
 
     public String getOutputPath() {
@@ -695,7 +684,6 @@ public class BuildCommand extends BaseCommandImpl {
             final String username, final ContentSpec contentSpec) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
-        processingOptions.setPermissiveMode(getPermissive() == null ? true : getPermissive());
         processingOptions.setValidating(true);
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);
@@ -744,11 +732,6 @@ public class BuildCommand extends BaseCommandImpl {
         } else {
             // Get the content spec from the file
             contentSpec = getContentSpecFromFile(fileOrId, true);
-
-            // Set permissive to false as when loading from file we don't know if the content was ever valid.
-            if (getPermissive() == null) {
-                setPermissive(false);
-            }
         }
 
         return contentSpec;

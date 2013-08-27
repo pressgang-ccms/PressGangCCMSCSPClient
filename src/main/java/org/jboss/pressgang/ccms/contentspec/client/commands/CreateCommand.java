@@ -38,9 +38,6 @@ public class CreateCommand extends BaseCommandImpl {
     @Parameter(converter = FileConverter.class, metaVar = "[FILE]")
     private List<File> files = new ArrayList<File>();
 
-    @Parameter(names = {Constants.PERMISSIVE_LONG_PARAM, Constants.PERMISSIVE_SHORT_PARAM}, description = "Turn on permissive processing.")
-    private Boolean permissive = false;
-
     @Parameter(names = Constants.EXEC_TIME_LONG_PARAM, description = "Show the execution time of the command.", hidden = true)
     private Boolean executionTime = false;
 
@@ -59,8 +56,8 @@ public class CreateCommand extends BaseCommandImpl {
             "the Revision History.")
     private Boolean revisionHistoryMessage = false;
 
-    @Parameter(names = Constants.STRICT_LEVEL_TITLES_LONG_PARAM, description = "Enforce that the level titles match their topic titles.")
-    protected Boolean strictLevelTitles = false;
+    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, description = "Enforce that all titles match their matching topic titles.")
+    protected Boolean strictTitles = false;
 
     public CreateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
@@ -77,14 +74,6 @@ public class CreateCommand extends BaseCommandImpl {
 
     public void setFiles(final List<File> files) {
         this.files = files;
-    }
-
-    public Boolean getPermissive() {
-        return permissive;
-    }
-
-    public void setPermissive(final Boolean permissive) {
-        this.permissive = permissive;
     }
 
     public Boolean getExecutionTime() {
@@ -127,12 +116,12 @@ public class CreateCommand extends BaseCommandImpl {
         this.message = message;
     }
 
-    public Boolean getStrictLevelTitles() {
-        return strictLevelTitles;
+    public Boolean getStrictTitles() {
+        return strictTitles;
     }
 
-    public void setStrictLevelTitles(Boolean strictLevelTitles) {
-        this.strictLevelTitles = strictLevelTitles;
+    public void setStrictTitles(Boolean strictTitles) {
+        this.strictTitles = strictTitles;
     }
 
     public boolean isValid() {
@@ -246,7 +235,7 @@ public class CreateCommand extends BaseCommandImpl {
             final String username) {
         final TextContentSpecProvider textContentSpecProvider = providerFactory.getProvider(TextContentSpecProvider.class);
         final TextCSProcessingOptionsWrapper processingOptions = textContentSpecProvider.newTextProcessingOptions();
-        processingOptions.setPermissive(permissive);
+        processingOptions.setStrictTitles(strictTitles);
 
         // Create the task to create the content spec on the server
         final FutureTask<TextContentSpecWrapper> task = new FutureTask<TextContentSpecWrapper>(new Callable<TextContentSpecWrapper>() {
