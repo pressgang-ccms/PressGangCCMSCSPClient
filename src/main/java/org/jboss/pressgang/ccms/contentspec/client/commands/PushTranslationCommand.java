@@ -231,6 +231,11 @@ public class PushTranslationCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
         }
 
+        // Check that the content spec isn't a failed one
+        if (contentSpecEntity.getFailed() != null) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_INVALID_CONTENT_SPEC, false);
+        }
+
         // Transform the content spec
         final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
 

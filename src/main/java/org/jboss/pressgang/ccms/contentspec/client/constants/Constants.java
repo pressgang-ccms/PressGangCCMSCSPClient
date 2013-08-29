@@ -172,10 +172,11 @@ public class Constants {
     public static final String ERROR_RUNNING_MAVEN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
             "occurred while running Maven. (exit code: %d)";
     public static final String ERROR_NO_VALID_CONTENT_SPEC = "No valid version exists on the server, please fix any errors and try again.";
+    public static final String ERROR_INVALID_CONTENT_SPEC = "The Content Specification has validation errors, please fix any errors and try again.";
 
     // Warning messages
     public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
-    public static final String WARN_BUILDING_FROM_LATEST_SPEC = "This content spec has validation errors, " +
+    public static final String WARN_BUILDING_FROM_LATEST_SPEC = "This Content Specification has validation errors, " +
             "so using the latest valid version.";
 
     // Info Messages
