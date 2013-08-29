@@ -307,7 +307,7 @@ public class PushCommand extends BaseCommandImpl {
 
         // Save the Post Processed spec
         try {
-            FileUtilities.saveFile(outputSpec, contentSpec.toString(), Constants.FILE_ENCODING);
+            FileUtilities.saveFile(outputSpec, contentSpec.getText(), Constants.FILE_ENCODING);
         } catch (IOException e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()),
                     false);
