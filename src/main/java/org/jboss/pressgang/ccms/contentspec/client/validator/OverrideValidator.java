@@ -12,8 +12,8 @@ import org.jboss.pressgang.ccms.contentspec.processor.constants.ProcessorConstan
 
 public class OverrideValidator implements IParameterValidator {
     private static final List<String> validNames = Arrays.asList(CSConstants.AUTHOR_GROUP_OVERRIDE, CSConstants.REVISION_HISTORY_OVERRIDE,
-            CSConstants.FEEDBACK_OVERRIDE, CSConstants.REVNUMBER_OVERRIDE, CSConstants.PUBSNUMBER_OVERRIDE, CSConstants.BRAND_OVERRIDE, 
-            CSConstants.POM_OVERRIDE);
+            CSConstants.FEEDBACK_OVERRIDE, CSConstants.REVNUMBER_OVERRIDE, CSConstants.PUBSNUMBER_OVERRIDE, CSConstants.BRAND_OVERRIDE,
+            CSConstants.BRAND_ALT_OVERRIDE, CSConstants.POM_OVERRIDE);
 
     @Override
     public void validate(final String name, final String value) throws ParameterException {
