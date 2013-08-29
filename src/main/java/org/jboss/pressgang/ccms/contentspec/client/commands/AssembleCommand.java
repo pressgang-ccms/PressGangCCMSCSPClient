@@ -99,7 +99,7 @@ public class AssembleCommand extends BuildCommand {
         final boolean assembleFromConfig = loadFromCSProcessorCfg();
 
         // Validate that only one id or file was entered
-        ClientUtilities.validateIdsOrFiles(this, getIds(), true);
+        ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();

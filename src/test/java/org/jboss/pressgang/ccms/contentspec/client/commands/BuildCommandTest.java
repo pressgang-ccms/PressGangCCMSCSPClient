@@ -695,6 +695,51 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldReturnByteArrayOnSuccessfulBuildFromCsprocessorCfg() throws BuildProcessingException, BuilderCreationException {
+        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
+        final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
+        final byte[] bookData = new byte[0];
+        // Given a command with no id and a valid csprocessor.cfg
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // and the content spec exists
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        // and the transform works
+        PowerMockito.mockStatic(CSTransformer.class);
+        final ContentSpec contentSpec = new ContentSpec();
+        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
+        // and a valid content spec
+        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
+                anyString())).willReturn(true);
+        given(command.getCsp()).willReturn(processor);
+        // and the builder will throw a builder processing exception
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+                bookData);
+        given(command.getBuilder()).willReturn(builder);
+        // and the builder has an error
+        given(builder.getNumErrors()).willReturn(randomNumber);
+        given(builder.getNumWarnings()).willReturn(0);
+        // and we create a way to exit after building
+        PowerMockito.mockStatic(DocBookUtilities.class);
+        PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
+        DocBookUtilities.escapeTitle(anyString());
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-2));
+        }
+
+        // Then check the build method was called
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(), any(BuildType.class));
+        assertThat(getStdOutLogs(), containsString("Starting to build..."));
+        assertThat(getStdOutLogs(),
+                containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
+    }
+
+    @Test
     public void shouldShutdownWhenSaveBuildFails() throws BuildProcessingException, BuilderCreationException, IOException {
         final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         final ContentSpecBuilder builder = mock(ContentSpecBuilder.class);
@@ -888,7 +933,7 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldReturnCorrectOutputFileWithNoOuputPath() {
+    public void shouldReturnCorrectOutputFileWithNoOutputPath() {
         // Given a filename
         String filename = "EmptyFile.txt";
         // and no output path
@@ -902,7 +947,7 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldReturnCorrectOutputFileWithOuputPathAsDirectory() {
+    public void shouldReturnCorrectOutputFileWithOutputPathAsDirectory() {
         // Given a filename
         String filename = "EmptyFile.txt";
         // and no output path
@@ -916,7 +961,7 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldReturnCorrectOutputFileWithOuputPathAsFile() {
+    public void shouldReturnCorrectOutputFileWithOutputPathAsFile() {
         // Given a filename
         String filename = "EmptyFile.txt";
         // and no output path

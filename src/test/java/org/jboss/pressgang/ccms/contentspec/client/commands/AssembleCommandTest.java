@@ -50,6 +50,7 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 public class AssembleCommandTest extends BaseUnitTest {
     private static final String BOOK_TITLE = "Test";
     private static final String DUMMY_BUILD_FILE_NAME = "Test.zip";
+    private static final String DUMMY_PROJECT_BUILD_FILE_NAME = "Test-publican.zip";
 
     @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
@@ -67,7 +68,9 @@ public class AssembleCommandTest extends BaseUnitTest {
     AssembleCommand command;
     File rootTestDirectory;
     File bookDir;
+    File projectBookDir;
     File emptyFile;
+    File projectEmptyFile;
 
     @Before
     public void setUp() throws IOException {
@@ -90,6 +93,14 @@ public class AssembleCommandTest extends BaseUnitTest {
         // Make a empty file in that directory
         emptyFile = new File(bookDir, DUMMY_BUILD_FILE_NAME);
         emptyFile.createNewFile();
+
+        // Make the project book directory
+        projectBookDir = new File(rootTestDirectory, BOOK_TITLE + File.separator + "assembly");
+        projectBookDir.mkdirs();
+
+        // Make a empty file in that directory
+        projectEmptyFile = new File(projectBookDir, DUMMY_PROJECT_BUILD_FILE_NAME);
+        projectEmptyFile.createNewFile();
     }
 
     @Test
@@ -231,6 +242,37 @@ public class AssembleCommandTest extends BaseUnitTest {
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
+        // and the fix file path method returns something
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+        // and the unzip succeeds
+        when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(true);
+        // and the publican command will execute successfully
+        when(ClientUtilities.runCommand(anyString(), any(File.class), any(Console.class), anyBoolean(), anyBoolean())).thenReturn(0);
+
+        // When processing the command
+        command.process();
+
+        // Then the command printed a success message and the runPublican method wasn't executed
+        assertThat(getStdOutLogs(), containsString("Content Specification build unzipped to " + rootPath + File.separator + BOOK_TITLE));
+        assertThat(getStdOutLogs(),
+                containsString("Content Specification successfully assembled at " + rootPath + File.separator + BOOK_TITLE));
+    }
+
+    @Test
+    public void shouldSuccessfullyRunFromCsprocessorCfg() throws IOException {
+        PowerMockito.mockStatic(ClientUtilities.class);
+        PowerMockito.mockStatic(FileUtilities.class);
+        PowerMockito.mockStatic(ZipUtilities.class);
+        final String rootPath = rootTestDirectory.getAbsolutePath();
+        // Given a command with no ids and a csprocessor.cfg
+        given(cspConfig.getContentSpecId()).willReturn(id);
+        // and the content spec file will be found
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
+        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
+        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenReturn(bookDir.getAbsolutePath
+                () + File.separator);
         // and the fix file path method returns something
         when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
         when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
@@ -457,5 +499,6 @@ public class AssembleCommandTest extends BaseUnitTest {
     @After
     public void cleanUp() throws IOException {
         FileUtils.deleteDirectory(bookDir);
+        FileUtils.deleteDirectory(projectBookDir);
     }
 }
