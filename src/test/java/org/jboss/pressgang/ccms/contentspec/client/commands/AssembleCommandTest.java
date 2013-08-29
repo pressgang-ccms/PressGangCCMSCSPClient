@@ -10,6 +10,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -300,6 +301,9 @@ public class AssembleCommandTest extends BaseUnitTest {
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenReturn(bookDir.getAbsolutePath
                 () + File.separator);
+        // and the validate and fix ids will run
+        when(ClientUtilities.prepareAndValidateStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
+        when(ClientUtilities.prepareStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
         // and the fix file path method returns something
         when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
         when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();

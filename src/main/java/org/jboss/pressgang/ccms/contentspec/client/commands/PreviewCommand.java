@@ -42,11 +42,10 @@ public class PreviewCommand extends AssembleCommand {
     @Override
     public void process() {
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
-        final boolean previewFromConfig = loadFromCSProcessorCfg();
         final String previewFormat = getPreviewFormat();
 
         // Validate that only one id or file was entered
-        ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
+        final boolean previewFromConfig = ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
