@@ -104,6 +104,11 @@ public class PullSnapshotCommand extends BaseCommandImpl {
                     getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
         }
 
+        // Check that the content spec isn't a failed one
+        if (contentSpecEntity.getFailed() != null) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_INVALID_CONTENT_SPEC, false);
+        }
+
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 

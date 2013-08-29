@@ -179,6 +179,11 @@ public class AssembleCommand extends BuildCommand {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
+            // Check that the content spec has a valid version
+            if (contentSpec.getChildren() == null || contentSpec.getChildren().isEmpty()) {
+                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
+            }
+
             if (assembleFromConfig) {
                 /*
                  * If we are assembling from a CSP Project directory then we need to get the location of the ZIP and the assembly directory

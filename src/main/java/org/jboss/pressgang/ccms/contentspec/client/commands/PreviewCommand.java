@@ -152,6 +152,11 @@ public class PreviewCommand extends AssembleCommand {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
+            // Check that the content spec has a valid version
+            if (contentSpec.getChildren() == null || contentSpec.getChildren().isEmpty()) {
+                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
+            }
+
             // If using a content spec project directory the file names/locations are static based on the root directory
             if (previewFromConfig) {
                 final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
