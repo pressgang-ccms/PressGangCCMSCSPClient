@@ -34,7 +34,9 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,6 +65,7 @@ public class PreviewCommandTest extends BaseUnitTest {
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock ContentSpec contentSpec;
+    @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
 
     PreviewCommand command;
     File rootTestDirectory;
@@ -144,6 +147,30 @@ public class PreviewCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldFailWhenNoValidContentSpecs() {
+        // Given a command with ids
+        command.setIds(Arrays.asList(id.toString()));
+        // and a valid preview format
+        given(clientConfig.getPublicanPreviewFormat()).willReturn("html");
+        // and the provider will return a wrapper, that has no children
+        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
+        given(contentSpecChildren.isEmpty()).willReturn(true);
+
+        // When the command is processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString("No valid version exists on the server, please fix any errors and try again."));
+    }
+
+    @Test
     public void shouldShutdownWhenPreviewFileDoesntExist() {
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with ids
@@ -154,6 +181,8 @@ public class PreviewCommandTest extends BaseUnitTest {
         command.setOutputPath(rootTestDirectory.getAbsolutePath() + File.separator);
         // and the provider will return a wrapper
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the wrapper returns a title, product, version and id
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpecWrapper.getVersion()).willReturn("1");
@@ -185,6 +214,8 @@ public class PreviewCommandTest extends BaseUnitTest {
         command.setOutputPath(rootTestDirectory.getAbsolutePath() + File.separator);
         // and the provider will return a wrapper
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
+        given(contentSpecChildren.size()).willReturn(1);
         // and the wrapper returns a title, product, version and id
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpecWrapper.getVersion()).willReturn("1");
@@ -259,6 +290,8 @@ public class PreviewCommandTest extends BaseUnitTest {
         given(cspConfig.getContentSpecId()).willReturn(id);
         // and the provider will return a wrapper
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
+        given(contentSpecChildren.size()).willReturn(1);
         // and the wrapper returns a title, product, version and id
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpecWrapper.getVersion()).willReturn("1");

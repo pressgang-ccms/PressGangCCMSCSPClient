@@ -3,12 +3,12 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createRealFile;
+import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createValidContentSpecString;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setUpAuthorisedUser;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidContentSpecMocking;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidContentSpecWrapperMocking;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidFileProperties;
 import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.setValidLevelMocking;
-import static org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil.createValidContentSpecString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -38,11 +38,13 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.After;
@@ -75,6 +77,8 @@ public class ValidateCommandTest extends BaseUnitTest {
     @Mock UserWrapper user;
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TextContentSpecProvider textContentSpecProvider;
+    @Mock TextContentSpecWrapper textContentSpecWrapper;
     @Mock ContentSpec contentSpec;
     @Mock TopicProvider topicProvider;
     @Mock Level level;
@@ -90,6 +94,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
+        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         this.command = new ValidateCommand(parser, cspConfig, clientConfig);
     }
@@ -224,7 +229,8 @@ public class ValidateCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(FileUtilities.class);
         given(FileUtilities.readFileContents(file)).willReturn(contentSpecString);
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
-        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(createValidContentSpecString(randomAlphanumString, id));
+        given(textContentSpecProvider.getTextContentSpec(id, null)).willReturn(textContentSpecWrapper);
+        given(textContentSpecWrapper.getText()).willReturn(createValidContentSpecString(randomAlphanumString, id));
         given(providerFactory.getProvider(TopicProvider.class)).willReturn(topicProvider);
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.parseContentSpecString(any(DataProviderFactory.class), any(ErrorLoggerManager.class),
@@ -271,7 +277,8 @@ public class ValidateCommandTest extends BaseUnitTest {
         // And there is a valid .contentspec file with its ID specified in the CSP config
         given(cspConfig.getContentSpecId()).willReturn(id);
         given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
-        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(createValidContentSpecString(randomAlphanumString, id));
+        given(textContentSpecProvider.getTextContentSpec(id, null)).willReturn(textContentSpecWrapper);
+        given(textContentSpecWrapper.getText()).willReturn(createValidContentSpecString(randomAlphanumString, id));
         PowerMockito.mockStatic(DocBookUtilities.class);
         given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
         String testFilename = filename + "-post.contentspec";
@@ -301,7 +308,8 @@ public class ValidateCommandTest extends BaseUnitTest {
         // And there is a valid .txt file with its ID specified in the CSP config but no .contentspec version
         given(cspConfig.getContentSpecId()).willReturn(id);
         given(contentSpecProvider.getContentSpec(id, null)).willReturn(contentSpecWrapper);
-        given(contentSpecProvider.getContentSpecAsString(id, null)).willReturn(createValidContentSpecString(randomAlphanumString, id));
+        given(textContentSpecProvider.getTextContentSpec(id, null)).willReturn(textContentSpecWrapper);
+        given(textContentSpecWrapper.getText()).willReturn(createValidContentSpecString(randomAlphanumString, id));
         PowerMockito.mockStatic(DocBookUtilities.class);
         given(DocBookUtilities.escapeTitle(anyString())).willReturn(filename);
         String testFilename = filename + "-post.txt";

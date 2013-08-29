@@ -223,7 +223,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // Given a content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
@@ -289,7 +289,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
@@ -316,7 +316,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -355,7 +355,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -391,7 +391,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -433,7 +433,7 @@ public class BuildCommandTest extends BaseUnitTest {
         final ContentSpec contentSpec = new ContentSpec();
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and a valid content spec
         given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class),
                 anyString())).willReturn(true);
@@ -498,7 +498,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -535,7 +535,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -573,7 +573,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -623,7 +623,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -675,7 +675,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -729,7 +729,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -776,7 +776,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         final ContentSpec contentSpec = new ContentSpec();
@@ -826,7 +826,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.size()).willReturn(1);
+        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
         PowerMockito.mockStatic(CSTransformer.class);
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory))).thenReturn(contentSpec);
