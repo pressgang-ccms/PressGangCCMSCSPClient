@@ -96,16 +96,17 @@ public class AssembleCommand extends BuildCommand {
     @Override
     public void process() {
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
-
-        // Validate that only one id or file was entered
-        final boolean assembleFromConfig = ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
+        boolean assembleFromConfig = loadFromCSProcessorCfg();
 
         if (!getNoBuild()) {
             super.process();
+        } else {
+            // Validate that only one id or file was entered
+            assembleFromConfig = ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
         }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
 
         JCommander.getConsole().println(Constants.STARTING_ASSEMBLE_MSG);
 

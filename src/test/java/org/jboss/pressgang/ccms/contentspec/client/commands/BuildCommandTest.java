@@ -51,6 +51,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.entities.ConfigDefaults;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
@@ -106,6 +107,7 @@ public class BuildCommandTest extends BaseUnitTest {
     @Mock UserWrapper user;
     @Mock TopicProvider topicProvider;
     @Mock BlobConstantProvider blobConstantProvider;
+    @Mock ConfigDefaults defaults;
 
     BuildCommand command;
     File rootTestDirectory;
@@ -120,6 +122,7 @@ public class BuildCommandTest extends BaseUnitTest {
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         when(providerFactory.getProvider(BlobConstantProvider.class)).thenReturn(blobConstantProvider);
+        when(clientConfig.getDefaults()).thenReturn(defaults);
         command = spy(new BuildCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid

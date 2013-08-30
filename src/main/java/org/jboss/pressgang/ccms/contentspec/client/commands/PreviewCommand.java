@@ -42,18 +42,19 @@ public class PreviewCommand extends AssembleCommand {
     @Override
     public void process() {
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
+        boolean previewFromConfig = loadFromCSProcessorCfg();
         final String previewFormat = getPreviewFormat();
-
-        // Validate that only one id or file was entered
-        final boolean previewFromConfig = ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
 
         if (!getNoAssemble()) {
             // Assemble the content specification
             super.process();
+        } else {
+            // Validate that only one id or file was entered
+            previewFromConfig = ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
         }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
 
         // Find the preview file to be opened.
         String previewFileName = findFileToPreview(contentSpecProvider, previewFromConfig, previewFormat);
