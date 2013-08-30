@@ -691,6 +691,10 @@ public class BuildCommand extends BaseCommandImpl {
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
+        // Don't validate bug links on a server installation.
+        if (getClientConfig().getDefaults().isServer()) {
+            processingOptions.setValidateBugLinks(false);
+        }
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
