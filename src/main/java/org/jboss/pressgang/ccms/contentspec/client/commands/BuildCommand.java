@@ -537,6 +537,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setForceInjectBugLinks(getForceBugLinks());
         buildOptions.setCommonContentDirectory(getClientConfig().getPublicanCommonContentDirectory());
         buildOptions.setFlatten(getFlatten());
+        buildOptions.setServerBuild(getClientConfig().getDefaults().isServer());
 
         return buildOptions;
     }
