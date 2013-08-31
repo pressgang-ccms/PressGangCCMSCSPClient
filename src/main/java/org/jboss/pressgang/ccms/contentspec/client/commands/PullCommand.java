@@ -96,7 +96,6 @@ public class PullCommand extends BaseCommandImpl {
         // Initialise the basic data and perform basic input checks
         if (ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds())) {
             pullForConfig = true;
-            setRevision(null);
         }
 
         // Check that the additional options are valid
