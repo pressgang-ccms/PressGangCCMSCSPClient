@@ -118,7 +118,7 @@ public class CheckoutCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Find the zanata server if the url is a reference to the zanata server name
-        if (getClientConfig().getZanataServers() != null) {
+        if (zanataUrl != null && getClientConfig().getZanataServers() != null) {
             for (final String serverName : getClientConfig().getZanataServers().keySet()) {
                 if (serverName.equals(zanataUrl)) {
                     zanataUrl = getClientConfig().getZanataServers().get(serverName).getUrl();

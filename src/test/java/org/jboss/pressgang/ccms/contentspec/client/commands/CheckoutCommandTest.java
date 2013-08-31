@@ -170,6 +170,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
         // and the title of the book is empty so that the root directory is used
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         // and we want to shutdown the command after the directory has been deleted
+        command.setZanataUrl(randomString);
         when(clientConfig.getZanataServers()).thenThrow(new CheckExitCalled(-2));
         // and we are calling the real delete method
         PowerMockito.mockStatic(FileUtilities.class, CALLS_REAL_METHODS);
