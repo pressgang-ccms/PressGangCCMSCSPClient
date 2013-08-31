@@ -39,7 +39,7 @@ public class SnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
-    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.")
+    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when processing the snapshot.")
     private Boolean update = false;
 
     @Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new content specification")
@@ -120,6 +120,15 @@ public class SnapshotCommand extends BaseCommandImpl {
         this.message = message;
     }
 
+    /**
+     * Checks to make sure the command line options are valid.
+     */
+    protected void validate() {
+        if (getRevision() != null && !getCreateNew()) {
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_SNAPSHOT_REVISION, false);
+        }
+    }
+
     @Override
     public void process() {
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
@@ -129,6 +138,9 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
+
+        // Check the command line options are valid
+        validate();
 
         boolean success = false;
 

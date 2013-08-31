@@ -174,6 +174,26 @@ public class SnapshotCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldPrintErrorAndShutdownWhenRevisionIsUsedWithoutNew() {
+        // Given a command with a revision
+        command.setRevision(revision);
+
+        // When processing
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(5));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString(
+                "You cannot turn an existing Content Specification into a snapshot from a revision. Please create use the --new option to" +
+                        " create a new Content Specification instead."));
+    }
+
+    @Test
     public void shouldShutdownWhenCreateNewContentSpecFails() {
         final ContentSpec spec = new ContentSpec();
         // Given a command with an id

@@ -79,151 +79,6 @@ public class Constants {
     public static final String TEMPLATE_COMMAND_NAME = "template";
     public static final String VALIDATE_COMMAND_NAME = "validate";
 
-    // Error Messages
-    public static final String INVALID_ARG_MSG = "Invalid argument!";
-    public static final String INI_NOT_FOUND_MSG = "The configuration file does not exist in the specified location!";
-    public static final String PROCESSING_CONFIG_ERROR_MSG = "An error occurred while reading the configuration file please try again.";
-    public static final String NO_WRITE_INI_MSG = "Cannot write csprocessor.ini to " + DEFAULT_CONFIG_LOCATION + "! Please check the file" +
-            " permissions!";
-    public static final String NO_DEFAULT_SERVER_FOUND = "No default server was found in the %s configuration file. Perhaps you need to "
-            + "uncomment a default?";
-    public static final String NO_SERVER_FOUND_FOR_DEFAULT_SERVER = "No server was found for the specified default.";
-    public static final String NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER = "No Zanata server was found for the specified default.";
-    public static final String NO_SERVER_USERNAME_MSG = "No Username was specified for the \"%s\" server in the configuration files.";
-    public static final String NO_SERVER_URL_MSG = "No Server URL was specified for the \"%s\" server in the configuration files.";
-    public static final String NO_ZANATA_SERVER_URL_MSG = "No Zanata Server URL was specified for the \"%s\" zanata server in the " +
-            "configuration files.";
-    public static final String UNABLE_TO_FIND_SERVER_MSG = "Cannot connect to the server, as the server address can't be resolved.";
-    public static final String FILE_EXISTS_OVERWRITE_MSG = "%s already exists! Overwrite existing file (y/n)? ";
-    public static final String ERROR_FAILED_SAVING = "An error occurred while trying to save the file.";
-    public static final String ERROR_FAILED_SAVING_FILE = "An error occurred while trying to save %s.";
-    public static final String LIST_ERROR_MSG = "There are %s Content Specs on this server. You should probably use \"csprocessor " +
-            "search\" if you have an idea what you are looking for. Otherwise, rerun the list command, " +
-            "and this time use --limit <NUMBER>";
-    public static final String NO_SNAPSHOT_NAME_MSG = "No snapshot name was specified. A name must be specified for a snapshot.";
-    public static final String LIST_SNAPSHOT_ERROR_MSG = "There are %s Snapshots on this server. You should probably use \"csprocessor " +
-            "search -s\" if you have an idea what you are looking for. Otherwise, rerun the list command, " +
-            "and this time use --limit<NUMBER>";
-    public static final String NO_FILE_FOUND_FOR_CONFIG = "The file \"%s\" was not found in the current directory.";
-
-    public static final String ERROR_UNAUTHORISED = "Unauthorised Request! Please check your username and the server URL is correct.";
-    public static final String ERROR_INTERNAL_ERROR = "Internal processing error!";
-    public static final String ERROR_NO_REV_ID_FOUND_MSG = "No data was found for the specified ID and revision!";
-    public static final String ERROR_NO_ID_FOUND_MSG = "No data was found for the specified ID!";
-    public static final String ERROR_NO_FILE_MSG = "No file was found for the specified file name!";
-    public static final String ERROR_EMPTY_FILE_MSG = "The specified file was empty!";
-    public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG = "Unable to assemble the Content Specification because the \"%s\" file " +
-            "couldn't be found.";
-    public static final String ERROR_FAILED_TO_ASSEMBLE_MSG = "The content specification failed to be assembled.";
-    public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
-            " running Publican.";
-    public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
-            "occurred while running Publican. (exit code: %d)";
-    public static final String ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG = "Unable to preview the Content Specification because the \"%s\" "
-            + "file couldn't be found.";
-    public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG = "Unable to open the \"%s\" file.";
-    public static final String ERROR_UNSUPPORTED_FORMAT = "\"%s\" is not currently supported as a preview format.";
-    public static final String ERROR_INVALID_CSPROCESSOR_CFG_MSG = "The csprocessor.cfg file doesn't have an ID specified.";
-    public static final String ERROR_CONTENT_SPEC_EXISTS_MSG = "A directory already exists for the Content Specification. Please check "
-            + "the \"%s\" directory first and if it's correct, then use the --force option.";
-    public static final String ERROR_NO_SERVER_FOUND_MSG = "No credentials are setup for the \"%s\" server specified in the csprocessor"
-            + ".cfg file. Please setup the server in your csprocessor.ini configuration file.";
-    public static final String ERROR_NO_ID_MSG = "No ID was specified by the command line or a csprocessor.cfg file.";
-    public static final String ERROR_NO_ID_CMD_LINE_MSG = "No ID was specified by the command line.";
-    public static final String ERROR_MULTIPLE_ID_MSG = "Multiple ID's specified. Please only specify one ID.";
-    public static final String ERROR_FAILED_CREATING_CONFIG_MSG = "Failed to create the default configuration file.";
-    public static final String ERROR_OUT_OF_DATE_MSG = "The local copy of the Content Specification is out of date. Please use " +
-            "\"csprocessor pull\" to download the latest copy.";
-    public static final String ERROR_LOCAL_COPY_UPDATED_MSG = "The local copy of the Content Specification has been updated and is out of" +
-            " sync with the server. Please use \"csprocessor push\" to update the server copy.";
-    public static final String ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG = "The local copy and server copy of the Content Specification has" +
-            " been updated. Please use \"csprocessor pull\" to update your local copy. Your unsaved local changes will be saved as %s" +
-            ".backup.";
-    public static final String ERROR_NO_FILE_OUT_OF_DATE_MSG = "The \"%s\" file couldn't be found. This could mean the title has changed " +
-            "on the server or the ID is wrong.";
-    public static final String ERROR_NO_USERNAME = "No username was specified for the server. Please check your configuration files and " +
-            "make sure a username exists.";
-    public static final String ERROR_PULL_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
-            "snapshot couldn't be pulled.";
-    public static final String ERROR_CREATE_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
-            "snapshot couldn't be saved.";
-    public static final String ERROR_FAILED_TO_CLEAN_ASSEMBLY = "The assembly directory was unable to be emptied. Please close an open "
-            + "previews and try again.";
-    public static final String ERROR_FAILED_FETCH_PUBSNUM = "An error occurred when fetching the pubsnumber from " + Constants.KOJI_NAME +
-            ".";
-    public static final String ERROR_INVALID_KOJIHUB_URL = "The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure" +
-            " that the URL is valid.";
-    public static final String ERROR_RUNNING_PUBLISH_MSG = "Unable to publish the Content Specification because an error occurred while "
-            + "running the publish command.";
-    public static final String ERROR_NO_PUBLISH_COMMAND = "No publish command or options were found. Please configure these options via "
-            + "the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
-    public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG = "No credentials are setup for the \"%s\" zanata server specified in " +
-            "the csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
-    public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG = "The zanata details specified in the csprocessor.cfg and/or zanata " +
-            "authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
-    public static final String ERROR_ZANATA_PUSH_FAILED_MSG = "Pushing topics to zanata failed.";
-    public static final String ERROR_INVALID_ZANATA_CONFIG_MSG = "No Zanata Project exists for the \"%s\" project at version \"%s\" from:" +
-            " %s";
-    public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG = "Failed to load the formatting XML Element Properties.";
-    public static final String ERROR_NO_LOCALES_MSG = "No Languages were specified by the command line.";
-    public static final String ERROR_INVALID_LOCALE_MSG = "%s is not a valid language. The valid languages are: %s";
-    public static final String ERROR_RUNNING_MAVEN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
-            " running Maven.";
-    public static final String ERROR_RUNNING_MAVEN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
-            "occurred while running Maven. (exit code: %d)";
-    public static final String ERROR_NO_VALID_CONTENT_SPEC = "No valid version exists on the server, please fix any errors and try again.";
-    public static final String ERROR_INVALID_CONTENT_SPEC = "The Content Specification has validation errors, please fix any errors and try again.";
-
-    // Warning messages
-    public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
-    public static final String WARN_BUILDING_FROM_LATEST_SPEC = "This Content Specification has validation errors, " +
-            "so using the latest valid version.";
-
-    // Info Messages
-    public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
-    public static final String EXEC_TIME_MSG = "Request processed in %dms";
-    public static final String OUTPUT_SAVED_MSG = "Output saved to: %s";
-    public static final String SUCCESSFUL_PUSH_MSG = "Content Specification ID: %d\nRevision: %d";
-    public static final String CSP_CONFIG_SAVED_MSG = "csprocessor.cfg saved to: %s";
-    public static final String NO_CS_FOUND_MSG = "INFO:  No Content Specifications were found on the Server.";
-    public static final String SUCCESSFUL_ASSEMBLE_MSG = "Content Specification successfully assembled at %s";
-    public static final String SUCCESSFUL_UNZIP_MSG = "Content Specification build unzipped to %s";
-    public static final String UP_TO_DATE_MSG = "The local copy of the Content Specification is up to date.";
-    public static final String SETUP_CONFIG_MSG = "Edit your configuration file to configure your username(s) and default server.";
-    public static final String SUCCESSFUL_SETUP_MSG = "Configuration settings successfully setup.";
-    public static final String CSP_ID_MSG = "Content Specification ID: %d";
-    public static final String CSP_REVISION_MSG = "Content Specification Revision: %d";
-    public static final String CSP_TITLE_MSG = "Content Specification Title: %s";
-    public static final String CSP_COMPLETION_MSG = "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %" +
-            ".2f%%";
-    public static final String SUCCESSFUL_PUBLISH_MSG = "Content Specification successfully published.";
-    public static final String SUCCESSFUL_ZANATA_PUSH_MSG = "Topics successfully pushed to Zanata for translation.";
-    public static final String SUCCESSFUL_PUSH_SNAPSHOT_MSG = "Snapshot successfully saved.";
-
-    // Start Messages
-    public static final String STARTING_ASSEMBLE_MSG = "Starting to assemble...";
-    public static final String STARTING_BUILD_MSG = "Starting to build...";
-    public static final String STARTING_PUBLICAN_BUILD_MSG = "Starting the publican build...";
-    public static final String STARTING_MAVEN_BUILD_MSG = "Starting the maven build...";
-    public static final String STARTING_VALIDATE_MSG = "Starting to validate...";
-    public static final String FETCHING_PUBSNUMBER_MSG = "Fetching the pubsnumber from " + Constants.KOJI_NAME + "...";
-    public static final String PUBLISH_BUILD_MSG = "Publishing the Content Specification...";
-
-    // Exit statuses
-    public static final int EXIT_SUCCESS = 0;
-    public static final int EXIT_FAILURE = -1;
-    public static final int EXIT_NO_SERVER = 1;
-    public static final int EXIT_UNAUTHORISED = 2;
-    public static final int EXIT_INTERNAL_SERVER_ERROR = 3;
-    public static final int EXIT_CONFIG_ERROR = 4;
-    public static final int EXIT_ARGUMENT_ERROR = 5;
-    public static final int EXIT_FILE_NOT_FOUND = 6;
-    public static final int EXIT_TOPIC_VALID = 7;
-    public static final int EXIT_TOPIC_INVALID = 8;
-    public static final int EXIT_OUT_OF_DATE = 9;
-    public static final int EXIT_SHUTDOWN_REQUEST = 10;
-    public static final int EXIT_UPGRADE_REQUIRED = 11;
-
     // Parameter names
     public static final String CONTENT_SPEC_LONG_PARAM = "--content-spec";
     public static final String CONTENT_SPEC_SHORT_PARAM = "-c";
@@ -358,4 +213,147 @@ public class Constants {
     public static final String STRICT_TITLES_LONG_PARAM = "--strict-titles";
 
     public static final String FORMAT_LONG_PARAM = "--format";
+
+    // Error Messages
+    public static final String INVALID_ARG_MSG = "Invalid argument!";
+    public static final String INI_NOT_FOUND_MSG = "The configuration file does not exist in the specified location!";
+    public static final String PROCESSING_CONFIG_ERROR_MSG = "An error occurred while reading the configuration file please try again.";
+    public static final String NO_WRITE_INI_MSG = "Cannot write csprocessor.ini to " + DEFAULT_CONFIG_LOCATION + "! Please check the file" +
+            " permissions!";
+    public static final String NO_DEFAULT_SERVER_FOUND = "No default server was found in the %s configuration file. Perhaps you need to "
+            + "uncomment a default?";
+    public static final String NO_SERVER_FOUND_FOR_DEFAULT_SERVER = "No server was found for the specified default.";
+    public static final String NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER = "No Zanata server was found for the specified default.";
+    public static final String NO_SERVER_USERNAME_MSG = "No Username was specified for the \"%s\" server in the configuration files.";
+    public static final String NO_SERVER_URL_MSG = "No Server URL was specified for the \"%s\" server in the configuration files.";
+    public static final String NO_ZANATA_SERVER_URL_MSG = "No Zanata Server URL was specified for the \"%s\" zanata server in the " +
+            "configuration files.";
+    public static final String UNABLE_TO_FIND_SERVER_MSG = "Cannot connect to the server, as the server address can't be resolved.";
+    public static final String FILE_EXISTS_OVERWRITE_MSG = "%s already exists! Overwrite existing file (y/n)? ";
+    public static final String ERROR_FAILED_SAVING = "An error occurred while trying to save the file.";
+    public static final String ERROR_FAILED_SAVING_FILE = "An error occurred while trying to save %s.";
+    public static final String LIST_ERROR_MSG = "There are %s Content Specs on this server. You should probably use \"csprocessor " +
+            "search\" if you have an idea what you are looking for. Otherwise, rerun the list command, " +
+            "and this time use " + LIMIT_LONG_PARAM + " <NUMBER>";
+    public static final String NO_FILE_FOUND_FOR_CONFIG = "The file \"%s\" was not found in the current directory.";
+
+    public static final String ERROR_UNAUTHORISED = "Unauthorised Request! Please check your username and the server URL is correct.";
+    public static final String ERROR_INTERNAL_ERROR = "Internal processing error!";
+    public static final String ERROR_NO_REV_ID_FOUND_MSG = "No data was found for the specified ID and revision!";
+    public static final String ERROR_NO_ID_FOUND_MSG = "No data was found for the specified ID!";
+    public static final String ERROR_NO_FILE_MSG = "No file was found for the specified file name!";
+    public static final String ERROR_EMPTY_FILE_MSG = "The specified file was empty!";
+    public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG = "Unable to assemble the Content Specification because the \"%s\" file " +
+            "couldn't be found.";
+    public static final String ERROR_FAILED_TO_ASSEMBLE_MSG = "The content specification failed to be assembled.";
+    public static final String ERROR_RUNNING_PUBLICAN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
+            " running Publican.";
+    public static final String ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
+            "occurred while running Publican. (exit code: %d)";
+    public static final String ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG = "Unable to preview the Content Specification because the \"%s\" "
+            + "file couldn't be found.";
+    public static final String ERROR_UNABLE_TO_OPEN_FILE_MSG = "Unable to open the \"%s\" file.";
+    public static final String ERROR_UNSUPPORTED_FORMAT = "\"%s\" is not currently supported as a preview format.";
+    public static final String ERROR_INVALID_CSPROCESSOR_CFG_MSG = "The csprocessor.cfg file doesn't have an ID specified.";
+    public static final String ERROR_CONTENT_SPEC_EXISTS_MSG = "A directory already exists for the Content Specification. Please check "
+            + "the \"%s\" directory first and if it's correct, then use the " + FORCE_LONG_PARAM + " option.";
+    public static final String ERROR_NO_SERVER_FOUND_MSG = "No credentials are setup for the \"%s\" server specified in the csprocessor"
+            + ".cfg file. Please setup the server in your csprocessor.ini configuration file.";
+    public static final String ERROR_NO_ID_MSG = "No ID was specified by the command line or a csprocessor.cfg file.";
+    public static final String ERROR_NO_ID_CMD_LINE_MSG = "No ID was specified by the command line.";
+    public static final String ERROR_MULTIPLE_ID_MSG = "Multiple ID's specified. Please only specify one ID.";
+    public static final String ERROR_FAILED_CREATING_CONFIG_MSG = "Failed to create the default configuration file.";
+    public static final String ERROR_OUT_OF_DATE_MSG = "The local copy of the Content Specification is out of date. Please use " +
+            "\"csprocessor pull\" to download the latest copy.";
+    public static final String ERROR_LOCAL_COPY_UPDATED_MSG = "The local copy of the Content Specification has been updated and is out of" +
+            " sync with the server. Please use \"csprocessor push\" to update the server copy.";
+    public static final String ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG = "The local copy and server copy of the Content Specification has" +
+            " been updated. Please use \"csprocessor pull\" to update your local copy. Your unsaved local changes will be saved as %s" +
+            ".backup.";
+    public static final String ERROR_NO_FILE_OUT_OF_DATE_MSG = "The \"%s\" file couldn't be found. This could mean the title has changed " +
+            "on the server or the ID is wrong.";
+    public static final String ERROR_NO_USERNAME = "No username was specified for the server. Please check your configuration files and " +
+            "make sure a username exists.";
+    public static final String ERROR_PULL_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
+            "snapshot couldn't be pulled.";
+    public static final String ERROR_CREATE_SNAPSHOT_INVALID = "The revision of the Content Specification is invalid and as such the " +
+            "snapshot couldn't be saved.";
+    public static final String ERROR_FAILED_TO_CLEAN_ASSEMBLY = "The assembly directory was unable to be emptied. Please close an open "
+            + "previews and try again.";
+    public static final String ERROR_FAILED_FETCH_PUBSNUM = "An error occurred when fetching the pubsnumber from " + Constants.KOJI_NAME +
+            ".";
+    public static final String ERROR_INVALID_KOJIHUB_URL = "The " + Constants.KOJI_NAME + " Hub URL is invalid or is blank. Please ensure" +
+            " that the URL is valid.";
+    public static final String ERROR_RUNNING_PUBLISH_MSG = "Unable to publish the Content Specification because an error occurred while "
+            + "running the publish command.";
+    public static final String ERROR_NO_PUBLISH_COMMAND = "No publish command or options were found. Please configure these options via "
+            + "the \"csprocessor.cfg\" or \"csprocessor.ini\" configuration files.";
+    public static final String ERROR_NO_ZANATA_SERVER_SETUP_MSG = "No credentials are setup for the \"%s\" zanata server specified in " +
+            "the csprocessor.cfg file. Please setup the zanata server in your csprocessor.ini configuration file.";
+    public static final String ERROR_PUSH_NO_ZANATA_DETAILS_MSG = "The zanata details specified in the csprocessor.cfg and/or zanata " +
+            "authentication details in csprocessor.ini or incorrect or missing. Please verify these details and try again.";
+    public static final String ERROR_ZANATA_PUSH_FAILED_MSG = "Pushing topics to zanata failed.";
+    public static final String ERROR_INVALID_ZANATA_CONFIG_MSG = "No Zanata Project exists for the \"%s\" project at version \"%s\" from:" +
+            " %s";
+    public static final String ERROR_FAILED_LOAD_XML_PROPS_MSG = "Failed to load the formatting XML Element Properties.";
+    public static final String ERROR_NO_LOCALES_MSG = "No Languages were specified by the command line.";
+    public static final String ERROR_INVALID_LOCALE_MSG = "%s is not a valid language. The valid languages are: %s";
+    public static final String ERROR_RUNNING_MAVEN_MSG = "Unable to assemble the Content Specification because an error occurred while" +
+            " running Maven.";
+    public static final String ERROR_RUNNING_MAVEN_EXIT_CODE_MSG = "Unable to assemble the Content Specification because an error " +
+            "occurred while running Maven. (exit code: %d)";
+    public static final String ERROR_NO_VALID_CONTENT_SPEC = "No valid version exists on the server, please fix any errors and try again.";
+    public static final String ERROR_INVALID_CONTENT_SPEC = "The Content Specification has validation errors, please fix any errors and try again.";
+    public static final String ERROR_SNAPSHOT_REVISION = "You cannot turn an existing Content Specification into a snapshot from a " +
+            "revision. Please create use the " + NEW_LONG_PARAM + " option to create a new Content Specification instead.";
+
+    // Warning messages
+    public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
+    public static final String WARN_BUILDING_FROM_LATEST_SPEC = "This Content Specification has validation errors, " +
+            "so using the latest valid version.";
+
+    // Info Messages
+    public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
+    public static final String EXEC_TIME_MSG = "Request processed in %dms";
+    public static final String OUTPUT_SAVED_MSG = "Output saved to: %s";
+    public static final String SUCCESSFUL_PUSH_MSG = "Content Specification ID: %d\nRevision: %d";
+    public static final String CSP_CONFIG_SAVED_MSG = "csprocessor.cfg saved to: %s";
+    public static final String NO_CS_FOUND_MSG = "INFO:  No Content Specifications were found on the Server.";
+    public static final String SUCCESSFUL_ASSEMBLE_MSG = "Content Specification successfully assembled at %s";
+    public static final String SUCCESSFUL_UNZIP_MSG = "Content Specification build unzipped to %s";
+    public static final String UP_TO_DATE_MSG = "The local copy of the Content Specification is up to date.";
+    public static final String SETUP_CONFIG_MSG = "Edit your configuration file to configure your username(s) and default server.";
+    public static final String SUCCESSFUL_SETUP_MSG = "Configuration settings successfully setup.";
+    public static final String CSP_ID_MSG = "Content Specification ID: %d";
+    public static final String CSP_REVISION_MSG = "Content Specification Revision: %d";
+    public static final String CSP_TITLE_MSG = "Content Specification Title: %s";
+    public static final String CSP_COMPLETION_MSG = "Total Number of Topics: %d\nNumber of Topics with XML: %d\nPercentage Complete: %" +
+            ".2f%%";
+    public static final String SUCCESSFUL_PUBLISH_MSG = "Content Specification successfully published.";
+    public static final String SUCCESSFUL_ZANATA_PUSH_MSG = "Topics successfully pushed to Zanata for translation.";
+    public static final String SUCCESSFUL_PUSH_SNAPSHOT_MSG = "Snapshot successfully saved.";
+
+    // Start Messages
+    public static final String STARTING_ASSEMBLE_MSG = "Starting to assemble...";
+    public static final String STARTING_BUILD_MSG = "Starting to build...";
+    public static final String STARTING_PUBLICAN_BUILD_MSG = "Starting the publican build...";
+    public static final String STARTING_MAVEN_BUILD_MSG = "Starting the maven build...";
+    public static final String STARTING_VALIDATE_MSG = "Starting to validate...";
+    public static final String FETCHING_PUBSNUMBER_MSG = "Fetching the pubsnumber from " + Constants.KOJI_NAME + "...";
+    public static final String PUBLISH_BUILD_MSG = "Publishing the Content Specification...";
+
+    // Exit statuses
+    public static final int EXIT_SUCCESS = 0;
+    public static final int EXIT_FAILURE = -1;
+    public static final int EXIT_NO_SERVER = 1;
+    public static final int EXIT_UNAUTHORISED = 2;
+    public static final int EXIT_INTERNAL_SERVER_ERROR = 3;
+    public static final int EXIT_CONFIG_ERROR = 4;
+    public static final int EXIT_ARGUMENT_ERROR = 5;
+    public static final int EXIT_FILE_NOT_FOUND = 6;
+    public static final int EXIT_TOPIC_VALID = 7;
+    public static final int EXIT_TOPIC_INVALID = 8;
+    public static final int EXIT_OUT_OF_DATE = 9;
+    public static final int EXIT_SHUTDOWN_REQUEST = 10;
+    public static final int EXIT_UPGRADE_REQUIRED = 11;
 }
