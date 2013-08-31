@@ -106,6 +106,38 @@ public class SetupCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldSetJDocbookOptions() {
+        // Given some input
+        String buildOptions = "clean compile";
+        String previewFormat = "html";
+        setStdInput(buildOptions + "\n" + previewFormat + "\n");
+
+        // When getting the publican options from the user
+        StringBuilder builder = new StringBuilder();
+        command.setupjDocbook(builder);
+
+        // Then the output should have the publican header and options set
+        assertThat(builder.toString(), is("[jDocbook]\nbuild.parameters=" + buildOptions + "\n" + "preview.format=" + previewFormat +
+                "\n"));
+    }
+
+    @Test
+    public void shouldSetDefaultJDocbookOptionsWhenNoInput() {
+        // Given some input
+        String buildOptions = "clean compile";
+        String previewFormat = "html_single";
+        setStdInput("\n\n");
+
+        // When getting the publican options from the user
+        StringBuilder builder = new StringBuilder();
+        command.setupjDocbook(builder);
+
+        // Then the output should have the publican header and options set
+        assertThat(builder.toString(), is("[jDocbook]\nbuild.parameters=" + buildOptions + "\n" + "preview.format=" + previewFormat +
+                "\n"));
+    }
+
+    @Test
     public void shouldSetPublishOptions() {
         // Given some input
         String kojiUrl = "http://www.example.com/kojihub";

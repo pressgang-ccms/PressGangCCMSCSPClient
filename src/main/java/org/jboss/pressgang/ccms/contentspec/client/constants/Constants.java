@@ -311,7 +311,7 @@ public class Constants {
 
     // Warning messages
     public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
-    public static final String WARN_BUILDING_FROM_LATEST_SPEC = "This Content Specification has validation errors, " +
+    public static final String WARN_BUILDING_FROM_LATEST_SPEC = "The Content Specification has validation errors, " +
             "so using the latest valid version.";
 
     // Info Messages

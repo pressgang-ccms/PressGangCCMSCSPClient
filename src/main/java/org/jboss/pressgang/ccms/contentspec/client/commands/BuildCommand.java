@@ -734,14 +734,14 @@ public class BuildCommand extends BaseCommandImpl {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
-            // Check that the content spec has a valid version
-            if (contentSpecEntity.getChildren() == null || contentSpecEntity.getChildren().isEmpty()) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
-            }
-
             // Check that the content spec isn't a failed one
             if (contentSpecEntity.getFailed() != null) {
                 printWarn(Constants.WARN_BUILDING_FROM_LATEST_SPEC);
+            }
+
+            // Check that the content spec has a valid version
+            if (contentSpecEntity.getChildren() == null || contentSpecEntity.getChildren().isEmpty()) {
+                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
             }
 
             contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());

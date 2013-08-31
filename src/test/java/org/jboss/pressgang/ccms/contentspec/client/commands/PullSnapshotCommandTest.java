@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -123,8 +124,8 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldPrintErrorAndShutdownWhenContentSpecNotFound() {
-        // Given a command called without an ID
-        command.setIds(new ArrayList<Integer>());
+        // Given a command with an id
+        command.setIds(Arrays.asList(id));
         // And no matching content spec
         given(contentSpecProvider.getContentSpec(id, null)).willReturn(null);
 
@@ -161,6 +162,28 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
 
         // Then the command should be shutdown and an error message printed
         assertThat(getStdOutLogs(), containsString("No data was found for the specified ID and revision!"));
+    }
+
+    @Test
+    public void shouldPrintErrorAndShutdownWhenContentSpecHasErrors() {
+        // Given a command called with an ID
+        command.setIds(Arrays.asList(id));
+        // And a matching content spec
+        given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
+        // and the content spec has errors
+        given(contentSpecWrapper.getFailed()).willReturn(randomString);
+
+        // When it is processed
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString("The Content Specification has validation errors, please fix any errors and try again."));
     }
 
     @Test

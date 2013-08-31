@@ -222,6 +222,54 @@ public class BuildCommandTest extends BaseUnitTest {
     }
 
     @Test
+    public void shouldPrintErrorAndShutdownWhenContentSpecHasNoValidVersion() {
+        // Given a command called with an ID
+        command.setIds(Arrays.asList(id.toString()));
+        // And a matching content spec
+        given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
+        // and the content spec has no children
+        final UpdateableCollectionWrapper<CSNodeWrapper> children = mock(UpdateableCollectionWrapper.class);
+        given(contentSpecWrapper.getChildren()).willReturn(children);
+        given(children.isEmpty()).willReturn(true);
+
+        // When it is processed
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString("No valid version exists on the server, please fix any errors and try again."));
+    }
+
+    @Test
+    public void shouldWarnWhenLatestContentSpecHasErrors() {
+        // Given a command called with an ID
+        command.setIds(Arrays.asList(id.toString()));
+        // And a matching content spec
+        given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
+        // and the content spec has errors
+        given(contentSpecWrapper.getFailed()).willReturn(randomString);
+        // and the content spec has no children as a way to finish the test
+        given(contentSpecWrapper.getChildren()).willReturn(null);
+
+        // When it is processed
+        try {
+            command.process();
+            // Then an error is printed and the program is shut down
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(-1));
+        }
+
+        // Then the command should be shutdown and an error message printed
+        assertThat(getStdOutLogs(), containsString("The Content Specification has validation errors, so using the latest valid version."));
+    }
+
+    @Test
     public void shouldReturnContentSpecWhenUsingIdAndExists() {
         // Given a content spec exists
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
