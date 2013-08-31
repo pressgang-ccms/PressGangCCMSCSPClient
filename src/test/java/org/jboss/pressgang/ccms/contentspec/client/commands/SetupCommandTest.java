@@ -177,8 +177,8 @@ public class SetupCommandTest extends BaseUnitTest {
         String zanataKey = apikey;
         String zanataProjectName = "project";
         String zanataVersionName = "version";
-        setStdInput(zanataProjectName + "\n" + zanataVersionName + "\n" + "1" + "\n" + zanataServerName + "\n" + zanataUrl + "\n" +
-                zanataUsername + "\n" + zanataKey + "\n");
+        setStdInput("No\n" + zanataProjectName + "\n" + zanataVersionName + "\n" + "1" + "\n" + zanataServerName + "\n" + zanataUrl +
+                "\n" + zanataUsername + "\n" + zanataKey + "\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
@@ -199,8 +199,10 @@ public class SetupCommandTest extends BaseUnitTest {
         String zanataKey = apikey;
         String zanataProjectName = "project";
         String zanataVersionName = "version";
-        setStdInput(zanataProjectName + "\n" + zanataVersionName + "\n" + "one\n0\n1" + "\n" + zanataServerName + "\n" + zanataUrl + "\n" +
-                zanataUsername + "\n" + zanataKey + "\n");
+        setStdInput(
+                "No\n" + zanataProjectName + "\n" + zanataVersionName + "\n" + "one\n0\n1" + "\n" + zanataServerName + "\n" + zanataUrl +
+                        "\n" +
+                        zanataUsername + "\n" + zanataKey + "\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
@@ -227,9 +229,10 @@ public class SetupCommandTest extends BaseUnitTest {
 
         String zanataProjectName = "project";
         String zanataVersionName = "version";
-        setStdInput(zanataProjectName + "\n" + zanataVersionName + "\n" + "2" + "\n" + zanataServerName2 + "\n" + zanataUrl2 + "\n" +
-                zanataUsername2 + "\n" + zanataKey2 + "\n" + zanataServerName1 + "\n" + zanataUrl1 + "\n" +
-                zanataUsername1 + "\n" + zanataKey1 + "\n" + zanataServerName1 + "\n");
+        setStdInput(
+                "n\n" + zanataProjectName + "\n" + zanataVersionName + "\n" + "2" + "\n" + zanataServerName2 + "\n" + zanataUrl2 + "\n" +
+                        zanataUsername2 + "\n" + zanataKey2 + "\n" + zanataServerName1 + "\n" + zanataUrl1 + "\n" +
+                        zanataUsername1 + "\n" + zanataKey1 + "\n" + zanataServerName1 + "\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
@@ -245,7 +248,7 @@ public class SetupCommandTest extends BaseUnitTest {
     @Test
     public void shouldSetEmptyValuesForSetZanataOptions() {
         // Given some input
-        setStdInput("\n\n1\npublic\n\n\n\n");
+        setStdInput("No\n\n\n1\npublic\n\n\n\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
@@ -255,6 +258,41 @@ public class SetupCommandTest extends BaseUnitTest {
         assertThat(builder.toString(),
                 is("[zanata]\ndefault=public\ndefault.project=\ndefault.project-version=\n\npublic.url=\npublic.username=\npublic" + "" +
                         ".key=\n"));
+    }
+
+    @Test
+    public void shouldUseDefaultConfigurationForZanataServersWhenAsked() {
+        // Given some input
+        setStdInput("Yes\n" + username + "\n" + apikey + "\n");
+
+        // When getting the zanata options from the user
+        StringBuilder builder = new StringBuilder();
+        command.setupZanata(builder);
+
+        // Then the output should have the empty zanata details set
+        assertThat(builder.toString(),
+                is("[zanata]\ndefault=" + Constants.DEFAULT_ZANATA_SERVER_NAME + "\ndefault.project=" + Constants.DEFAULT_ZANATA_PROJECT +
+                        "\ndefault.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n\n" + Constants.DEFAULT_ZANATA_SERVER_NAME +
+                        ".url=" + Constants.DEFAULT_ZANATA_SERVER + "\n" + Constants.DEFAULT_ZANATA_SERVER_NAME + ".username=" + username
+                        + "\n" + Constants.DEFAULT_ZANATA_SERVER_NAME + ".key=" + apikey + "\n"));
+    }
+
+    @Test
+    public void shouldPrintErrorAndShutdownWhenInvalidAnswerForDefaultZanataServers() {
+        // Given some invalid input
+        setStdInput("blah\n");
+
+        // When getting the zanata options from the user
+        StringBuilder builder = new StringBuilder();
+        try {
+        command.setupZanata(builder);
+            fail(SYSTEM_EXIT_ERROR);
+        } catch (CheckExitCalled e) {
+            assertThat(e.getStatus(), is(5));
+        }
+
+        // Then check an error was printed
+        assertThat(getStdOutLogs(), containsString("Invalid argument!"));
     }
 
     @Test
@@ -285,7 +323,7 @@ public class SetupCommandTest extends BaseUnitTest {
         String pressgangUrl2 = "http://test.example.com/";
         String pressgangUsername2 = username;
 
-        setStdInput("n\n" + "2" + "\n" + pressgangServerName2 + "\n" + pressgangUrl2 + "\n" + pressgangUsername2 + "\n" +
+        setStdInput("No\n" + "2" + "\n" + pressgangServerName2 + "\n" + pressgangUrl2 + "\n" + pressgangUsername2 + "\n" +
                 pressgangServerName1 + "\n" + pressgangUrl1 + "\n" + pressgangUsername1 + "\n" + pressgangServerName1 + "\n");
 
         // When getting the server options from the user
@@ -317,8 +355,9 @@ public class SetupCommandTest extends BaseUnitTest {
         setStdInput(username + "\n");
 
         // When getting the server options from the user
+        final StringBuilder builder = new StringBuilder();
         try {
-            command.process();
+            command.setupServers(builder);
             // Then an error is printed and the program is shut down
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {

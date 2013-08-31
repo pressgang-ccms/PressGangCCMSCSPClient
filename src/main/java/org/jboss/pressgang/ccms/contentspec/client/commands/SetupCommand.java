@@ -354,71 +354,98 @@ public class SetupCommand extends BaseCommandImpl {
     protected void setupZanata(final StringBuilder configFile) {
         String defaultZanataProject = "";
         String defaultZanataVersion = "";
-
-        JCommander.getConsole().println("Please enter a default zanata project name:");
-        defaultZanataProject = JCommander.getConsole().readLine();
-
-        JCommander.getConsole().println("Please enter a default zanata project version:");
-        defaultZanataVersion = JCommander.getConsole().readLine();
+        String defaultZanataServerName = "";
 
         final TreeMap<String, ZanataServerConfiguration> servers = new TreeMap<String, ZanataServerConfiguration>(
                 new ServerNameComparator());
-        String answer = "";
 
-        while (!answer.matches("^[0-9]+$") || (Integer.parseInt(answer) <= 0)) {
-            JCommander.getConsole().print("How many zanata servers are to be configured? ");
-            answer = JCommander.getConsole().readLine();
+        JCommander.getConsole().println("Use the default zanata server configuration? (Yes/No)");
+        String answer = JCommander.getConsole().readLine();
 
-            // Good point to check for a shutdown
-            allowShutdownToContinueIfRequested();
-        }
-
-        // Get the number of servers
-        final Integer numServers = Integer.parseInt(answer);
-
-        // Get the server setup details from the user
-        final StringBuilder serverNames = new StringBuilder("");
-        for (int i = 1; i <= numServers; i++) {
+        // We are using the default setup so we only need to get the username and api key.
+        if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             final ZanataServerConfiguration config = new ZanataServerConfiguration();
 
-            // Get the name of the server
-            JCommander.getConsole().println("Please enter the name of server no " + i + ": ");
-            config.setName(JCommander.getConsole().readLine().toLowerCase());
-
-            // Get the url of the server
-            JCommander.getConsole().println("Please enter the URL of server no. " + i + ": ");
-            config.setUrl(ClientUtilities.fixHostURL(JCommander.getConsole().readLine()));
+            // Set the server defaults
+            defaultZanataServerName = Constants.DEFAULT_ZANATA_SERVER_NAME;
+            defaultZanataProject = Constants.DEFAULT_ZANATA_PROJECT;
+            defaultZanataVersion = Constants.DEFAULT_ZANATA_VERSION;
+            config.setName(Constants.DEFAULT_ZANATA_SERVER_NAME);
+            config.setUrl(Constants.DEFAULT_ZANATA_SERVER);
 
             // Get the username for the server
-            JCommander.getConsole().println("Please enter the username of server no. " + i + ": ");
+            JCommander.getConsole().println("Please enter your username for " + Constants.DEFAULT_ZANATA_SERVER + ": ");
             config.setUsername(JCommander.getConsole().readLine());
 
             // Get the token for the server
-            JCommander.getConsole().println("Please enter the API Key of server no. " + i + ": ");
+            JCommander.getConsole().println("Please enter your API Key for " + Constants.DEFAULT_ZANATA_SERVER + ": ");
             config.setToken(JCommander.getConsole().readLine());
 
-            // Add the server configuration and add the name to the list of displayable strings
+            // Add the server configuration
             servers.put(config.getName(), config);
-            serverNames.append(config.getName() + "/");
+        } else if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
+            JCommander.getConsole().println("Please enter a default zanata project name:");
+            defaultZanataProject = JCommander.getConsole().readLine();
 
-            // Good point to check for a shutdown
-            allowShutdownToContinueIfRequested();
-        }
+            JCommander.getConsole().println("Please enter a default zanata project version:");
+            defaultZanataVersion = JCommander.getConsole().readLine();
 
-        /* Only ask for the default when there are multiple servers */
-        String defaultZanataServerName = "";
-        if (servers.size() > 1) {
-            // Get which server they want to connect to
-            while (!servers.containsKey(defaultZanataServerName)) {
-                JCommander.getConsole().println("Which zanata server do you want to connect to by default? (" + serverNames.substring(0,
-                        serverNames.length() - 1) + ")");
-                defaultZanataServerName = JCommander.getConsole().readLine().toLowerCase();
+            while (!answer.matches("^[0-9]+$") || (Integer.parseInt(answer) <= 0)) {
+                JCommander.getConsole().print("How many zanata servers are to be configured? ");
+                answer = JCommander.getConsole().readLine();
 
                 // Good point to check for a shutdown
                 allowShutdownToContinueIfRequested();
             }
+
+            // Get the number of servers
+            final Integer numServers = Integer.parseInt(answer);
+
+            // Get the server setup details from the user
+            final StringBuilder serverNames = new StringBuilder("");
+            for (int i = 1; i <= numServers; i++) {
+                final ZanataServerConfiguration config = new ZanataServerConfiguration();
+
+                // Get the name of the server
+                JCommander.getConsole().println("Please enter a name for server no. " + i + ": ");
+                config.setName(JCommander.getConsole().readLine().toLowerCase());
+
+                // Get the url of the server
+                JCommander.getConsole().println("Please enter the URL of server no. " + i + ": ");
+                config.setUrl(ClientUtilities.fixHostURL(JCommander.getConsole().readLine()));
+
+                // Get the username for the server
+                JCommander.getConsole().println("Please enter your username of server no. " + i + ": ");
+                config.setUsername(JCommander.getConsole().readLine());
+
+                // Get the token for the server
+                JCommander.getConsole().println("Please enter your API Key of server no. " + i + ": ");
+                config.setToken(JCommander.getConsole().readLine());
+
+                // Add the server configuration and add the name to the list of displayable strings
+                servers.put(config.getName(), config);
+                serverNames.append(config.getName() + "/");
+
+                // Good point to check for a shutdown
+                allowShutdownToContinueIfRequested();
+            }
+
+            /* Only ask for the default when there are multiple servers */
+            if (servers.size() > 1) {
+                // Get which server they want to connect to
+                while (!servers.containsKey(defaultZanataServerName)) {
+                    JCommander.getConsole().println("Which zanata server do you want to connect to by default? (" + serverNames.substring(0,
+                            serverNames.length() - 1) + ")");
+                    defaultZanataServerName = JCommander.getConsole().readLine().toLowerCase();
+
+                    // Good point to check for a shutdown
+                    allowShutdownToContinueIfRequested();
+                }
+            } else {
+                defaultZanataServerName = serverNames.substring(0, serverNames.length() - 1);
+            }
         } else {
-            defaultZanataServerName = serverNames.substring(0, serverNames.length() - 1);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.INVALID_ARG_MSG, false);
         }
 
         // Create the default settings

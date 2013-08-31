@@ -35,11 +35,11 @@ public class Constants {
     public static final String DEFAULT_TEST_SERVER = "";
     public static final String DEFAULT_KOJIHUB_URL = "";
     public static final String DEFAULT_PUBLISH_COMMAND = "";
+    public static final String DEFAULT_ZANATA_SERVER = "";
+    public static final String DEFAULT_ZANATA_SERVER_NAME = "";
+    public static final String DEFAULT_ZANATA_PROJECT = "";
+    public static final String DEFAULT_ZANATA_VERSION = "";
     public static final String KOJI_NAME = "brew";
-
-    // Zanata Constants
-    public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
-    public static final String DEFAULT_ZANATA_VERSION = "1";
 
     // Server based settings
     public static final Integer MAX_LIST_RESULT = 50;
