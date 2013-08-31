@@ -134,7 +134,8 @@ public class PullCommand extends BaseCommandImpl {
                     fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 } else {
                     fileName = DocBookUtilities.escapeTitle(
-                            contentSpecEntity.getTitle()) + "-post-r" + getRevision() + "." + Constants.FILENAME_EXTENSION;
+                            contentSpecEntity.getTitle()) + "-post-r" + contentSpecEntity.getRevision() + "." + Constants
+                            .FILENAME_EXTENSION;
                 }
                 if (pullForConfig) {
                     setOutputPath(ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpecEntity));
