@@ -110,6 +110,8 @@ public class Constants {
     public static final String REVISION_LONG_PARAM = "--revision";
     public static final String REVISION_SHORT_PARAM = "-r";
 
+    public static final String MAX_TOPIC_REVISION_LONG_PARAM = "--max-topic-revision";
+
     public static final String OVERRIDE_LONG_PARAM = "--override";
 
     public static final String PUBLICAN_CFG_OVERRIDE_LONG_PARAM = "--publican.cfg-override";

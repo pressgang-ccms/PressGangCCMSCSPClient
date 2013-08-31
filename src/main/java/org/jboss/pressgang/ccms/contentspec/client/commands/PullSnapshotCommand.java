@@ -30,6 +30,9 @@ public class PullSnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
+    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, description = "The maximum revision to update all topics to")
+    private Integer maxRevision = null;
+
     @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM},
             description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
     private String outputPath;
@@ -72,6 +75,14 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         this.revision = revision;
     }
 
+    public Integer getMaxRevision() {
+        return maxRevision;
+    }
+
+    public void setMaxRevision(Integer maxRevision) {
+        this.maxRevision = maxRevision;
+    }
+
     public String getOutputPath() {
         return outputPath;
     }
@@ -98,7 +109,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
         // Get the topic from the rest interface
         final ContentSpecWrapper contentSpecEntity = getProviderFactory().getProvider(ContentSpecProvider.class).getContentSpec(
-                getIds().get(0), revision);
+                getIds().get(0), getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
@@ -151,9 +162,10 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         final SnapshotOptions snapshotOptions = new SnapshotOptions();
         snapshotOptions.setAddRevisions(true);
         snapshotOptions.setUpdateRevisions(getUpdate());
-        snapshotOptions.setRevision(getRevision());
+        snapshotOptions.setRevision(getMaxRevision());
 
         // Process the content spec to make sure the spec is valid,
+        JCommander.getConsole().println("Creating the snapshot...");
         setProcessor(new SnapshotProcessor(getProviderFactory()));
         getProcessor().processContentSpec(contentSpec, snapshotOptions);
     }

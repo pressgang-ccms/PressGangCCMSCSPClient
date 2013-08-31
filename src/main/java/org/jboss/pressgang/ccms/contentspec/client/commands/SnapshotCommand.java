@@ -39,10 +39,13 @@ public class SnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
+    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, description = "The maximum revision to update all topics to")
+    private Integer maxRevision = null;
+
     @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when processing the snapshot.")
     private Boolean update = false;
 
-    @Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new content specification")
+    @Parameter(names = {Constants.NEW_LONG_PARAM}, description = "Create the snapshot as a new Content Specification")
     private Boolean createNew = false;
 
     @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM},
@@ -86,6 +89,14 @@ public class SnapshotCommand extends BaseCommandImpl {
 
     public void setRevision(final Integer revision) {
         this.revision = revision;
+    }
+
+    public Integer getMaxRevision() {
+        return maxRevision;
+    }
+
+    public void setMaxRevision(Integer maxRevision) {
+        this.maxRevision = maxRevision;
     }
 
     public Boolean getUpdate() {
@@ -173,9 +184,10 @@ public class SnapshotCommand extends BaseCommandImpl {
         final SnapshotOptions snapshotOptions = new SnapshotOptions();
         snapshotOptions.setAddRevisions(true);
         snapshotOptions.setUpdateRevisions(getUpdate());
-        snapshotOptions.setRevision(getRevision());
+        snapshotOptions.setRevision(getMaxRevision());
 
         // Create the snapshot
+        JCommander.getConsole().println("Creating the snapshot...");
         setProcessor(new SnapshotProcessor(getProviderFactory()));
         getProcessor().processContentSpec(contentSpec, snapshotOptions);
 
