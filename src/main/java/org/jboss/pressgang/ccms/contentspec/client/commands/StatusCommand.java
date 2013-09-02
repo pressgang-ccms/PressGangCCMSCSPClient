@@ -62,9 +62,9 @@ public class StatusCommand extends BaseCommandImpl {
         String contentSpecString = null;
         if (id.matches("^\\d+$")) {
             final Integer intId = Integer.parseInt(id);
-            contentSpec = contentSpecProvider.getContentSpec(intId, null);
+            contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, intId, null);
             // Get the string version of the content spec from the server
-            contentSpecString = contentSpecProvider.getContentSpecAsString(intId, null);
+            contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, intId, null);
             if (contentSpec == null || contentSpecString == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
@@ -106,8 +106,8 @@ public class StatusCommand extends BaseCommandImpl {
         // If the content spec is null, than look up the ID from the file
         if (contentSpec == null) {
             final Integer intId = getContentSpecId(contentSpecData);
-            contentSpec = contentSpecProvider.getContentSpec(intId, null);
-            contentSpecString = contentSpecProvider.getContentSpecAsString(intId, null);
+            contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, intId, null);
+            contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, intId, null);
         }
 
         // Good point to check for a shutdown

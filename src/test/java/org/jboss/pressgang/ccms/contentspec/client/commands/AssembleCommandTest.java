@@ -311,6 +311,9 @@ public class AssembleCommandTest extends BaseUnitTest {
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(true);
         // and the publican command will execute successfully
         when(ClientUtilities.runCommand(anyString(), any(File.class), any(Console.class), anyBoolean(), anyBoolean())).thenReturn(0);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         command.process();

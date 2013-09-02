@@ -239,6 +239,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(textContentSpecWrapper.getFailed()).willReturn("");
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When setting the content spec topic revisions
         try {
@@ -275,6 +278,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(textContentSpecWrapper.getFailed()).willReturn("");
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When setting the content spec topic revisions
         try {
@@ -315,6 +321,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(textContentSpecWrapper.getId()).willReturn(id);
         given(textContentSpecWrapper.getRevision()).willReturn(revision);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When setting the content spec topic revisions
         command.process();

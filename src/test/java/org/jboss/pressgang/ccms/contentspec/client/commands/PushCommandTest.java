@@ -491,6 +491,9 @@ public class PushCommandTest extends BaseUnitTest {
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
         given(textContentSpecWrapper.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification " +
                 "ID: " + id + "\nRevision: " + id);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
     }
 
     private void mockSaveFileButNotReadFileContents() throws IOException {

@@ -212,6 +212,9 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
         // and the content spec will return some string
         given(contentSpec.toString()).willReturn(randomString);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -259,6 +262,9 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         // and the prepare getOutputRootDirectory returns the rootDirectory path
         when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenReturn(
                 rootTestDirectory.getAbsolutePath() + File.separator + CONTENTSPEC_TITLE + File.separator);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);

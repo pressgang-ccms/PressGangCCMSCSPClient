@@ -204,6 +204,9 @@ public class CheckoutCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getId()).willReturn(id);
         // and the ClientUtilities create method is mocked
         PowerMockito.mockStatic(ClientUtilities.class);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When the command is processing
         command.process();

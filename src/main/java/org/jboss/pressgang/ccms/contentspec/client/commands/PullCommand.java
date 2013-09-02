@@ -120,8 +120,9 @@ public class PullCommand extends BaseCommandImpl {
             }
             // Content Specification
         } else {
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(getIds().get(0), getRevision());
-            final String contentSpecString = contentSpecProvider.getContentSpecAsString(getIds().get(0), getRevision());
+            final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, getIds().get(0),
+                    getRevision());
+            final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, getIds().get(0), getRevision());
             if (contentSpecEntity == null || contentSpecString == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
                         getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);

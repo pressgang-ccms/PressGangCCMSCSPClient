@@ -53,7 +53,7 @@ public class InfoCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Get the Content Specification from the server.
-        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), null);
+        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
         }

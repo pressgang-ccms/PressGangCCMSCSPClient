@@ -172,7 +172,7 @@ public class AssembleCommand extends BuildCommand {
         }
 
         if (assembleFromId) {
-            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(id, null);
+            final ContentSpecWrapper contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
 
             // Check that that content specification was found
             if (contentSpec == null) {

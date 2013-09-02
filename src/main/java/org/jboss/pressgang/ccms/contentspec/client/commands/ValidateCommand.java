@@ -82,7 +82,8 @@ public class ValidateCommand extends BaseCommandImpl {
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
             if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
-                final ContentSpecWrapper contentSpec = getProviderFactory().getProvider(ContentSpecProvider.class).getContentSpec(
+                final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
+                final ContentSpecWrapper contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider,
                         getCspConfig().getContentSpecId(), null);
                 final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 File file = new File(fileName);

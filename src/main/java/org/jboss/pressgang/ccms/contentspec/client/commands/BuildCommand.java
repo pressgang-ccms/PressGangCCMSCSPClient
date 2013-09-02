@@ -723,10 +723,10 @@ public class BuildCommand extends BaseCommandImpl {
                 if (translatedContentSpec != null) {
                     contentSpecEntity = translatedContentSpec.getContentSpec();
                 } else {
-                    contentSpecEntity = contentSpecProvider.getContentSpec(id, getRevision());
+                    contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
                 }
             } else {
-                contentSpecEntity = contentSpecProvider.getContentSpec(id, getRevision());
+                contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
             }
 
             // Check that the content spec entity exists.

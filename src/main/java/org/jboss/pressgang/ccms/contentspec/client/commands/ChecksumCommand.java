@@ -42,7 +42,8 @@ public class ChecksumCommand extends BaseCommandImpl {
         ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds());
 
         // Get the content spec from the server
-        final String contentSpecString = getProviderFactory().getProvider(ContentSpecProvider.class).getContentSpecAsString(ids.get(0),
+        final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
+        final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, ids.get(0),
                 null);
 
         // Check that that content specification was found

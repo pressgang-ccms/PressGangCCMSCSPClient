@@ -179,6 +179,9 @@ public class PullCommandTest extends BaseUnitTest {
         // And we don't actually want to save anything
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -213,6 +216,9 @@ public class PullCommandTest extends BaseUnitTest {
         when(ClientUtilities.prepareIds(any(BaseCommandImpl.class), eq(cspConfig), anyList())).thenCallRealMethod();
         when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenCallRealMethod();
         when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), anyString())).thenCallRealMethod();
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);

@@ -145,7 +145,7 @@ public class PreviewCommand extends AssembleCommand {
         }
 
         if (previewFromId) {
-            final ContentSpecWrapper contentSpec = contentSpecProvider.getContentSpec(id, null);
+            final ContentSpecWrapper contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
 
             // Check that that content specification was found
             if (contentSpec == null) {

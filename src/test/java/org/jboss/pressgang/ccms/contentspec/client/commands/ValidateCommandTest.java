@@ -293,6 +293,9 @@ public class ValidateCommandTest extends BaseUnitTest {
         setValidLevelMocking(level, randomAlphanumString);
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When the Validate Command is processed
         command.process();
@@ -324,6 +327,9 @@ public class ValidateCommandTest extends BaseUnitTest {
         setValidLevelMocking(level, randomAlphanumString);
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When the Validate Command is processed
         command.process();

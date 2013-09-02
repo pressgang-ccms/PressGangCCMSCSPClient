@@ -96,8 +96,8 @@ public class CheckoutCommand extends BaseCommandImpl {
         ClientUtilities.validateIdsOrFiles(this, getIds(), false);
 
         // Get the content spec from the server
-        final String contentSpecString = contentSpecProvider.getContentSpecAsString(ids.get(0), null);
-        final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(ids.get(0), null);
+        final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, ids.get(0), null);
+        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
         if (contentSpecString == null || contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
         }

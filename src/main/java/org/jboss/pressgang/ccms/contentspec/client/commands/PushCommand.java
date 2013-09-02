@@ -135,7 +135,8 @@ public class PushCommand extends BaseCommandImpl {
         if (loadFromCSProcessorCfg()) {
             // Check that the config details are valid
             if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
-                final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(getCspConfig().getContentSpecId(), null);
+                final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider,
+                        getCspConfig().getContentSpecId(), null);
                 final String fileName = DocBookUtilities.escapeTitle(
                         contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
                 File file = new File(fileName);

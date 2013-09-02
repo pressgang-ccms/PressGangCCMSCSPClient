@@ -383,6 +383,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // and we want to inject a place to stop processing
         command.setZanataUrl("test");
         doThrow(new CheckExitCalled(-2)).when(clientConfig).getZanataServers();
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         try {
@@ -419,6 +422,9 @@ public class BuildCommandTest extends BaseUnitTest {
         command.setFetchPubsnum(true);
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new KojiException(""));
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         try {
@@ -455,6 +461,9 @@ public class BuildCommandTest extends BaseUnitTest {
         command.setFetchPubsnum(true);
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new MalformedURLException());
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         try {
@@ -500,6 +509,9 @@ public class BuildCommandTest extends BaseUnitTest {
         when(ClientUtilities.fixHostURL(anyString())).thenReturn(randomString);
         // and we make a way to kill the processing after the setup
         doThrow(new CheckExitCalled(-2)).when(command).getBuilder();
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When the command is processing
         try {
@@ -752,6 +764,9 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doReturn(true).when(ClientUtilities.class);
         ClientUtilities.validateLanguage(any(BaseCommand.class), eq(providerFactory), anyString());
+        // and the helper method to get the content spec works
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When the command is processing
         try {

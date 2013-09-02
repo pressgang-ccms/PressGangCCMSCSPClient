@@ -44,10 +44,12 @@ import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.StringConstantProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -881,6 +883,26 @@ public class ClientUtilities {
         }
 
         return retValue;
+    }
+
+    public static ContentSpecWrapper getContentSpecEntity(ContentSpecProvider contentSpecProvider, Integer id, Integer revision) {
+        ContentSpecWrapper contentSpec = null;
+        try {
+            contentSpec = contentSpecProvider.getContentSpec(id, revision);
+        } catch (NotFoundException e) {
+            // Do nothing as we handle this below.
+        }
+        return contentSpec;
+    }
+
+    public static String getContentSpecAsString(ContentSpecProvider contentSpecProvider, Integer id, Integer revision) {
+        String contentSpec = null;
+        try {
+            contentSpec = contentSpecProvider.getContentSpecAsString(id, revision);
+        } catch (NotFoundException e) {
+            // Do nothing as we handle this below.
+        }
+        return contentSpec;
     }
 }
 

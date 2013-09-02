@@ -108,8 +108,8 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Get the topic from the rest interface
-        final ContentSpecWrapper contentSpecEntity = getProviderFactory().getProvider(ContentSpecProvider.class).getContentSpec(
-                getIds().get(0), getRevision());
+        final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
+        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, getIds().get(0), getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
@@ -162,7 +162,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         final SnapshotOptions snapshotOptions = new SnapshotOptions();
         snapshotOptions.setAddRevisions(true);
         snapshotOptions.setUpdateRevisions(getUpdate());
-        snapshotOptions.setRevision(getMaxRevision());
+        snapshotOptions.setRevision(getMaxRevision() == null ? getRevision() : getMaxRevision());
 
         // Process the content spec to make sure the spec is valid,
         JCommander.getConsole().println("Creating the snapshot...");
