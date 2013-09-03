@@ -42,6 +42,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
@@ -664,6 +665,7 @@ public class BuildCommand extends BaseCommandImpl {
                         getCspConfig().getZanataDetails(), buildType);
             }
         } catch (BuildProcessingException e) {
+            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
         } catch (BuilderCreationException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
@@ -745,6 +747,7 @@ public class BuildCommand extends BaseCommandImpl {
             }
 
             contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
+            contentSpec.setRevision(contentSpecEntity.getRevision());
         } else {
             // Get the content spec from the file
             contentSpec = getContentSpecFromFile(fileOrId, true);
