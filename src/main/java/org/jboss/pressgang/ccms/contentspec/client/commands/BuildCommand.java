@@ -41,6 +41,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -718,17 +719,21 @@ public class BuildCommand extends BaseCommandImpl {
             final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
 
             // Get the Content Spec from the server. If the locale is set then find the closest translated spec and load it from there.
-            final ContentSpecWrapper contentSpecEntity;
-            if (getLocale() != null) {
-                final TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getClosestTranslatedContentSpecById
-                        (getProviderFactory(), id, getRevision());
-                if (translatedContentSpec != null) {
-                    contentSpecEntity = translatedContentSpec.getContentSpec();
+            ContentSpecWrapper contentSpecEntity = null;
+            try {
+                if (getLocale() != null) {
+                    final TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getClosestTranslatedContentSpecById
+                            (getProviderFactory(), id, getRevision());
+                    if (translatedContentSpec != null) {
+                        contentSpecEntity = translatedContentSpec.getContentSpec();
+                    } else {
+                        contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
+                    }
                 } else {
                     contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
                 }
-            } else {
-                contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
+            } catch (NotFoundException e) {
+                // Do nothing as this is handled below
             }
 
             // Check that the content spec entity exists.
