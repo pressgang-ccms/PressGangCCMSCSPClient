@@ -16,6 +16,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
+import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 
 @Parameters(commandDescription = "Get a list of revisions for a specified ID")
 public class RevisionsCommand extends BaseCommandImpl {
@@ -80,11 +81,15 @@ public class RevisionsCommand extends BaseCommandImpl {
 
         // Get the list of revisions
         RevisionList revisions = null;
-        if (topic) {
-            revisions = EntityUtilities.getTopicRevisionsById(getProviderFactory().getProvider(TopicProvider.class), getIds().get(0));
-        } else {
-            revisions = ContentSpecUtilities.getContentSpecRevisionsById(getProviderFactory().getProvider(ContentSpecProvider.class),
-                    getIds().get(0));
+        try {
+            if (topic) {
+                revisions = EntityUtilities.getTopicRevisionsById(getProviderFactory().getProvider(TopicProvider.class), getIds().get(0));
+            } else {
+                revisions = ContentSpecUtilities.getContentSpecRevisionsById(getProviderFactory().getProvider(ContentSpecProvider.class),
+                        getIds().get(0));
+            }
+        } catch (NotFoundException e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
         }
 
         // Check that the content spec is valid
