@@ -17,9 +17,9 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
+import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.services.zanatasync.SyncMaster;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
@@ -217,21 +217,32 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     protected Set<String> getZanataIds(final DataProviderFactory providerFactory, final List<Integer> contentSpecIds) {
         JCommander.getConsole().println("Downloading topics...");
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
-        final ContentSpecProvider contentSpecProvider = providerFactory.getProvider(ContentSpecProvider.class);
 
         final List<TopicWrapper> topics = new ArrayList<TopicWrapper>();
-        final List<ContentSpecWrapper> contentSpecs = new ArrayList<ContentSpecWrapper>();
+        final List<TranslatedContentSpecWrapper> translatedContentSpecs = new ArrayList<TranslatedContentSpecWrapper>();
         for (final Integer contentSpecId : contentSpecIds) {
-            final ContentSpecWrapper contentSpecEntity = contentSpecProvider.getContentSpec(contentSpecId);
+            // Get the latest pushed content spec
+            ContentSpecWrapper contentSpecEntity = null;
+            try {
+                final TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getClosestTranslatedContentSpecById
+                        (getProviderFactory(), contentSpecId, null);
+                if (translatedContentSpec != null) {
+                    contentSpecEntity = translatedContentSpec.getContentSpec();
+                    translatedContentSpecs.add(translatedContentSpec);
+                } else {
+                    // If we don't have a translation then print an error
+                    printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_TRANSLATION_ID_FOUND_MSG, false);
+                }
+            } catch (NotFoundException e) {
+                // Do nothing as this is handled below
+            }
 
             if (contentSpecEntity == null) {
                 printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
 
-            final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory);
-            contentSpecs.add(contentSpecEntity);
-
             // Iterate over the spec topics and get their topics
+            final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory);
             final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
             if (specTopics != null && !specTopics.isEmpty()) {
                 for (final SpecTopic specTopic : specTopics) {
@@ -241,7 +252,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             }
         }
 
-        return getZanataIds(contentSpecs, topics);
+        return getZanataIds(translatedContentSpecs, topics);
     }
 
     /**
@@ -250,13 +261,11 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      * @param topics The topics to get the Zanata IDs for.
      * @return The Set of Zanata IDs that represent the topics.
      */
-    protected Set<String> getZanataIds(final List<ContentSpecWrapper> contentSpecs, final List<TopicWrapper> topics) {
+    protected Set<String> getZanataIds(final List<TranslatedContentSpecWrapper> translatedContentSpecs, final List<TopicWrapper> topics) {
         final Set<String> zanataIds = new HashSet<String>();
 
         // Get the zanata ids for each content spec
-        for (final ContentSpecWrapper contentSpec : contentSpecs) {
-            final TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getTranslatedContentSpecById(getProviderFactory(),
-                    contentSpec.getId(), contentSpec.getRevision());
+        for (final TranslatedContentSpecWrapper translatedContentSpec : translatedContentSpecs) {
             zanataIds.add(translatedContentSpec.getZanataId());
         }
 

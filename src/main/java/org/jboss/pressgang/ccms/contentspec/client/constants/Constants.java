@@ -243,6 +243,7 @@ public class Constants {
     public static final String ERROR_INTERNAL_ERROR = "Internal processing error!";
     public static final String ERROR_NO_REV_ID_FOUND_MSG = "No data was found for the specified ID and revision!";
     public static final String ERROR_NO_ID_FOUND_MSG = "No data was found for the specified ID!";
+    public static final String ERROR_NO_TRANSLATION_ID_FOUND_MSG = "No translations were found for the specified ID!";
     public static final String ERROR_NO_FILE_MSG = "No file was found for the specified file name!";
     public static final String ERROR_EMPTY_FILE_MSG = "The specified file was empty!";
     public static final String ERROR_UNABLE_TO_FIND_ZIP_MSG = "Unable to assemble the Content Specification because the \"%s\" file " +
