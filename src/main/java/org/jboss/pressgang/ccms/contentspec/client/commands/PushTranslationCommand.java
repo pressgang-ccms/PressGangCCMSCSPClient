@@ -439,8 +439,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Get the condition and see if a translated topic already exists.
         final String condition = specTopic.getConditionStatement(true);
-        final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicId(providerFactory, topic.getId(),
-                topic.getRevision(), topic.getLocale()) != null;
+        final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicAndNodeId(providerFactory, topic.getId(),
+                topic.getRevision(), condition == null ? null : translatedCSNode.getId(), topic.getLocale()) != null;
 
         // Check if the zanata document already exists, if it does than the topic can be ignored.
         final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
