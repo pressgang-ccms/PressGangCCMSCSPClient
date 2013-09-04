@@ -437,8 +437,9 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Create the zanata id based on whether a condition has been specified or not
         final String zanataId = getTopicZanataId(specTopic, translatedCSNode);
 
-        // Get the condition and see if a translated topic already exists.
-        final String condition = specTopic.getConditionStatement(true);
+        // Get the condition if the xml has any conditions and see if a matching translated topic already exists.
+        boolean xmlHasConditions = !DocBookUtilities.getConditionNodes(doc).isEmpty();
+        final String condition = xmlHasConditions ? specTopic.getConditionStatement(true) : null;
         final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicAndNodeId(providerFactory, topic.getId(),
                 topic.getRevision(), condition == null ? null : translatedCSNode.getId(), topic.getLocale()) != null;
 
