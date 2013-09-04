@@ -727,7 +727,7 @@ public class BuildCommand extends BaseCommandImpl {
                     if (translatedContentSpec != null) {
                         contentSpecEntity = translatedContentSpec.getContentSpec();
                     } else {
-                        contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_TRANSLATION_ID_FOUND_MSG, false);
                     }
                 } else {
                     contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
