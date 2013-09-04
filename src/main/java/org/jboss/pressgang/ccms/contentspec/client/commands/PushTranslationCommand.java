@@ -346,7 +346,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        final float total = topics.size() + 1;
+        final float total = getContentSpecOnly() ? 1 : (topics.size() + 1);
         float current = 0;
         final int showPercent = 5;
         int lastPercent = 0;
