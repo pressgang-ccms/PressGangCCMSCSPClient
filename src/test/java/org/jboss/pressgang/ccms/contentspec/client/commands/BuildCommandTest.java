@@ -56,6 +56,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.BlobConstantProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
@@ -66,6 +67,7 @@ import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
@@ -82,7 +84,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class, CSTransformer.class})
+@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class, CSTransformer.class,
+        EntityUtilities.class})
 public class BuildCommandTest extends BaseUnitTest {
     private static final String BOOK_TITLE = "Test";
     private static final String DUMMY_SPEC_FILE = "Test.contentspec";
@@ -100,6 +103,7 @@ public class BuildCommandTest extends BaseUnitTest {
     @Mock RESTProviderFactory providerFactory;
     @Mock ContentSpecProvider contentSpecProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TranslatedContentSpecWrapper translatedContentSpecWrapper;
     @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
     @Mock ContentSpec contentSpec;
     @Mock UserProvider userProvider;
@@ -736,7 +740,9 @@ public class BuildCommandTest extends BaseUnitTest {
         // Given a command with an id
         command.setIds(Arrays.asList(id.toString()));
         // and the content spec exists
-        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
+        PowerMockito.mockStatic(EntityUtilities.class);
+        when(EntityUtilities.getClosestTranslatedContentSpecById(eq(providerFactory), anyInt(), anyInt())).thenReturn(translatedContentSpecWrapper);
+        given(translatedContentSpecWrapper.getContentSpec()).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
         given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the transform works
