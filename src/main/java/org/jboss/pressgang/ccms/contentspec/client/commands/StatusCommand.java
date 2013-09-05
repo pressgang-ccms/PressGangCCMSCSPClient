@@ -8,7 +8,6 @@ import java.util.List;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.google.code.regexp.Matcher;
 import com.google.code.regexp.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
@@ -105,9 +104,13 @@ public class StatusCommand extends BaseCommandImpl {
 
         // If the content spec is null, than look up the ID from the file
         if (contentSpec == null) {
-            final Integer intId = getContentSpecId(contentSpecData);
-            contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, intId, null);
-            contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, intId, null);
+            final Integer intId = ContentSpecUtilities.getContentSpecID(contentSpecData);
+            if (intId == null) {
+                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_UNABLE_TO_DETERMINE_ID_FROM_FILE, false);
+            } else {
+                contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, intId, null);
+                contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, intId, null);
+            }
         }
 
         // Good point to check for a shutdown
@@ -118,15 +121,14 @@ public class StatusCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
         }
 
-        // Calculate the server checksum valuess
+        // Calculate the server checksum values
         final String serverChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpecString);
 
         // Read the local checksum value
         final String localStringChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpecData);
 
         // Calculate the local checksum value
-        contentSpecData = contentSpecData.replaceFirst("CHECKSUM[ ]*=.*(\r)?\n", "");
-        final String localChecksum = HashUtilities.generateMD5(contentSpecData);
+        final String localChecksum = HashUtilities.generateMD5(ContentSpecUtilities.removeChecksum(contentSpecData));
 
         // Check that the checksums match
         if (!localStringChecksum.equals(localChecksum) && !localStringChecksum.equals(serverChecksum)) {
@@ -138,15 +140,6 @@ public class StatusCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, Constants.ERROR_LOCAL_COPY_UPDATED_MSG, false);
         } else {
             JCommander.getConsole().println(Constants.UP_TO_DATE_MSG);
-        }
-    }
-
-    protected Integer getContentSpecId(String contentSpecFile) {
-        final Matcher matcher = ID_PATTERN.matcher(contentSpecFile);
-        if (matcher.find()) {
-            return Integer.parseInt(matcher.group("ID"));
-        } else {
-            return null;
         }
     }
 

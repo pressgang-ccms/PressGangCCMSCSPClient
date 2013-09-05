@@ -309,6 +309,8 @@ public class Constants {
     public static final String ERROR_INVALID_CONTENT_SPEC = "The Content Specification has validation errors, please fix any errors and try again.";
     public static final String ERROR_SNAPSHOT_REVISION = "You cannot turn an existing Content Specification into a snapshot from a " +
             "revision. Please create use the " + NEW_LONG_PARAM + " option to create a new Content Specification instead.";
+    public static final String ERROR_UNABLE_TO_DETERMINE_ID_FROM_FILE = "Unable to determine the ID of the Content Specification from the" +
+            " specified file.";
 
     // Warning messages
     public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
