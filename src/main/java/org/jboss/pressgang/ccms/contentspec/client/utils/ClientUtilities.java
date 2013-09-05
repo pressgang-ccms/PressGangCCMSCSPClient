@@ -61,6 +61,7 @@ import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
@@ -434,11 +435,10 @@ public class ClientUtilities {
             final StringBuilder output = new StringBuilder(
                     String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
             for (final Spec spec : contentSpecs.getSpecs()) {
-                output.append(String.format(format, spec.getId().toString(), escapeForList(spec.getTitle()),
-                        escapeForList(spec.getProduct()),
-                        escapeForList(spec.getVersion()),
-                        spec.getCreator() == null ? "Unknown" : spec.getCreator(),
-                        spec.getLastModified() == null ? "Unknown" : dateFormatter.format(spec.getLastModified())) + "\n");
+                output.append(
+                        String.format(format, spec.getId().toString(), escapeForList(spec.getTitle()), escapeForList(spec.getProduct()),
+                                escapeForList(spec.getVersion()), spec.getCreator() == null ? "Unknown" : spec.getCreator(),
+                                spec.getLastModified() == null ? "Unknown" : dateFormatter.format(spec.getLastModified())) + "\n");
             }
             return output.toString();
         }
@@ -561,23 +561,14 @@ public class ClientUtilities {
     /**
      * Gets the output root directory based on the configuration files and ContentSpec entity object.
      *
-     * @param cspConfig   The content spec configuration settings.
-     * @param contentSpec The content spec object to get details from for the output directory.
+     * @param providerFactory
+     * @param cspConfig       The content spec configuration settings.
+     * @param contentSpec     The content spec object to get details from for the output directory.
      * @return A string that represents where the root folder is for content to be saved.
      */
-    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final ContentSpecWrapper contentSpec) {
-        return getOutputRootDirectory(cspConfig, contentSpec.getTitle());
-    }
-
-    /**
-     * Gets the output root directory based on the configuration files and ContentSpec entity object.
-     *
-     * @param cspConfig   The content spec configuration settings.
-     * @param contentSpec The content spec object to get details from for the output directory.
-     * @return A string that represents where the root folder is for content to be saved.
-     */
-    public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final TextContentSpecWrapper contentSpec) {
-        return getOutputRootDirectory(cspConfig, contentSpec.getTitle());
+    public static String getOutputRootDirectory(final DataProviderFactory providerFactory, final ContentSpecConfiguration cspConfig,
+            final BaseContentSpecWrapper<?> contentSpec) {
+        return getOutputRootDirectoryFromEscapedTitle(cspConfig, getEscapedContentSpecTitle(providerFactory, contentSpec));
     }
 
     /**
@@ -589,11 +580,24 @@ public class ClientUtilities {
      */
     public static String getOutputRootDirectory(final ContentSpecConfiguration cspConfig, final String contentSpecTitle) {
         assert contentSpecTitle != null;
+
+        return getOutputRootDirectoryFromEscapedTitle(cspConfig, DocBookUtilities.escapeTitle(contentSpecTitle));
+    }
+
+    /**
+     * Gets the output root directory based on the configuration files and ContentSpec entity object.
+     *
+     * @param cspConfig               The content spec configuration settings.
+     * @param escapedContentSpecTitle The title of the content specification for the output directory.
+     * @return A string that represents where the root folder is for content to be saved.
+     */
+    public static String getOutputRootDirectoryFromEscapedTitle(final ContentSpecConfiguration cspConfig,
+            final String escapedContentSpecTitle) {
+        assert escapedContentSpecTitle != null;
         assert cspConfig != null;
 
-        final String fileName = DocBookUtilities.escapeTitle(contentSpecTitle);
         return (cspConfig.getRootOutputDirectory() == null || cspConfig.getRootOutputDirectory().equals(
-                "") ? "" : (cspConfig.getRootOutputDirectory() + fileName + File.separator));
+                "") ? "" : (cspConfig.getRootOutputDirectory() + escapedContentSpecTitle + File.separator));
     }
 
     /**
@@ -712,7 +716,7 @@ public class ClientUtilities {
         boolean error = false;
 
         // Save the csprocessor.cfg and post spec to file if the create was successful
-        final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+        final String escapedTitle = getEscapedContentSpecTitle(command.getProviderFactory(), contentSpec);
         final File outputSpec = new File(
                 cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                         .FILENAME_EXTENSION);
@@ -909,6 +913,26 @@ public class ClientUtilities {
             // Do nothing as we handle this below.
         }
         return contentSpec;
+    }
+
+    public static String getEscapedContentSpecTitle(final DataProviderFactory providerFactory,
+            final BaseContentSpecWrapper<?> contentSpecEntity) {
+        final String title;
+        if (contentSpecEntity.getTitle() != null) {
+            title = contentSpecEntity.getTitle();
+        } else if (contentSpecEntity.getFailed() != null) {
+            final ContentSpec contentSpec = parseContentSpecString(providerFactory, new ErrorLoggerManager(),
+                    contentSpecEntity.getFailed());
+            if (contentSpec != null && contentSpec.getTitle() != null) {
+                title = contentSpec.getTitle();
+            } else {
+                title = contentSpecEntity.getId().toString();
+            }
+        } else {
+            title = contentSpecEntity.getId().toString();
+        }
+
+        return DocBookUtilities.escapeTitle(title);
     }
 }
 

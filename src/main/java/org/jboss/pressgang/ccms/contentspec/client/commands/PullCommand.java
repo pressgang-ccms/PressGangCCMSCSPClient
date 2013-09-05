@@ -144,16 +144,15 @@ public class PullCommand extends BaseCommandImpl {
                 outputString = contentSpecString;
 
                 // Calculate the filenames and output directory.
-                final String title = contentSpecEntity.getTitle() == null ? contentSpecEntity.getId().toString() : DocBookUtilities.escapeTitle
-                        (contentSpecEntity.getTitle());
+                final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpecEntity);
                 if (getRevision() == null) {
-                    fileName = title + "-post." + Constants.FILENAME_EXTENSION;
+                    fileName = escapedTitle + "-post." + Constants.FILENAME_EXTENSION;
                 } else {
-                    fileName = title + "-post-r" + contentSpecEntity.getRevision() + "." + Constants
+                    fileName = escapedTitle + "-post-r" + contentSpecEntity.getRevision() + "." + Constants
                             .FILENAME_EXTENSION;
                 }
                 if (pullForConfig) {
-                    setOutputPath(ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpecEntity));
+                    setOutputPath(ClientUtilities.getOutputRootDirectory(getProviderFactory(), getCspConfig(), contentSpecEntity));
                 }
             }
         }

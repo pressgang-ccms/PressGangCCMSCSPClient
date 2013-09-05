@@ -184,50 +184,47 @@ public class AssembleCommand extends BuildCommand {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
             }
 
+            final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpec);
             if (assembleFromConfig) {
                 /*
                  * If we are assembling from a CSP Project directory then we need to get the location of the ZIP and the assembly directory
                  * relative to the current working directory, or the CSP root project directory.
                  */
-                final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
+                final String rootDir = ClientUtilities.getOutputRootDirectory(getProviderFactory(), getCspConfig(), contentSpec);
 
                 setBuildFileDirectory(rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION);
                 if (getBuildType() == BuildType.JDOCBOOK) {
                     setOutputDirectory(rootDir + Constants.DEFAULT_CONFIG_JDOCBOOK_LOCATION);
-                    setBuildFileName(
-                            DocBookUtilities.escapeTitle(contentSpec.getTitle()) + Constants.DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX +
-                                    ".zip");
+                    setBuildFileName(escapedTitle + Constants.DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX + ".zip");
                 } else {
                     setOutputDirectory(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION);
-                    setBuildFileName(
-                            DocBookUtilities.escapeTitle(contentSpec.getTitle()) + Constants.DEFAULT_CONFIG_PUBLICAN_BUILD_POSTFIX +
-                                    ".zip");
+                    setBuildFileName(escapedTitle + Constants.DEFAULT_CONFIG_PUBLICAN_BUILD_POSTFIX + ".zip");
                 }
             } else {
                 // Find the build directories and files from the content spec
-                findBuildDirectoryAndFiles(contentSpec.getTitle());
+                findBuildDirectoryAndFiles(escapedTitle);
             }
         } else {
             // Parse the spec from a file to get the main details
             final ContentSpec contentSpec = getContentSpecFromFile(getIds().get(0), false);
 
             // Find the build directories and files from the content spec
-            findBuildDirectoryAndFiles(contentSpec.getTitle());
+            findBuildDirectoryAndFiles(DocBookUtilities.escapeTitle(contentSpec.getTitle()));
         }
     }
 
     /**
      * Find the Build Directory and output files for a content spec using it's title
      *
-     * @param contentSpecTitle The content specs title.
+     * @param escapedContentSpecTitle The content specs title.
      */
-    private void findBuildDirectoryAndFiles(final String contentSpecTitle) {
+    private void findBuildDirectoryAndFiles(final String escapedContentSpecTitle) {
         // Create the fully qualified output path
         if (getOutputPath() != null && (getOutputPath().endsWith(File.separator) || new File(getOutputPath()).isDirectory())) {
             setBuildFileDirectory(ClientUtilities.fixDirectoryPath(getOutputPath()));
-            setBuildFileName(DocBookUtilities.escapeTitle(contentSpecTitle) + ".zip");
+            setBuildFileName(escapedContentSpecTitle + ".zip");
         } else if (getOutputPath() == null) {
-            setBuildFileName(DocBookUtilities.escapeTitle(contentSpecTitle) + ".zip");
+            setBuildFileName(escapedContentSpecTitle + ".zip");
         } else {
             setBuildFileName(getOutputPath());
         }
@@ -235,9 +232,9 @@ public class AssembleCommand extends BuildCommand {
         // Add the full file path to the output path
         final File file = new File(ClientUtilities.fixFilePath(getBuildFileDirectory() + getBuildFileName()));
         if (file.getParent() != null) {
-            setOutputDirectory(file.getParent() + File.separator + DocBookUtilities.escapeTitle(contentSpecTitle));
+            setOutputDirectory(file.getParent() + File.separator + DocBookUtilities.escapeTitle(escapedContentSpecTitle));
         } else {
-            setOutputDirectory(DocBookUtilities.escapeTitle(contentSpecTitle));
+            setOutputDirectory(DocBookUtilities.escapeTitle(escapedContentSpecTitle));
         }
     }
 

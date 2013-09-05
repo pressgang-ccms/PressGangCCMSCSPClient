@@ -26,7 +26,6 @@ import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.exception.ProviderException;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
-import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
@@ -137,12 +136,12 @@ public class PushCommand extends BaseCommandImpl {
             if (getCspConfig() != null && getCspConfig().getContentSpecId() != null) {
                 final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider,
                         getCspConfig().getContentSpecId(), null);
-                final String fileName = DocBookUtilities.escapeTitle(
-                        contentSpecEntity.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+                final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpecEntity);
+                final String fileName = escapedTitle + "-post." + Constants.FILENAME_EXTENSION;
                 File file = new File(fileName);
                 if (!file.exists()) {
                     // Backwards compatibility check for files ending with .txt
-                    file = new File(DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-post.txt");
+                    file = new File(escapedTitle + "-post.txt");
                     if (!file.exists()) {
                         printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
                     }
@@ -294,8 +293,8 @@ public class PushCommand extends BaseCommandImpl {
         // Save the post spec to file if the push was successful
         final File outputSpec;
         if (pushingFromConfig) {
-            final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-            outputSpec = new File(ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + escapedTitle + "-post." +
+            final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpec);
+            outputSpec = new File(ClientUtilities.getOutputRootDirectory(getProviderFactory(), getCspConfig(), contentSpec) + escapedTitle + "-post." +
                     Constants.FILENAME_EXTENSION);
         } else {
             outputSpec = getFiles().get(0);

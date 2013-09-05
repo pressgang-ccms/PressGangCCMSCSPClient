@@ -20,7 +20,6 @@ import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptio
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
@@ -85,11 +84,12 @@ public class ValidateCommand extends BaseCommandImpl {
                 final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
                 final ContentSpecWrapper contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider,
                         getCspConfig().getContentSpecId(), null);
-                final String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+                final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpec);
+                final String fileName = escapedTitle + "-post." + Constants.FILENAME_EXTENSION;
                 File file = new File(fileName);
                 if (!file.exists()) {
                     // Backwards compatibility check for files ending with .txt
-                    file = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+                    file = new File(escapedTitle + "-post.txt");
                     if (!file.exists()) {
                         printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
                     }

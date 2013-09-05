@@ -19,7 +19,6 @@ import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
 @Parameters(commandDescription = "Pull a revision of a content specification that represents a snapshot in time.")
@@ -109,7 +108,8 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
         // Get the topic from the rest interface
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
-        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, getIds().get(0), getRevision());
+        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, getIds().get(0),
+                getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
@@ -143,14 +143,15 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         if (pullForConfig) {
-            setOutputPath(ClientUtilities.getOutputRootDirectory(getCspConfig(),
+            setOutputPath(ClientUtilities.getOutputRootDirectory(getProviderFactory(), getCspConfig(),
                     contentSpecEntity) + Constants.DEFAULT_SNAPSHOT_LOCATION + File.separator);
         }
 
         // Save or print the data
         final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
         final String contentSpecString = contentSpec.toString(INCLUDE_CHECKSUMS);
-        final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-snapshot-" + dateFormatter.format(
+        final String fileName = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(),
+                contentSpecEntity) + "-snapshot-" + dateFormatter.format(
                 contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
         if (getOutputPath() == null) {
             JCommander.getConsole().println(contentSpecString);

@@ -13,7 +13,6 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -103,9 +102,8 @@ public class CheckoutCommand extends BaseCommandImpl {
         }
 
         // Check that the output directory doesn't already exist
-        final String title = contentSpecEntity.getTitle() == null ? contentSpecEntity.getId().toString() : DocBookUtilities.escapeTitle(
-                contentSpecEntity.getTitle());
-        final File directory = new File(getCspConfig().getRootOutputDirectory() + title);
+        final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpecEntity);
+        final File directory = new File(getCspConfig().getRootOutputDirectory() + escapedTitle);
         if (directory.exists() && !force) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);

@@ -17,7 +17,6 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
@@ -69,13 +68,14 @@ public class StatusCommand extends BaseCommandImpl {
             }
 
             // Create the local file
-            String tempFileName = DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post." + Constants.FILENAME_EXTENSION;
+            final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpec);
+            String tempFileName = escapedTitle + "-post." + Constants.FILENAME_EXTENSION;
             File tempFile = new File(tempFileName);
 
             // Check that the file exists
             if (!tempFile.exists()) {
                 // Backwards compatibility check for files ending with .txt
-                tempFile = new File(DocBookUtilities.escapeTitle(contentSpec.getTitle()) + "-post.txt");
+                tempFile = new File(escapedTitle + "-post.txt");
                 if (!tempFile.exists()) {
                     printErrorAndShutdown(Constants.EXIT_FAILURE,
                             String.format(Constants.ERROR_NO_FILE_OUT_OF_DATE_MSG, tempFileName), false);

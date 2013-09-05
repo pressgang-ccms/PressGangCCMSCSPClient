@@ -32,6 +32,7 @@ import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -182,6 +183,7 @@ public class PullCommandTest extends BaseUnitTest {
         // and the helper method to get the content spec works
         when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
         when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);
@@ -214,11 +216,12 @@ public class PullCommandTest extends BaseUnitTest {
         // and call some real methods
         when(ClientUtilities.prepareAndValidateIds(any(BaseCommandImpl.class), eq(cspConfig), anyList())).thenCallRealMethod();
         when(ClientUtilities.prepareIds(any(BaseCommandImpl.class), eq(cspConfig), anyList())).thenCallRealMethod();
-        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenCallRealMethod();
-        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), anyString())).thenCallRealMethod();
+        when(ClientUtilities.getOutputRootDirectory(eq(providerFactory), eq(cspConfig), eq(contentSpecWrapper))).thenCallRealMethod();
+        when(ClientUtilities.getOutputRootDirectoryFromEscapedTitle(eq(cspConfig), anyString())).thenCallRealMethod();
         // and the helper method to get the content spec works
         when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
         when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);

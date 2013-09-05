@@ -57,6 +57,7 @@ import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
+import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
 import org.junit.After;
@@ -354,7 +355,7 @@ public class PushCommandTest extends BaseUnitTest {
         assertThat(command.getFiles().get(0).getName(), is(testFilename));
         // And a file with the post-processing content spec is created
         PowerMockito.verifyStatic(Mockito.times(1));
-        ClientUtilities.getOutputRootDirectory(cspConfig, textContentSpecWrapper);
+        ClientUtilities.getOutputRootDirectory(eq(providerFactory), eq(cspConfig), eq(textContentSpecWrapper));
         PowerMockito.verifyStatic(Mockito.times(1));
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
     }
@@ -494,6 +495,7 @@ public class PushCommandTest extends BaseUnitTest {
         // and the helper method to get the content spec works
         when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
         when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
     }
 
     private void mockSaveFileButNotReadFileContents() throws IOException {

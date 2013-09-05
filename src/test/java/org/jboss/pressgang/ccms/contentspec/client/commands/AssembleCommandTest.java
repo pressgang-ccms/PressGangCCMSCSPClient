@@ -37,6 +37,7 @@ import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
 import org.junit.After;
 import org.junit.Before;
@@ -299,7 +300,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         given(contentSpecChildren.isEmpty()).willReturn(false);
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
-        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), eq(contentSpecWrapper))).thenReturn(bookDir.getAbsolutePath
+        when(ClientUtilities.getOutputRootDirectory(eq(providerFactory), eq(cspConfig), eq(contentSpecWrapper))).thenReturn(bookDir.getAbsolutePath
                 () + File.separator);
         // and the validate and fix ids will run
         when(ClientUtilities.prepareAndValidateStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
@@ -314,6 +315,7 @@ public class AssembleCommandTest extends BaseUnitTest {
         // and the helper method to get the content spec works
         when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
         when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
 
         // When processing the command
         command.process();

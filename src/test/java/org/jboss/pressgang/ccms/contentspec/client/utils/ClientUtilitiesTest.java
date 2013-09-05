@@ -509,7 +509,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
 
         // When determining the root directory
-        String rootDirectory = ClientUtilities.getOutputRootDirectory(cspConfig, contentSpecWrapper);
+        String rootDirectory = ClientUtilities.getOutputRootDirectory(providerFactory, cspConfig, contentSpecWrapper);
 
         // Then the directory should be the root test dir + book title
         assertThat(rootDirectory, is(rootTestDirectory.getAbsolutePath() + File.separator + BOOK_TITLE + File.separator));
