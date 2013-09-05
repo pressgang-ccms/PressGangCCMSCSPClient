@@ -73,7 +73,8 @@ public class BuildCommand extends BaseCommandImpl {
     @DynamicParameter(names = Constants.OVERRIDE_LONG_PARAM, metaVar = "<variable>=<value>", validateWith = OverrideValidator.class)
     private Map<String, String> overrides = Maps.newHashMap();
 
-    @DynamicParameter(names = Constants.PUBLICAN_CFG_OVERRIDE_LONG_PARAM, metaVar = "<parameter>=<value>")
+    @DynamicParameter(names = Constants.PUBLICAN_CFG_OVERRIDE_LONG_PARAM, metaVar = "<parameter>=<value>",
+            description = "Override a publican.cfg parameter during the build. This can also be used to add publican.cfg parameters.")
     private Map<String, String> publicanCfgOverrides = Maps.newHashMap();
 
     @Parameter(names = Constants.BUG_REPORTING_LONG_PARM, description = "Hide the bug reporting links in the output.")
