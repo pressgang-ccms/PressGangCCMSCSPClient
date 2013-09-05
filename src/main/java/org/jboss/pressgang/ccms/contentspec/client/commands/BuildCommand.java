@@ -743,13 +743,37 @@ public class BuildCommand extends BaseCommandImpl {
             }
 
             // Check that the content spec isn't a failed one
+            boolean warningPrinted = false;
             if (contentSpecEntity.getFailed() != null) {
                 printWarn(Constants.WARN_BUILDING_FROM_LATEST_SPEC);
+                warningPrinted = true;
             }
 
             // Check that the content spec has a valid version
             if (contentSpecEntity.getChildren() == null || contentSpecEntity.getChildren().isEmpty()) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
+            }
+
+            // If we are getting the latest translated content spec then we'll need to validate it and see if it matches the
+            // latest untranslated content spec
+            if (getRevision() == null) {
+                final ContentSpecWrapper latestContentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id,
+                        getRevision());
+                if (latestContentSpecEntity != null && !latestContentSpecEntity.getRevision().equals(contentSpecEntity.getRevision())) {
+                    printWarn(Constants.WARN_LATEST_TRANSLATION_IS_NOT_THE_LATEST);
+                    warningPrinted = true;
+                }
+            }
+
+            // Add a warning about the revisions not matching
+            if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
+                printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, contentSpecEntity.getRevision()));
+                warningPrinted = true;
+            }
+
+            // If a warning was printed add a space to make the warnings more noticeable.
+            if (warningPrinted) {
+                JCommander.getConsole().println("");
             }
 
             contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());

@@ -314,6 +314,10 @@ public class Constants {
     public static final String WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE ="\"%s\" is not recognised as a valid publican.cfg override.";
     public static final String WARN_BUILDING_FROM_LATEST_SPEC = "The Content Specification has validation errors, " +
             "so using the latest valid version.";
+    public static final String WARN_REVISION_NOT_EXIST_USING_X_MSG = "The Content Specification revision specified doesn't exist. So " +
+            "revision %d is being used instead, as it is the closest match.";
+    public static final String WARN_LATEST_TRANSLATION_IS_NOT_THE_LATEST = "The latest version of this Content Specification has changes " +
+            "that haven't been pushed for translation yet and therefore will not be reflected in the build.";
 
     // Info Messages
     public static final String ZIP_SAVED_ERRORS_MSG = "Content Specification successfully built with %s Errors and %s Warnings";
