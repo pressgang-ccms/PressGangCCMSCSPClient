@@ -131,7 +131,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Transform the content spec
-        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
+        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -149,7 +149,7 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
         // Save or print the data
         final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
-        final String contentSpecString = contentSpec.toString();
+        final String contentSpecString = contentSpec.toString(INCLUDE_CHECKSUMS);
         final String fileName = DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()) + "-snapshot-" + dateFormatter.format(
                 contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
         if (getOutputPath() == null) {

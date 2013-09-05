@@ -777,7 +777,7 @@ public class BuildCommand extends BaseCommandImpl {
                 JCommander.getConsole().println("");
             }
 
-            contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
+            contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
             contentSpec.setRevision(contentSpecEntity.getRevision());
         } else {
             // Get the content spec from the file

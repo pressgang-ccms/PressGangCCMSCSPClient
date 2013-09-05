@@ -44,7 +44,6 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.entities.Spec;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
-import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.UserProvider;
@@ -303,18 +302,6 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Then the command should complete without error
         verify(command, times(0)).printErrorAndShutdown(anyInt(), anyString(), anyBoolean());
         assertTrue(retValue);
-    }
-
-    @Test
-    public void shouldReturnRightChecksum() {
-        // Given the ContentSpec.toString() method will return a string with a checksum in it
-        given(contentSpec.toString()).willReturn("CHECKSUM = " + checksum + "\nTitle = Test Spec\n");
-
-        // When the method is invoked
-        String contentSpecChecksumString = ContentSpecUtilities.getContentSpecChecksum(contentSpec);
-
-        // Then the output of the getContentSpecChecksum command should match the checksum
-        assertThat(contentSpecChecksumString, is(checksum.toString()));
     }
 
     @Test

@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -209,9 +210,9 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
         // and the transformer returns a content spec
         PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
         // and the content spec will return some string
-        given(contentSpec.toString()).willReturn(randomString);
+        given(contentSpec.toString(anyBoolean())).willReturn(randomString);
         // and the helper method to get the content spec works
         when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
         when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
@@ -253,9 +254,9 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
         // and the transformer returns a content spec
         PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
         // and the content spec will return some string
-        given(contentSpec.toString()).willReturn(randomString);
+        given(contentSpec.toString(anyBoolean())).willReturn(randomString);
         // and the command should call some real methods in ClientUtilities
         when(ClientUtilities.prepareAndValidateIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
         when(ClientUtilities.prepareIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();

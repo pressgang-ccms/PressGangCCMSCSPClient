@@ -11,6 +11,8 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 
 public abstract class BaseCommandImpl implements BaseCommand {
+    protected static final boolean INCLUDE_CHECKSUMS = false;
+
     private final JCommander parser;
     private final ContentSpecConfiguration cspConfig;
     private final ClientConfiguration clientConfig;

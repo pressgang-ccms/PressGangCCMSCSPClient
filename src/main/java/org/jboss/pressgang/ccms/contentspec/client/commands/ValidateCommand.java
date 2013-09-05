@@ -173,6 +173,7 @@ public class ValidateCommand extends BaseCommandImpl {
             final ContentSpec contentSpec, final String username) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
+        processingOptions.setIgnoreChecksum(true);
         processingOptions.setValidating(true);
         processingOptions.setStrictTitles(strictTitles);
 

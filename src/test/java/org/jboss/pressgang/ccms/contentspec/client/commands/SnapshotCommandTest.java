@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -227,7 +228,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works successfully
         PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(spec);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(spec);
         // and the content spec has some data
         spec.setId(id);
         spec.setChecksum(checksum);
@@ -269,7 +270,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the transform works successfully
         PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
         // and the processing fails
         // and we don't want to create the content spec snapshot
         given(command.getProcessor()).willReturn(snapshotProcessor);
@@ -308,7 +309,7 @@ public class SnapshotCommandTest extends BaseUnitTest {
         given(contentSpecWrapper.getRevision()).willReturn(revision);
         // and the transform works successfully
         PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
         // and the content spec has some data
         given(contentSpec.getId()).willReturn(id);
         given(contentSpec.getChecksum()).willReturn(checksum);

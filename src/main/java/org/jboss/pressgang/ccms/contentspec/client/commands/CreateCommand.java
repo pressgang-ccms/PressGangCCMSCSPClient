@@ -255,7 +255,7 @@ public class CreateCommand extends BaseCommandImpl {
                 TextContentSpecWrapper output = null;
                 try {
                     final TextContentSpecWrapper contentSpecEntity = textContentSpecProvider.newTextContentSpec();
-                    contentSpecEntity.setText(contentSpec.toString());
+                    contentSpecEntity.setText(contentSpec.toString(INCLUDE_CHECKSUMS));
                     output = textContentSpecProvider.createTextContentSpec(contentSpecEntity, processingOptions, logMessage);
                 } catch (ProviderException e) {
                     output = textContentSpecProvider.newTextContentSpec();

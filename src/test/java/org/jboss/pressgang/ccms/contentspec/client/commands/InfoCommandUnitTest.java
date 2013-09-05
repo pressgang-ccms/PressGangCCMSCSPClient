@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -121,7 +122,7 @@ public class InfoCommandUnitTest extends BaseUnitTest {
         given(topicWrapper.getXml()).willReturn(contentSpecTitle);
         // and the content spec will be successfully transformed
         PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory))).thenReturn(contentSpec);
+        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
 
         // When the command is executed
         command.process();

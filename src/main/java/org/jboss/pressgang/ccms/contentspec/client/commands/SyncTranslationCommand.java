@@ -242,7 +242,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             }
 
             // Iterate over the spec topics and get their topics
-            final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory);
+            final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory, INCLUDE_CHECKSUMS);
             final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
             if (specTopics != null && !specTopics.isEmpty()) {
                 for (final SpecTopic specTopic : specTopics) {

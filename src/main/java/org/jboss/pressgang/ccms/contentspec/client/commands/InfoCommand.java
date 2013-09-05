@@ -70,7 +70,7 @@ public class InfoCommand extends BaseCommandImpl {
         JCommander.getConsole().println("Starting to calculate the statistics...");
 
         // Transform the content spec
-        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
+        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();

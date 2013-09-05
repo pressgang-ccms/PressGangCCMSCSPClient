@@ -17,7 +17,6 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
-import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
@@ -179,8 +178,8 @@ public class SnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Transform the content spec
-        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory());
-        final String originalChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpec);
+        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
+//        final String originalChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpec);
 
         // If we want to create it as a new spec then remove the checksum and id
         if (getCreateNew()) {
@@ -200,7 +199,8 @@ public class SnapshotCommand extends BaseCommandImpl {
         getProcessor().processContentSpec(contentSpec, snapshotOptions);
 
         // Process and save the updated content spec.
-        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), originalChecksum);
+//        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), originalChecksum);
+        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), null);
         success = output != null && output.getFailed() == null;
 
         if (!success) {
@@ -253,17 +253,18 @@ public class SnapshotCommand extends BaseCommandImpl {
                     if (getCreateNew()) {
                         contentSpec.setId(null);
                         contentSpec.setChecksum(null);
-                        input.setText(contentSpec.toString());
+                        input.setText(contentSpec.toString(INCLUDE_CHECKSUMS));
                         output = textContentSpecProvider.createTextContentSpec(input, processingOptions, logMessage);
                     } else {
-                        input.setText(ContentSpecUtilities.replaceChecksum(contentSpec.toString(), originalChecksum));
+//                        input.setText(ContentSpecUtilities.replaceChecksum(contentSpec.toString(INCLUDE_CHECKSUMS), originalChecksum));
+                        input.setText(contentSpec.toString());
                         input.setId(contentSpec.getId());
                         output = textContentSpecProvider.updateTextContentSpec(input, processingOptions, logMessage);
                     }
                 } catch (ProviderException e) {
                     output = textContentSpecProvider.newTextContentSpec();
                     output.setErrors(e.getMessage());
-                    output.setFailed(contentSpec.toString());
+                    output.setFailed(contentSpec.toString(INCLUDE_CHECKSUMS));
                 }
 
                 return output;
