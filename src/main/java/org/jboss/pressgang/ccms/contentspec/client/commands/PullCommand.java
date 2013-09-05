@@ -115,6 +115,13 @@ public class PullCommand extends BaseCommandImpl {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
                         getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
+                // Add a warning about the revisions not matching
+                if (getRevision() != null && !getRevision().equals(topic.getRevision())) {
+                    printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, topic.getRevision()));
+                    // Print a space to highlight the warning
+                    JCommander.getConsole().println("");
+                }
+
                 outputString = topic.getXml();
                 fileName = DocBookUtilities.escapeTitle(topic.getTitle()) + ".xml";
             }
@@ -127,6 +134,13 @@ public class PullCommand extends BaseCommandImpl {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
                         getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
             } else {
+                // Add a warning about the revisions not matching
+                if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
+                    printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, contentSpecEntity.getRevision()));
+                    // Print a space to highlight the warning
+                    JCommander.getConsole().println("");
+                }
+
                 outputString = contentSpecString;
 
                 // Calculate the filenames and output directory.

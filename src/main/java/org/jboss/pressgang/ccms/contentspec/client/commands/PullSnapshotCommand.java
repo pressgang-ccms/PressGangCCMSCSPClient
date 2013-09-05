@@ -120,6 +120,13 @@ public class PullSnapshotCommand extends BaseCommandImpl {
             printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_INVALID_CONTENT_SPEC, false);
         }
 
+        // Add a warning about the revisions not matching
+        if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
+            printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, contentSpecEntity.getRevision()));
+            // Print a space to highlight the warning
+            JCommander.getConsole().println("");
+        }
+
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
