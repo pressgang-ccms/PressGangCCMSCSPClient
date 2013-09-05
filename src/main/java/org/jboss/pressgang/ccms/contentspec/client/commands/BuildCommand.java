@@ -430,6 +430,7 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Get the content spec and make sure it exists
         final ContentSpec contentSpec = getContentSpec(getIds().get(0));
+        final String contentSpecTitle = contentSpec.getTitle();
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -478,12 +479,12 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Get the filename for the spec, using it's title.
-        String fileName = DocBookUtilities.escapeTitle(contentSpec.getTitle());
+        String fileName = DocBookUtilities.escapeTitle(contentSpecTitle);
 
         // Create the output file
         String outputDir = "";
         if (buildingFromConfig) {
-            outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
+            outputDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpecTitle) + Constants.DEFAULT_CONFIG_ZIP_LOCATION;
             if (getBuildType() == BuildType.JDOCBOOK) {
                 fileName += Constants.DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX;
             } else {
