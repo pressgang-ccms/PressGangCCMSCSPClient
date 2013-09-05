@@ -36,7 +36,6 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.RevisionsCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.SearchCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.SetupCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.SnapshotCommand;
-import org.jboss.pressgang.ccms.contentspec.client.commands.StatusCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.SyncTranslationCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.TemplateCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.ValidateCommand;
@@ -288,7 +287,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final SearchCommand search = new SearchCommand(parser, cspConfig, clientConfig);
         final SetupCommand setup = new SetupCommand(parser, cspConfig, clientConfig);
         final SnapshotCommand snapshot = new SnapshotCommand(parser, cspConfig, clientConfig);
-        final StatusCommand status = new StatusCommand(parser, cspConfig, clientConfig);
+//        final StatusCommand status = new StatusCommand(parser, cspConfig, clientConfig);
         final SyncTranslationCommand syncTranslation = new SyncTranslationCommand(parser, cspConfig, clientConfig);
         final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
         final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
@@ -344,8 +343,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         parser.addCommand(snapshot.getCommandName(), snapshot);
         commands.put(snapshot.getCommandName(), snapshot);
 
-        parser.addCommand(status.getCommandName(), status);
-        commands.put(status.getCommandName(), status);
+//        parser.addCommand(status.getCommandName(), status);
+//        commands.put(status.getCommandName(), status);
 
         parser.addCommand(syncTranslation.getCommandName(), syncTranslation);
         commands.put(syncTranslation.getCommandName(), syncTranslation);
