@@ -103,8 +103,9 @@ public class CheckoutCommand extends BaseCommandImpl {
         }
 
         // Check that the output directory doesn't already exist
-        final File directory = new File(
-                getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpecEntity.getTitle()));
+        final String title = contentSpecEntity.getTitle() == null ? contentSpecEntity.getId().toString() : DocBookUtilities.escapeTitle(
+                contentSpecEntity.getTitle());
+        final File directory = new File(getCspConfig().getRootOutputDirectory() + title);
         if (directory.exists() && !force) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
                     String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
