@@ -434,13 +434,19 @@ public class ClientUtilities {
             final StringBuilder output = new StringBuilder(
                     String.format(format, "ID", "TITLE", "PRODUCT", "VERSION", "CREATED BY", "LAST MODIFIED") + "\n");
             for (final Spec spec : contentSpecs.getSpecs()) {
-                output.append(String.format(format, spec.getId().toString(), spec.getTitle(), spec.getProduct(), spec.getVersion(),
+                output.append(String.format(format, spec.getId().toString(), escapeForList(spec.getTitle()),
+                        escapeForList(spec.getProduct()),
+                        escapeForList(spec.getVersion()),
                         spec.getCreator() == null ? "Unknown" : spec.getCreator(),
                         spec.getLastModified() == null ? "Unknown" : dateFormatter.format(spec.getLastModified())) + "\n");
             }
             return output.toString();
         }
         return "";
+    }
+
+    private static String escapeForList(final String input) {
+        return input == null ? "" : input;
     }
 
     /**
