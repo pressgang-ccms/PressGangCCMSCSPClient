@@ -668,8 +668,7 @@ public class BuildCommand extends BaseCommandImpl {
                         getCspConfig().getZanataDetails(), buildType);
             }
         } catch (BuildProcessingException e) {
-            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
+            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, ExceptionUtilities.getRootCause(e).getMessage(), false);
         } catch (BuilderCreationException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, Constants.ERROR_INTERNAL_ERROR, false);
         }

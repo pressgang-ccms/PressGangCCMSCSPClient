@@ -590,7 +590,6 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // Then check an error message was printed
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
-        assertThat(getStdOutLogs(), containsString("Internal processing error!"));
     }
 
     @Test
