@@ -31,14 +31,14 @@ public class Constants {
     public static final String BUILDDATE_PROPERTY_NAME = "cspclient.builddate";
 
     // Options that need configuring for a build
-    public static final String DEFAULT_PROD_SERVER = "http://skynet.usersys.redhat.com:8080/pressgang-ccms/rest/";
-    public static final String DEFAULT_TEST_SERVER = "http://skynet-dev.usersys.redhat.com:8080/pressgang-ccms/rest/";
-    public static final String DEFAULT_KOJIHUB_URL = "http://brewhub.devel.redhat.com/brewhub";
-    public static final String DEFAULT_PUBLISH_COMMAND = "rhpkg publican-build --lang en-US";
-    public static final String DEFAULT_ZANATA_SERVER = "https://translate.engineering.redhat.com/";
-    public static final String DEFAULT_ZANATA_SERVER_NAME = "internal";
-    public static final String DEFAULT_ZANATA_PROJECT = "skynet-topics";
-    public static final String DEFAULT_ZANATA_VERSION = "1";
+    public static final String DEFAULT_PROD_SERVER = "";
+    public static final String DEFAULT_TEST_SERVER = "";
+    public static final String DEFAULT_KOJIHUB_URL = "";
+    public static final String DEFAULT_PUBLISH_COMMAND = "";
+    public static final String DEFAULT_ZANATA_SERVER = "";
+    public static final String DEFAULT_ZANATA_SERVER_NAME = "";
+    public static final String DEFAULT_ZANATA_PROJECT = "";
+    public static final String DEFAULT_ZANATA_VERSION = "";
     public static final String KOJI_NAME = "brew";
 
     // Server based settings

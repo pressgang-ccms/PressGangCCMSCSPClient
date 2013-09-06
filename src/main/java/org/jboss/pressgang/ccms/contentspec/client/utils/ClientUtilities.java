@@ -1,5 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.utils;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -933,6 +935,17 @@ public class ClientUtilities {
         }
 
         return DocBookUtilities.escapeTitle(title);
+    }
+
+    public static String createLogMessage(final String username, final String message) {
+        final StringBuilder retValue = new StringBuilder();
+        if (!isNullOrEmpty(username)) {
+            retValue.append(username + ": ");
+        }
+        if (!isNullOrEmpty(message)) {
+            retValue.append(message);
+        }
+        return retValue.toString();
     }
 }
 

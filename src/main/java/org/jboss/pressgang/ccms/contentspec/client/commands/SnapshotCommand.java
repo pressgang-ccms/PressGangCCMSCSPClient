@@ -14,6 +14,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
@@ -242,8 +243,8 @@ public class SnapshotCommand extends BaseCommandImpl {
                 }
                 final LogMessageWrapper logMessage = providerFactory.getProvider(LogMessageProvider.class).createLogMessage();
                 logMessage.setFlags(flag);
-                logMessage.setMessage(getMessage());
-                logMessage.setUser(username);
+                logMessage.setMessage(ClientUtilities.createLogMessage(username, getMessage()));
+                logMessage.setUser(CSConstants.UNKNOWN_USER_ID.toString());
 
                 // Create the input object to be saved
 
