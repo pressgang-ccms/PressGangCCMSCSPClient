@@ -52,6 +52,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.exception.ProviderException;
+import org.jboss.pressgang.ccms.provider.exception.UpgradeException;
 import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -231,6 +232,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                 // Check that the version is valid
                 if (!doVersionCheck(providerFactory.getRESTManager().getRESTClient())) {
+                    JCommander.getConsole().println("This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
+                            " again.");
                     shutdown(Constants.EXIT_UPGRADE_REQUIRED);
                 }
 
@@ -1051,8 +1054,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             try {
                 response = e.getResponse();
                 if (response.getStatus() == 426) {
-                    JCommander.getConsole().println("This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
-                            " again.");
                     return false;
                 }
             } finally {
@@ -1060,6 +1061,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                     response.releaseConnection();
                 }
             }
+        } catch (UpgradeException e) {
+            return false;
         }
 
         return true;
