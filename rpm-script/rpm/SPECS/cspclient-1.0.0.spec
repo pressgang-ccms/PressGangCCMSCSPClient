@@ -4,7 +4,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.0.0
-Release: 20
+Release: 21
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,7 +38,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Fri Sep 06 2013 lnewson - 1.0.0
+* Sun Sep 08 2013 lnewson - 1.0.0
 - Updated the client to work against the new data structure of the server.
 - Changed the push/create/snapshot commands to do the processing server side instead of client side.
 - BZ #1000844: Include the Topic Title in the error reports.
