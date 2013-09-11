@@ -41,6 +41,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
@@ -700,6 +701,11 @@ public class BuildCommand extends BaseCommandImpl {
         // Don't validate bug links on a server installation.
         if (getClientConfig().getDefaults().isServer()) {
             processingOptions.setValidateBugLinks(false);
+        }
+
+        // Set the rest topic provider to expand translations by default
+        if (getLocale() != null) {
+            getProviderFactory().getProvider(RESTTopicProvider.class).setExpandTranslations(true);
         }
 
         // Attempt to download all the topic data in one request

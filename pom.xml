@@ -13,6 +13,7 @@
 
     <properties>
         <pressgang.ccms.version>1.1-SNAPSHOT</pressgang.ccms.version>
+        <pressgang.rest-provider.version>1.1.1-SNAPSHOT</pressgang.rest-provider.version>
         <zanata-sync.version>0.1.1-SNAPSHOT</zanata-sync.version>
         <commonsconfiguration.version>1.7</commonsconfiguration.version>
         <jcommander.version>1.24-SNAPSHOT</jcommander.version>
@@ -171,7 +172,7 @@
         <dependency>
             <groupId>org.jboss.pressgang.ccms</groupId>
             <artifactId>rest-provider</artifactId>
-            <version>${pressgang.ccms.version}</version>
+            <version>${pressgang.rest-provider.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.pressgang.ccms.services</groupId>
