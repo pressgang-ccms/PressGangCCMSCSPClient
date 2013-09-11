@@ -657,14 +657,15 @@ public class BuildCommand extends BaseCommandImpl {
      * @return A ZIP archive as a byte array that is ready to be saved as a file.
      */
     protected byte[] buildContentSpec(final ContentSpec contentSpec, final String username) {
+        final String fixedUsername = username == null ? "Unknown" : username;
         byte[] builderOutput = null;
         try {
             setBuilder(new ContentSpecBuilder(getProviderFactory()));
             BuildType buildType = getBuildType() == null ? BuildType.PUBLICAN : getBuildType();
             if (getLocale() == null) {
-                builderOutput = getBuilder().buildBook(contentSpec, username, getBuildOptions(), getOverrideFiles(), buildType);
+                builderOutput = getBuilder().buildBook(contentSpec, fixedUsername, getBuildOptions(), getOverrideFiles(), buildType);
             } else {
-                builderOutput = getBuilder().buildTranslatedBook(contentSpec, username, getBuildOptions(), getOverrideFiles(),
+                builderOutput = getBuilder().buildTranslatedBook(contentSpec, fixedUsername, getBuildOptions(), getOverrideFiles(),
                         getCspConfig().getZanataDetails(), buildType);
             }
         } catch (BuildProcessingException e) {
@@ -700,6 +701,9 @@ public class BuildCommand extends BaseCommandImpl {
         if (getClientConfig().getDefaults().isServer()) {
             processingOptions.setValidateBugLinks(false);
         }
+
+        // Attempt to download all the topic data in one request
+        ClientUtilities.downloadAllTopics(providerFactory, contentSpec);
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
