@@ -999,7 +999,7 @@ public class ClientUtilities {
             Integer>> referencedRevisionTopicIds) {
         JCommander.getConsole().println("Attempting to download all the revision topics...");
 
-        final int showPercent = 5;
+        final int showPercent = 10;
         final float total = referencedRevisionTopicIds.size();
         float current = 0;
         int lastPercent = 0;
