@@ -956,7 +956,8 @@ public class ClientUtilities {
      * Download all the topics that are to be used during processing from the
      * parsed Content Specification.
      */
-    public static void downloadAllTopics(final DataProviderFactory providerFactory, final ContentSpec contentSpec) {
+    public static void downloadAllTopics(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
+            final Integer maxRevision) {
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
         final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
         final List<Integer> topicIds = new ArrayList<Integer>();
@@ -972,7 +973,7 @@ public class ClientUtilities {
         }
 
         // Check if a maximum revision was specified for processing
-        if (contentSpec.getRevision() == null && !topicIds.isEmpty()) {
+        if (maxRevision == null && !topicIds.isEmpty()) {
             // Download the list of topics in one go to reduce I/O overhead
             JCommander.getConsole().println("Attempting to download all the latest topics...");
             final RESTTopicQueryBuilderV1 queryBuilder = new RESTTopicQueryBuilderV1();
@@ -981,7 +982,7 @@ public class ClientUtilities {
         } else if (!topicIds.isEmpty()) {
             // Add to the list of referenced topic ids
             for (final Integer topicId : topicIds) {
-                revisionTopicIds.add(new Pair<Integer, Integer>(topicId, contentSpec.getRevision()));
+                revisionTopicIds.add(new Pair<Integer, Integer>(topicId, maxRevision));
             }
         }
 

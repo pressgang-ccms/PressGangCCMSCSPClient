@@ -695,6 +695,7 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);
         processingOptions.setStrictBugLinks(true);
+        processingOptions.setMaxRevision(getRevision());
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
@@ -709,7 +710,7 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Attempt to download all the topic data in one request
-        ClientUtilities.downloadAllTopics(providerFactory, contentSpec);
+        ClientUtilities.downloadAllTopics(providerFactory, contentSpec, getRevision());
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
