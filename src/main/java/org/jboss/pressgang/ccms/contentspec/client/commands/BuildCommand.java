@@ -41,6 +41,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
@@ -657,14 +658,15 @@ public class BuildCommand extends BaseCommandImpl {
      * @return A ZIP archive as a byte array that is ready to be saved as a file.
      */
     protected byte[] buildContentSpec(final ContentSpec contentSpec, final String username) {
+        final String fixedUsername = username == null ? "Unknown" : username;
         byte[] builderOutput = null;
         try {
             setBuilder(new ContentSpecBuilder(getProviderFactory()));
             BuildType buildType = getBuildType() == null ? BuildType.PUBLICAN : getBuildType();
             if (getLocale() == null) {
-                builderOutput = getBuilder().buildBook(contentSpec, username, getBuildOptions(), getOverrideFiles(), buildType);
+                builderOutput = getBuilder().buildBook(contentSpec, fixedUsername, getBuildOptions(), getOverrideFiles(), buildType);
             } else {
-                builderOutput = getBuilder().buildTranslatedBook(contentSpec, username, getBuildOptions(), getOverrideFiles(),
+                builderOutput = getBuilder().buildTranslatedBook(contentSpec, fixedUsername, getBuildOptions(), getOverrideFiles(),
                         getCspConfig().getZanataDetails(), buildType);
             }
         } catch (BuildProcessingException e) {
@@ -693,6 +695,7 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setIgnoreChecksum(true);
         processingOptions.setAllowNewTopics(false);
         processingOptions.setStrictBugLinks(true);
+        processingOptions.setMaxRevision(getRevision());
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
@@ -700,6 +703,14 @@ public class BuildCommand extends BaseCommandImpl {
         if (getClientConfig().getDefaults().isServer()) {
             processingOptions.setValidateBugLinks(false);
         }
+
+        // Set the rest topic provider to expand translations by default
+        if (getLocale() != null) {
+            getProviderFactory().getProvider(RESTTopicProvider.class).setExpandTranslations(true);
+        }
+
+        // Attempt to download all the topic data in one request
+        ClientUtilities.downloadAllTopics(providerFactory, contentSpec, getRevision());
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));

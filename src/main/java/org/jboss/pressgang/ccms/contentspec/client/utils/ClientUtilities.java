@@ -35,6 +35,7 @@ import com.redhat.j2koji.entities.KojiBuild;
 import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.j2koji.rpc.search.KojiBuildSearch;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
+import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.builder.utils.DocbookBuildUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
@@ -50,14 +51,17 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.StringConstantProvider;
+import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
+import org.jboss.pressgang.ccms.rest.v1.query.RESTTopicQueryBuilderV1;
 import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
+import org.jboss.pressgang.ccms.utils.structures.Pair;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
@@ -946,6 +950,72 @@ public class ClientUtilities {
             retValue.append(message);
         }
         return retValue.toString();
+    }
+
+    /**
+     * Download all the topics that are to be used during processing from the
+     * parsed Content Specification.
+     */
+    public static void downloadAllTopics(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
+            final Integer maxRevision) {
+        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
+        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
+        final List<Integer> topicIds = new ArrayList<Integer>();
+        final List<Pair<Integer, Integer>> revisionTopicIds = new ArrayList<Pair<Integer, Integer>>();
+
+        // populate the topicIds and revisionTopicIds
+        for (final SpecTopic specTopic : specTopics) {
+            if (specTopic.getRevision() == null) {
+                topicIds.add(specTopic.getDBId());
+            } else {
+                revisionTopicIds.add(new Pair<Integer, Integer>(specTopic.getDBId(), specTopic.getRevision()));
+            }
+        }
+
+        // Check if a maximum revision was specified for processing
+        if (maxRevision == null && !topicIds.isEmpty()) {
+            // Download the list of topics in one go to reduce I/O overhead
+            JCommander.getConsole().println("Attempting to download all the latest topics...");
+            final RESTTopicQueryBuilderV1 queryBuilder = new RESTTopicQueryBuilderV1();
+            queryBuilder.setTopicIds(topicIds);
+            topicProvider.getTopicsWithQuery(queryBuilder.getQuery());
+        } else if (!topicIds.isEmpty()) {
+            // Add to the list of referenced topic ids
+            for (final Integer topicId : topicIds) {
+                revisionTopicIds.add(new Pair<Integer, Integer>(topicId, maxRevision));
+            }
+        }
+
+        if (!revisionTopicIds.isEmpty()) {
+            downloadRevisionTopics(topicProvider, revisionTopicIds);
+        }
+    }
+
+    /**
+     * Download the Topics from the REST API that specify a revision.
+     *
+     * @param referencedRevisionTopicIds The Set of topic ids and revision to download.
+     */
+    public static void downloadRevisionTopics(final TopicProvider topicProvider, final List<Pair<Integer,
+            Integer>> referencedRevisionTopicIds) {
+        JCommander.getConsole().println("Attempting to download all the revision topics...");
+
+        final int showPercent = 10;
+        final float total = referencedRevisionTopicIds.size();
+        float current = 0;
+        int lastPercent = 0;
+
+        for (final Pair<Integer, Integer> topicToRevision : referencedRevisionTopicIds) {
+            // If we want to update the revisions then we should get the latest topic and not the revision
+            topicProvider.getTopic(topicToRevision.getFirst(), topicToRevision.getSecond());
+
+            ++current;
+            final int percent = Math.round(current / total * 100);
+            if (percent - lastPercent >= showPercent) {
+                lastPercent = percent;
+                JCommander.getConsole().println("\tDownloading revision topics " + percent + "% Done");
+            }
+        }
     }
 }
 

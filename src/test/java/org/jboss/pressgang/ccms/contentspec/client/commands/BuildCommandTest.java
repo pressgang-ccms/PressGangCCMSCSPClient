@@ -61,6 +61,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.BlobConstantProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -109,7 +110,7 @@ public class BuildCommandTest extends BaseUnitTest {
     @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
-    @Mock TopicProvider topicProvider;
+    @Mock RESTTopicProvider topicProvider;
     @Mock BlobConstantProvider blobConstantProvider;
     @Mock ConfigDefaults defaults;
 
@@ -124,6 +125,7 @@ public class BuildCommandTest extends BaseUnitTest {
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
+        when(providerFactory.getProvider(RESTTopicProvider.class)).thenReturn(topicProvider);
         when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         when(providerFactory.getProvider(BlobConstantProvider.class)).thenReturn(blobConstantProvider);
         when(clientConfig.getDefaults()).thenReturn(defaults);

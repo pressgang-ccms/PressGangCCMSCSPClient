@@ -177,6 +177,9 @@ public class ValidateCommand extends BaseCommandImpl {
         processingOptions.setValidating(true);
         processingOptions.setStrictTitles(strictTitles);
 
+        // Attempt to download all the topic data in one request
+        ClientUtilities.downloadAllTopics(providerFactory, contentSpec, null);
+
         // Process the content spec to see if it's valid
         setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
         return getProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER);

@@ -115,6 +115,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     }
 
     public void setup() {
+        System.setProperty("pressgang.rest.cache.timeout", "20");
+
         /* Set stderr to log to log4j */
         LoggingUtilities.tieSystemErrToLog(Logger.getLogger(Client.class));
 
