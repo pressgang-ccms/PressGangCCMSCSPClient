@@ -4,7 +4,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.0.2
-Release: 2
+Release: 3
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,11 +38,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Thu Sep 12 2013 lnewson - 1.0.2
+* Mon Sep 16 2013 lnewson - 1.0.2
 - Fixed a bug that was causing builds to throw date errors when the users machine wasn't using en_US as their locale.
 - Changed the progamlisting validation to be case insensitive.
 - Optimised builds so that they will build faster (especially builds that would normally take longer than 5mins)
 - BZ #1007108 Fixed a bug where processes weren't getting their relationships set.
+- Fixed a regression to BZ #988192
 * Mon Sep 09 2013 lnewson - 1.0.1
 - Fixed a bug where building would remove spaces from the product title.
 * Fri Sep 06 2013 lnewson - 1.0.0
