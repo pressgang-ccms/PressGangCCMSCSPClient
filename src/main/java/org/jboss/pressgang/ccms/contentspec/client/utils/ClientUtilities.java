@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -614,7 +615,7 @@ public class ClientUtilities {
      * @param ids
      */
     public static boolean prepareAndValidateIds(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig,
-            final List<Integer> ids) {
+            final Collection<Integer> ids) {
         boolean isLoadingFromConfig = prepareIds(command, cspConfig, ids);
         validateIdsOrFiles(command, ids, true);
         return isLoadingFromConfig;
@@ -627,7 +628,8 @@ public class ClientUtilities {
      * @param cspConfig
      * @param ids
      */
-    public static boolean prepareIds(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig, final List<Integer> ids) {
+    public static boolean prepareIds(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig,
+            final Collection<Integer> ids) {
         boolean isLoadingFromConfig = false;
         // If there are no ids then use the csprocessor.cfg file
         if (command.loadFromCSProcessorCfg()) {
@@ -650,7 +652,7 @@ public class ClientUtilities {
      * @param ids
      */
     public static boolean prepareAndValidateStringIds(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig,
-            final List<String> ids) {
+            final Collection<String> ids) {
         boolean isLoadingFromConfig = prepareStringIds(command, cspConfig, ids);
         validateIdsOrFiles(command, ids, true);
         return isLoadingFromConfig;
@@ -665,7 +667,7 @@ public class ClientUtilities {
      * @return True if the command prepared the ids from a csprocessor.cfg, otherwise false.
      */
     public static boolean prepareStringIds(final BaseCommandImpl command, final ContentSpecConfiguration cspConfig,
-            final List<String> ids) {
+            final Collection<String> ids) {
         boolean isLoadingFromConfig = false;
         // If there are no ids then use the csprocessor.cfg file
         if (command.loadFromCSProcessorCfg()) {
@@ -688,7 +690,7 @@ public class ClientUtilities {
      * @param ids                       The list of ids or files to validate.
      * @param canLoadFromCsprocessorCfg Whether or not the command is allowed to load from the csprocessor.cfg file.
      */
-    public static void validateIdsOrFiles(BaseCommandImpl command, final List<?> ids, boolean canLoadFromCsprocessorCfg) {
+    public static void validateIdsOrFiles(BaseCommandImpl command, final Collection<?> ids, boolean canLoadFromCsprocessorCfg) {
         // Check that one and only one ID exists
         if (ids.size() == 0) {
             if (canLoadFromCsprocessorCfg) {
