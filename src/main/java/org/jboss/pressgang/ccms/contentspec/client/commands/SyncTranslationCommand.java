@@ -21,10 +21,13 @@ import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.services.zanatasync.SyncMaster;
+import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataConstants;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
@@ -124,7 +127,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process the ids
-        final Set<String> zanataIds = getZanataIds(getProviderFactory(), ids);
+        final Set<String> zanataIds = getContentSpecZanataResources(getProviderFactory(), ids);
         JCommander.getConsole().println("Syncing the topics...");
         syncMaster.processZanataResources(zanataIds);
     }
@@ -214,11 +217,9 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      * @param contentSpecIds  The list of Content Spec IDs to sync.
      * @return A Set of Zanata IDs that represent the topics to be synced from the list of Content Specs.
      */
-    protected Set<String> getZanataIds(final DataProviderFactory providerFactory, final List<Integer> contentSpecIds) {
+    protected Set<String> getContentSpecZanataResources(final DataProviderFactory providerFactory, final List<Integer> contentSpecIds) {
         JCommander.getConsole().println("Downloading topics...");
-        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
 
-        final List<TopicWrapper> topics = new ArrayList<TopicWrapper>();
         final List<TranslatedContentSpecWrapper> translatedContentSpecs = new ArrayList<TranslatedContentSpecWrapper>();
         for (final Integer contentSpecId : contentSpecIds) {
             // Get the latest pushed content spec
@@ -240,41 +241,46 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             if (contentSpecEntity == null) {
                 printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_ID_FOUND_MSG, false);
             }
-
-            // Iterate over the spec topics and get their topics
-            final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, providerFactory, INCLUDE_CHECKSUMS);
-            final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
-            if (specTopics != null && !specTopics.isEmpty()) {
-                for (final SpecTopic specTopic : specTopics) {
-                    final TopicWrapper topic = topicProvider.getTopic(specTopic.getDBId(), specTopic.getRevision());
-                    topics.add(topic);
-                }
-            }
         }
 
-        return getZanataIds(translatedContentSpecs, topics);
+        return getZanataIds(providerFactory, translatedContentSpecs);
     }
 
     /**
-     * Get the Zanata IDs that represent a Collection of Topics.
+     * Get the Zanata IDs that represent a Collection of Content Specs and their Topics.
      *
-     * @param topics The topics to get the Zanata IDs for.
-     * @return The Set of Zanata IDs that represent the topics.
+     * @param providerFactory
+     * @param translatedContentSpecs
+     * @return The Set of Zanata IDs that represent the content specs and topics.
      */
-    protected Set<String> getZanataIds(final List<TranslatedContentSpecWrapper> translatedContentSpecs, final List<TopicWrapper> topics) {
+    protected Set<String> getZanataIds(final DataProviderFactory providerFactory,
+            final List<TranslatedContentSpecWrapper> translatedContentSpecs) {
+        final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
         final Set<String> zanataIds = new HashSet<String>();
 
         // Get the zanata ids for each content spec
         for (final TranslatedContentSpecWrapper translatedContentSpec : translatedContentSpecs) {
             zanataIds.add(translatedContentSpec.getZanataId());
-        }
 
-        // Get the zanata ids for each topics
-        for (final TopicWrapper topic : topics) {
-            // Find the latest pushed translated topic
-            final TranslatedTopicWrapper translatedTopic = EntityUtilities.returnPushedTranslatedTopic(topic);
-            if (translatedTopic != null) {
-                zanataIds.add(translatedTopic.getZanataId());
+            final CollectionWrapper<TranslatedCSNodeWrapper> translatedCSNodes = translatedContentSpec.getTranslatedNodes();
+            for (final TranslatedCSNodeWrapper translatedCSNode : translatedCSNodes.getItems()) {
+                final CSNodeWrapper csNode = translatedCSNode.getCSNode();
+                // Make sure the node is a topic
+                if (EntityUtilities.isNodeATopic(csNode)) {
+                    final TopicWrapper topic = topicProvider.getTopic(csNode.getEntityId(), csNode.getEntityRevision());
+
+                    // Try and see if it was pushed with a condition
+                    TranslatedTopicWrapper pushedTopic = EntityUtilities.returnPushedTranslatedTopic(topic, translatedCSNode);
+                    // If pushed topic is null then it means no condition was used
+                    if (pushedTopic == null) {
+                        pushedTopic = EntityUtilities.returnPushedTranslatedTopic(topic);
+                    }
+
+                    // If a pushed topic was found then add it
+                    if (pushedTopic != null) {
+                        zanataIds.add(pushedTopic.getZanataId());
+                    }
+                }
             }
         }
 
