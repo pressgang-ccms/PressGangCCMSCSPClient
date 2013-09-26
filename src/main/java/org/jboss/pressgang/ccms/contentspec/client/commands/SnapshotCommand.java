@@ -39,7 +39,8 @@ public class SnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
-    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, description = "The maximum revision to update all topics to")
+    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, description = "The maximum revision to update all topics to.",
+            metaVar = "<REVISION>")
     private Integer maxRevision = null;
 
     @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when processing the snapshot.")
@@ -49,11 +50,11 @@ public class SnapshotCommand extends BaseCommandImpl {
     private Boolean createNew = false;
 
     @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM},
-            description = "A commit message about what was " + "changed.")
+            description = "A commit message about what was changed.")
     private String message = null;
 
     @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER,
-            description = "The commit message should be set to be included in " + "the Revision History.")
+            description = "The commit message should be set to be included in the Revision History.")
     private Boolean revisionHistoryMessage = false;
 
     private SnapshotProcessor processor = null;
