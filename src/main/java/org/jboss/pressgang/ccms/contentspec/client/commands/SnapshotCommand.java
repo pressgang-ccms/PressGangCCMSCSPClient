@@ -180,7 +180,6 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         // Transform the content spec
         final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
-//        final String originalChecksum = ContentSpecUtilities.getContentSpecChecksum(contentSpec);
 
         // If we want to create it as a new spec then remove the checksum and id
         if (getCreateNew()) {
@@ -200,8 +199,7 @@ public class SnapshotCommand extends BaseCommandImpl {
         getProcessor().processContentSpec(contentSpec, snapshotOptions);
 
         // Process and save the updated content spec.
-//        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), originalChecksum);
-        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername(), null);
+        final TextContentSpecWrapper output = processAndSaveContentSpec(getProviderFactory(), contentSpec, getUsername());
         success = output != null && output.getFailed() == null;
 
         if (!success) {
@@ -222,14 +220,13 @@ public class SnapshotCommand extends BaseCommandImpl {
      * @param providerFactory  The provider factory to create providers to lookup entity details.
      * @param contentSpec      The content spec to be processed and saved.
      * @param username         The user who requested the content spec be processed and saved.
-     * @param originalChecksum The content specs original checksum value.
      * @return True if the content spec was processed and saved successfully, otherwise false.
      */
     protected TextContentSpecWrapper processAndSaveContentSpec(final RESTProviderFactory providerFactory, final ContentSpec contentSpec,
-            final String username, final String originalChecksum) {
+            final String username) {
         final TextContentSpecProvider textContentSpecProvider = providerFactory.getProvider(TextContentSpecProvider.class);
         final TextCSProcessingOptionsWrapper processingOptions = textContentSpecProvider.newTextProcessingOptions();
-        processingOptions.setStrictTitles(true);
+        processingOptions.setStrictTitles(false);
 
         // Create the task to update the content spec on the server
         final FutureTask<TextContentSpecWrapper> task = new FutureTask<TextContentSpecWrapper>(new Callable<TextContentSpecWrapper>() {
@@ -247,7 +244,6 @@ public class SnapshotCommand extends BaseCommandImpl {
                 logMessage.setUser(CSConstants.UNKNOWN_USER_ID.toString());
 
                 // Create the input object to be saved
-
                 TextContentSpecWrapper output = null;
                 try {
                     final TextContentSpecWrapper input = textContentSpecProvider.newTextContentSpec();
@@ -257,7 +253,6 @@ public class SnapshotCommand extends BaseCommandImpl {
                         input.setText(contentSpec.toString(INCLUDE_CHECKSUMS));
                         output = textContentSpecProvider.createTextContentSpec(input, processingOptions, logMessage);
                     } else {
-//                        input.setText(ContentSpecUtilities.replaceChecksum(contentSpec.toString(INCLUDE_CHECKSUMS), originalChecksum));
                         input.setText(contentSpec.toString());
                         input.setId(contentSpec.getId());
                         output = textContentSpecProvider.updateTextContentSpec(input, processingOptions, logMessage);
