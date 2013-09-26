@@ -349,6 +349,7 @@ public class CreateCommandTest extends BaseUnitTest {
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(textContentSpecWrapper.getId()).willReturn(id);
+        given(textContentSpecWrapper.getRevision()).willReturn(randomNumber);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
@@ -385,14 +386,11 @@ public class CreateCommandTest extends BaseUnitTest {
                 any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         given(textContentSpecWrapper.getId()).willReturn(id);
+        given(textContentSpecWrapper.getRevision()).willReturn(randomNumber);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         // and the processing succeeds
         given(textContentSpecWrapper.getErrors()).willReturn("The Content Specification saved successfully.");
-        // and the content spec provider returns a content spec
-        given(contentSpecProvider.getContentSpec(anyInt())).willReturn(contentSpecWrapper);
-        // and the wrapper will return a valid revision
-        given(contentSpecWrapper.getRevision()).willReturn(randomNumber);
 
         // When it is processed
         command.process();

@@ -204,14 +204,13 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         if (!success) {
             JCommander.getConsole().println(output.getErrors());
-            JCommander.getConsole().println(Constants.ERROR_CREATE_SNAPSHOT_INVALID);
+            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, output.getId(), output.getRevision()));
             JCommander.getConsole().println("");
             shutdown(Constants.EXIT_TOPIC_INVALID);
         } else {
             JCommander.getConsole().println(Constants.SUCCESSFUL_PUSH_SNAPSHOT_MSG);
             JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_PUSH_MSG, output.getId(), output.getRevision()));
         }
-
     }
 
     /**

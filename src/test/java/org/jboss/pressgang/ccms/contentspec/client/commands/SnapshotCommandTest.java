@@ -253,11 +253,11 @@ public class SnapshotCommandTest extends BaseUnitTest {
             assertThat(e.getStatus(), is(8));
         }
 
-        // Then the command should shutdown and an error message should be printed
+        // Then the command should shutdown and a message should be printed
         assertNull(spec.getId());
         assertNull(spec.getChecksum());
         assertThat(getStdOutLogs(),
-                containsString("The revision of the Content Specification is invalid and as such the snapshot couldn't be saved."));
+                containsString("Content Specification ID"));
     }
 
     @Test
@@ -292,9 +292,9 @@ public class SnapshotCommandTest extends BaseUnitTest {
             assertThat(e.getStatus(), is(8));
         }
 
-        // Then the command should shutdown and an error message should be printed
+        // Then the command should shutdown and a message should be printed
         assertThat(getStdOutLogs(),
-                containsString("The revision of the Content Specification is invalid and as such the snapshot couldn't be saved."));
+                containsString("Content Specification ID"));
     }
 
     @Test
