@@ -46,11 +46,11 @@ public class PushCommand extends BaseCommandImpl {
     private Boolean pushOnly = false;
 
     @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM},
-            description = "A commit message about what was " + "changed.")
+            description = "A commit message about what was changed.", metaVar = "<MESSAGE>")
     private String message = null;
 
     @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER,
-            description = "The commit message should be set to be included in " + "the Revision History.")
+            description = "The commit message should be set to be included in the Revision History.", metaVar = "<MESSAGE>")
     private Boolean revisionHistoryMessage = false;
 
     @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, description = "Enforce that all titles match their matching topic titles.")
