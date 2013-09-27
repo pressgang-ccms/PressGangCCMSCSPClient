@@ -99,7 +99,7 @@ public class Constants {
     public static final String OUTPUT_SHORT_PARAM = "-o";
 
     public static final String FORCE_LONG_PARAM = "--force";
-    public static final String FORCE_SHORT_PARAM = "--f";
+    public static final String FORCE_SHORT_PARAM = "-f";
 
     public static final String XML_LONG_PARAM = "--xml";
     public static final String XML_SHORT_PARAM = "-x";
