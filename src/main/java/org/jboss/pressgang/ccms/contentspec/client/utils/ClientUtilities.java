@@ -983,7 +983,7 @@ public class ClientUtilities {
             final RESTTopicQueryBuilderV1 queryBuilder = new RESTTopicQueryBuilderV1();
             if (topicIds.size() > MAX_DOWNLOAD_SIZE) {
                 int start = 0;
-                while (start + MAX_DOWNLOAD_SIZE < topicIds.size()) {
+                while (start < topicIds.size()) {
                     final List<Integer> subList = topicIds.subList(start, Math.min(start + MAX_DOWNLOAD_SIZE, topicIds.size()));
                     queryBuilder.setTopicIds(subList);
                     topicProvider.getTopicsWithQuery(queryBuilder.getQuery());
