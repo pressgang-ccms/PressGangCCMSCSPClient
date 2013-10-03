@@ -73,6 +73,8 @@ import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 public class ClientUtilities {
+    private static int MAX_DOWNLOAD_SIZE = 500;
+
     /**
      * Checks if the location for a config location is in the correct format then corrects it if not.
      *
@@ -979,8 +981,19 @@ public class ClientUtilities {
             // Download the list of topics in one go to reduce I/O overhead
             JCommander.getConsole().println("Attempting to download all the latest topics...");
             final RESTTopicQueryBuilderV1 queryBuilder = new RESTTopicQueryBuilderV1();
-            queryBuilder.setTopicIds(topicIds);
-            topicProvider.getTopicsWithQuery(queryBuilder.getQuery());
+            if (topicIds.size() > MAX_DOWNLOAD_SIZE) {
+                int start = 0;
+                while (start + MAX_DOWNLOAD_SIZE < topicIds.size()) {
+                    final List<Integer> subList = topicIds.subList(start, Math.min(start + MAX_DOWNLOAD_SIZE, topicIds.size()));
+                    queryBuilder.setTopicIds(subList);
+                    topicProvider.getTopicsWithQuery(queryBuilder.getQuery());
+
+                    start += MAX_DOWNLOAD_SIZE;
+                }
+            } else {
+                queryBuilder.setTopicIds(topicIds);
+                topicProvider.getTopicsWithQuery(queryBuilder.getQuery());
+            }
         } else if (!topicIds.isEmpty()) {
             // Add to the list of referenced topic ids
             for (final Integer topicId : topicIds) {
