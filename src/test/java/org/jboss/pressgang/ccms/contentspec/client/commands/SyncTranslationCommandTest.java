@@ -10,7 +10,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
@@ -72,7 +72,7 @@ public class SyncTranslationCommandTest extends BaseUnitTest {
     @Test
     public void shouldFailWithInvalidLanguage() throws Exception {
         // Given a command with no ids
-        command.setIds(new ArrayList<Integer>());
+        command.setIds(new HashSet<String>());
         // and no csprocessor.cfg data
         given(cspConfig.getContentSpecId()).willReturn(id);
         // and a language is set
