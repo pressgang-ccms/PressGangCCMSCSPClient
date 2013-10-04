@@ -67,6 +67,7 @@ import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
@@ -913,6 +914,16 @@ public class ClientUtilities {
             // Do nothing as we handle this below.
         }
         return contentSpec;
+    }
+
+    public static TopicWrapper getTopicEntity(TopicProvider topicProvider, Integer id, Integer revision) {
+        TopicWrapper topic = null;
+        try {
+            topic = topicProvider.getTopic(id, revision);
+        } catch (NotFoundException e) {
+            // Do nothing as we handle this below.
+        }
+        return topic;
     }
 
     public static String getContentSpecAsString(ContentSpecProvider contentSpecProvider, Integer id, Integer revision) {

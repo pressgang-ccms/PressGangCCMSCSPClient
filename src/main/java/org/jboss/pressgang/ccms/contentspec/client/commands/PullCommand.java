@@ -110,7 +110,8 @@ public class PullCommand extends BaseCommandImpl {
         String fileName = "";
         // Topic
         if (useTopic()) {
-            final TopicWrapper topic = getProviderFactory().getProvider(TopicProvider.class).getTopic(getIds().get(0), getRevision());
+            final TopicWrapper topic = ClientUtilities.getTopicEntity(getProviderFactory().getProvider(TopicProvider.class),
+                    getIds().get(0), getRevision());
             if (topic == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
                         getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
