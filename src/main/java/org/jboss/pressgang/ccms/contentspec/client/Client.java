@@ -693,16 +693,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         }
 
         // Read in the defaults
-        if (!configReader.getRootNode().getChildren("defaults").isEmpty()) {
-            final ConfigDefaults defaults = new ConfigDefaults();
-
-            // Load the server value
-            if (configReader.getProperty("defaults.server") != null && !configReader.getProperty("defaults.server").equals("")) {
-                defaults.setServer(Boolean.parseBoolean(configReader.getProperty("defaults.server").toString()));
-            }
-
-            clientConfig.setDefaults(defaults);
-        }
+        readDefaultDetailsFromConfig(configReader);
 
         return true;
     }
@@ -851,6 +842,43 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         }
 
         clientConfig.setZanataServers(zanataServers);
+        return true;
+    }
+
+    /**
+     * Read the Default settings from a INI Configuration file.
+     *
+     * @param configReader The initialized configuration reader to read
+     *                     the server configuration from file.
+     * @return True if everything was read in correctly otherwise false.
+     */
+    protected boolean readDefaultDetailsFromConfig(final HierarchicalINIConfiguration configReader) {
+        if (!configReader.getRootNode().getChildren("defaults").isEmpty()) {
+            final ConfigDefaults defaults = new ConfigDefaults();
+
+            // Load the server value
+            if (configReader.getProperty("defaults.server") != null && !configReader.getProperty("defaults.server").equals("")) {
+                defaults.setServer(Boolean.parseBoolean(configReader.getProperty("defaults.server").toString()));
+            }
+
+            // Load the firstname value
+            if (configReader.getProperty("defaults.firstname") != null && !configReader.getProperty("defaults.firstname").equals("")) {
+                defaults.setFirstname(configReader.getProperty("defaults.firstname").toString());
+            }
+
+            // Load the surname value
+            if (configReader.getProperty("defaults.surname") != null && !configReader.getProperty("defaults.surname").equals("")) {
+                defaults.setSurname(configReader.getProperty("defaults.surname").toString());
+            }
+
+            // Load the email value
+            if (configReader.getProperty("defaults.email") != null && !configReader.getProperty("defaults.email").equals("")) {
+                defaults.setEmail(configReader.getProperty("defaults.email").toString());
+            }
+
+            clientConfig.setDefaults(defaults);
+        }
+
         return true;
     }
 
