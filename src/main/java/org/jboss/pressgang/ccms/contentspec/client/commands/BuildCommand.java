@@ -102,19 +102,19 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.SHOW_REPORT_LONG_PARAM, descriptionKey = "BUILD_SHOW_REPORT")
     protected Boolean showReport = false;
 
-    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER")
+    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER", metaVar = "<URL>")
     private String zanataUrl = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT")
+    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT", metaVar = "<PROJECT>")
     private String zanataProject = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, descriptionKey = "ZANATA_PROJECT_VERSION")
+    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, descriptionKey = "ZANATA_PROJECT_VERSION", metaVar = "<VERSION>")
     private String zanataVersion = null;
 
     @Parameter(names = Constants.TARGET_LANG_LONG_PARAM, descriptionKey = "BUILD_TARGET_LOCALE", metaVar = "<LOCALE>")
     private String targetLocale = null;
 
-    @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
+    @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM}, metaVar = "<REVISION>")
     private Integer revision = null;
 
     @Parameter(names = {Constants.UPDATE_LONG_PARAM}, descriptionKey = "BUILD_UPDATE", hidden = true)

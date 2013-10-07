@@ -27,9 +27,6 @@ public class SearchCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.CONTENT_SPEC_LONG_PARAM, Constants.CONTENT_SPEC_SHORT_PARAM})
     private Boolean useContentSpec;
 
-    @Parameter(names = {Constants.SNAPSHOT_LONG_PARAM, Constants.SNAPSHOT_SHORT_PARAM}, hidden = true)
-    private Boolean useSnapshot = false;
-
     public SearchCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
     }
@@ -53,14 +50,6 @@ public class SearchCommand extends BaseCommandImpl {
 
     public void setUseContentSpec(final Boolean useContentSpec) {
         this.useContentSpec = useContentSpec;
-    }
-
-    public Boolean isUseSnapshot() {
-        return useSnapshot;
-    }
-
-    public void setUseSnapshot(final Boolean useSnapshot) {
-        this.useSnapshot = useSnapshot;
     }
 
     @Override

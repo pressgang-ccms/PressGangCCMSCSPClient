@@ -28,7 +28,7 @@ public class PullCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.TOPIC_LONG_PARAM, Constants.TOPIC_SHORT_PARAM})
     private Boolean pullTopic = false;
 
-    @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
+    @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM}, metaVar = "<REVISION>")
     private Integer revision;
 
     @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, descriptionKey = "OUTPUT", metaVar = "<FILE>")

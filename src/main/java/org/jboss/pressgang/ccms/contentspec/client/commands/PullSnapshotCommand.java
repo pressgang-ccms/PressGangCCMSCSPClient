@@ -26,10 +26,10 @@ public class PullSnapshotCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
-    @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
+    @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM}, metaVar = "<REVISION>")
     private Integer revision = null;
 
-    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, descriptionKey = "SNAPSHOT_MAX_REV")
+    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, descriptionKey = "SNAPSHOT_MAX_REV", metaVar = "<REVISION>")
     private Integer maxRevision = null;
 
     @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, descriptionKey = "OUTPUT", metaVar = "<FILE>")

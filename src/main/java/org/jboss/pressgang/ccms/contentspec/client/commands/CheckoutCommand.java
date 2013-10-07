@@ -25,13 +25,13 @@ public class CheckoutCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, descriptionKey = "CHECKOUT_FORCE")
     private Boolean force = false;
 
-    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER")
+    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER", metaVar = "<URL>")
     private String zanataUrl = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT")
+    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT", metaVar = "<PROJECT>")
     private String zanataProject = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "ZANATA_PROJECT_VERSION")
+    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "ZANATA_PROJECT_VERSION", metaVar = "<VERSION>")
     private String zanataVersion = null;
 
     public CheckoutCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {

@@ -56,13 +56,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
-    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER")
+    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER", metaVar = "<URL>")
     private String zanataUrl = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT")
+    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT", metaVar = "<PROJECT>")
     private String zanataProject = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, descriptionKey = "ZANATA_PROJECT_VERSION")
+    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, descriptionKey = "ZANATA_PROJECT_VERSION", metaVar = "<VERSION>")
     private String zanataVersion = null;
 
     @Parameter(names = Constants.CONTENT_SPEC_ONLY_LONG_PARAM, descriptionKey = "PUSH_TRANSLATION_CONTENT_SPEC_ONLY")
