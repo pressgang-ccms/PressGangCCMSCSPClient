@@ -701,7 +701,7 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         // Attempt to download all the topic data in one request
-        ClientUtilities.downloadAllTopics(providerFactory, contentSpec, getRevision());
+        ClientUtilities.downloadAllTopics(this, providerFactory, contentSpec, getRevision());
 
         // Validate the Content Specification
         setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));

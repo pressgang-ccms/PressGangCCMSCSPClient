@@ -970,7 +970,7 @@ public class ClientUtilities {
      * Download all the topics that are to be used during processing from the
      * parsed Content Specification.
      */
-    public static void downloadAllTopics(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
+    public static void downloadAllTopics(final BaseCommand command, final DataProviderFactory providerFactory, final ContentSpec contentSpec,
             final Integer maxRevision) {
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
         final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
@@ -989,7 +989,7 @@ public class ClientUtilities {
         // Check if a maximum revision was specified for processing
         if (maxRevision == null && !topicIds.isEmpty()) {
             // Download the list of topics in one go to reduce I/O overhead
-            JCommander.getConsole().println("Attempting to download all the latest topics...");
+            JCommander.getConsole().println(command.getMessage("ATTEMPTING_TO_DOWNLOAD_TOPICS_MSG"));
             final RESTTopicQueryBuilderV1 queryBuilder = new RESTTopicQueryBuilderV1();
             if (topicIds.size() > MAX_DOWNLOAD_SIZE) {
                 int start = 0;
@@ -1012,18 +1012,19 @@ public class ClientUtilities {
         }
 
         if (!revisionTopicIds.isEmpty()) {
-            downloadRevisionTopics(topicProvider, revisionTopicIds);
+            downloadRevisionTopics(command, topicProvider, revisionTopicIds);
         }
     }
 
     /**
      * Download the Topics from the REST API that specify a revision.
      *
+     * @param command
      * @param referencedRevisionTopicIds The Set of topic ids and revision to download.
      */
-    public static void downloadRevisionTopics(final TopicProvider topicProvider,
+    public static void downloadRevisionTopics(BaseCommand command, final TopicProvider topicProvider,
             final List<Pair<Integer, Integer>> referencedRevisionTopicIds) {
-        JCommander.getConsole().println("Attempting to download all the revision topics...");
+        JCommander.getConsole().println(command.getMessage("ATTEMPTING_TO_DOWNLOAD_REV_TOPICS_MSG"));
 
         final int showPercent = 10;
         final float total = referencedRevisionTopicIds.size();
@@ -1038,7 +1039,7 @@ public class ClientUtilities {
             final int percent = Math.round(current / total * 100);
             if (percent - lastPercent >= showPercent) {
                 lastPercent = percent;
-                JCommander.getConsole().println("\tDownloading revision topics " + percent + "% Done");
+                JCommander.getConsole().println("\t" + command.getMessage("DOWNLOADING_REV_TOPICS_MSG", percent));
             }
         }
     }

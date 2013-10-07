@@ -133,7 +133,7 @@ public class SnapshotCommand extends BaseCommandImpl {
      */
     protected void validate() {
         if (getRevision() != null && !getCreateNew()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_SNAPSHOT_REVISION_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_SNAPSHOT_REVISION_MSG", Constants.NEW_LONG_PARAM), false);
         }
     }
 

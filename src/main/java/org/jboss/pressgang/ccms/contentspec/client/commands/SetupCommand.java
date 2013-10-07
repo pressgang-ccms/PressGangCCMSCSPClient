@@ -117,7 +117,8 @@ public class SetupCommand extends BaseCommandImpl {
             // Save the config
             FileUtilities.saveFile(file, configFile.toString(), Constants.FILE_ENCODING);
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_FAILED_CREATING_CONFIG_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_NO_WRITE_INI_MSG", Constants.DEFAULT_CONFIG_LOCATION),
+                    false);
         }
 
         JCommander.getConsole().println(getMessage("SUCCESSFUL_SETUP_MSG"));

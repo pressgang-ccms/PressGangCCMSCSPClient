@@ -581,7 +581,10 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             try {
                 configReader = new HierarchicalINIConfiguration(fixedLocation);
             } catch (ConfigurationException e) {
-                command.printError(getMessage("INI_NOT_FOUND_MSG"), false);
+                command.printError(getMessage("ERROR_INI_NOT_FOUND_MSG"), false);
+                return false;
+            } catch (Exception e) {
+                command.printError(getMessage("ERROR_PROCESSING_CONFIG_MSG"), false);
                 return false;
             }
         } else if (location.equals(Constants.DEFAULT_CONFIG_LOCATION)) {
@@ -604,7 +607,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             }
             return setConfigOptions(location);
         } else {
-            command.printError(getMessage("INI_NOT_FOUND_MSG"), false);
+            command.printError(getMessage("ERROR_INI_NOT_FOUND_MSG"), false);
             return false;
         }
 
