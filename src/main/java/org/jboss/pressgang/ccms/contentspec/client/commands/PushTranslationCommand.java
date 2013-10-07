@@ -62,7 +62,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT")
     private String zanataProject = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, descriptionKey = "ZANATA_VERSION")
+    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, descriptionKey = "ZANATA_PROJECT_VERSION")
     private String zanataVersion = null;
 
     @Parameter(names = Constants.CONTENT_SPEC_ONLY_LONG_PARAM, descriptionKey = "PUSH_TRANSLATION_CONTENT_SPEC_ONLY")

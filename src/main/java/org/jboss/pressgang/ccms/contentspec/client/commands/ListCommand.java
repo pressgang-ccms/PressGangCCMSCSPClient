@@ -15,7 +15,7 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
-@Parameters(resourceBundle = "commands", commandDescription = "LIST")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "LIST")
 public class ListCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, hidden = true)
     private Boolean force = false;

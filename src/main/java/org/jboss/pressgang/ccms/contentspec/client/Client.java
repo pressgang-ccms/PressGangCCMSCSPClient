@@ -63,7 +63,7 @@ import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ClientResponseFailure;
 
 public class Client implements BaseCommand, ShutdownAbleApp {
-    private final JCommander parser = new JCommander(this);
+    private final JCommander parser = new JCommander(this, ResourceBundle.getBundle("commands"));
 
     private final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
