@@ -21,20 +21,24 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.sort.RevisionNodeSort;
 import org.jboss.pressgang.ccms.contentspec.structures.RevNumber;
 import org.jboss.pressgang.ccms.contentspec.structures.Version;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.provider.CSNodeProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.LogMessageProvider;
 import org.jboss.pressgang.ccms.provider.StringConstantProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedTopicProvider;
+import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.rest.v1.query.RESTCSNodeQueryBuilderV1;
 import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
@@ -189,16 +193,24 @@ public class AddRevisionCommand extends BaseCommandImpl {
 
         // Get the topic from the server
         final CSNodeWrapper revisionHistoryNode = csNodes.getItems().get(0);
-        final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, revisionHistoryNode.getEntityId(),
-                revisionHistoryNode.getEntityRevision());
+        final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, revisionHistoryNode.getEntityId(), null);
+
+        // Check that the revision history isn't a specific revision
+        if (getLocale() == null && revisionHistoryNode.getEntityRevision() != null) {
+            printWarn(getMessage("WARN_FIXED_REV_HISTORY_MSG", revisionHistoryNode.getEntityRevision()));
+        }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
+        final String firstname = isNullOrEmpty(getFirstname()) ? getClientConfig().getDefaults().getFirstname() : getFirstname();
+        final String surname = isNullOrEmpty(getSurname()) ? getClientConfig().getDefaults().getSurname() : getSurname();
+        final String email = isNullOrEmpty(getEmail()) ? getClientConfig().getDefaults().getEmail() : getEmail();
+
         if (getLocale() == null) {
             // Add the revision and save the topic
-            addRevisionToTopic(revisionHistory, getMessages(), getFirstname(), getSurname(), getEmail(), getRevnumber(), getDate());
-            topicProvider.updateTopic(revisionHistory);
+            addRevisionToTopic(revisionHistory, getMessages(), firstname, surname, email, getRevnumber(), getDate());
+            topicProvider.updateTopic(revisionHistory, getLogMessage());
         } else {
             // Get the matching translated csnode
             final CollectionWrapper<TranslatedCSNodeWrapper> translatedCSNodes = revisionHistoryNode.getTranslatedNodes();
@@ -215,10 +227,13 @@ public class AddRevisionCommand extends BaseCommandImpl {
             allowShutdownToContinueIfRequested();
 
             // Add the revision and save the translated topic
-            addRevisionToTranslatedTopic(translatedTopic, getMessages(), getFirstname(), getSurname(), getEmail(), getRevnumber(),
+            addRevisionToTranslatedTopic(translatedTopic, getMessages(), firstname, surname, email, getRevnumber(),
                     getDate());
-            translatedTopicProvider.updateTranslatedTopic(translatedTopic);
+            translatedTopicProvider.updateTranslatedTopic(translatedTopic, getLogMessage());
         }
+
+        // Print a success message
+        JCommander.getConsole().println(getMessage("REV_SUCCESSFULLY_ADDED_MSG"));
     }
 
     /**
@@ -332,7 +347,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         // Convert the translated additional XML into a DOM document
         Document translatedDoc = null;
         try {
-            if (isNullOrEmpty(topic.getXml())) {
+            if (isNullOrEmpty(topic.getTranslatedAdditionalXML())) {
                 final String template = getRevisionHistoryTemplate();
                 translatedDoc = XMLUtilities.convertStringToDocument(template);
             } else {
@@ -401,12 +416,12 @@ public class AddRevisionCommand extends BaseCommandImpl {
 
             // Create the revnumber
             final Element revnumberEle = doc.createElement("revnumber");
-            revnumberEle.setNodeValue(revnumber);
+            revnumberEle.setTextContent(revnumber);
             revision.appendChild(revnumberEle);
 
             // Create the date
             final Element dateEle = doc.createElement("date");
-            dateEle.setNodeValue(isNullOrEmpty(date) ? DATE_FORMAT.format(new Date()) : date);
+            dateEle.setTextContent(isNullOrEmpty(date) ? DATE_FORMAT.format(new Date()) : date);
             revision.appendChild(dateEle);
 
             // Create the author
@@ -414,15 +429,15 @@ public class AddRevisionCommand extends BaseCommandImpl {
             revision.appendChild(author);
 
             final Element firstnameEle = doc.createElement("firstname");
-            firstnameEle.setNodeValue(firstname);
+            firstnameEle.setTextContent(firstname);
             author.appendChild(firstnameEle);
 
             final Element surnameEle = doc.createElement("surname");
-            surnameEle.setNodeValue(surname);
+            surnameEle.setTextContent(surname);
             author.appendChild(surnameEle);
 
             final Element emailEle = doc.createElement("email");
-            emailEle.setNodeValue(email);
+            emailEle.setTextContent(email);
             author.appendChild(emailEle);
 
             // Create the revdescription
@@ -433,7 +448,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
             revdescription.appendChild(simpleList);
             for (final String message : messages) {
                 final Element member = doc.createElement("member");
-                member.setNodeValue(message);
+                member.setTextContent(message);
                 simpleList.appendChild(member);
             }
         } else {
@@ -449,6 +464,14 @@ public class AddRevisionCommand extends BaseCommandImpl {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    protected LogMessageWrapper getLogMessage() {
+        final LogMessageWrapper logMessage = getProviderFactory().getProvider(LogMessageProvider.class).createLogMessage();
+        logMessage.setFlags(RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT & 0);
+        logMessage.setMessage(ClientUtilities.createLogMessage(getUsername(), null));
+        logMessage.setUser(CSConstants.UNKNOWN_USER_ID.toString());
+        return logMessage;
     }
 
     @Override
