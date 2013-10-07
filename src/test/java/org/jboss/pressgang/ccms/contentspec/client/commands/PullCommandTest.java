@@ -253,6 +253,7 @@ public class PullCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
+        when(ClientUtilities.getTopicEntity(eq(topicProvider), anyInt(), anyInt())).thenCallRealMethod();
 
         // When processing the command
         ArgumentCaptor<String> fileName = ArgumentCaptor.forClass(String.class);

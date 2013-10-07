@@ -840,11 +840,11 @@ public class BuildCommand extends BaseCommandImpl {
          * file should be overwritten.
          */
         if (!buildingFromConfig && outputFile.exists() && !getAnswerYes()) {
-            JCommander.getConsole().println(getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()));
+            JCommander.getConsole().print(getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()) + " ");
             answer = JCommander.getConsole().readLine();
             while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase(
                     "yes") || answer.equalsIgnoreCase("no"))) {
-                JCommander.getConsole().print(getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()));
+                JCommander.getConsole().print(getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()) + " ");
                 answer = JCommander.getConsole().readLine();
 
                 // Check if the app is shutting down and if so let it.
@@ -906,7 +906,7 @@ public class BuildCommand extends BaseCommandImpl {
          */
         if (getFetchPubsnum()) {
             // Print the kojihub server url
-            JCommander.getConsole().println(getMessage("KOJI_WEBSERVICE_MSG", getCspConfig().getKojiHubUrl()));
+            JCommander.getConsole().println(getMessage("KOJI_WEBSERVICE_MSG", Constants.KOJI_HUB_NAME, getCspConfig().getKojiHubUrl()));
 
             // Test that the server address is valid
             if (!ClientUtilities.validateServerExists(getCspConfig().getKojiHubUrl())) {

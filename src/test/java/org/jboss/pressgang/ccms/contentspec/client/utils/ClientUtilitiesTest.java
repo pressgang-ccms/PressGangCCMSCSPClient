@@ -236,9 +236,11 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         given(cspConfig.getContentSpecId()).willReturn(null);
         // And we aren't loading from the csprocessor.cfg
         given(command.loadFromCSProcessorCfg()).willReturn(false);
+        // And the message will be returned
+        given(command.getMessage(anyString())).willReturn("No ID was specified by the command line or a csprocessor.cfg file.");
 
         // When it is processed
-        ArgumentCaptor<String> errorMessage = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor <String> errorMessage = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Integer> exitStatus = ArgumentCaptor.forClass(Integer.class);
         boolean retValue = ClientUtilities.prepareAndValidateIds(command, cspConfig, ids);
 
@@ -257,6 +259,8 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         given(cspConfig.getContentSpecId()).willReturn(null);
         // And we aren't loading from the csprocessor.cfg
         given(command.loadFromCSProcessorCfg()).willReturn(false);
+        // And the message will be returned
+        given(command.getMessage(anyString())).willReturn("Multiple ID's specified. Please only specify one ID.");
 
         // When it is processed
         ArgumentCaptor<String> errorMessage = ArgumentCaptor.forClass(String.class);
@@ -331,8 +335,13 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         PowerMockito.doThrow(new IOException()).when(FileUtilities.class);
         FileUtilities.saveFile(any(File.class), anyString(), anyString());
 
+        // and the correct messages will be returned
+        given(command.getMessage(anyString(), any())).willReturn("An error occurred while trying to save " + bookDir.getAbsolutePath() +
+                File.separator + "csprocessor.cfg.", "An error occurred while trying to save " + bookDir.getAbsolutePath() + File.separator + BOOK_TITLE +
+                "-post.contentspec");
+
         // When it is processed
-        ArgumentCaptor<String> errorMessage = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor <String> errorMessage = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Integer> exitStatus = ArgumentCaptor.forClass(Integer.class);
         ClientUtilities.createContentSpecProject(command, cspConfig, bookDir, randomString, contentSpecWrapper, new ZanataDetails());
 

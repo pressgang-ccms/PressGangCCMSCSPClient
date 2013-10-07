@@ -984,7 +984,7 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // Then the output should have a question printed twice. The first should have the answer
         assertThat(getStdOutLogs(),
-                containsString(randomString + " already exists! Overwrite existing file (y/n)? \n" + randomString + " already exists!" +
+                containsString(randomString + " already exists! Overwrite existing file (y/n)? " + randomString + " already exists!" +
                         " Overwrite existing file (y/n)? "));
     }
 
