@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
@@ -22,7 +23,6 @@ import org.apache.log4j.Logger;
 import org.jboss.pressgang.ccms.contentspec.client.commands.AssembleCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.BuildCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.CheckoutCommand;
-import org.jboss.pressgang.ccms.contentspec.client.commands.ChecksumCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.CreateCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.InfoCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.ListCommand;
@@ -63,6 +63,8 @@ import org.jboss.resteasy.client.ClientResponseFailure;
 
 public class Client implements BaseCommand, ShutdownAbleApp {
     private final JCommander parser = new JCommander(this);
+
+    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
 
     /**
      * A mapping of the sub commands the client uses
@@ -106,7 +108,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             client.processArgs(args);
         } catch (Throwable ex) {
             JCommander.getConsole().println(ExceptionUtilities.getStackTrace((Exception) ex));
-            JCommander.getConsole().println(Constants.ERROR_INTERNAL_ERROR);
+            JCommander.getConsole().println(client.getMessage("ERROR_INTERNAL_ERROR"));
             client.shutdown(Constants.EXIT_FAILURE);
         }
     }
@@ -164,13 +166,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             command.printHelp();
         } else if (command.isShowVersion() || isShowVersion()) {
             // Print the version details
-            printVersionDetails(Constants.BUILD_MSG,
+            printVersionDetails(getMessage("BUILD_MSG"),
                     VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
         } else if (command instanceof SetupCommand || command instanceof TemplateCommand) {
             command.process();
         } else {
             // Print the version details
-            printVersionDetails(Constants.BUILD_MSG,
+            printVersionDetails(getMessage("BUILD_MSG"),
                     VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
 
             // Good point to check for a shutdown
@@ -199,14 +201,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // If we are loading from csprocessor.cfg then display a message
             if (command.loadFromCSProcessorCfg()) {
-                JCommander.getConsole().println(Constants.CSP_CONFIG_LOADING_MSG);
+                JCommander.getConsole().println(getMessage("CSP_CONFIG_LOADING_MSG"));
 
                 // Load the csprocessor.cfg file from the current directory
                 try {
                     if (csprocessorcfg.exists() && csprocessorcfg.isFile()) {
                         ClientUtilities.readFromCsprocessorCfg(csprocessorcfg, cspConfig);
                         if (cspConfig.getContentSpecId() == null) {
-                            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_INVALID_CSPROCESSOR_CFG_MSG, false);
+                            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_INVALID_CSPROCESSOR_CFG_MSG"), false);
                         }
                     }
                 } catch (Exception e) {
@@ -234,9 +236,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                 // Check that the version is valid
                 if (!doVersionCheck(providerFactory.getRESTManager().getRESTClient())) {
-                    JCommander.getConsole().println("This version of the " + Constants.PROGRAM_NAME + " is out of date. Please update and try" +
-                            " again.");
-                    shutdown(Constants.EXIT_UPGRADE_REQUIRED);
+                    printErrorAndShutdown(Constants.EXIT_UPGRADE_REQUIRED, getMessage("ERROR_APP_OUT_OF_DATE_MSG"), false);
                 }
 
                 isProcessingCommand.set(false);
@@ -253,7 +253,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             try {
                 command.process();
             } catch (ProviderException e) {
-                printError(Constants.ERROR_INTERNAL_ERROR, false);
+                printError(getMessage("ERROR_INTERNAL_ERROR"), false);
                 JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
             }
             isProcessingCommand.set(false);
@@ -279,7 +279,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final BuildCommand build = new BuildCommand(parser, cspConfig, clientConfig);
         final CheckoutCommand checkout = new CheckoutCommand(parser, cspConfig, clientConfig);
         final CreateCommand create = new CreateCommand(parser, cspConfig, clientConfig);
-        final ChecksumCommand checksum = new ChecksumCommand(parser, cspConfig, clientConfig);
+//        final ChecksumCommand checksum = new ChecksumCommand(parser, cspConfig, clientConfig);
         final InfoCommand info = new InfoCommand(parser, cspConfig, clientConfig);
         final ListCommand list = new ListCommand(parser, cspConfig, clientConfig);
         final PreviewCommand preview = new PreviewCommand(parser, cspConfig, clientConfig);
@@ -309,8 +309,8 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         parser.addCommand(create.getCommandName(), create);
         commands.put(create.getCommandName(), create);
 
-        parser.addCommand(checksum.getCommandName(), checksum);
-        commands.put(checksum.getCommandName(), checksum);
+//        parser.addCommand(checksum.getCommandName(), checksum);
+//        commands.put(checksum.getCommandName(), checksum);
 
         parser.addCommand(info.getCommandName(), info);
         commands.put(info.getCommandName(), info);
@@ -404,11 +404,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null) {
                 final File configFile = new File(ClientUtilities.fixConfigLocation(command.getConfigLocation()));
                 command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        String.format(Constants.NO_DEFAULT_SERVER_FOUND, configFile.getAbsolutePath()), false);
+                        getMessage("NO_DEFAULT_SERVER_FOUND_MSG", configFile.getAbsolutePath()), false);
             } else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches(
                     "^(http://|https://).*")) {
                 if (!servers.containsKey(servers.get(Constants.DEFAULT_SERVER_NAME).getUrl())) {
-                    command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.NO_SERVER_FOUND_FOR_DEFAULT_SERVER, false);
+                    command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("NO_SERVER_FOUND_FOR_DEFAULT_SERVER_MSG"), false);
                 } else {
                     final ServerConfiguration defaultConfig = servers.get(Constants.DEFAULT_SERVER_NAME);
                     final ServerConfiguration config = servers.get(defaultConfig.getUrl());
@@ -458,10 +458,10 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (url == null && !firstRun) {
                 JCommander.getConsole().println("");
                 printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        String.format(Constants.ERROR_NO_SERVER_FOUND_MSG, cspConfig.getServerUrl()), false);
+                        getMessage("ERROR_NO_SERVER_FOUND_MSG", cspConfig.getServerUrl()), false);
             } else if (url == null) {
                 JCommander.getConsole().println("");
-                printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.SETUP_CONFIG_MSG, false);
+                printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("SETUP_CONFIG_MSG"), false);
             }
         } else {
             url = servers.get(Constants.DEFAULT_SERVER_NAME).getUrl();
@@ -539,7 +539,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (zanataServerConfig == null) {
                 JCommander.getConsole().println("");
                 printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        String.format(Constants.ERROR_NO_ZANATA_SERVER_SETUP_MSG, cspConfig.getZanataDetails().getServer()), false);
+                        getMessage("ERROR_NO_ZANATA_SERVER_SETUP_MSG", cspConfig.getZanataDetails().getServer()), false);
             } else {
                 cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
                 cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
@@ -576,16 +576,16 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         // Checks if the file exists in the specified location
         final File file = new File(location);
         if (file.exists() && !file.isDirectory()) {
-            JCommander.getConsole().println(String.format(Constants.CONFIG_LOADING_MSG, location));
+            JCommander.getConsole().println(getMessage("CONFIG_LOADING_MSG", location));
             // Initialise the configuration reader with the skynet.ini content
             try {
                 configReader = new HierarchicalINIConfiguration(fixedLocation);
             } catch (ConfigurationException e) {
-                command.printError(Constants.INI_NOT_FOUND_MSG, false);
+                command.printError(getMessage("INI_NOT_FOUND_MSG"), false);
                 return false;
             }
         } else if (location.equals(Constants.DEFAULT_CONFIG_LOCATION)) {
-            JCommander.getConsole().println(String.format(Constants.CONFIG_CREATING_MSG, location));
+            JCommander.getConsole().println(getMessage("CONFIG_CREATING_MSG", location));
             firstRun = true;
 
             // Save the configuration file
@@ -599,12 +599,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 // Save the config
                 FileUtilities.saveFile(file, ConfigConstants.DEFAULT_CONFIG_FILE, Constants.FILE_ENCODING);
             } catch (IOException e) {
-                printError(Constants.ERROR_FAILED_CREATING_CONFIG_MSG, false);
+                printError(getMessage("ERROR_FAILED_CREATING_CONFIG_MSG"), false);
                 return false;
             }
             return setConfigOptions(location);
         } else {
-            command.printError(Constants.INI_NOT_FOUND_MSG, false);
+            command.printError(getMessage("INI_NOT_FOUND_MSG"), false);
             return false;
         }
 
@@ -726,7 +726,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                     // Check that a url was specified
                     if (url == null) {
-                        command.printError(String.format(Constants.NO_SERVER_URL_MSG, name), false);
+                        command.printError(getMessage("NO_SERVER_URL_MSG", name), false);
                         return false;
                     }
 
@@ -791,7 +791,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                     // Check that a url was specified
                     if (url == null) {
-                        command.printError(String.format(Constants.NO_ZANATA_SERVER_URL_MSG, name), false);
+                        command.printError(getMessage("NO_ZANATA_SERVER_URL_MSG", name), false);
                         return false;
                     }
 
@@ -830,7 +830,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (zanataServers.containsKey(Constants.DEFAULT_SERVER_NAME) && !zanataServers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches(
                 "^(http://|https://).*")) {
             if (!zanataServers.containsKey(zanataServers.get(Constants.DEFAULT_SERVER_NAME).getUrl())) {
-                command.printError(Constants.NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER, false);
+                command.printError(getMessage("NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER_MSG"), false);
                 return false;
             } else {
                 final ZanataServerConfiguration defaultConfig = zanataServers.get(Constants.DEFAULT_SERVER_NAME);
@@ -1008,6 +1008,15 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         return false;
     }
 
+    public String getMessage(final String key, final Object... args) {
+        final String baseMsg = messages.getString(key);
+        if (args.length > 0) {
+            return String.format(baseMsg, args);
+        } else {
+            return baseMsg;
+        }
+    }
+
     /**
      * Allows a shutdown to continue if requested. If the application is shutting down then this method will create a loop to stop
      * further execution of code.
@@ -1029,14 +1038,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     @Override
     public boolean validateServerUrl() {
         // Print the server url
-        JCommander.getConsole().println(String.format(Constants.WEBSERVICE_MSG, getServerUrl()));
+        JCommander.getConsole().println(String.format(getMessage("WEBSERVICE_MSG"), getServerUrl()));
 
         // Test that the server address is valid
         if (!ClientUtilities.validateServerExists(getServerUrl())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
         }
 
         return true;

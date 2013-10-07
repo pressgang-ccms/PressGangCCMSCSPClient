@@ -18,8 +18,9 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
-@Parameters(commandDescription = "Setup the Content Specification Processor configuration files")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "SETUP")
 public class SetupCommand extends BaseCommandImpl {
+    private static final String YES_NO = " (Yes/No)";
 
     public SetupCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
@@ -54,7 +55,7 @@ public class SetupCommand extends BaseCommandImpl {
         setupPublican(configFile);
 
         // Get the jdocbook build options
-        JCommander.getConsole().println("Setup the jDocbook options? (Yes/No)");
+        JCommander.getConsole().println(getMessage("SETUP_JDOCBOOK_MSG") + YES_NO);
         String answer = JCommander.getConsole().readLine();
 
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
@@ -70,7 +71,7 @@ public class SetupCommand extends BaseCommandImpl {
         }
 
         // Get the publishing options
-        JCommander.getConsole().println("Setup the publishing options? (Yes/No)");
+        JCommander.getConsole().println(getMessage("SETUP_PUBLISHING_MSG") + YES_NO);
         answer = JCommander.getConsole().readLine();
 
         // Setup the publishing settings if required
@@ -83,7 +84,7 @@ public class SetupCommand extends BaseCommandImpl {
             setupPublish(configFile);
         }
 
-        JCommander.getConsole().println("Setup zanata configuration? (Yes/No)");
+        JCommander.getConsole().println(getMessage("SETUP_ZANATA_MSG") + YES_NO);
         answer = JCommander.getConsole().readLine();
 
         // Setup the Zanata Settings if required
@@ -116,10 +117,10 @@ public class SetupCommand extends BaseCommandImpl {
             // Save the config
             FileUtilities.saveFile(file, configFile.toString(), Constants.FILE_ENCODING);
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_FAILED_CREATING_CONFIG_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_FAILED_CREATING_CONFIG_MSG"), false);
         }
 
-        JCommander.getConsole().println(Constants.SUCCESSFUL_SETUP_MSG);
+        JCommander.getConsole().println(getMessage("SUCCESSFUL_SETUP_MSG"));
     }
 
     @Override
@@ -144,14 +145,14 @@ public class SetupCommand extends BaseCommandImpl {
 
         final TreeMap<String, ServerConfiguration> servers = new TreeMap<String, ServerConfiguration>(new ServerNameComparator());
 
-        JCommander.getConsole().println("Use the default server configuration? (Yes/No)");
+        JCommander.getConsole().println(getMessage("SETUP_USE_DEFAULT_CONFIG_MSG") + YES_NO);
         String answer = JCommander.getConsole().readLine();
 
         // We are using the default setup so we only need to get the default server and a username
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Get which server they want to connect to by default
             while (!defaultServerName.equalsIgnoreCase("test") && !defaultServerName.equalsIgnoreCase("production")) {
-                JCommander.getConsole().println("Which server do you want to connect to by default? (test/production)");
+                JCommander.getConsole().println(getMessage("SETUP_WHICH_SERVER_MSG") + " (test/production)");
                 defaultServerName = JCommander.getConsole().readLine().toLowerCase();
 
                 // Good point to check for a shutdown
@@ -159,7 +160,7 @@ public class SetupCommand extends BaseCommandImpl {
             }
 
             // Get the users username
-            JCommander.getConsole().println("Please enter a username to connect to the servers: ");
+            JCommander.getConsole().println(getMessage("SETUP_ENTER_USERNAME_MSG") + " ");
             username = JCommander.getConsole().readLine();
 
             // Create the default settings
@@ -172,7 +173,7 @@ public class SetupCommand extends BaseCommandImpl {
         } else if (answer.equalsIgnoreCase("no") || answer.equalsIgnoreCase("n")) {
             // We need to read in a list of servers and then get the default server
             while (!answer.matches("^[0-9]+$") || (Integer.parseInt(answer) <= 0)) {
-                JCommander.getConsole().print("How many servers are to be configured? ");
+                JCommander.getConsole().print(getMessage("SETUP_HOW_MANY_SERVERS_MSG") + " ");
                 answer = JCommander.getConsole().readLine();
 
                 // Good point to check for a shutdown
@@ -209,8 +210,8 @@ public class SetupCommand extends BaseCommandImpl {
             if (servers.size() > 1) {
                 // Get which server they want to connect to
                 while (!servers.containsKey(defaultServerName)) {
-                    JCommander.getConsole().println("Which server do you want to connect to by default? (" + serverNames.substring(0,
-                            serverNames.length() - 1) + ")");
+                    JCommander.getConsole().println(
+                            getMessage("SETUP_WHICH_SERVER_MSG") + " (" + serverNames.substring(0, serverNames.length() - 1) + ")");
                     defaultServerName = JCommander.getConsole().readLine().toLowerCase();
 
                     // Good point to check for a shutdown
@@ -223,7 +224,7 @@ public class SetupCommand extends BaseCommandImpl {
             // Create the default settings
             servers.put(Constants.DEFAULT_SERVER_NAME, new ServerConfiguration(Constants.DEFAULT_SERVER_NAME, defaultServerName));
         } else {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.INVALID_ARG_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("INVALID_ARG_MSG"), false);
         }
 
         // Add the information to the configuration file
@@ -265,7 +266,7 @@ public class SetupCommand extends BaseCommandImpl {
         String rootDir = "";
 
         // Get the root directory to store content specifications
-        JCommander.getConsole().println("Enter a root directory to store Content Specifications. (Press enter for no root directory)");
+        JCommander.getConsole().println(getMessage("SETUP_ROOT_DIRECTORY_MSG"));
         rootDir = JCommander.getConsole().readLine();
 
         // Create the Root Directory
@@ -445,7 +446,7 @@ public class SetupCommand extends BaseCommandImpl {
                 defaultZanataServerName = serverNames.substring(0, serverNames.length() - 1);
             }
         } else {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.INVALID_ARG_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("INVALID_ARG_MSG"), false);
         }
 
         // Create the default settings

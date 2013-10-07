@@ -19,7 +19,7 @@ import org.jboss.pressgang.ccms.utils.common.StringUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
-@Parameters(commandDescription = "Search for a Content Specification")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "SEARCH")
 public class SearchCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[QUERY]")
     private List<String> queries = new ArrayList<String>();
@@ -93,7 +93,7 @@ public class SearchCommand extends BaseCommandImpl {
 
         // Display the search results
         if (csList.isEmpty()) {
-            JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
+            JCommander.getConsole().println(getMessage("NO_CS_FOUND_MSG"));
         } else {
             JCommander.getConsole().println(
                     ClientUtilities.generateContentSpecList(ClientUtilities.buildSpecList(csList, getProviderFactory())));

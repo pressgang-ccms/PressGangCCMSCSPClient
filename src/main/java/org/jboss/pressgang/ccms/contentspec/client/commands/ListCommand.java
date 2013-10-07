@@ -15,12 +15,12 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
-@Parameters(commandDescription = "List the Content Specifications on the server")
+@Parameters(resourceBundle = "commands", commandDescription = "LIST")
 public class ListCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, hidden = true)
     private Boolean force = false;
 
-    @Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", description = "Limit the results to only show up to <NUM> results.")
+    @Parameter(names = Constants.LIMIT_LONG_PARAM, metaVar = "<NUM>", descriptionKey = "LIST_LIMIT")
     private Integer limit = null;
 
     public ListCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -72,9 +72,9 @@ public class ListCommand extends BaseCommandImpl {
 
         // If there are too many content specs & force isn't set then send back an error message
         if (noSpecs > Constants.MAX_LIST_RESULT && getLimit() == null && !isForce()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.LIST_ERROR_MSG, noSpecs), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_LIST_TOO_MANY_MSG", noSpecs, Constants.LIMIT_LONG_PARAM), false);
         } else if (noSpecs == 0) {
-            JCommander.getConsole().println(Constants.NO_CS_FOUND_MSG);
+            JCommander.getConsole().println(getMessage("NO_CS_FOUND_MSG"));
         } else {
             // Get the sublist of results to display
             final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);

@@ -33,27 +33,25 @@ import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 
-@Parameters(commandDescription = "Push an updated Content Specification to the server")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "PUSH")
 public class PushCommand extends BaseCommandImpl {
     @Parameter(converter = FileConverter.class, metaVar = "[FILE]")
     private List<File> files = new ArrayList<File>();
 
-    @Parameter(names = Constants.EXEC_TIME_LONG_PARAM, description = "Show the execution time of the command.", hidden = true)
+    @Parameter(names = Constants.EXEC_TIME_LONG_PARAM, descriptionKey = "EXEC_TIME", hidden = true)
     private Boolean executionTime = false;
 
-    @Parameter(names = Constants.PUSH_ONLY_LONG_PARAM,
-            description = "Only push the Content Specification and don't save the Post Processed Content Specification.")
+    @Parameter(names = Constants.PUSH_ONLY_LONG_PARAM, descriptionKey= "PUSH_ONLY")
     private Boolean pushOnly = false;
 
-    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM},
-            description = "A commit message about what was changed.", metaVar = "<MESSAGE>")
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, descriptionKey = "COMMIT_MESSAGE",
+            metaVar = "<MESSAGE>")
     private String message = null;
 
-    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER,
-            description = "The commit message should be set to be included in the Revision History.", metaVar = "<MESSAGE>")
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, descriptionKey = "COMMIT_REV_MESSAGE", metaVar = "<MESSAGE>")
     private Boolean revisionHistoryMessage = false;
 
-    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, description = "Enforce that all titles match their matching topic titles.")
+    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, descriptionKey = "STRICT_TITLES")
     protected Boolean strictTitles = false;
 
     public PushCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -144,7 +142,7 @@ public class PushCommand extends BaseCommandImpl {
                     // Backwards compatibility check for files ending with .txt
                     file = new File(escapedTitle + "-post.txt");
                     if (!file.exists()) {
-                        printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_FOUND_FOR_CONFIG_MSG", fileName), false);
                     }
                 }
                 getFiles().add(file);
@@ -154,7 +152,7 @@ public class PushCommand extends BaseCommandImpl {
 
         // Check that the parameters are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_FILE_MSG, true);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_MSG"), true);
         }
 
         // Good point to check for a shutdown (before starting)
@@ -178,7 +176,7 @@ public class PushCommand extends BaseCommandImpl {
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(output.getErrors());
         if (getExecutionTime()) {
-            JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
+            JCommander.getConsole().println(getMessage("EXEC_TIME_MSG", elapsedTime));
         }
 
         // if we failed validation then exit
@@ -207,7 +205,7 @@ public class PushCommand extends BaseCommandImpl {
         String contentSpecString = FileUtilities.readFileContents(file);
 
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         return contentSpecString;
@@ -310,7 +308,7 @@ public class PushCommand extends BaseCommandImpl {
         try {
             FileUtilities.saveFile(outputSpec, contentSpec.getText(), Constants.FILE_ENCODING);
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()),
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputSpec.getAbsolutePath()),
                     false);
         }
     }

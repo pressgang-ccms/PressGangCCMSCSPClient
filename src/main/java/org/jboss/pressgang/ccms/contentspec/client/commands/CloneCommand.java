@@ -11,7 +11,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 
-@Parameters(commandDescription = "Clone a Content Specification to create a new Content Specification")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "CLONE")
 public class CloneCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();

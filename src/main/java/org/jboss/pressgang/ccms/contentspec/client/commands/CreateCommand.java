@@ -34,30 +34,28 @@ import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
-@Parameters(commandDescription = "Create a new Content Specification on the server")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "CREATE")
 public class CreateCommand extends BaseCommandImpl {
     @Parameter(converter = FileConverter.class, metaVar = "[FILE]")
     private List<File> files = new ArrayList<File>();
 
-    @Parameter(names = Constants.EXEC_TIME_LONG_PARAM, description = "Show the execution time of the command.", hidden = true)
+    @Parameter(names = Constants.EXEC_TIME_LONG_PARAM, descriptionKey = "EXEC_TIME", hidden = true)
     private Boolean executionTime = false;
 
-    @Parameter(names = Constants.NO_CREATE_CSPROCESSOR_CFG_LONG_PARAM, description = "Don't create the csprocessor.cfg and other files.")
+    @Parameter(names = Constants.NO_CREATE_CSPROCESSOR_CFG_LONG_PARAM, descriptionKey = "CREATE_NO_CREATE_CSPROCESSOR_CFG")
     private Boolean noCreateCsprocessorCfg = false;
 
-    @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM},
-            description = "Force the Content Specification directories to be created.")
+    @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, descriptionKey = "CREATE_FORCE")
     private Boolean force = false;
 
-    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, description = "A commit message about what was " +
-            "changed.", metaVar = "<MESSAGE>")
+    @Parameter(names = {Constants.MESSAGE_LONG_PARAM, Constants.MESSAGE_SHORT_PARAM}, descriptionKey = "COMMIT_MESSAGE",
+            metaVar = "<MESSAGE>")
     private String message = null;
 
-    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, description = "The commit message should be set to be included in " +
-            "the Revision History.", metaVar = "<MESSAGE>")
+    @Parameter(names = Constants.REVISION_MESSAGE_FLAG_LONG_PARAMETER, descriptionKey = "COMMIT_REV_MESSAGE", metaVar = "<MESSAGE>")
     private Boolean revisionHistoryMessage = false;
 
-    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, description = "Enforce that all titles match their matching topic titles.")
+    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, descriptionKey = "STRICT_TITLES")
     protected Boolean strictTitles = false;
 
     public CreateCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -140,7 +138,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Check that the options set are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_FILE_MSG, true);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_MSG"), true);
         }
 
         long startTime = System.currentTimeMillis();
@@ -152,7 +150,7 @@ public class CreateCommand extends BaseCommandImpl {
         final File directory = new File(getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
         if (directory.exists() && !getForce() && !getNoCreateCsprocessorCfg() && directory.isDirectory()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
+                    getMessage("ERROR_CONTENT_SPEC_EXISTS_MSG", directory.getAbsolutePath(), Constants.FORCE_LONG_PARAM), false);
         }
 
         // Good point to check for a shutdown
@@ -167,7 +165,7 @@ public class CreateCommand extends BaseCommandImpl {
         JCommander.getConsole().println(output.getErrors());
         // Print the command execution time as saving files shouldn't be included
         if (executionTime) {
-            JCommander.getConsole().println(String.format(Constants.EXEC_TIME_MSG, elapsedTime));
+            JCommander.getConsole().println(getMessage("EXEC_TIME_MSG", elapsedTime));
         }
 
         JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, output.getId(), output.getRevision()));
@@ -203,7 +201,7 @@ public class CreateCommand extends BaseCommandImpl {
     protected ContentSpec getContentSpecFromFile(final File file) {
         final String contentSpecString = FileUtilities.readFileContents(file);
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         // Good point to check for a shutdown

@@ -18,18 +18,16 @@ import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
-@Parameters(commandDescription = "Builds and Assembles a Content Specification so that it is ready to be previewed")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "ASSEMBLE")
 public class AssembleCommand extends BuildCommand {
 
-    @Parameter(names = Constants.NO_BUILD_LONG_PARAM, description = "Don't build the Content Specification.")
+    @Parameter(names = Constants.NO_BUILD_LONG_PARAM, descriptionKey = "ASSEMBLE_NO_BUILD")
     private Boolean noBuild = false;
 
-    @Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, description = "Hide the output from assembling the Content Specification.")
+    @Parameter(names = Constants.HIDE_OUTPUT_LONG_PARAM, descriptionKey = "ASSEMBLE_HIDE_OUTPUT")
     private Boolean hideOutput = false;
 
-    @Parameter(names = Constants.NO_PUBLICAN_BUILD_LONG_PARAM,
-            description = "Don't build the Content Specification after unzipping.",
-            hidden = true)
+    @Parameter(names = Constants.NO_PUBLICAN_BUILD_LONG_PARAM, descriptionKey = "ASSEMBLE_NO_PUBLICAN_BUILD", hidden = true)
     private Boolean noPublicanBuild = false;
 
     private String buildFileDirectory = "";
@@ -108,7 +106,7 @@ public class AssembleCommand extends BuildCommand {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        JCommander.getConsole().println(Constants.STARTING_ASSEMBLE_MSG);
+        JCommander.getConsole().println(getMessage("STARTING_ASSEMBLE_MSG"));
 
         // Find the build directory and required files
         findBuildDirectoryAndFiles(contentSpecProvider, assembleFromConfig);
@@ -118,7 +116,7 @@ public class AssembleCommand extends BuildCommand {
 
         final File buildFile = new File(ClientUtilities.fixDirectoryPath(getBuildFileDirectory()) + getBuildFileName());
         if (!buildFile.exists()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.ERROR_UNABLE_TO_FIND_ZIP_MSG, getBuildFileName()), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_UNABLE_TO_FIND_ZIP_MSG", getBuildFileName()), false);
         }
 
         // Make sure the output directories exist
@@ -130,9 +128,9 @@ public class AssembleCommand extends BuildCommand {
 
         // Unzip the file
         if (!ZipUtilities.unzipFileIntoDirectory(buildFile, getOutputDirectory())) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_TO_ASSEMBLE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_TO_ASSEMBLE_MSG"), false);
         } else {
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_UNZIP_MSG, buildOutputDirectory.getAbsolutePath()));
+            JCommander.getConsole().println(getMessage("SUCCESSFUL_UNZIP_MSG", buildOutputDirectory.getAbsolutePath()));
         }
 
         // Good point to check for a shutdown
@@ -145,7 +143,7 @@ public class AssembleCommand extends BuildCommand {
             } else {
                 runPublican(buildOutputDirectory);
             }
-            JCommander.getConsole().println(String.format(Constants.SUCCESSFUL_ASSEMBLE_MSG, buildOutputDirectory.getAbsolutePath()));
+            JCommander.getConsole().println(getMessage("SUCCESSFUL_ASSEMBLE_MSG", buildOutputDirectory.getAbsolutePath()));
         }
     }
 
@@ -176,12 +174,12 @@ public class AssembleCommand extends BuildCommand {
 
             // Check that that content specification was found
             if (contentSpec == null) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
             }
 
             // Check that the content spec has a valid version
             if (contentSpec.getChildren() == null || contentSpec.getChildren().isEmpty()) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_VALID_CONTENT_SPEC, false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_VALID_CONTENT_SPEC_MSG"), false);
             }
 
             final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpec);
@@ -254,15 +252,15 @@ public class AssembleCommand extends BuildCommand {
         }
 
         try {
-            JCommander.getConsole().println(Constants.STARTING_PUBLICAN_BUILD_MSG);
+            JCommander.getConsole().println(getMessage("STARTING_PUBLICAN_BUILD_MSG"));
             final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, publicanFilesDirectory,
                     JCommander.getConsole(), !hideOutput, false);
             if (exitValue == null || exitValue != 0) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        String.format(Constants.ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG, (exitValue == null ? 0 : exitValue)), false);
+                        getMessage("ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG", (exitValue == null ? 0 : exitValue)), false);
             }
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_RUNNING_PUBLICAN_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_RUNNING_PUBLICAN_MSG"), false);
         }
     }
 
@@ -275,15 +273,15 @@ public class AssembleCommand extends BuildCommand {
         String jDocbookOptions = getClientConfig().getjDocbookBuildOptions();
 
         try {
-            JCommander.getConsole().println(Constants.STARTING_MAVEN_BUILD_MSG);
+            JCommander.getConsole().println(getMessage("STARTING_MAVEN_BUILD_MSG"));
             final Integer exitValue = ClientUtilities.runCommand("mvn " + jDocbookOptions, null, jDocbookFilesDirectory,
                     JCommander.getConsole(), !hideOutput, false);
             if (exitValue == null || exitValue != 0) {
-                printError(String.format(Constants.ERROR_RUNNING_MAVEN_EXIT_CODE_MSG, (exitValue == null ? 0 : exitValue)), false);
+                printError(getMessage("ERROR_RUNNING_MAVEN_EXIT_CODE_MSG", (exitValue == null ? 0 : exitValue)), false);
                 shutdown(Constants.EXIT_FAILURE);
             }
         } catch (IOException e) {
-            printError(Constants.ERROR_RUNNING_MAVEN_MSG, false);
+            printError(getMessage("ERROR_RUNNING_MAVEN_MSG"), false);
             shutdown(Constants.EXIT_FAILURE);
         }
     }

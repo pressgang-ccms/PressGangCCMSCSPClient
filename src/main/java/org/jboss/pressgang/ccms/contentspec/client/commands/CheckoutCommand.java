@@ -17,25 +17,21 @@ import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
-@Parameters(commandDescription = "Checkout an existing Content Specification from the server")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "CHECKOUT")
 public class CheckoutCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
-    @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM},
-            description = "Force the Content Specification directories to be created.")
+    @Parameter(names = {Constants.FORCE_LONG_PARAM, Constants.FORCE_SHORT_PARAM}, descriptionKey = "CHECKOUT_FORCE")
     private Boolean force = false;
 
-    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM,
-            description = "The zanata server to be associated with the Content Specification.")
+    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER")
     private String zanataUrl = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM,
-            description = "The zanata project name to be associated with the Content Specification.")
+    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT")
     private String zanataProject = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM,
-            description = "The zanata project version to be associated with the Content Specification.")
+    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "ZANATA_PROJECT_VERSION")
     private String zanataVersion = null;
 
     public CheckoutCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -98,15 +94,15 @@ public class CheckoutCommand extends BaseCommandImpl {
         final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, ids.get(0), null);
         final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
         if (contentSpecString == null || contentSpecEntity == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Check that the output directory doesn't already exist
         final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpecEntity);
         final File directory = new File(getCspConfig().getRootOutputDirectory() + escapedTitle);
         if (directory.exists() && !force) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    String.format(Constants.ERROR_CONTENT_SPEC_EXISTS_MSG, directory.getAbsolutePath()), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_CONTENT_SPEC_EXISTS_MSG", directory.getAbsolutePath(),
+                    Constants.FORCE_LONG_PARAM), false);
             // If it exists and force is enabled delete the directory contents
         } else if (directory.exists()) {
             // TODO Handle failing to delete the directory contents

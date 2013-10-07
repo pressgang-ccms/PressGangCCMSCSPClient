@@ -21,7 +21,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
-@Parameters(commandDescription = "Pull a revision of a content specification that represents a snapshot in time.")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "PULL_SNAPSHOT")
 public class PullSnapshotCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
@@ -29,14 +29,13 @@ public class PullSnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision = null;
 
-    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, description = "The maximum revision to update all topics to")
+    @Parameter(names = Constants.MAX_TOPIC_REVISION_LONG_PARAM, descriptionKey = "SNAPSHOT_MAX_REV")
     private Integer maxRevision = null;
 
-    @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM},
-            description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
+    @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, descriptionKey = "OUTPUT", metaVar = "<FILE>")
     private String outputPath;
 
-    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, description = "Update all current revisions when pulling down the snapshot.")
+    @Parameter(names = {Constants.UPDATE_LONG_PARAM}, descriptionKey = "SNAPSHOT_UPDATE")
     private Boolean update = false;
 
     private SnapshotProcessor processor = null;
@@ -112,17 +111,17 @@ public class PullSnapshotCommand extends BaseCommandImpl {
                 getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                    getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
         }
 
         // Check that the content spec isn't a failed one
         if (contentSpecEntity.getFailed() != null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_INVALID_CONTENT_SPEC, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
         }
 
         // Add a warning about the revisions not matching
         if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
-            printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, contentSpecEntity.getRevision()));
+            printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
             // Print a space to highlight the warning
             JCommander.getConsole().println("");
         }

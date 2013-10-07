@@ -23,12 +23,12 @@ import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
-@Parameters(commandDescription = "Validate a Content Specification")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "VALIDATE")
 public class ValidateCommand extends BaseCommandImpl {
     @Parameter(converter = FileConverter.class, metaVar = "[FILE]")
     private List<File> files = new ArrayList<File>();
 
-    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, description = "Enforce that all titles match their matching topic titles.")
+    @Parameter(names = Constants.STRICT_TITLES_LONG_PARAM, descriptionKey = "STRICT_TITLES")
     protected Boolean strictTitles = false;
 
     private ContentSpecProcessor csp = null;
@@ -91,7 +91,7 @@ public class ValidateCommand extends BaseCommandImpl {
                     // Backwards compatibility check for files ending with .txt
                     file = new File(escapedTitle + "-post.txt");
                     if (!file.exists()) {
-                        printErrorAndShutdown(Constants.EXIT_FAILURE, String.format(Constants.NO_FILE_FOUND_FOR_CONFIG, fileName), false);
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_FOUND_FOR_CONFIG_MSG", fileName), false);
                     }
                 }
                 getFiles().add(file);
@@ -100,7 +100,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Check that the parameters are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_FILE_MSG, true);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_MSG"), true);
         }
 
         // Good point to check for a shutdown
@@ -143,7 +143,7 @@ public class ValidateCommand extends BaseCommandImpl {
         String contentSpecString = FileUtilities.readFileContents(file);
 
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         // Parse the spec

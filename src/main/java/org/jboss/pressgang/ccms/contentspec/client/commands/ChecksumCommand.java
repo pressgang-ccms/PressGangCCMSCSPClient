@@ -14,7 +14,7 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 
-@Parameters(commandDescription = "Get the checksum value for a Content Specification")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "CHECKSUM")
 public class ChecksumCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
@@ -48,7 +48,7 @@ public class ChecksumCommand extends BaseCommandImpl {
 
         // Check that that content specification was found
         if (contentSpecString == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Calculate and print the checksum value

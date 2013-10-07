@@ -12,13 +12,12 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 
-@Parameters(commandDescription = "Build, Assemble and then Publish the Content Specification")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "PUBLISH")
 public class PublishCommand extends AssembleCommand {
-    @Parameter(names = Constants.NO_ASSEMBLE_LONG_PARAM, description = "Don't assemble the Content Specification.")
+    @Parameter(names = Constants.NO_ASSEMBLE_LONG_PARAM, descriptionKey = "PREVIEW_NO_ASSEMBLE")
     private Boolean noAssemble = false;
 
-    @Parameter(names = Constants.PUBLISH_MESSAGE_LONG_PARAM, description = "Add a message to be used with the publish command.",
-            metaVar = "<MESSAGE>")
+    @Parameter(names = Constants.PUBLISH_MESSAGE_LONG_PARAM, descriptionKey = "PUBLISH_MESSAGE", metaVar = "<MESSAGE>")
     private String message = null;
 
     public PublishCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -57,7 +56,7 @@ public class PublishCommand extends AssembleCommand {
 
         // Validate that the configs passed are okay.
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_NO_PUBLISH_COMMAND, false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_NO_PUBLISH_COMMAND_MSG"), false);
         }
 
         if (!getNoAssemble()) {
@@ -82,16 +81,16 @@ public class PublishCommand extends AssembleCommand {
         }
 
         try {
-            JCommander.getConsole().println(Constants.PUBLISH_BUILD_MSG);
+            JCommander.getConsole().println(getMessage("PUBLISH_BUILD_MSG"));
             Integer exitValue = ClientUtilities.runCommand(publishCommand, new File(getOutputDirectory()), JCommander.getConsole(),
                     !getHideOutput(), true);
             if (exitValue == null || exitValue != 0) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_RUNNING_PUBLISH_MSG, false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_RUNNING_PUBLISH_MSG"), false);
             }
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_RUNNING_PUBLISH_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_RUNNING_PUBLISH_MSG"), false);
         }
-        JCommander.getConsole().println(Constants.SUCCESSFUL_PUBLISH_MSG);
+        JCommander.getConsole().println(getMessage("SUCCESSFUL_PUBLISH_MSG"));
     }
 
     @Override

@@ -14,13 +14,12 @@ import org.jboss.pressgang.ccms.contentspec.client.converter.FileConverter;
 import org.jboss.pressgang.ccms.contentspec.constants.TemplateConstants;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
-@Parameters(commandDescription = "Get a basic Content Specification template.")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "TEMPLATE")
 public class TemplateCommand extends BaseCommandImpl {
     @Parameter(names = Constants.COMMENTED_LONG_PARAM, description = "Get the fully commented template")
     private Boolean commented = false;
 
-    @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM},
-            description = "Save the output to the specified file/directory.", metaVar = "<FILE>",
+    @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, descriptionKey = "OUTPUT", metaVar = "<FILE>",
             converter = FileConverter.class)
     private File output;
 
@@ -73,9 +72,9 @@ public class TemplateCommand extends BaseCommandImpl {
             // Create and write to the file
             try {
                 FileUtilities.saveFile(output, template, Constants.FILE_ENCODING);
-                JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getAbsolutePath()));
+                JCommander.getConsole().println(getMessage("OUTPUT_SAVED_MSG", output.getAbsolutePath()));
             } catch (IOException e) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_SAVING_MSG"), false);
             }
         }
     }

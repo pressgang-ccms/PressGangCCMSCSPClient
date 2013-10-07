@@ -18,7 +18,7 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 
-@Parameters(commandDescription = "Get a list of revisions for a specified ID")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "REVISIONS")
 public class RevisionsCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
@@ -73,7 +73,7 @@ public class RevisionsCommand extends BaseCommandImpl {
 
         // Check that the command is valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.INVALID_ARG_MSG, true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("INVALID_ARG_MSG"), true);
         }
 
         // Good point to check for a shutdown
@@ -89,12 +89,12 @@ public class RevisionsCommand extends BaseCommandImpl {
                         getIds().get(0));
             }
         } catch (NotFoundException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Check that the content spec is valid
         if (revisions == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Good point to check for a shutdown

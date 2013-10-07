@@ -697,12 +697,12 @@ public class ClientUtilities {
         // Check that one and only one ID exists
         if (ids.size() == 0) {
             if (canLoadFromCsprocessorCfg) {
-                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_ID_MSG, false);
+                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, command.getMessage("ERROR_NO_ID_MSG"), false);
             } else {
-                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_ID_CMD_LINE_MSG, false);
+                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, command.getMessage("ERROR_NO_ID_CMD_LINE_MSG"), false);
             }
         } else if (ids.size() > 1) {
-            command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_MULTIPLE_ID_MSG, false);
+            command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, command.getMessage("ERROR_MULTIPLE_ID_MSG"), false);
         }
     }
 
@@ -743,18 +743,18 @@ public class ClientUtilities {
         // Save the csprocessor.cfg
         try {
             FileUtilities.saveFile(outputConfig, config, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputConfig.getAbsolutePath()));
+            JCommander.getConsole().println(command.getMessage("CSP_CONFIG_SAVED_MSG", outputConfig.getAbsolutePath()));
         } catch (IOException e) {
-            command.printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputConfig.getAbsolutePath()), false);
+            command.printError(command.getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputConfig.getAbsolutePath()), false);
             error = true;
         }
 
         // Save the Post Processed spec
         try {
             FileUtilities.saveFile(outputSpec, contentSpecString, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, outputSpec.getAbsolutePath()));
+            JCommander.getConsole().println(command.getMessage("OUTPUT_SAVED_MSG", outputSpec.getAbsolutePath()));
         } catch (IOException e) {
-            command.printError(String.format(Constants.ERROR_FAILED_SAVING_FILE, outputSpec.getAbsolutePath()), false);
+            command.printError(command.getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputSpec.getAbsolutePath()), false);
             error = true;
         }
 
@@ -799,9 +799,9 @@ public class ClientUtilities {
         // Create and write to the file
         try {
             FileUtilities.saveFile(output, content, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(String.format(Constants.OUTPUT_SAVED_MSG, output.getName()));
+            JCommander.getConsole().println(command.getMessage("OUTPUT_SAVED_MSG", output.getName()));
         } catch (IOException e) {
-            command.printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_FAILED_SAVING, false);
+            command.printErrorAndShutdown(Constants.EXIT_FAILURE, command.getMessage("ERROR_FAILED_SAVING_MSG"), false);
         }
     }
 
@@ -855,8 +855,7 @@ public class ClientUtilities {
         for (final String lang : langs) {
             if (!locales.contains(lang)) {
                 command.printError(
-                        String.format(Constants.ERROR_INVALID_LOCALE_MSG, lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")),
-                        false);
+                        command.getMessage("ERROR_INVALID_LOCALE_MSG", lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")), false);
                 valid = false;
             }
         }
@@ -873,7 +872,7 @@ public class ClientUtilities {
      */
     public static TextContentSpecWrapper saveContentSpec(final BaseCommand command, final FutureTask<TextContentSpecWrapper> task) {
         // Run the task in a separate thread and output a waiting message every 10 seconds
-        JCommander.getConsole().println("Saving to the server...");
+        JCommander.getConsole().println(command.getMessage("SAVING_MSG"));
         final Thread thread = new Thread(task);
         thread.start();
         int count = 0;
@@ -1022,8 +1021,8 @@ public class ClientUtilities {
      *
      * @param referencedRevisionTopicIds The Set of topic ids and revision to download.
      */
-    public static void downloadRevisionTopics(final TopicProvider topicProvider, final List<Pair<Integer,
-            Integer>> referencedRevisionTopicIds) {
+    public static void downloadRevisionTopics(final TopicProvider topicProvider,
+            final List<Pair<Integer, Integer>> referencedRevisionTopicIds) {
         JCommander.getConsole().println("Attempting to download all the revision topics...");
 
         final int showPercent = 10;

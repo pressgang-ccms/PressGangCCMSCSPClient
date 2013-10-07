@@ -19,25 +19,21 @@ import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.zanata.common.LocaleId;
 
-@Parameters(commandDescription = "Sync the translations for a Content Specification with Zanata")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "SYNC_TRANSLATION")
 public class SyncTranslationCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[IDs]")
     private Set<String> ids = new HashSet<String>();
 
-    @Parameter(names = Constants.LOCALES_LONG_PARAM, metaVar = "[LOCALES]",
-            description = "The locales to sync for the specified IDs.")
+    @Parameter(names = Constants.LOCALES_LONG_PARAM, metaVar = "[LOCALES]", descriptionKey = "SYNC_TRANSLATION_LOCALES")
     private String locales = "";
 
-    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM,
-            description = "The zanata server to be associated with the Content Specification.")
+    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER")
     private String zanataUrl = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM,
-            description = "The zanata project name to be associated with the Content Specification.")
+    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT")
     private String zanataProject = null;
 
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM,
-            description = "The zanata project version to be associated with the Content Specification.")
+    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "ZANATA_PROJECT_VERSION")
     private String zanataVersion = null;
 
     public SyncTranslationCommand(JCommander parser, ContentSpecConfiguration cspConfig, ClientConfiguration clientConfig) {
@@ -95,7 +91,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
         // Check that at least one locale has been specified
         if (getLocales().trim().length() == 0) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.ERROR_NO_LOCALES_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_LOCALES_MSG"), false);
         }
 
         // Good point to check for a shutdown
@@ -103,7 +99,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
         // Check that the zanata details are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, Constants.ERROR_PUSH_NO_ZANATA_DETAILS_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_PUSH_NO_ZANATA_DETAILS_MSG"), false);
         }
 
         final ZanataInterface zanataInterface = initialiseZanataInterface();
@@ -203,14 +199,14 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Print the zanata server url
-        JCommander.getConsole().println(String.format(Constants.ZANATA_WEBSERVICE_MSG, zanataDetails.getServer()));
+        JCommander.getConsole().println(getMessage("ZANATA_WEBSERVICE_MSG", zanataDetails.getServer()));
 
         // Test that the server address is valid
         if (!ClientUtilities.validateServerExists(zanataDetails.getServer())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, Constants.UNABLE_TO_FIND_SERVER_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, getMessage("UNABLE_TO_FIND_SERVER_MSG"), false);
         }
 
         return true;

@@ -17,7 +17,7 @@ import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 
-@Parameters(commandDescription = "Pull a Content Specification from the server")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "PULL")
 public class PullCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
@@ -31,8 +31,7 @@ public class PullCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.REVISION_LONG_PARAM, Constants.REVISION_SHORT_PARAM})
     private Integer revision;
 
-    @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM},
-            description = "Save the output to the specified file/directory.", metaVar = "<FILE>")
+    @Parameter(names = {Constants.OUTPUT_LONG_PARAM, Constants.OUTPUT_SHORT_PARAM}, descriptionKey = "OUTPUT", metaVar = "<FILE>")
     private String outputPath;
 
     public PullCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
@@ -100,7 +99,7 @@ public class PullCommand extends BaseCommandImpl {
 
         // Check that the additional options are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, Constants.INVALID_ARG_MSG, true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("INVALID_ARG_MSG"), true);
         }
 
         // Good point to check for a shutdown
@@ -114,11 +113,11 @@ public class PullCommand extends BaseCommandImpl {
                     getIds().get(0), getRevision());
             if (topic == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                        getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
             } else {
                 // Add a warning about the revisions not matching
                 if (getRevision() != null && !getRevision().equals(topic.getRevision())) {
-                    printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, topic.getRevision()));
+                    printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", topic.getRevision()));
                     // Print a space to highlight the warning
                     JCommander.getConsole().println("");
                 }
@@ -133,11 +132,11 @@ public class PullCommand extends BaseCommandImpl {
             final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, getIds().get(0), getRevision());
             if (contentSpecEntity == null || contentSpecString == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        getRevision() == null ? Constants.ERROR_NO_ID_FOUND_MSG : Constants.ERROR_NO_REV_ID_FOUND_MSG, false);
+                        getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
             } else {
                 // Add a warning about the revisions not matching
                 if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
-                    printWarn(String.format(Constants.WARN_REVISION_NOT_EXIST_USING_X_MSG, contentSpecEntity.getRevision()));
+                    printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
                     // Print a space to highlight the warning
                     JCommander.getConsole().println("");
                 }

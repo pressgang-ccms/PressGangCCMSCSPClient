@@ -20,7 +20,7 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
-@Parameters(commandDescription = "Check the status of a local copy of a Content Specification compared to the server")
+@Parameters(resourceBundle = "commands", commandDescriptionKey = "STATUS")
 public class StatusCommand extends BaseCommandImpl {
     private static final Pattern ID_PATTERN = Pattern.compile("ID[ ]*=[ ]*(?<ID>[0-9]+)");
 
@@ -64,7 +64,7 @@ public class StatusCommand extends BaseCommandImpl {
             // Get the string version of the content spec from the server
             contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, intId, null);
             if (contentSpec == null || contentSpecString == null) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
             }
 
             // Create the local file
@@ -77,8 +77,7 @@ public class StatusCommand extends BaseCommandImpl {
                 // Backwards compatibility check for files ending with .txt
                 tempFile = new File(escapedTitle + "-post.txt");
                 if (!tempFile.exists()) {
-                    printErrorAndShutdown(Constants.EXIT_FAILURE,
-                            String.format(Constants.ERROR_NO_FILE_OUT_OF_DATE_MSG, tempFileName), false);
+                    printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_OUT_OF_DATE_MSG", tempFileName), false);
                 }
             }
 
@@ -95,18 +94,18 @@ public class StatusCommand extends BaseCommandImpl {
         try {
             contentSpecData = FileUtils.readFileToString(new File(fileName));
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         if (contentSpecData.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_EMPTY_FILE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         // If the content spec is null, than look up the ID from the file
         if (contentSpec == null) {
             final Integer intId = ContentSpecUtilities.getContentSpecID(contentSpecData);
             if (intId == null) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_UNABLE_TO_DETERMINE_ID_FROM_FILE, false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_UNABLE_TO_DETERMINE_ID_FROM_FILE_MSG"), false);
             } else {
                 contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, intId, null);
                 contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, intId, null);
@@ -118,7 +117,7 @@ public class StatusCommand extends BaseCommandImpl {
 
         // At this point we should have a content spec topic, if not then shut down
         if (contentSpec == null || contentSpecString == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, Constants.ERROR_NO_ID_FOUND_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Calculate the server checksum values
@@ -132,14 +131,14 @@ public class StatusCommand extends BaseCommandImpl {
 
         // Check that the checksums match
         if (!localStringChecksum.equals(localChecksum) && !localStringChecksum.equals(serverChecksum)) {
-            printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, String.format(Constants.ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG, fileName),
+            printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, getMessage("ERROR_LOCAL_COPY_AND_SERVER_UPDATED_MSG", fileName),
                     false);
         } else if (!localStringChecksum.equals(serverChecksum)) {
-            printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, Constants.ERROR_OUT_OF_DATE_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, getMessage("ERROR_OUT_OF_DATE_MSG"), false);
         } else if (!localChecksum.equals(serverChecksum)) {
-            printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, Constants.ERROR_LOCAL_COPY_UPDATED_MSG, false);
+            printErrorAndShutdown(Constants.EXIT_OUT_OF_DATE, getMessage("ERROR_LOCAL_COPY_UPDATED_MSG"), false);
         } else {
-            JCommander.getConsole().println(Constants.UP_TO_DATE_MSG);
+            JCommander.getConsole().println(getMessage("UP_TO_DATE_MSG"));
         }
     }
 
