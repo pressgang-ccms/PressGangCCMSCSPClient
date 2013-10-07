@@ -20,6 +20,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalINIConfiguration;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.log4j.Logger;
+import org.jboss.pressgang.ccms.contentspec.client.commands.AddRevisionCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.AssembleCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.BuildCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.CheckoutCommand;
@@ -275,6 +276,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
      */
     protected void setupCommands(final JCommander parser, final ContentSpecConfiguration cspConfig,
             final ClientConfiguration clientConfig) {
+        final AddRevisionCommand addRevision = new AddRevisionCommand(parser, cspConfig, clientConfig);
         final AssembleCommand assemble = new AssembleCommand(parser, cspConfig, clientConfig);
         final BuildCommand build = new BuildCommand(parser, cspConfig, clientConfig);
         final CheckoutCommand checkout = new CheckoutCommand(parser, cspConfig, clientConfig);
@@ -296,6 +298,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final SyncTranslationCommand syncTranslation = new SyncTranslationCommand(parser, cspConfig, clientConfig);
         final TemplateCommand template = new TemplateCommand(parser, cspConfig, clientConfig);
         final ValidateCommand validate = new ValidateCommand(parser, cspConfig, clientConfig);
+
+        parser.addCommand(addRevision.getCommandName(), addRevision);
+        commands.put(addRevision.getCommandName(), addRevision);
 
         parser.addCommand(assemble.getCommandName(), assemble);
         commands.put(assemble.getCommandName(), assemble);

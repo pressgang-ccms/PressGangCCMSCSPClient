@@ -126,7 +126,7 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.SHOW_REMARKS_LONG_PARAM, descriptionKey = "BUILD_SHOW_REMARKS")
     private Boolean showRemarks = false;
 
-    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM, descriptionKey = "BUILD_REV_MESSAGE")
+    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM, descriptionKey = "REV_MESSAGE")
     private List<String> messages = Lists.newArrayList();
 
     @Parameter(names = {Constants.FLATTEN_TOPICS_LONG_PARAM}, descriptionKey = "BUILD_FLATTEN_TOPICS")
