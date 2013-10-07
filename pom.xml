@@ -19,8 +19,8 @@
         <j2koji.version>0.0.1-SNAPSHOT</j2koji.version>
         <processor.version>1.2-SNAPSHOT</processor.version>
         <builder.version>1.2-SNAPSHOT</builder.version>
-        <jackson.version>1.9.8</jackson.version>
-        <resteasy.version>2.3.4.Final</resteasy.version>
+        <jackson.version>1.9.9</jackson.version>
+        <resteasy.version>2.3.5.Final</resteasy.version>
         <slf4j.version>1.6.4</slf4j.version>
         <shadeplugin.version>2.0</shadeplugin.version>
         <commonsio.version>1.4</commonsio.version>
