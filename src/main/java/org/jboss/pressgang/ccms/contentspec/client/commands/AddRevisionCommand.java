@@ -51,10 +51,10 @@ public class AddRevisionCommand extends BaseCommandImpl {
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
-    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM, descriptionKey = "REV_MESSAGE")
+    @Parameter(names = Constants.REV_MESSAGE_LONG_PARAM, descriptionKey = "ADD_REVISION_MESSAGE", metaVar = "<MESSAGE>")
     private List<String> messages = Lists.newArrayList();
 
-    @Parameter(names = Constants.LOCALE_LONG_PARAM, descriptionKey = "ADD_REVISION_LOCALE", metaVar = "<LOCALE>", required = true)
+    @Parameter(names = Constants.LOCALE_LONG_PARAM, descriptionKey = "ADD_REVISION_LOCALE", metaVar = "<LOCALE>")
     private String locale = null;
 
     @Parameter(names = Constants.FIRST_NAME_LONG_PARAM, descriptionKey = "ADD_REVISION_FIRSTNAME", metaVar = "<FIRSTNAME>")
