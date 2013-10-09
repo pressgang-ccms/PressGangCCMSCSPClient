@@ -577,7 +577,6 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Parse the content spec
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        JCommander.getConsole().println("Starting to parse...");
         final ContentSpec contentSpec = ClientUtilities.parseContentSpecString(getProviderFactory(), loggerManager, contentSpecString,
                 ContentSpecParser.ParsingMode.EITHER, processProcesses);
 
@@ -680,6 +679,8 @@ public class BuildCommand extends BaseCommandImpl {
      */
     protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
             final String username, final ContentSpec contentSpec) {
+        JCommander.getConsole().println(getMessage("STARTING_VALIDATE_MSG"));
+
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setValidating(true);
@@ -782,6 +783,7 @@ public class BuildCommand extends BaseCommandImpl {
             contentSpec.setRevision(contentSpecEntity.getRevision());
         } else {
             // Get the content spec from the file
+            JCommander.getConsole().println(getMessage("STARTING_TO_PARSE_MSG"));
             contentSpec = getContentSpecFromFile(fileOrId, true);
         }
 

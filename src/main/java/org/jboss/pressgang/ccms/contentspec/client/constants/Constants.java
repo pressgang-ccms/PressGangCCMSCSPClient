@@ -39,7 +39,7 @@ public class Constants {
     public static final String DEFAULT_ZANATA_SERVER_NAME = "";
     public static final String DEFAULT_ZANATA_PROJECT = "";
     public static final String DEFAULT_ZANATA_VERSION = "";
-    public static final String KOJI_NAME = "brew";
+    public static final String KOJI_NAME = "";
     public static final String KOJI_HUB_NAME = KOJI_NAME + "hub";
 
     // Server based settings
