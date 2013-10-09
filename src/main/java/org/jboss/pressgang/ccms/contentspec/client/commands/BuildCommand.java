@@ -699,13 +699,15 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setAllowNewTopics(false);
         processingOptions.setStrictBugLinks(true);
         processingOptions.setMaxRevision(getRevision());
-        processingOptions.setValidateBugLinks(!getSkipBugLinkValidation());
+        processingOptions.setDoBugLinkLastValidateCheck(false);
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
         // Don't validate bug links on a server installation.
         if (getClientConfig().getDefaults().isServer()) {
             processingOptions.setValidateBugLinks(false);
+        } else {
+            processingOptions.setValidateBugLinks(!getSkipBugLinkValidation());
         }
 
         // Set the rest topic provider to expand translations by default
