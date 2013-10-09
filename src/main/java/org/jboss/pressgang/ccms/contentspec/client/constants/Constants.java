@@ -218,6 +218,8 @@ public class Constants {
 
     public static final String DATE_LONG_PARAM = "--date";
 
+    public static final String SKIP_BUG_LINK_VALIDATION = "--skip-bug-link-validation";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;

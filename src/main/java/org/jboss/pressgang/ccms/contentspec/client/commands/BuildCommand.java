@@ -142,6 +142,9 @@ public class BuildCommand extends BaseCommandImpl {
             converter = BuildTypeConverter.class, validateWith = BuildTypeValidator.class)
     private BuildType buildType = null;
 
+    @Parameter(names = Constants.SKIP_BUG_LINK_VALIDATION, descriptionKey = "BUILD_SKIP_BUG_LINK_VALIDATION")
+    private Boolean skipBugLinkValidation = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -402,6 +405,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.buildType = buildType;
     }
 
+    public Boolean getSkipBugLinkValidation() {
+        return skipBugLinkValidation;
+    }
+
+    public void setSkipBugLinkValidation(Boolean skipBugLinkValidation) {
+        this.skipBugLinkValidation = skipBugLinkValidation;
+    }
+
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -463,8 +474,8 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Print the success messages
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(),
-                getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
+        JCommander.getConsole().println(getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(), getBuilder().getNumWarnings()) +
+                (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
                 + "Victory!" : ""));
         if (getExecutionTime()) {
             JCommander.getConsole().println(getMessage("EXEC_TIME_MSG", elapsedTime));
@@ -688,6 +699,7 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setAllowNewTopics(false);
         processingOptions.setStrictBugLinks(true);
         processingOptions.setMaxRevision(getRevision());
+        processingOptions.setValidateBugLinks(!getSkipBugLinkValidation());
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
