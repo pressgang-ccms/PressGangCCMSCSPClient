@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <name>Content Specification Processor Client</name>
 
     <properties>
@@ -20,7 +20,7 @@
         <jcommander.version>1.24-SNAPSHOT</jcommander.version>
         <j2koji.version>0.0.1-SNAPSHOT</j2koji.version>
         <processor.version>0.1.1-SNAPSHOT</processor.version>
-        <builder.version>0.2.4-SNAPSHOT</builder.version>
+        <builder.version>0.2.5-SNAPSHOT</builder.version>
         <jackson.version>1.9.8</jackson.version>
         <resteasy.version>2.3.4.Final</resteasy.version>
         <slf4j.version>1.6.4</slf4j.version>
