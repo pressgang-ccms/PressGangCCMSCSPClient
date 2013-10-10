@@ -3,7 +3,7 @@ Summary: Content Specification Processor client application
 License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 1.0.6
+Version: 1.0.7
 Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
@@ -38,7 +38,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Thu Oct 10 2013 lnewson - 1.0.6
+* Fri Oct 11 2013 lnewson - 1.0.7
 - Fixed BZ#1017511 - In articles 'Section:' is ignored unless nested in another section.
 * Wed Oct 09 2013 lnewson - 1.0.5
 - Fixed a bug that was causing publican.cfg overrides to behave incorrectly.
