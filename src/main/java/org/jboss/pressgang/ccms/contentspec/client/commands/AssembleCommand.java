@@ -2,6 +2,7 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.regex.Matcher;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -12,10 +13,12 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "ASSEMBLE")
@@ -30,12 +33,20 @@ public class AssembleCommand extends BuildCommand {
     @Parameter(names = Constants.NO_PUBLICAN_BUILD_LONG_PARAM, descriptionKey = "ASSEMBLE_NO_PUBLICAN_BUILD", hidden = true)
     private Boolean noPublicanBuild = false;
 
+    @Parameter(names = Constants.PUBLICAN_CONFIG_LONG_PARAM, descriptionKey = "ASSEMBLE_PUBLICAN_CONFIG")
+    private String publicanCfg = null;
+
     private String buildFileDirectory = "";
     String buildFileName = null;
     String outputDirectory = "";
 
     public AssembleCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
+    }
+
+    @Override
+    public String getCommandName() {
+        return Constants.ASSEMBLE_COMMAND_NAME;
     }
 
     protected String getBuildFileDirectory() {
@@ -62,11 +73,6 @@ public class AssembleCommand extends BuildCommand {
         this.outputDirectory = outputDirectory;
     }
 
-    @Override
-    public String getCommandName() {
-        return Constants.ASSEMBLE_COMMAND_NAME;
-    }
-
     public Boolean getNoBuild() {
         return noBuild;
     }
@@ -89,6 +95,14 @@ public class AssembleCommand extends BuildCommand {
 
     public void setNoPublicanBuild(Boolean noPublicanBuild) {
         this.noPublicanBuild = noPublicanBuild;
+    }
+
+    public String getPublicanCfg() {
+        return publicanCfg;
+    }
+
+    public void setPublicanCfg(String publicanCfg) {
+        this.publicanCfg = publicanCfg;
     }
 
     @Override
@@ -131,6 +145,11 @@ public class AssembleCommand extends BuildCommand {
             printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_TO_ASSEMBLE_MSG"), false);
         } else {
             JCommander.getConsole().println(getMessage("SUCCESSFUL_UNZIP_MSG", buildOutputDirectory.getAbsolutePath()));
+        }
+
+        // Make sure the specified publican.cfg file exists in the output
+        if (!validatePublicanCfg(buildOutputDirectory)) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_PUBLICAN_CFG_DOESNT_EXIST_MSG", getPublicanCfg()), false);
         }
 
         // Good point to check for a shutdown
@@ -251,6 +270,14 @@ public class AssembleCommand extends BuildCommand {
             publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
         }
 
+        // Add the config filename
+        if (getPublicanCfg() != null) {
+            final String name = getPublicanCfg();
+            final Matcher matcher = CSConstants.CUSTOM_PUBLICAN_CFG_PATTERN.matcher(name);
+            final String fixedName = (matcher.find() ? matcher.group(1) : name) + "-" + CommonConstants.CS_PUBLICAN_CFG_TITLE;
+            publicanOptions += " --config " + fixedName;
+        }
+
         try {
             JCommander.getConsole().println(getMessage("STARTING_PUBLICAN_BUILD_MSG"));
             final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, publicanFilesDirectory,
@@ -283,6 +310,29 @@ public class AssembleCommand extends BuildCommand {
         } catch (IOException e) {
             printError(getMessage("ERROR_RUNNING_MAVEN_MSG"), false);
             shutdown(Constants.EXIT_FAILURE);
+        }
+    }
+
+    /**
+     * Validates that the --publican-config value specified has a matching config in the input directory.
+     *
+     * @param outputDirectory The output directory where the files should exist.
+     * @return True if the value is valid, otherwise false.
+     */
+    protected boolean validatePublicanCfg(final File outputDirectory) {
+        // If it's not a publican build then it doesn't matter what value is specified
+        if (getBuildType() == null || getBuildType().equals(BuildType.PUBLICAN)) {
+            final String name = getPublicanCfg();
+            if (name != null) {
+                final Matcher matcher = CSConstants.CUSTOM_PUBLICAN_CFG_PATTERN.matcher(name);
+                final String fixedName = (matcher.find() ? matcher.group(1) : name) + "-" + CommonConstants.CS_PUBLICAN_CFG_TITLE;
+                final File config = new File(outputDirectory, fixedName);
+                return config.exists() && config.isFile();
+            } else {
+                return true;
+            }
+        } else {
+            return true;
         }
     }
 

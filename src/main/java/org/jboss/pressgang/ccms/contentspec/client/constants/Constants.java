@@ -220,6 +220,8 @@ public class Constants {
 
     public static final String SKIP_BUG_LINK_VALIDATION = "--skip-bug-link-validation";
 
+    public static final String PUBLICAN_CONFIG_LONG_PARAM = "--publican-config";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;

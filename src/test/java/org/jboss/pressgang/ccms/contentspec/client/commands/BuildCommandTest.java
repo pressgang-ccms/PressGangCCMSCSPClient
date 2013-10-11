@@ -43,7 +43,6 @@ import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
-import org.jboss.pressgang.ccms.contentspec.builder.structures.CSDocbookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
@@ -58,6 +57,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.docbook.compiling.DocbookBuildingOptions;
 import org.jboss.pressgang.ccms.provider.BlobConstantProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
@@ -577,7 +577,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(),
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(),
                 any(BuildType.class))).willThrow(new BuildProcessingException(""));
         given(command.getBuilder()).willReturn(builder);
 
@@ -613,7 +613,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(),
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(),
                 any(BuildType.class))).willThrow(new BuilderCreationException(""));
         given(command.getBuilder()).willReturn(builder);
 
@@ -651,7 +651,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
@@ -672,7 +672,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(), any(BuildType.class));
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
@@ -701,7 +701,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
@@ -723,7 +723,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), overrideFileCaptor.capture(),
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), overrideFileCaptor.capture(),
                 any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
@@ -755,7 +755,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and a locale is set
@@ -785,7 +785,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check that the translated build method was called
-        verify(builder).buildTranslatedBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(),
+        verify(builder).buildTranslatedBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(),
                 any(ZanataDetails.class), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
@@ -812,7 +812,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
@@ -833,7 +833,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), anyMap(), any(BuildType.class));
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
@@ -859,7 +859,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has no errors
@@ -910,7 +910,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(CSDocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has no errors

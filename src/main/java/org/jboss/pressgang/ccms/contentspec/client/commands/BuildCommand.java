@@ -22,7 +22,6 @@ import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
-import org.jboss.pressgang.ccms.contentspec.builder.structures.CSDocbookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
@@ -39,6 +38,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptio
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
+import org.jboss.pressgang.ccms.docbook.compiling.DocbookBuildingOptions;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
@@ -518,11 +518,11 @@ public class BuildCommand extends BaseCommandImpl {
      *
      * @return The Object that holds all the options used when building.
      */
-    protected CSDocbookBuildingOptions getBuildOptions() {
+    protected DocbookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
 
-        final CSDocbookBuildingOptions buildOptions = new CSDocbookBuildingOptions();
+        final DocbookBuildingOptions buildOptions = new DocbookBuildingOptions();
         buildOptions.setInjection(getInlineInjection());
         buildOptions.setInjectionTypes(getInjectionTypes());
         buildOptions.setIgnoreMissingCustomInjections(getHideErrors());
@@ -684,7 +684,7 @@ public class BuildCommand extends BaseCommandImpl {
      *
      * @param providerFactory The provider factory that can create providers to lookup various entities from a datasource.
      * @param loggerManager   The logging manager that handles output.
-     * @param user            The user who requested the build/validation.
+     * @param username        The user who requested the build/validation.
      * @param contentSpec     The content spec object to be validated.
      * @return True if the content spec is valid, otherwise false.
      */
