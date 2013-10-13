@@ -204,6 +204,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         given(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), any(String.class))).willReturn(
                 contentSpec);
         given(contentSpec.getBaseLevel()).willReturn(new Level(randomAlphanumString, LevelType.BASE));
+        given(contentSpec.getDefaultPublicanCfg()).willCallRealMethod();
         // And an authorised user
         setUpAuthorisedUser(command, userProvider, users, user, username);
 

@@ -84,6 +84,7 @@ public class TestUtil {
         given(contentSpecMock.getVersion()).willReturn("1");
         given(contentSpecMock.getDtd()).willReturn("Docbook 4.5");
         given(contentSpecMock.getCopyrightHolder()).willReturn(randomAlphanumString);
+        given(contentSpecMock.getDefaultPublicanCfg()).willCallRealMethod();
         given(contentSpecMock.getId()).willReturn(id);
         given(contentSpecMock.getRevision()).willReturn(null);
         given(contentSpecMock.getChecksum()).willReturn(HashUtilities.generateMD5("ID = " + id + "\nTitle = " + randomAlphanumString +
