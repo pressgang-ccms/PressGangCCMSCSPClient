@@ -193,12 +193,6 @@ public class AddRevisionCommand extends BaseCommandImpl {
 
         // Get the topic from the server
         final CSNodeWrapper revisionHistoryNode = csNodes.getItems().get(0);
-        final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, revisionHistoryNode.getEntityId(), null);
-
-        // Check that the revision history isn't a specific revision
-        if (getLocale() == null && revisionHistoryNode.getEntityRevision() != null) {
-            printWarn(getMessage("WARN_FIXED_REV_HISTORY_MSG", revisionHistoryNode.getEntityRevision()));
-        }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -208,6 +202,16 @@ public class AddRevisionCommand extends BaseCommandImpl {
         final String email = isNullOrEmpty(getEmail()) ? getClientConfig().getDefaults().getEmail() : getEmail();
 
         if (getLocale() == null) {
+            final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, revisionHistoryNode.getEntityId(), null);
+
+            // Check that the revision history isn't a specific revision
+            if (getLocale() == null && revisionHistoryNode.getEntityRevision() != null) {
+                printWarn(getMessage("WARN_FIXED_REV_HISTORY_MSG", revisionHistoryNode.getEntityRevision()));
+            }
+
+            // Good point to check for a shutdown
+            allowShutdownToContinueIfRequested();
+
             // Add the revision and save the topic
             addRevisionToTopic(revisionHistory, getMessages(), firstname, surname, email, getRevnumber(), getDate());
             topicProvider.updateTopic(revisionHistory, getLogMessage());
@@ -215,6 +219,13 @@ public class AddRevisionCommand extends BaseCommandImpl {
             // Get the matching translated csnode
             final CollectionWrapper<TranslatedCSNodeWrapper> translatedCSNodes = revisionHistoryNode.getTranslatedNodes();
             final TranslatedCSNodeWrapper matchingTranslatedCSNode = getMatchingTranslatedCSNode(revisionHistoryNode, translatedCSNodes);
+
+            // Get the actual topic as it might be different to the latest content spec
+            final CSNodeWrapper csNode = matchingTranslatedCSNode.getCSNode();
+            final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, csNode.getEntityId(), csNode.getEntityRevision());
+
+            // Good point to check for a shutdown
+            allowShutdownToContinueIfRequested();
 
             // Find the translated topic for the node
             TranslatedTopicWrapper translatedTopic = EntityUtilities.returnClosestTranslatedTopic(revisionHistory, matchingTranslatedCSNode,
@@ -533,12 +544,13 @@ public class AddRevisionCommand extends BaseCommandImpl {
                     if (release == null) {
                         newRelease = new Version("1");
                     } else if (release.getMinor() == null) {
-                        newRelease = new Version(release.getMajor() + 1, null, null, release.getOther());
+                        newRelease = release.adjustMajor(1);
                     } else if (release.getRevision() == null) {
-                        newRelease = new Version(release.getMajor(), release.getMinor() + 1, null, release.getOther());
+                        newRelease = release.adjustMinor(1);
                     } else {
-                        newRelease = new Version(release.getMajor(), release.getMinor(), release.getRevision() + 1, release.getOther());
+                        newRelease = release.adjustRevision(1);
                     }
+
                     return new RevNumber(revNumber.getVersion(), newRelease).toString();
                 } else {
                     return null;
@@ -582,11 +594,9 @@ public class AddRevisionCommand extends BaseCommandImpl {
                 if (release == null) {
                     newRelease = new Version("1");
                 } else if (release.getMinor() == null) {
-                    newRelease = new Version(release.getMajor(), 1, null, release.getOther());
-                } else if (release.getRevision() == null) {
-                    newRelease = new Version(release.getMajor(), release.getMinor(), 1, release.getOther());
+                    newRelease = release.adjustMinor(1);
                 } else {
-                    newRelease = new Version(release.getMajor(), release.getMinor(), release.getRevision() + 1, release.getOther());
+                    newRelease = release.adjustRevision(1);
                 }
                 return new RevNumber(revNumber.getVersion(), newRelease).toString();
             } else {
