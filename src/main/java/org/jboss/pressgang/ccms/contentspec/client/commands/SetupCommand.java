@@ -60,10 +60,7 @@ public class SetupCommand extends BaseCommandImpl {
 
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             // Good point to check for a shutdown
-            if (isAppShuttingDown()) {
-                shutdown.set(true);
-                return;
-            }
+            allowShutdownToContinueIfRequested();
 
             configFile.append("\n");
 
@@ -99,6 +96,19 @@ public class SetupCommand extends BaseCommandImpl {
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
+
+        // Get the default options
+        JCommander.getConsole().println(getMessage("SETUP_DEFAULTS_MSG") + YES_NO);
+        answer = JCommander.getConsole().readLine();
+
+        if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
+            // Good point to check for a shutdown
+            allowShutdownToContinueIfRequested();
+
+            configFile.append("\n");
+
+            setupDefaults(configFile);
+        }
 
         // Save the configuration file
         final File file = new File(Constants.DEFAULT_CONFIG_LOCATION);
@@ -286,10 +296,9 @@ public class SetupCommand extends BaseCommandImpl {
         String publicanFormat = "";
 
         // Get the publican options
-        JCommander.getConsole().println(
-                "Please enter the publican build command line options. [" + Constants.DEFAULT_PUBLICAN_OPTIONS + "]");
+        JCommander.getConsole().println(getMessage("SETUP_PUBLICAN_BUILD_PARAMS_MSG", Constants.DEFAULT_PUBLICAN_OPTIONS));
         publicanParams = JCommander.getConsole().readLine();
-        JCommander.getConsole().println("Please enter the preferred publican preview format. [" + Constants.DEFAULT_PUBLICAN_FORMAT + "]");
+        JCommander.getConsole().println(getMessage("SETUP_PUBLICAN_PREVIEW_FORMAT_MSG", Constants.DEFAULT_PUBLICAN_FORMAT));
         publicanFormat = JCommander.getConsole().readLine();
 
         // Create the publican options
@@ -309,10 +318,9 @@ public class SetupCommand extends BaseCommandImpl {
         String jDocbookFormat = "";
 
         // Get the jDocbook options
-        JCommander.getConsole().println(
-                "Please enter the jDocbook build command line options. [" + Constants.DEFAULT_JDOCBOOK_OPTIONS + "]");
+        JCommander.getConsole().println(getMessage("SETUP_JDOCBOOK_BUILD_PARAM_MSG", Constants.DEFAULT_JDOCBOOK_OPTIONS));
         jDocbookParams = JCommander.getConsole().readLine();
-        JCommander.getConsole().println("Please enter the preferred jDocbook preview format. [" + Constants.DEFAULT_JDOCBOOK_FORMAT + "]");
+        JCommander.getConsole().println(getMessage("SETUP_JDOCBOOK_PREVIEW_FORMAT_MSG", Constants.DEFAULT_JDOCBOOK_FORMAT));
         jDocbookFormat = JCommander.getConsole().readLine();
 
         // Create the publican options
@@ -361,7 +369,7 @@ public class SetupCommand extends BaseCommandImpl {
         final TreeMap<String, ZanataServerConfiguration> servers = new TreeMap<String, ZanataServerConfiguration>(
                 new ServerNameComparator());
 
-        JCommander.getConsole().println("Use the default zanata server configuration? (Yes/No)");
+        JCommander.getConsole().println(getMessage("SETUP_USE_DEFAULT_ZANATA_CONFIG_MSG") + YES_NO);
         String answer = JCommander.getConsole().readLine();
 
         // We are using the default setup so we only need to get the username and api key.
@@ -489,26 +497,52 @@ public class SetupCommand extends BaseCommandImpl {
         }
     }
 
+    /**
+     * Setup the default value configuration options by asking
+     * the user for specific details.
+     *
+     * @param configFile
+     */
+    protected void setupDefaults(final StringBuilder configFile) {
+        // Get the default firstname
+        JCommander.getConsole().println(getMessage("SETUP_DEFAULT_FIRSTNAME_MSG"));
+        String firstname = JCommander.getConsole().readLine();
+
+        // Get the default firstname
+        JCommander.getConsole().println(getMessage("SETUP_DEFAULT_SURNAME_MSG"));
+        String surname = JCommander.getConsole().readLine();
+
+        // Get the default firstname
+        JCommander.getConsole().println(getMessage("SETUP_DEFAULT_EMAIL_MSG"));
+        String email = JCommander.getConsole().readLine();
+
+        // Create the Root Directory
+        configFile.append("[defaults]\n");
+        configFile.append("firstname=" + firstname + "\n");
+        configFile.append("surname=" + surname + "\n");
+        configFile.append("email=" + email + "\n");
+    }
+
     @Override
     public boolean requiresExternalConnection() {
         return false;
     }
-}
 
-/**
- * A comparator that can be used to sort servers into alphabetical order and ensure the default server is always first.
- */
-class ServerNameComparator implements Comparator<String>, Serializable {
-    private static final long serialVersionUID = 8086132813427986154L;
+    /**
+     * A comparator that can be used to sort servers into alphabetical order and ensure the default server is always first.
+     */
+    private static class ServerNameComparator implements Comparator<String>, Serializable {
+        private static final long serialVersionUID = 8086132813427986154L;
 
-    @Override
-    public int compare(String serverName1, String serverName2) {
-        if (serverName1.equals(Constants.DEFAULT_SERVER_NAME)) {
-            return -1;
-        } else if (serverName2.equals(Constants.DEFAULT_SERVER_NAME)) {
-            return 1;
-        } else {
-            return serverName1.compareTo(serverName2);
+        @Override
+        public int compare(String serverName1, String serverName2) {
+            if (serverName1.equals(Constants.DEFAULT_SERVER_NAME)) {
+                return -1;
+            } else if (serverName2.equals(Constants.DEFAULT_SERVER_NAME)) {
+                return 1;
+            } else {
+                return serverName1.compareTo(serverName2);
+            }
         }
     }
 }
