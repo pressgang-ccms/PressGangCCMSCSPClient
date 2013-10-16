@@ -371,6 +371,8 @@ public class AddRevisionCommand extends BaseCommandImpl {
         // Calculate the revnumber to be used
         final String fixedRevnumber;
         if (isNullOrEmpty(revnumber)) {
+            final GenericRevisionStrategy revisionStrategy = new GenericRevisionStrategy();
+
             // Get the revision nodes
             final NodeList docRevisions = doc.getElementsByTagName("revision");
             final NodeList additionalDocRevisions = translatedDoc.getElementsByTagName("revision");
@@ -382,8 +384,16 @@ public class AddRevisionCommand extends BaseCommandImpl {
                 revisionNodes.add((Element) additionalDocRevisions.item(i));
             }
 
-            final TranslationRevisionStrategy revisionStrategy = new TranslationRevisionStrategy();
-            fixedRevnumber = revisionStrategy.getNextRevisionNumber(revisionNodes);
+            // Get the highest revision
+            final Element highestEle = revisionStrategy.getHighestRevision(revisionNodes);
+
+            // If the highest translation is from the translation doc just treat it normally
+            if (translatedDoc.equals(highestEle.getOwnerDocument())) {
+                fixedRevnumber = revisionStrategy.getNextRevisionNumber(additionalDocRevisions);
+            } else {
+                final TranslationRevisionStrategy translatedRevisionStrategy = new TranslationRevisionStrategy();
+                fixedRevnumber = translatedRevisionStrategy.getNextRevisionNumber(docRevisions);
+            }
         } else {
             fixedRevnumber = revnumber;
         }
@@ -558,6 +568,15 @@ public class AddRevisionCommand extends BaseCommandImpl {
             } else {
                 return "1.0.0-1";
             }
+        }
+
+        public Element getHighestRevision(final NodeList revisions) {
+            final List<Element> revisionNodes = new LinkedList<Element>();
+            for (int i = 0; i < revisions.getLength(); i++) {
+                revisionNodes.add((Element) revisions.item(i));
+            }
+
+            return getHighestRevision(revisionNodes);
         }
 
         @Override
