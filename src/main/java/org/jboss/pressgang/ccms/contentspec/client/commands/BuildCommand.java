@@ -432,7 +432,7 @@ public class BuildCommand extends BaseCommandImpl {
         validatePublicanCfgOverride();
 
         // Get the content spec and make sure it exists
-        final ContentSpec contentSpec = getContentSpec(getIds().get(0));
+        final ContentSpec contentSpec = getContentSpec(getIds().get(0), true);
         final String contentSpecTitle = contentSpec.getTitle();
 
         // Good point to check for a shutdown
@@ -726,10 +726,12 @@ public class BuildCommand extends BaseCommandImpl {
     /**
      * Gets a ContentSpec from either an ID or File path.
      *
+     *
      * @param fileOrId The File or Id string to use to get the content spec.
+     * @param logOutput If any log messages should be printed to the output when getting the content spec.
      * @return The content spec object if it could be found, otherwise null.
      */
-    protected ContentSpec getContentSpec(final String fileOrId) {
+    protected ContentSpec getContentSpec(final String fileOrId, boolean logOutput) {
         // Get the Content Spec either from file or from the REST API
         final ContentSpec contentSpec;
         if (fileOrId.matches("^\\d+$")) {

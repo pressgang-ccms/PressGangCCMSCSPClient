@@ -14,12 +14,10 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
-import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "ASSEMBLE")
 public class AssembleCommand extends BuildCommand {
@@ -107,7 +105,6 @@ public class AssembleCommand extends BuildCommand {
 
     @Override
     public void process() {
-        final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
         boolean assembleFromConfig = loadFromCSProcessorCfg();
 
         if (!getNoBuild()) {
@@ -123,7 +120,8 @@ public class AssembleCommand extends BuildCommand {
         JCommander.getConsole().println(getMessage("STARTING_ASSEMBLE_MSG"));
 
         // Find the build directory and required files
-        findBuildDirectoryAndFiles(contentSpecProvider, assembleFromConfig);
+        final ContentSpec contentSpec = getContentSpec(getIds().get(0), !getNoBuild());
+        findBuildDirectoryAndFiles(contentSpec, assembleFromConfig);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -148,7 +146,7 @@ public class AssembleCommand extends BuildCommand {
         }
 
         // Make sure the specified publican.cfg file exists in the output
-        if (!validatePublicanCfg(buildOutputDirectory)) {
+        if (!validatePublicanCfg(contentSpec, buildOutputDirectory)) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_PUBLICAN_CFG_DOESNT_EXIST_MSG", getPublicanCfg()), false);
         }
 
@@ -160,7 +158,7 @@ public class AssembleCommand extends BuildCommand {
             if (getBuildType() == BuildType.JDOCBOOK) {
                 runMaven(buildOutputDirectory);
             } else {
-                runPublican(buildOutputDirectory);
+                runPublican(contentSpec, buildOutputDirectory);
             }
             JCommander.getConsole().println(getMessage("SUCCESSFUL_ASSEMBLE_MSG", buildOutputDirectory.getAbsolutePath()));
         }
@@ -169,10 +167,10 @@ public class AssembleCommand extends BuildCommand {
     /**
      * Find the Build Directory and output files.
      *
-     * @param contentSpecProvider The Content Spec provider that can be used to get information about a content spec.
-     * @param assembleFromConfig  Whether or not the command is assembling from a csprocessor.cfg directory or not.
+     * @param contentSpec        The Content Spec to find the build directory and file names for.
+     * @param assembleFromConfig Whether or not the command is assembling from a csprocessor.cfg directory or not.
      */
-    protected void findBuildDirectoryAndFiles(final ContentSpecProvider contentSpecProvider, boolean assembleFromConfig) {
+    protected void findBuildDirectoryAndFiles(final ContentSpec contentSpec, boolean assembleFromConfig) {
         boolean assembleFromId = true;
         Integer id = null;
         // Find if we are assembling from a file or ID
@@ -188,26 +186,14 @@ public class AssembleCommand extends BuildCommand {
             id = getCspConfig().getContentSpecId();
         }
 
+        final String escapedTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
         if (assembleFromId) {
-            final ContentSpecWrapper contentSpec = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
-
-            // Check that that content specification was found
-            if (contentSpec == null) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
-            }
-
-            // Check that the content spec has a valid version
-            if (contentSpec.getChildren() == null || contentSpec.getChildren().isEmpty()) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_VALID_CONTENT_SPEC_MSG"), false);
-            }
-
-            final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpec);
             if (assembleFromConfig) {
                 /*
                  * If we are assembling from a CSP Project directory then we need to get the location of the ZIP and the assembly directory
                  * relative to the current working directory, or the CSP root project directory.
                  */
-                final String rootDir = ClientUtilities.getOutputRootDirectory(getProviderFactory(), getCspConfig(), contentSpec);
+                final String rootDir = ClientUtilities.getOutputRootDirectory(getCspConfig(), contentSpec);
 
                 setBuildFileDirectory(rootDir + Constants.DEFAULT_CONFIG_ZIP_LOCATION);
                 if (getBuildType() == BuildType.JDOCBOOK) {
@@ -222,11 +208,8 @@ public class AssembleCommand extends BuildCommand {
                 findBuildDirectoryAndFiles(escapedTitle);
             }
         } else {
-            // Parse the spec from a file to get the main details
-            final ContentSpec contentSpec = getContentSpecFromFile(getIds().get(0), false);
-
             // Find the build directories and files from the content spec
-            findBuildDirectoryAndFiles(DocBookUtilities.escapeTitle(contentSpec.getTitle()));
+            findBuildDirectoryAndFiles(escapedTitle);
         }
     }
 
@@ -258,9 +241,10 @@ public class AssembleCommand extends BuildCommand {
     /**
      * Run Publican to assemble the book from Docbook XML markup to the required format.
      *
+     * @param contentSpec            The content spec that is being assembled.
      * @param publicanFilesDirectory The directory location that hosts the publican files.
      */
-    protected void runPublican(final File publicanFilesDirectory) {
+    protected void runPublican(final ContentSpec contentSpec, final File publicanFilesDirectory) {
         String publicanOptions = getClientConfig().getPublicanBuildOptions();
 
         // Replace the locale in the build options if the locale has been set
@@ -271,11 +255,11 @@ public class AssembleCommand extends BuildCommand {
         }
 
         // Add the config filename
-        if (getPublicanCfg() != null) {
-            final String name = getPublicanCfg();
+        final String name = getPublicanCfg() == null ? contentSpec.getDefaultPublicanCfg() : getPublicanCfg();
+        if (name != null && !"publican.cfg".equals(name)) {
             final Matcher matcher = CSConstants.CUSTOM_PUBLICAN_CFG_PATTERN.matcher(name);
             final String fixedName = (matcher.find() ? matcher.group(1) : name) + "-" + CommonConstants.CS_PUBLICAN_CFG_TITLE;
-            publicanOptions += " --config " + fixedName;
+            publicanOptions += " --config=" + fixedName;
         }
 
         try {
@@ -316,14 +300,15 @@ public class AssembleCommand extends BuildCommand {
     /**
      * Validates that the --publican-config value specified has a matching config in the input directory.
      *
+     * @param contentSpec     The content spec that is being assembled.
      * @param outputDirectory The output directory where the files should exist.
      * @return True if the value is valid, otherwise false.
      */
-    protected boolean validatePublicanCfg(final File outputDirectory) {
+    protected boolean validatePublicanCfg(final ContentSpec contentSpec, final File outputDirectory) {
         // If it's not a publican build then it doesn't matter what value is specified
         if (getBuildType() == null || getBuildType().equals(BuildType.PUBLICAN)) {
-            final String name = getPublicanCfg();
-            if (name != null) {
+            final String name = getPublicanCfg() == null ? contentSpec.getDefaultPublicanCfg() : getPublicanCfg();
+            if (name != null && !"publican.cfg".equals(name)) {
                 final Matcher matcher = CSConstants.CUSTOM_PUBLICAN_CFG_PATTERN.matcher(name);
                 final String fixedName = (matcher.find() ? matcher.group(1) : name) + "-" + CommonConstants.CS_PUBLICAN_CFG_TITLE;
                 final File config = new File(outputDirectory, fixedName);

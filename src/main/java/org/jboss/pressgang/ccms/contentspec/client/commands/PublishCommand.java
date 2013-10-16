@@ -6,6 +6,7 @@ import java.io.IOException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
@@ -62,8 +63,9 @@ public class PublishCommand extends AssembleCommand {
         if (!getNoAssemble()) {
             super.process();
         } else {
+            final ContentSpec contentSpec = getContentSpec(getIds().get(0), true);
             // We need the output directory still
-            findBuildDirectoryAndFiles(contentSpecProvider, publishFromConfig);
+            findBuildDirectoryAndFiles(contentSpec, publishFromConfig);
         }
 
         String publishCommand = getCspConfig().getPublishCommand();

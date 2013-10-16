@@ -35,6 +35,7 @@ import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
+import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
@@ -69,6 +70,7 @@ public class AssembleCommandTest extends BaseUnitTest {
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
     @Mock ContentSpec contentSpec;
+    @Mock CSNodeWrapper csNodeWrapper;
 
     AssembleCommand command;
     File rootTestDirectory;
@@ -297,10 +299,15 @@ public class AssembleCommandTest extends BaseUnitTest {
         // and the content spec file will be found
         given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
         given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
+        given(contentSpecWrapper.getId()).willReturn(id);
         given(contentSpecChildren.isEmpty()).willReturn(false);
-        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
+        // and the content spec has a title
+        given(contentSpecChildren.getItems()).willReturn(Arrays.asList(csNodeWrapper));
+        given(csNodeWrapper.getTitle()).willReturn(CommonConstants.CS_TITLE_TITLE);
+        given(csNodeWrapper.getAdditionalText()).willReturn(BOOK_TITLE);
+        given(csNodeWrapper.getNodeType()).willReturn(CommonConstants.CS_NODE_META_DATA);
         when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
-        when(ClientUtilities.getOutputRootDirectory(eq(providerFactory), eq(cspConfig), eq(contentSpecWrapper))).thenReturn(bookDir.getAbsolutePath
+        when(ClientUtilities.getOutputRootDirectory(eq(cspConfig), any(ContentSpec.class))).thenReturn(bookDir.getAbsolutePath
                 () + File.separator);
         // and the validate and fix ids will run
         when(ClientUtilities.prepareAndValidateStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
@@ -327,61 +334,16 @@ public class AssembleCommandTest extends BaseUnitTest {
     }
 
     @Test
-    public void shouldShutdownWhenContentSpecNotFound() {
-        // Given a command called with an an ID
-        command.setIds(Arrays.asList(id.toString()));
-        // And no matching content spec
-        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(null);
-
-        // When finding files
-        try {
-            command.findBuildDirectoryAndFiles(contentSpecProvider, false);
-            // Then an error is printed and the program is shut down
-            fail(SYSTEM_EXIT_ERROR);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(-1));
-        }
-
-        // Then the command should be shutdown and an error message printed
-        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID!"));
-    }
-
-    @Test
-    public void shouldShutdownWhenContentSpecFileNotFound() {
-        // Given a command called with a file
-        command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
-        // And no file
-        PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn("");
-
-        // When it finding files
-        try {
-            command.findBuildDirectoryAndFiles(contentSpecProvider, false);
-            // Then an error is printed and the program is shut down
-            fail(SYSTEM_EXIT_ERROR);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(-1));
-        }
-
-        // Then the command should be shutdown and an error message printed
-        assertThat(getStdOutLogs(), containsString("The specified file was empty!"));
-    }
-
-    @Test
     public void shouldSetBuildFileLocationsWhenLoadingFromCsprocessorCfg() {
         // Given a command with no ids
         command.setIds(new ArrayList<String>());
         given(cspConfig.getContentSpecId()).willReturn(id);
-        // and the provider will return a wrapper
-        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
-        given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.isEmpty()).willReturn(false);
         // and the wrapper returns a title and id
-        given(contentSpecWrapper.getTitle()).willReturn(BOOK_TITLE);
-        given(contentSpecWrapper.getId()).willReturn(id);
+        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        given(contentSpec.getId()).willReturn(id);
 
         // When the command is finding the files
-        command.findBuildDirectoryAndFiles(contentSpecProvider, true);
+        command.findBuildDirectoryAndFiles(contentSpec, true);
 
         // Then the command should have the build information set
         assertThat(command.getBuildFileDirectory(), containsString("assembly" + File.separator));
@@ -391,27 +353,14 @@ public class AssembleCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldSetBuildFileLocationsWhenFileSpecifiedAndNoOutputPath() {
-        PowerMockito.mockStatic(FileUtilities.class);
-        PowerMockito.mockStatic(ClientUtilities.class);
         // Given a command with a file
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
-        // and the content spec file will be found
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
-        // and the content spec parses
-        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
-                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
-        // and the content spec returns a title and id
-        given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
-        given(contentSpec.getId()).willReturn(id);
-        // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
 
         // When the command is finding the files
-        command.findBuildDirectoryAndFiles(contentSpecProvider, false);
+        command.findBuildDirectoryAndFiles(contentSpec, false);
 
         // Then the command should have the build information set
         assertThat(command.getBuildFileDirectory(), is(""));
@@ -424,24 +373,14 @@ public class AssembleCommandTest extends BaseUnitTest {
         final String rootPath = rootTestDirectory.getAbsolutePath() + File.separator;
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
-        // and the file will be found
-        PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         // and the output path is a directory
         command.setOutputPath(rootPath);
-        // and the content spec parses
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
-                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
-        // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
 
         // When the command is finding the files
-        command.findBuildDirectoryAndFiles(contentSpecProvider, false);
+        command.findBuildDirectoryAndFiles(contentSpec, false);
 
         // Then the command should have the build information set
         assertThat(command.getBuildFileDirectory(), is(rootPath));
@@ -454,23 +393,14 @@ public class AssembleCommandTest extends BaseUnitTest {
         final String rootPath = rootTestDirectory.getAbsolutePath() + File.separator;
         // Given a command with ids
         command.setIds(Arrays.asList(rootPath));
-        // and the file will be found
-        PowerMockito.mockStatic(FileUtilities.class);
-        when(FileUtilities.readFileContents(any(File.class))).thenReturn(randomString);
         // and the output path is a directory
         command.setOutputPath(rootPath + DUMMY_BUILD_FILE_NAME);
-        // and the content spec parses
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.parseContentSpecString(eq(providerFactory), any(ErrorLoggerManager.class), anyString(),
-                any(ContentSpecParser.ParsingMode.class), anyBoolean())).thenReturn(contentSpec);
-        // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
         // and the content spec returns a title and id
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
 
         // When the command is finding the files
-        command.findBuildDirectoryAndFiles(contentSpecProvider, false);
+        command.findBuildDirectoryAndFiles(contentSpec, false);
 
         // Then the command should have the build information set
         assertThat(command.getBuildFileDirectory(), is(""));
@@ -489,7 +419,7 @@ public class AssembleCommandTest extends BaseUnitTest {
 
         // When running publican
         try {
-            command.runPublican(rootTestDirectory);
+            command.runPublican(contentSpec, rootTestDirectory);
             // Then an error is printed and the program is shut down
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {

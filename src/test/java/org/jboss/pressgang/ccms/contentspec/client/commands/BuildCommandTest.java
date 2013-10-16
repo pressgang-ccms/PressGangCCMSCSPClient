@@ -216,7 +216,7 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // When getting the content spec
         try {
-            command.getContentSpec(id.toString());
+            command.getContentSpec(id.toString(), true);
             // Then an error is printed and the program is shut down
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
@@ -286,7 +286,7 @@ public class BuildCommandTest extends BaseUnitTest {
         when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
 
         // When getting the content spec
-        final ContentSpec contentSpec = command.getContentSpec(id.toString());
+        final ContentSpec contentSpec = command.getContentSpec(id.toString(), true);
 
         // Then verify that the content spec isn't null
         assertNotNull(contentSpec);
@@ -306,7 +306,7 @@ public class BuildCommandTest extends BaseUnitTest {
         when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
 
         // When getting the content spec
-        final ContentSpec contentSpec = command.getContentSpec(emptyFile);
+        final ContentSpec contentSpec = command.getContentSpec(emptyFile, true);
 
         // Then verify that the content spec isn't null and permissive is false
         assertNotNull(contentSpec);
@@ -327,7 +327,7 @@ public class BuildCommandTest extends BaseUnitTest {
 
         // When parsing the content spec
         try {
-            command.getContentSpec(emptyFile);
+            command.getContentSpec(emptyFile, true);
             // Then an error is printed and the program is shut down
             fail(SYSTEM_EXIT_ERROR);
         } catch (CheckExitCalled e) {
