@@ -58,7 +58,7 @@ fi
 
 # Fix the Release and Version
 sed "s/Version: [0-9\.]\+/Version: ${VERSION}/g" -i ${FILE_NAME}.spec
-sed "s/Release: [0-9]\+/Release: ${RELEASE}/g" -i ${FILE_NAME}.spec
+sed "s/Release: [0-9\.]\+/Release: ${RELEASE}/g" -i ${FILE_NAME}.spec
 
 # Add the changelog message if the file is new
 if [ ${NEW_FILE} = "true" ]; then

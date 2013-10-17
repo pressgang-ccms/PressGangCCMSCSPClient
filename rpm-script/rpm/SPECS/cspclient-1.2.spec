@@ -4,7 +4,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.2
-Release: 1.1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -38,7 +38,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Mon Oct 14 2013 lnewson - 1.2
+* Fri Oct 18 2013 lnewson - 1.2
 - BZ #864616 - RFE: Support setting of entities from Content Specification.
 - BZ #968925 - RFE: Provide a way to store additional Revision History messages.
 - BZ #981118 - RFE: Provide a way of enabling a standardized Author_Group.xml file.
