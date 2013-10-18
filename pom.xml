@@ -8,17 +8,17 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>1.2</version>
+    <version>1.3-SNAPSHOT</version>
     <name>Content Specification Processor Client</name>
 
     <properties>
-        <pressgang.ccms.version>1.2-SNAPSHOT</pressgang.ccms.version>
-        <zanata-sync.version>1.2-SNAPSHOT</zanata-sync.version>
+        <pressgang.ccms.version>1.3-SNAPSHOT</pressgang.ccms.version>
+        <zanata-sync.version>1.3-SNAPSHOT</zanata-sync.version>
         <commonsconfiguration.version>1.7</commonsconfiguration.version>
         <jcommander.version>1.24-SNAPSHOT</jcommander.version>
         <j2koji.version>0.0.1-SNAPSHOT</j2koji.version>
-        <processor.version>1.2-SNAPSHOT</processor.version>
-        <builder.version>1.2-SNAPSHOT</builder.version>
+        <processor.version>1.3-SNAPSHOT</processor.version>
+        <builder.version>1.3-SNAPSHOT</builder.version>
         <jackson.version>1.9.9</jackson.version>
         <resteasy.version>2.3.5.Final</resteasy.version>
         <slf4j.version>1.6.4</slf4j.version>
