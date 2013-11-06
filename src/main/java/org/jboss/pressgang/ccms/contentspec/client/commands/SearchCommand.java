@@ -82,7 +82,7 @@ public class SearchCommand extends BaseCommandImpl {
 
         // Display the search results
         if (csList.isEmpty()) {
-            JCommander.getConsole().println(getMessage("NO_CS_FOUND_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("NO_CS_FOUND_MSG"));
         } else {
             JCommander.getConsole().println(
                     ClientUtilities.generateContentSpecList(ClientUtilities.buildSpecList(csList, getProviderFactory())));

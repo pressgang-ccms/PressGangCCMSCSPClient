@@ -25,6 +25,7 @@ import net.sf.ipsedixit.annotation.Arbitrary;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -205,8 +206,7 @@ public class CheckoutCommandTest extends BaseUnitTest {
         // and the ClientUtilities create method is mocked
         PowerMockito.mockStatic(ClientUtilities.class);
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
 
         // When the command is processing
         command.process();

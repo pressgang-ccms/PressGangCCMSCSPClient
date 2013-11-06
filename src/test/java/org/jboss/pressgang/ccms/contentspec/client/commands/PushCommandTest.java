@@ -34,6 +34,7 @@ import net.sf.ipsedixit.core.StringType;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -287,7 +288,6 @@ public class PushCommandTest extends BaseUnitTest {
 
     @Test
     public void shouldPrintResultWhenSpecPushed() throws Exception {
-        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
         // Given a valid CSP
         setUpValidCspFromFileParameter();
         // And the wrapper has the basic data
@@ -493,9 +493,10 @@ public class PushCommandTest extends BaseUnitTest {
         given(textContentSpecWrapper.getErrors()).willReturn("INFO: The Content Specification saved successfully.\nContent Specification " +
                 "ID: " + id + "\nRevision: " + id);
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
         when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
+        // and getting error messages works
+        TestUtil.setUpMessages();
     }
 
     private void mockSaveFileButNotReadFileContents() throws IOException {

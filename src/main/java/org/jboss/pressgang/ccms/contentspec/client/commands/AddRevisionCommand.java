@@ -173,7 +173,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         // Get the Content Specification from the server.
         final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
         if (contentSpecEntity == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Good point to check for a shutdown
@@ -188,7 +188,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         // Make sure the content spec has a revision history topic
         final CollectionWrapper<CSNodeWrapper> csNodes = csNodeProvider.getCSNodesWithQuery(queryBuilder.getQuery());
         if (csNodes.isEmpty()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_REV_HISTORY_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_REV_HISTORY_MSG"), false);
         }
 
         // Get the topic from the server
@@ -206,7 +206,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
 
             // Check that the revision history isn't a specific revision
             if (getLocale() == null && revisionHistoryNode.getEntityRevision() != null) {
-                printWarn(getMessage("WARN_FIXED_REV_HISTORY_MSG", revisionHistoryNode.getEntityRevision()));
+                printWarn(ClientUtilities.getMessage("WARN_FIXED_REV_HISTORY_MSG", revisionHistoryNode.getEntityRevision()));
             }
 
             // Good point to check for a shutdown
@@ -244,7 +244,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         }
 
         // Print a success message
-        JCommander.getConsole().println(getMessage("REV_SUCCESSFULLY_ADDED_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("REV_SUCCESSFULLY_ADDED_MSG"));
     }
 
     /**
@@ -253,22 +253,22 @@ public class AddRevisionCommand extends BaseCommandImpl {
     protected void validateArguments() {
         // Make sure the firstname has a default or is set via the command line
         if (isNullOrEmpty(getClientConfig().getDefaults().getFirstname()) && isNullOrEmpty(getFirstname())) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_FIRSTNAME_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("ERROR_NO_FIRSTNAME_MSG"), true);
         }
 
         // Make sure the surname has a default or is set via the command line
         if (isNullOrEmpty(getClientConfig().getDefaults().getSurname()) && isNullOrEmpty(getSurname())) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_SURNAME_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("ERROR_NO_SURNAME_MSG"), true);
         }
 
         // Make sure the email has a default or is set via the command line
         if (isNullOrEmpty(getClientConfig().getDefaults().getEmail()) && isNullOrEmpty(getEmail())) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_EMAIL_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("ERROR_NO_EMAIL_MSG"), true);
         }
 
         // Make sure at least one message has been defined
         if (getMessages().isEmpty()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_MESSAGES_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("ERROR_NO_MESSAGES_MSG"), true);
         }
     }
 
@@ -309,7 +309,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
                 doc = XMLUtilities.convertStringToDocument(topic.getXml());
             }
         } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_REV_HISTORY_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_REV_HISTORY_MSG"), false);
         }
 
         final String fixedRevnumber;
@@ -352,7 +352,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
                 doc = XMLUtilities.convertStringToDocument(topic.getXml());
             }
         } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_REV_HISTORY_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_REV_HISTORY_MSG"), false);
         }
 
         // Convert the translated additional XML into a DOM document
@@ -365,7 +365,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
                 translatedDoc = XMLUtilities.convertStringToDocument(topic.getTranslatedAdditionalXML());
             }
         } catch (Exception e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_TRANS_REV_HISTORY_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_TRANS_REV_HISTORY_MSG"), false);
         }
 
         // Calculate the revnumber to be used
@@ -473,7 +473,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
                 simpleList.appendChild(member);
             }
         } else {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_REVHISTORY_ELE_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_REVHISTORY_ELE_MSG"), false);
         }
     }
 

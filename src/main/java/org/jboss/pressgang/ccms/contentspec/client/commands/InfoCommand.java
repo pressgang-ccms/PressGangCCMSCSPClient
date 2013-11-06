@@ -55,19 +55,19 @@ public class InfoCommand extends BaseCommandImpl {
         // Get the Content Specification from the server.
         final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
         if (contentSpecEntity == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Print the initial CSP ID & Title message
-        JCommander.getConsole().println(getMessage("CSP_ID_MSG", ids.get(0)));
-        JCommander.getConsole().println(getMessage("CSP_REVISION_MSG", contentSpecEntity.getRevision()));
-        JCommander.getConsole().println(getMessage("CSP_TITLE_MSG", contentSpecEntity.getTitle()));
+        JCommander.getConsole().println(ClientUtilities.getMessage("CSP_ID_MSG", ids.get(0)));
+        JCommander.getConsole().println(ClientUtilities.getMessage("CSP_REVISION_MSG", contentSpecEntity.getRevision()));
+        JCommander.getConsole().println(ClientUtilities.getMessage("CSP_TITLE_MSG", contentSpecEntity.getTitle()));
         JCommander.getConsole().println("");
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        JCommander.getConsole().println(getMessage("STARTING_TO_CALC_STATS_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_TO_CALC_STATS_MSG"));
 
         // Transform the content spec
         final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
@@ -90,7 +90,8 @@ public class InfoCommand extends BaseCommandImpl {
 
         // Print the completion status
         JCommander.getConsole().println(
-                getMessage("CSP_COMPLETION_MSG", numTopics, numTopicsComplete, ((float) numTopicsComplete / (float) numTopics * 100.0f)));
+                ClientUtilities.getMessage("CSP_COMPLETION_MSG", numTopics, numTopicsComplete,
+                        ((float) numTopicsComplete / (float) numTopics * 100.0f)));
     }
 
     @Override

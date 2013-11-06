@@ -117,7 +117,7 @@ public class AssembleCommand extends BuildCommand {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        JCommander.getConsole().println(getMessage("STARTING_ASSEMBLE_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_ASSEMBLE_MSG"));
 
         // Find the build directory and required files
         final ContentSpec contentSpec = getContentSpec(getIds().get(0), !getNoBuild());
@@ -128,7 +128,7 @@ public class AssembleCommand extends BuildCommand {
 
         final File buildFile = new File(ClientUtilities.fixDirectoryPath(getBuildFileDirectory()) + getBuildFileName());
         if (!buildFile.exists()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_UNABLE_TO_FIND_ZIP_MSG", getBuildFileName()), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_ZIP_MSG", getBuildFileName()), false);
         }
 
         // Make sure the output directories exist
@@ -140,14 +140,15 @@ public class AssembleCommand extends BuildCommand {
 
         // Unzip the file
         if (!ZipUtilities.unzipFileIntoDirectory(buildFile, getOutputDirectory())) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_TO_ASSEMBLE_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_TO_ASSEMBLE_MSG"), false);
         } else {
-            JCommander.getConsole().println(getMessage("SUCCESSFUL_UNZIP_MSG", buildOutputDirectory.getAbsolutePath()));
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_UNZIP_MSG", buildOutputDirectory.getAbsolutePath()));
         }
 
         // Make sure the specified publican.cfg file exists in the output
         if (!validatePublicanCfg(contentSpec, buildOutputDirectory)) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_PUBLICAN_CFG_DOESNT_EXIST_MSG", getPublicanCfg()), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_PUBLICAN_CFG_DOESNT_EXIST_MSG",
+                    getPublicanCfg()), false);
         }
 
         // Good point to check for a shutdown
@@ -160,7 +161,7 @@ public class AssembleCommand extends BuildCommand {
             } else {
                 runPublican(contentSpec, buildOutputDirectory);
             }
-            JCommander.getConsole().println(getMessage("SUCCESSFUL_ASSEMBLE_MSG", buildOutputDirectory.getAbsolutePath()));
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_ASSEMBLE_MSG", buildOutputDirectory.getAbsolutePath()));
         }
     }
 
@@ -263,15 +264,15 @@ public class AssembleCommand extends BuildCommand {
         }
 
         try {
-            JCommander.getConsole().println(getMessage("STARTING_PUBLICAN_BUILD_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_PUBLICAN_BUILD_MSG"));
             final Integer exitValue = ClientUtilities.runCommand("publican build " + publicanOptions, publicanFilesDirectory,
                     JCommander.getConsole(), !hideOutput, false);
             if (exitValue == null || exitValue != 0) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        getMessage("ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG", (exitValue == null ? 0 : exitValue)), false);
+                        ClientUtilities.getMessage("ERROR_RUNNING_PUBLICAN_EXIT_CODE_MSG", (exitValue == null ? 0 : exitValue)), false);
             }
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_RUNNING_PUBLICAN_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_RUNNING_PUBLICAN_MSG"), false);
         }
     }
 
@@ -284,15 +285,15 @@ public class AssembleCommand extends BuildCommand {
         String jDocbookOptions = getClientConfig().getjDocbookBuildOptions();
 
         try {
-            JCommander.getConsole().println(getMessage("STARTING_MAVEN_BUILD_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_MAVEN_BUILD_MSG"));
             final Integer exitValue = ClientUtilities.runCommand("mvn " + jDocbookOptions, null, jDocbookFilesDirectory,
                     JCommander.getConsole(), !hideOutput, false);
             if (exitValue == null || exitValue != 0) {
-                printError(getMessage("ERROR_RUNNING_MAVEN_EXIT_CODE_MSG", (exitValue == null ? 0 : exitValue)), false);
+                printError(ClientUtilities.getMessage("ERROR_RUNNING_MAVEN_EXIT_CODE_MSG", (exitValue == null ? 0 : exitValue)), false);
                 shutdown(Constants.EXIT_FAILURE);
             }
         } catch (IOException e) {
-            printError(getMessage("ERROR_RUNNING_MAVEN_MSG"), false);
+            printError(ClientUtilities.getMessage("ERROR_RUNNING_MAVEN_MSG"), false);
             shutdown(Constants.EXIT_FAILURE);
         }
     }

@@ -26,6 +26,7 @@ import net.sf.ipsedixit.annotation.Arbitrary;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -167,8 +168,9 @@ public class AssembleCommandTest extends BaseUnitTest {
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
         // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+        TestUtil.setUpFixFilePaths();
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When processing the command
         try {
@@ -202,8 +204,9 @@ public class AssembleCommandTest extends BaseUnitTest {
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
         // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+        TestUtil.setUpFixFilePaths();
+        // and getting error messages works
+        TestUtil.setUpMessages();
         // and the unzip fails
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(false);
 
@@ -239,8 +242,9 @@ public class AssembleCommandTest extends BaseUnitTest {
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
         // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+        TestUtil.setUpFixFilePaths();
+        // and getting error messages works
+        TestUtil.setUpMessages();
         // and no publican build
         command.setNoPublicanBuild(true);
         // and the unzip succeeds
@@ -272,8 +276,9 @@ public class AssembleCommandTest extends BaseUnitTest {
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
         given(contentSpec.getId()).willReturn(id);
         // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+        TestUtil.setUpFixFilePaths();
+        // and getting error messages works
+        TestUtil.setUpMessages();
         // and the unzip succeeds
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(true);
         // and the publican command will execute successfully
@@ -313,15 +318,15 @@ public class AssembleCommandTest extends BaseUnitTest {
         when(ClientUtilities.prepareAndValidateStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
         when(ClientUtilities.prepareStringIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
         // and the fix file path method returns something
-        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
-        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+        TestUtil.setUpFixFilePaths();
+        // and getting error messages works
+        TestUtil.setUpMessages();
         // and the unzip succeeds
         when(ZipUtilities.unzipFileIntoDirectory(any(File.class), anyString())).thenReturn(true);
         // and the publican command will execute successfully
         when(ClientUtilities.runCommand(anyString(), any(File.class), any(Console.class), anyBoolean(), anyBoolean())).thenReturn(0);
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
         when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
 
         // When processing the command
@@ -416,6 +421,8 @@ public class AssembleCommandTest extends BaseUnitTest {
         // and the publican command fails with an exit code other than 0
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.runCommand(anyString(), any(File.class), any(Console.class), anyBoolean(), anyBoolean())).thenReturn(exitCode);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When running publican
         try {

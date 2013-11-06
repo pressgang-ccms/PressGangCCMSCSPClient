@@ -1,6 +1,5 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands.base;
 
-import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
@@ -18,7 +17,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
     private final ContentSpecConfiguration cspConfig;
     private final ClientConfiguration clientConfig;
     private RESTProviderFactory providerFactory = null;
-    private final ResourceBundle messages = ResourceBundle.getBundle("messages");
+
 
     @Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, hidden = true)
     private String serverUrl;
@@ -231,14 +230,14 @@ public abstract class BaseCommandImpl implements BaseCommand {
     @Override
     public boolean validateServerUrl() {
         // Print the server url
-        JCommander.getConsole().println(getMessage("WEBSERVICE_MSG", getServerUrl()));
+        JCommander.getConsole().println(ClientUtilities.getMessage("WEBSERVICE_MSG", getServerUrl()));
 
         // Test that the server address is valid
         if (!ClientUtilities.validateServerExists(getServerUrl())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
         }
 
         return true;
@@ -259,15 +258,6 @@ public abstract class BaseCommandImpl implements BaseCommand {
                     // Do nothing as this should only get interrupted when the app fully shuts down.
                 }
             }
-        }
-    }
-
-    public String getMessage(final String key, final Object... args) {
-        final String baseMsg = messages.getString(key);
-        if (args.length > 0) {
-            return String.format(baseMsg, args);
-        } else {
-            return baseMsg;
         }
     }
 }

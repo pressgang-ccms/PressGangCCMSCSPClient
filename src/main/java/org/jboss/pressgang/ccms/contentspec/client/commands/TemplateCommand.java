@@ -11,6 +11,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.converter.FileConverter;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.constants.TemplateConstants;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 
@@ -72,9 +73,9 @@ public class TemplateCommand extends BaseCommandImpl {
             // Create and write to the file
             try {
                 FileUtilities.saveFile(output, template, Constants.FILE_ENCODING);
-                JCommander.getConsole().println(getMessage("OUTPUT_SAVED_MSG", output.getAbsolutePath()));
+                JCommander.getConsole().println(ClientUtilities.getMessage("OUTPUT_SAVED_MSG", output.getAbsolutePath()));
             } catch (IOException e) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_SAVING_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_SAVING_MSG"), false);
             }
         }
     }

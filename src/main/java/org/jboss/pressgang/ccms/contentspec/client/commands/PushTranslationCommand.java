@@ -139,14 +139,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
 
         // Print the zanata server url
-        JCommander.getConsole().println(getMessage("ZANATA_WEBSERVICE_MSG", zanataDetails.getServer()));
+        JCommander.getConsole().println(ClientUtilities.getMessage("ZANATA_WEBSERVICE_MSG", zanataDetails.getServer()));
 
         // Test that the server address is valid
         if (!ClientUtilities.validateServerExists(zanataDetails.getServer())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
         }
 
         return true;
@@ -215,7 +215,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Check that the zanata details are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_PUSH_NO_ZANATA_DETAILS_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_PUSH_NO_ZANATA_DETAILS_MSG"), false);
         }
 
         // Good point to check for a shutdown
@@ -224,12 +224,12 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
 
         if (contentSpecEntity == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Check that the content spec isn't a failed one
         if (contentSpecEntity.getFailed() != null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
         }
 
         // Transform the content spec
@@ -264,10 +264,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         if (!pushToZanata(getProviderFactory(), contentSpec, contentSpecEntity)) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_ZANATA_PUSH_FAILED_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_ZANATA_PUSH_FAILED_MSG"), false);
             shutdown(Constants.EXIT_FAILURE);
         } else {
-            JCommander.getConsole().println(getMessage("SUCCESSFUL_ZANATA_PUSH_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_ZANATA_PUSH_MSG"));
         }
     }
 

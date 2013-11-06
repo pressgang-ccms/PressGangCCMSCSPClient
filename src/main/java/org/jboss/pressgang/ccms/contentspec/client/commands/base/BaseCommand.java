@@ -73,15 +73,6 @@ public interface BaseCommand extends ShutdownAbleApp {
     void printErrorAndShutdown(int exitStatus, final String errorMsg, boolean displayHelp);
 
     /**
-     * Gets a message from the properties and formats the message with any additional args.
-     *
-     * @param key The key for the message.
-     * @param args The arguments to format the message with.
-     * @return The formatted message.
-     */
-    String getMessage(String key, Object... args);
-
-    /**
      * Do the main process working involved in running the
      * command by using the command line arguments and
      * configuration files to do the command actions.

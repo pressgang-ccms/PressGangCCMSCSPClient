@@ -138,7 +138,7 @@ public class CreateCommand extends BaseCommandImpl {
 
         // Check that the options set are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_FILE_MSG"), true);
         }
 
         long startTime = System.currentTimeMillis();
@@ -150,7 +150,7 @@ public class CreateCommand extends BaseCommandImpl {
         final File directory = new File(getCspConfig().getRootOutputDirectory() + DocBookUtilities.escapeTitle(contentSpec.getTitle()));
         if (directory.exists() && !getForce() && !getNoCreateCsprocessorCfg() && directory.isDirectory()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    getMessage("ERROR_CONTENT_SPEC_EXISTS_MSG", directory.getAbsolutePath(), Constants.FORCE_LONG_PARAM), false);
+                    ClientUtilities.getMessage("ERROR_CONTENT_SPEC_EXISTS_MSG", directory.getAbsolutePath(), Constants.FORCE_LONG_PARAM), false);
         }
 
         // Good point to check for a shutdown
@@ -165,7 +165,7 @@ public class CreateCommand extends BaseCommandImpl {
         JCommander.getConsole().println(output.getErrors());
         // Print the command execution time as saving files shouldn't be included
         if (executionTime) {
-            JCommander.getConsole().println(getMessage("EXEC_TIME_MSG", elapsedTime));
+            JCommander.getConsole().println(ClientUtilities.getMessage("EXEC_TIME_MSG", elapsedTime));
         }
 
         JCommander.getConsole().println(String.format(ProcessorConstants.SUCCESSFUL_PUSH_MSG, output.getId(), output.getRevision()));
@@ -201,7 +201,7 @@ public class CreateCommand extends BaseCommandImpl {
     protected ContentSpec getContentSpecFromFile(final File file) {
         final String contentSpecString = FileUtilities.readFileContents(file);
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         // Good point to check for a shutdown

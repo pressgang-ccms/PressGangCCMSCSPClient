@@ -111,17 +111,17 @@ public class PullSnapshotCommand extends BaseCommandImpl {
                 getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
+                    ClientUtilities.getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
         }
 
         // Check that the content spec isn't a failed one
         if (contentSpecEntity.getFailed() != null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
         }
 
         // Add a warning about the revisions not matching
         if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
-            printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
+            printWarn(ClientUtilities.getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
             // Print a space to highlight the warning
             JCommander.getConsole().println("");
         }

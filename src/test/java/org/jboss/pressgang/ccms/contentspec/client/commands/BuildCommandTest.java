@@ -390,8 +390,9 @@ public class BuildCommandTest extends BaseUnitTest {
         command.setZanataUrl("test");
         doThrow(new CheckExitCalled(-2)).when(clientConfig).getZanataServers();
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When processing the command
         try {
@@ -429,8 +430,9 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new KojiException(""));
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When processing the command
         try {
@@ -468,8 +470,9 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new MalformedURLException());
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
+        // and getting error messages works
+        TestUtil.setUpMessages();;
 
         // When processing the command
         try {
@@ -516,8 +519,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and we make a way to kill the processing after the setup
         doThrow(new CheckExitCalled(-2)).when(command).getBuilder();
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
 
         // When the command is processing
         try {
@@ -772,8 +774,9 @@ public class BuildCommandTest extends BaseUnitTest {
         PowerMockito.doReturn(true).when(ClientUtilities.class);
         ClientUtilities.validateLanguage(any(BaseCommand.class), eq(providerFactory), anyString());
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When the command is processing
         try {
@@ -789,7 +792,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 any(ZanataDetails.class), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
-                containsString("Content Specification successfully built with 0 Errors and 0 Warnings - Flawless " + "Victory!"));
+                containsString("Content Specification successfully built with 0 Errors and 0 Warnings - Flawless Victory!"));
     }
 
     @Test
@@ -1106,6 +1109,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When validating the server url
         boolean result = command.validateServerUrl();
@@ -1123,6 +1128,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // And that the URL will not be valid
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.validateServerExists(anyString())).thenReturn(false);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When validating the server url
         try {
@@ -1148,6 +1155,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When validating the server url
         boolean result = command.validateServerUrl();
@@ -1173,6 +1182,8 @@ public class BuildCommandTest extends BaseUnitTest {
         given(cspConfig.getKojiHubUrl()).willReturn(kojiUrl);
         // And that the URL will be invalid
         when(ClientUtilities.validateServerExists(refEq(kojiUrl))).thenReturn(false);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When validating the server url
         try {
@@ -1202,6 +1213,8 @@ public class BuildCommandTest extends BaseUnitTest {
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When validating the server url
         boolean result = command.validateServerUrl();
@@ -1233,6 +1246,8 @@ public class BuildCommandTest extends BaseUnitTest {
         given(zanataDetails.getVersion()).willReturn(randomNumber.toString());
         // And that the URL will be invalid
         when(ClientUtilities.validateServerExists(refEq(zanataUrl))).thenReturn(false);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When validating the server url
         try {

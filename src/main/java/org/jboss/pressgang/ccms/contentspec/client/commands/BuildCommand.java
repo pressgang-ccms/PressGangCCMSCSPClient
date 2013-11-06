@@ -27,6 +27,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.converter.BuildTypeConverter;
+import org.jboss.pressgang.ccms.contentspec.client.processor.ClientContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.validator.BuildTypeValidator;
 import org.jboss.pressgang.ccms.contentspec.client.validator.OverrideValidator;
@@ -40,7 +41,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.docbook.compiling.DocbookBuildingOptions;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
@@ -461,7 +462,7 @@ public class BuildCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        JCommander.getConsole().println(getMessage("STARTING_BUILD_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_BUILD_MSG"));
 
         // Setup the zanata details incase some were overridden via the command line
         setupZanataOptions();
@@ -474,11 +475,11 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Print the success messages
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(), getBuilder().getNumWarnings()) +
-                (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless "
-                + "Victory!" : ""));
+        JCommander.getConsole().println(
+                ClientUtilities.getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(), getBuilder().getNumWarnings()) +
+                (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless Victory!" : ""));
         if (getExecutionTime()) {
-            JCommander.getConsole().println(getMessage("EXEC_TIME_MSG", elapsedTime));
+            JCommander.getConsole().println(ClientUtilities.getMessage("EXEC_TIME_MSG", elapsedTime));
         }
 
         // Get the filename for the spec, using it's title.
@@ -580,7 +581,7 @@ public class BuildCommand extends BaseCommandImpl {
         String contentSpecString = FileUtilities.readFileContents(new File(ClientUtilities.fixFilePath(file)));
 
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         // Good point to check for a shutdown
@@ -638,14 +639,15 @@ public class BuildCommand extends BaseCommandImpl {
      * @return The pubsnumber for the content spec if it could be found, otherwise null.
      */
     protected Integer getContentSpecPubsNumberFromKoji(final ContentSpec contentSpec) {
-        JCommander.getConsole().println(getMessage("FETCHING_PUBSNUMBER_MSG", Constants.KOJI_NAME));
+        JCommander.getConsole().println(ClientUtilities.getMessage("FETCHING_PUBSNUMBER_MSG", Constants.KOJI_NAME));
 
         try {
             return ClientUtilities.getPubsnumberFromKoji(contentSpec, getCspConfig().getKojiHubUrl());
         } catch (MalformedURLException e) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_INVALID_KOJIHUB_URL_MSG", Constants.KOJI_NAME), false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_INVALID_KOJIHUB_URL_MSG",
+                    Constants.KOJI_NAME), false);
         } catch (KojiException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_FETCH_PUBSNUM_MSG", Constants.KOJI_NAME), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_FETCH_PUBSNUM_MSG", Constants.KOJI_NAME), false);
         }
 
         return null;
@@ -673,7 +675,7 @@ public class BuildCommand extends BaseCommandImpl {
         } catch (BuildProcessingException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, ExceptionUtilities.getRootCause(e).getMessage(), false);
         } catch (BuilderCreationException e) {
-            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, getMessage("ERROR_INTERNAL_ERROR"), false);
+            printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, ClientUtilities.getMessage("ERROR_INTERNAL_ERROR"), false);
         }
 
         return builderOutput;
@@ -688,9 +690,9 @@ public class BuildCommand extends BaseCommandImpl {
      * @param contentSpec     The content spec object to be validated.
      * @return True if the content spec is valid, otherwise false.
      */
-    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+    protected boolean validateContentSpec(final RESTProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
             final String username, final ContentSpec contentSpec) {
-        JCommander.getConsole().println(getMessage("STARTING_VALIDATE_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_VALIDATE_MSG"));
 
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -715,11 +717,8 @@ public class BuildCommand extends BaseCommandImpl {
             getProviderFactory().getProvider(RESTTopicProvider.class).setExpandTranslations(true);
         }
 
-        // Attempt to download all the topic data in one request
-        ClientUtilities.downloadAllTopics(this, providerFactory, contentSpec, getRevision());
-
         // Validate the Content Specification
-        setCsp(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
+        setCsp(new ClientContentSpecProcessor(providerFactory, loggerManager, processingOptions));
         return getCsp().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER, getLocale());
     }
 
@@ -747,7 +746,7 @@ public class BuildCommand extends BaseCommandImpl {
                     if (translatedContentSpec != null) {
                         contentSpecEntity = translatedContentSpec.getContentSpec();
                     } else {
-                        printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_TRANSLATION_ID_FOUND_MSG"), false);
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_TRANSLATION_ID_FOUND_MSG"), false);
                     }
                 } else {
                     contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
@@ -758,19 +757,19 @@ public class BuildCommand extends BaseCommandImpl {
 
             // Check that the content spec entity exists.
             if (contentSpecEntity == null) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
             }
 
             // Check that the content spec isn't a failed one
             boolean warningPrinted = false;
             if (contentSpecEntity.getFailed() != null) {
-                printWarn(getMessage("WARN_BUILDING_FROM_LATEST_SPEC"));
+                printWarn(ClientUtilities.getMessage("WARN_BUILDING_FROM_LATEST_SPEC"));
                 warningPrinted = true;
             }
 
             // Check that the content spec has a valid version
             if (contentSpecEntity.getChildren() == null || contentSpecEntity.getChildren().isEmpty()) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_VALID_CONTENT_SPEC_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_VALID_CONTENT_SPEC_MSG"), false);
             }
 
             // If we are getting the latest translated content spec then we'll need to validate it and see if it matches the
@@ -779,14 +778,14 @@ public class BuildCommand extends BaseCommandImpl {
                 final ContentSpecWrapper latestContentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id,
                         getRevision());
                 if (latestContentSpecEntity != null && !latestContentSpecEntity.getRevision().equals(contentSpecEntity.getRevision())) {
-                    printWarn(getMessage("WARN_LATEST_TRANSLATION_IS_NOT_THE_LATEST"));
+                    printWarn(ClientUtilities.getMessage("WARN_LATEST_TRANSLATION_IS_NOT_THE_LATEST"));
                     warningPrinted = true;
                 }
             }
 
             // Add a warning about the revisions not matching
             if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
-                printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
+                printWarn(ClientUtilities.getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
                 warningPrinted = true;
             }
 
@@ -799,7 +798,7 @@ public class BuildCommand extends BaseCommandImpl {
             contentSpec.setRevision(contentSpecEntity.getRevision());
         } else {
             // Get the content spec from the file
-            JCommander.getConsole().println(getMessage("STARTING_TO_PARSE_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_TO_PARSE_MSG"));
             contentSpec = getContentSpecFromFile(fileOrId, true);
         }
 
@@ -858,11 +857,11 @@ public class BuildCommand extends BaseCommandImpl {
          * file should be overwritten.
          */
         if (!buildingFromConfig && outputFile.exists() && !getAnswerYes()) {
-            JCommander.getConsole().print(getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()) + " ");
+            JCommander.getConsole().print(ClientUtilities.getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()) + " ");
             answer = JCommander.getConsole().readLine();
             while (!(answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("n") || answer.equalsIgnoreCase(
                     "yes") || answer.equalsIgnoreCase("no"))) {
-                JCommander.getConsole().print(getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()) + " ");
+                JCommander.getConsole().print(ClientUtilities.getMessage("ERROR_FILE_EXISTS_OVERWRITE_MSG", outputFile.getName()) + " ");
                 answer = JCommander.getConsole().readLine();
 
                 // Check if the app is shutting down and if so let it.
@@ -874,12 +873,12 @@ public class BuildCommand extends BaseCommandImpl {
         try {
             if (answer.equalsIgnoreCase("y") || answer.equalsIgnoreCase("yes")) {
                 FileUtilities.saveFile(outputFile, buildZip);
-                JCommander.getConsole().println(getMessage("OUTPUT_SAVED_MSG", outputFile.getAbsolutePath()));
+                JCommander.getConsole().println(ClientUtilities.getMessage("OUTPUT_SAVED_MSG", outputFile.getAbsolutePath()));
             } else {
                 shutdown(Constants.EXIT_FAILURE);
             }
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_SAVING_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_SAVING_MSG"), false);
         }
     }
 
@@ -889,7 +888,7 @@ public class BuildCommand extends BaseCommandImpl {
     protected void validatePublicanCfgOverride() {
         for (final Entry<String, String> overrideEntry : getPublicanCfgOverrides().entrySet()) {
             if (!CSConstants.PUBLICAN_CFG_PARAMETERS.contains(overrideEntry.getKey())) {
-                printWarn(getMessage("WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE", overrideEntry.getKey()));
+                printWarn(ClientUtilities.getMessage("WARN_UNKNOWN_PUBLICAN_CFG_OVERRIDE", overrideEntry.getKey()));
             }
         }
     }
@@ -924,14 +923,15 @@ public class BuildCommand extends BaseCommandImpl {
          */
         if (getFetchPubsnum()) {
             // Print the kojihub server url
-            JCommander.getConsole().println(getMessage("KOJI_WEBSERVICE_MSG", Constants.KOJI_HUB_NAME, getCspConfig().getKojiHubUrl()));
+            JCommander.getConsole().println(
+                    ClientUtilities.getMessage("KOJI_WEBSERVICE_MSG", Constants.KOJI_HUB_NAME, getCspConfig().getKojiHubUrl()));
 
             // Test that the server address is valid
             if (!ClientUtilities.validateServerExists(getCspConfig().getKojiHubUrl())) {
                 // Print a line to separate content
                 JCommander.getConsole().println("");
 
-                printErrorAndShutdown(Constants.EXIT_NO_SERVER, getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
             }
         }
 
@@ -948,8 +948,8 @@ public class BuildCommand extends BaseCommandImpl {
                 JCommander.getConsole().println("");
 
                 printErrorAndShutdown(Constants.EXIT_NO_SERVER,
-                        getMessage("ERROR_INVALID_ZANATA_CONFIG_MSG", zanataDetails.getProject(), zanataDetails.getVersion(),
-                                zanataDetails.getServer()), false);
+                        ClientUtilities.getMessage("ERROR_INVALID_ZANATA_CONFIG_MSG", zanataDetails.getProject(),
+                                zanataDetails.getVersion(), zanataDetails.getServer()), false);
             }
         }
 

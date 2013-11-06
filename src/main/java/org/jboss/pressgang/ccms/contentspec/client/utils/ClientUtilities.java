@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,6 +76,23 @@ import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 public class ClientUtilities {
     private static int MAX_DOWNLOAD_SIZE = 500;
+    private static final ResourceBundle MESSAGES = ResourceBundle.getBundle("messages");
+
+    /**
+     * Gets a message from the properties and formats the message with any additional args.
+     *
+     * @param key The key for the message.
+     * @param args The arguments to format the message with.
+     * @return The formatted message.
+     */
+    public static String getMessage(final String key, final Object... args) {
+        final String baseMsg = MESSAGES.getString(key);
+        if (args.length > 0) {
+            return String.format(baseMsg, args);
+        } else {
+            return baseMsg;
+        }
+    }
 
     /**
      * Checks if the location for a config location is in the correct format then corrects it if not.
@@ -697,12 +715,12 @@ public class ClientUtilities {
         // Check that one and only one ID exists
         if (ids.size() == 0) {
             if (canLoadFromCsprocessorCfg) {
-                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, command.getMessage("ERROR_NO_ID_MSG"), false);
+                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_ID_MSG"), false);
             } else {
-                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, command.getMessage("ERROR_NO_ID_CMD_LINE_MSG"), false);
+                command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_NO_ID_CMD_LINE_MSG"), false);
             }
         } else if (ids.size() > 1) {
-            command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, command.getMessage("ERROR_MULTIPLE_ID_MSG"), false);
+            command.printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_MULTIPLE_ID_MSG"), false);
         }
     }
 
@@ -743,18 +761,18 @@ public class ClientUtilities {
         // Save the csprocessor.cfg
         try {
             FileUtilities.saveFile(outputConfig, config, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(command.getMessage("CSP_CONFIG_SAVED_MSG", outputConfig.getAbsolutePath()));
+            JCommander.getConsole().println(getMessage("CSP_CONFIG_SAVED_MSG", outputConfig.getAbsolutePath()));
         } catch (IOException e) {
-            command.printError(command.getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputConfig.getAbsolutePath()), false);
+            command.printError(getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputConfig.getAbsolutePath()), false);
             error = true;
         }
 
         // Save the Post Processed spec
         try {
             FileUtilities.saveFile(outputSpec, contentSpecString, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(command.getMessage("OUTPUT_SAVED_MSG", outputSpec.getAbsolutePath()));
+            JCommander.getConsole().println(getMessage("OUTPUT_SAVED_MSG", outputSpec.getAbsolutePath()));
         } catch (IOException e) {
-            command.printError(command.getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputSpec.getAbsolutePath()), false);
+            command.printError(getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputSpec.getAbsolutePath()), false);
             error = true;
         }
 
@@ -799,9 +817,9 @@ public class ClientUtilities {
         // Create and write to the file
         try {
             FileUtilities.saveFile(output, content, Constants.FILE_ENCODING);
-            JCommander.getConsole().println(command.getMessage("OUTPUT_SAVED_MSG", output.getName()));
+            JCommander.getConsole().println(getMessage("OUTPUT_SAVED_MSG", output.getName()));
         } catch (IOException e) {
-            command.printErrorAndShutdown(Constants.EXIT_FAILURE, command.getMessage("ERROR_FAILED_SAVING_MSG"), false);
+            command.printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_SAVING_MSG"), false);
         }
     }
 
@@ -855,7 +873,7 @@ public class ClientUtilities {
         for (final String lang : langs) {
             if (!locales.contains(lang)) {
                 command.printError(
-                        command.getMessage("ERROR_INVALID_LOCALE_MSG", lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")), false);
+                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")), false);
                 valid = false;
             }
         }
@@ -872,7 +890,7 @@ public class ClientUtilities {
      */
     public static TextContentSpecWrapper saveContentSpec(final BaseCommand command, final FutureTask<TextContentSpecWrapper> task) {
         // Run the task in a separate thread and output a waiting message every 10 seconds
-        JCommander.getConsole().println(command.getMessage("SAVING_MSG"));
+        JCommander.getConsole().println(getMessage("SAVING_MSG"));
         final Thread thread = new Thread(task);
         thread.start();
         int count = 0;
@@ -970,7 +988,7 @@ public class ClientUtilities {
      * Download all the topics that are to be used during processing from the
      * parsed Content Specification.
      */
-    public static void downloadAllTopics(final BaseCommand command, final DataProviderFactory providerFactory, final ContentSpec contentSpec,
+    public static void downloadAllTopics(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
             final Integer maxRevision) {
         final TopicProvider topicProvider = providerFactory.getProvider(TopicProvider.class);
         final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
@@ -989,7 +1007,7 @@ public class ClientUtilities {
         // Check if a maximum revision was specified for processing
         if (maxRevision == null && !topicIds.isEmpty()) {
             // Download the list of topics in one go to reduce I/O overhead
-            JCommander.getConsole().println(command.getMessage("ATTEMPTING_TO_DOWNLOAD_TOPICS_MSG"));
+            JCommander.getConsole().println(getMessage("ATTEMPTING_TO_DOWNLOAD_TOPICS_MSG"));
             final RESTTopicQueryBuilderV1 queryBuilder = new RESTTopicQueryBuilderV1();
             if (topicIds.size() > MAX_DOWNLOAD_SIZE) {
                 int start = 0;
@@ -1012,19 +1030,18 @@ public class ClientUtilities {
         }
 
         if (!revisionTopicIds.isEmpty()) {
-            downloadRevisionTopics(command, topicProvider, revisionTopicIds);
+            downloadRevisionTopics(topicProvider, revisionTopicIds);
         }
     }
 
     /**
      * Download the Topics from the REST API that specify a revision.
      *
-     * @param command
      * @param referencedRevisionTopicIds The Set of topic ids and revision to download.
      */
-    public static void downloadRevisionTopics(BaseCommand command, final TopicProvider topicProvider,
+    public static void downloadRevisionTopics(final TopicProvider topicProvider,
             final List<Pair<Integer, Integer>> referencedRevisionTopicIds) {
-        JCommander.getConsole().println(command.getMessage("ATTEMPTING_TO_DOWNLOAD_REV_TOPICS_MSG"));
+        JCommander.getConsole().println(getMessage("ATTEMPTING_TO_DOWNLOAD_REV_TOPICS_MSG"));
 
         final int showPercent = 10;
         final float total = referencedRevisionTopicIds.size();
@@ -1039,73 +1056,73 @@ public class ClientUtilities {
             final int percent = Math.round(current / total * 100);
             if (percent - lastPercent >= showPercent) {
                 lastPercent = percent;
-                JCommander.getConsole().println("\t" + command.getMessage("DOWNLOADING_REV_TOPICS_MSG", percent));
+                JCommander.getConsole().println("\t" + getMessage("DOWNLOADING_REV_TOPICS_MSG", percent));
             }
         }
     }
-}
 
-class InputStreamHandler extends Thread implements ShutdownAbleApp {
-    private final InputStream stream;
-    private final StringBuffer buffer;
-    private final Console console;
-    private final OutputStream outStream;
+    private static class InputStreamHandler extends Thread implements ShutdownAbleApp {
+        private final InputStream stream;
+        private final StringBuffer buffer;
+        private final Console console;
+        private final OutputStream outStream;
 
-    private final AtomicBoolean shutdown = new AtomicBoolean(false);
-    private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
+        private final AtomicBoolean shutdown = new AtomicBoolean(false);
+        private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 
-    public InputStreamHandler(final InputStream stream, final StringBuffer buffer) {
-        this.stream = stream;
-        this.buffer = buffer;
-        console = null;
-        outStream = null;
-    }
+        public InputStreamHandler(final InputStream stream, final StringBuffer buffer) {
+            this.stream = stream;
+            this.buffer = buffer;
+            console = null;
+            outStream = null;
+        }
 
-    public InputStreamHandler(final InputStream stream, final Console console) {
-        this.stream = stream;
-        buffer = null;
-        this.console = console;
-        outStream = null;
-    }
+        public InputStreamHandler(final InputStream stream, final Console console) {
+            this.stream = stream;
+            buffer = null;
+            this.console = console;
+            outStream = null;
+        }
 
-    public InputStreamHandler(final InputStream stream, final OutputStream outStream) {
-        this.stream = stream;
-        buffer = null;
-        console = null;
-        this.outStream = outStream;
-    }
+        public InputStreamHandler(final InputStream stream, final OutputStream outStream) {
+            this.stream = stream;
+            buffer = null;
+            console = null;
+            this.outStream = outStream;
+        }
 
-    @Override
-    public void run() {
-        int nextChar;
-        try {
-            while ((nextChar = stream.read()) != -1 && !isShuttingDown.get()) {
-                final char c = (char) nextChar;
-                if (buffer != null) {
-                    buffer.append(c);
-                } else if (outStream != null) {
-                    outStream.write(c);
-                    outStream.flush();
-                } else {
-                    synchronized (console) {
-                        console.print(c + "");
+        @Override
+        public void run() {
+            int nextChar;
+            try {
+                while ((nextChar = stream.read()) != -1 && !isShuttingDown.get()) {
+                    final char c = (char) nextChar;
+                    if (buffer != null) {
+                        buffer.append(c);
+                    } else if (outStream != null) {
+                        outStream.write(c);
+                        outStream.flush();
+                    } else {
+                        synchronized (console) {
+                            console.print(c + "");
+                        }
                     }
                 }
+            } catch (Exception e) {
+                // Do nothing
+                JCommander.getConsole().println(e.getMessage());
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            // Do nothing
-            JCommander.getConsole().println(e.getMessage());
-            e.printStackTrace();
         }
-    }
 
-    @Override
-    public void shutdown() {
-        this.isShuttingDown.set(true);
-    }
+        @Override
+        public void shutdown() {
+            this.isShuttingDown.set(true);
+        }
 
-    @Override
-    public boolean isShutdown() {
-        return shutdown.get();
+        @Override
+        public boolean isShutdown() {
+            return shutdown.get();
+        }
     }
 }

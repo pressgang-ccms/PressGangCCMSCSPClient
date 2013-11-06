@@ -30,6 +30,7 @@ import net.sf.ipsedixit.core.StringType;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
+import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
@@ -207,6 +208,8 @@ public class ValidateCommandTest extends BaseUnitTest {
         given(contentSpec.getDefaultPublicanCfg()).willCallRealMethod();
         // And an authorised user
         setUpAuthorisedUser(command, userProvider, users, user, username);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When the ValidateCommand is processed
         try {
@@ -296,8 +299,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
         when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
 
         // When the Validate Command is processed
@@ -331,8 +333,7 @@ public class ValidateCommandTest extends BaseUnitTest {
         setValidContentSpecMocking(contentSpec, level, randomAlphanumString, id);
         setValidContentSpecWrapperMocking(contentSpecWrapper, randomAlphanumString, id);
         // and the helper method to get the content spec works
-        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
-        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        TestUtil.setUpContentSpecHelper(contentSpecProvider);
         when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
 
         // When the Validate Command is processed

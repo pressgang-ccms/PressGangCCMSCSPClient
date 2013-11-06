@@ -142,7 +142,8 @@ public class PushCommand extends BaseCommandImpl {
                     // Backwards compatibility check for files ending with .txt
                     file = new File(escapedTitle + "-post.txt");
                     if (!file.exists()) {
-                        printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_FOUND_FOR_CONFIG_MSG", fileName), false);
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_FILE_FOUND_FOR_CONFIG_MSG",
+                                fileName), false);
                     }
                 }
                 getFiles().add(file);
@@ -152,7 +153,7 @@ public class PushCommand extends BaseCommandImpl {
 
         // Check that the parameters are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_FILE_MSG"), true);
         }
 
         // Good point to check for a shutdown (before starting)
@@ -176,7 +177,7 @@ public class PushCommand extends BaseCommandImpl {
         long elapsedTime = System.currentTimeMillis() - startTime;
         JCommander.getConsole().println(output.getErrors());
         if (getExecutionTime()) {
-            JCommander.getConsole().println(getMessage("EXEC_TIME_MSG", elapsedTime));
+            JCommander.getConsole().println(ClientUtilities.getMessage("EXEC_TIME_MSG", elapsedTime));
         }
 
         // if we failed validation then exit
@@ -205,7 +206,7 @@ public class PushCommand extends BaseCommandImpl {
         String contentSpecString = FileUtilities.readFileContents(file);
 
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         return contentSpecString;
@@ -308,7 +309,8 @@ public class PushCommand extends BaseCommandImpl {
         try {
             FileUtilities.saveFile(outputSpec, contentSpec.getText(), Constants.FILE_ENCODING);
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_FAILED_SAVING_FILE_MSG", outputSpec.getAbsolutePath()),
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_SAVING_FILE_MSG",
+                    outputSpec.getAbsolutePath()),
                     false);
         }
     }

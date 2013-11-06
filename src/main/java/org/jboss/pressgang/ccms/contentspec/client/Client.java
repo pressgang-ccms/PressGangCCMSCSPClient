@@ -109,7 +109,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             client.processArgs(args);
         } catch (Throwable ex) {
             JCommander.getConsole().println(ExceptionUtilities.getStackTrace((Exception) ex));
-            JCommander.getConsole().println(client.getMessage("ERROR_INTERNAL_ERROR"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("ERROR_INTERNAL_ERROR"));
             client.shutdown(Constants.EXIT_FAILURE);
         }
     }
@@ -167,13 +167,13 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             command.printHelp();
         } else if (command.isShowVersion() || isShowVersion()) {
             // Print the version details
-            printVersionDetails(getMessage("BUILD_MSG"),
+            printVersionDetails(ClientUtilities.getMessage("BUILD_MSG"),
                     VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
         } else if (command instanceof SetupCommand || command instanceof TemplateCommand) {
             command.process();
         } else {
             // Print the version details
-            printVersionDetails(getMessage("BUILD_MSG"),
+            printVersionDetails(ClientUtilities.getMessage("BUILD_MSG"),
                     VersionUtilities.getAPIVersion(Constants.VERSION_PROPERTIES_FILENAME, Constants.VERSION_PROPERTY_NAME), false);
 
             // Good point to check for a shutdown
@@ -202,14 +202,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
             // If we are loading from csprocessor.cfg then display a message
             if (command.loadFromCSProcessorCfg()) {
-                JCommander.getConsole().println(getMessage("CSP_CONFIG_LOADING_MSG"));
+                JCommander.getConsole().println(ClientUtilities.getMessage("CSP_CONFIG_LOADING_MSG"));
 
                 // Load the csprocessor.cfg file from the current directory
                 try {
                     if (csprocessorcfg.exists() && csprocessorcfg.isFile()) {
                         ClientUtilities.readFromCsprocessorCfg(csprocessorcfg, cspConfig);
                         if (cspConfig.getContentSpecId() == null) {
-                            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_INVALID_CSPROCESSOR_CFG_MSG"), false);
+                            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_INVALID_CSPROCESSOR_CFG_MSG"), false);
                         }
                     }
                 } catch (Exception e) {
@@ -237,7 +237,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                 // Check that the version is valid
                 if (!doVersionCheck(providerFactory.getRESTManager().getRESTClient())) {
-                    printErrorAndShutdown(Constants.EXIT_UPGRADE_REQUIRED, getMessage("ERROR_APP_OUT_OF_DATE_MSG"), false);
+                    printErrorAndShutdown(Constants.EXIT_UPGRADE_REQUIRED, ClientUtilities.getMessage("ERROR_APP_OUT_OF_DATE_MSG"), false);
                 }
 
                 isProcessingCommand.set(false);
@@ -254,7 +254,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             try {
                 command.process();
             } catch (ProviderException e) {
-                printError(getMessage("ERROR_INTERNAL_ERROR"), false);
+                printError(ClientUtilities.getMessage("ERROR_INTERNAL_ERROR"), false);
                 JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
             }
             isProcessingCommand.set(false);
@@ -409,11 +409,11 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (!servers.containsKey(Constants.DEFAULT_SERVER_NAME) && getServerUrl() == null && command.getServerUrl() == null) {
                 final File configFile = new File(ClientUtilities.fixConfigLocation(command.getConfigLocation()));
                 command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        getMessage("NO_DEFAULT_SERVER_FOUND_MSG", configFile.getAbsolutePath()), false);
+                        ClientUtilities.getMessage("NO_DEFAULT_SERVER_FOUND_MSG", configFile.getAbsolutePath()), false);
             } else if (servers.containsKey(Constants.DEFAULT_SERVER_NAME) && !servers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches(
                     "^(http://|https://).*")) {
                 if (!servers.containsKey(servers.get(Constants.DEFAULT_SERVER_NAME).getUrl())) {
-                    command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("NO_SERVER_FOUND_FOR_DEFAULT_SERVER_MSG"), false);
+                    command.printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("NO_SERVER_FOUND_FOR_DEFAULT_SERVER_MSG"), false);
                 } else {
                     final ServerConfiguration defaultConfig = servers.get(Constants.DEFAULT_SERVER_NAME);
                     final ServerConfiguration config = servers.get(defaultConfig.getUrl());
@@ -463,10 +463,10 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (url == null && !firstRun) {
                 JCommander.getConsole().println("");
                 printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        getMessage("ERROR_NO_SERVER_FOUND_MSG", cspConfig.getServerUrl()), false);
+                        ClientUtilities.getMessage("ERROR_NO_SERVER_FOUND_MSG", cspConfig.getServerUrl()), false);
             } else if (url == null) {
                 JCommander.getConsole().println("");
-                printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("SETUP_CONFIG_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("SETUP_CONFIG_MSG"), false);
             }
         } else {
             url = servers.get(Constants.DEFAULT_SERVER_NAME).getUrl();
@@ -544,7 +544,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             if (zanataServerConfig == null) {
                 JCommander.getConsole().println("");
                 printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        getMessage("ERROR_NO_ZANATA_SERVER_SETUP_MSG", cspConfig.getZanataDetails().getServer()), false);
+                        ClientUtilities.getMessage("ERROR_NO_ZANATA_SERVER_SETUP_MSG", cspConfig.getZanataDetails().getServer()), false);
             } else {
                 cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
                 cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
@@ -581,19 +581,19 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         // Checks if the file exists in the specified location
         final File file = new File(location);
         if (file.exists() && !file.isDirectory()) {
-            JCommander.getConsole().println(getMessage("CONFIG_LOADING_MSG", location));
+            JCommander.getConsole().println(ClientUtilities.getMessage("CONFIG_LOADING_MSG", location));
             // Initialise the configuration reader with the skynet.ini content
             try {
                 configReader = new HierarchicalINIConfiguration(fixedLocation);
             } catch (ConfigurationException e) {
-                command.printError(getMessage("ERROR_INI_NOT_FOUND_MSG"), false);
+                command.printError(ClientUtilities.getMessage("ERROR_INI_NOT_FOUND_MSG"), false);
                 return false;
             } catch (Exception e) {
-                command.printError(getMessage("ERROR_PROCESSING_CONFIG_MSG"), false);
+                command.printError(ClientUtilities.getMessage("ERROR_PROCESSING_CONFIG_MSG"), false);
                 return false;
             }
         } else if (location.equals(Constants.DEFAULT_CONFIG_LOCATION)) {
-            JCommander.getConsole().println(getMessage("CONFIG_CREATING_MSG", location));
+            JCommander.getConsole().println(ClientUtilities.getMessage("CONFIG_CREATING_MSG", location));
             firstRun = true;
 
             // Save the configuration file
@@ -607,12 +607,12 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 // Save the config
                 FileUtilities.saveFile(file, ConfigConstants.DEFAULT_CONFIG_FILE, Constants.FILE_ENCODING);
             } catch (IOException e) {
-                printError(getMessage("ERROR_FAILED_CREATING_CONFIG_MSG"), false);
+                printError(ClientUtilities.getMessage("ERROR_FAILED_CREATING_CONFIG_MSG"), false);
                 return false;
             }
             return setConfigOptions(location);
         } else {
-            command.printError(getMessage("ERROR_INI_NOT_FOUND_MSG"), false);
+            command.printError(ClientUtilities.getMessage("ERROR_INI_NOT_FOUND_MSG"), false);
             return false;
         }
 
@@ -725,7 +725,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                     // Check that a url was specified
                     if (url == null) {
-                        command.printError(getMessage("NO_SERVER_URL_MSG", name), false);
+                        command.printError(ClientUtilities.getMessage("NO_SERVER_URL_MSG", name), false);
                         return false;
                     }
 
@@ -790,7 +790,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                     // Check that a url was specified
                     if (url == null) {
-                        command.printError(getMessage("NO_ZANATA_SERVER_URL_MSG", name), false);
+                        command.printError(ClientUtilities.getMessage("NO_ZANATA_SERVER_URL_MSG", name), false);
                         return false;
                     }
 
@@ -829,7 +829,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         if (zanataServers.containsKey(Constants.DEFAULT_SERVER_NAME) && !zanataServers.get(Constants.DEFAULT_SERVER_NAME).getUrl().matches(
                 "^(http://|https://).*")) {
             if (!zanataServers.containsKey(zanataServers.get(Constants.DEFAULT_SERVER_NAME).getUrl())) {
-                command.printError(getMessage("NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER_MSG"), false);
+                command.printError(ClientUtilities.getMessage("NO_ZANATA_SERVER_FOUND_FOR_DEFAULT_SERVER_MSG"), false);
                 return false;
             } else {
                 final ZanataServerConfiguration defaultConfig = zanataServers.get(Constants.DEFAULT_SERVER_NAME);
@@ -1044,15 +1044,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         return false;
     }
 
-    public String getMessage(final String key, final Object... args) {
-        final String baseMsg = messages.getString(key);
-        if (args.length > 0) {
-            return String.format(baseMsg, args);
-        } else {
-            return baseMsg;
-        }
-    }
-
     /**
      * Allows a shutdown to continue if requested. If the application is shutting down then this method will create a loop to stop
      * further execution of code.
@@ -1074,14 +1065,14 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     @Override
     public boolean validateServerUrl() {
         // Print the server url
-        JCommander.getConsole().println(String.format(getMessage("WEBSERVICE_MSG"), getServerUrl()));
+        JCommander.getConsole().println(String.format(ClientUtilities.getMessage("WEBSERVICE_MSG"), getServerUrl()));
 
         // Test that the server address is valid
         if (!ClientUtilities.validateServerExists(getServerUrl())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
         }
 
         return true;

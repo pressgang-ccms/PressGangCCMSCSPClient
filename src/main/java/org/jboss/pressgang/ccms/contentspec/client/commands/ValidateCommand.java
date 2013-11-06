@@ -13,13 +13,14 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.converter.FileConverter;
+import org.jboss.pressgang.ccms.contentspec.client.processor.ClientContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
@@ -91,7 +92,8 @@ public class ValidateCommand extends BaseCommandImpl {
                     // Backwards compatibility check for files ending with .txt
                     file = new File(escapedTitle + "-post.txt");
                     if (!file.exists()) {
-                        printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_FOUND_FOR_CONFIG_MSG", fileName), false);
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_FILE_FOUND_FOR_CONFIG_MSG",
+                                fileName), false);
                     }
                 }
                 getFiles().add(file);
@@ -100,7 +102,7 @@ public class ValidateCommand extends BaseCommandImpl {
 
         // Check that the parameters are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_FILE_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_FILE_MSG"), true);
         }
 
         // Good point to check for a shutdown
@@ -143,7 +145,7 @@ public class ValidateCommand extends BaseCommandImpl {
         String contentSpecString = FileUtilities.readFileContents(file);
 
         if (contentSpecString.equals("")) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_EMPTY_FILE_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_EMPTY_FILE_MSG"), false);
         }
 
         // Parse the spec
@@ -169,7 +171,7 @@ public class ValidateCommand extends BaseCommandImpl {
      * @param username        The user who requested the content spec be validated.
      * @return True if the content spec is valid, otherwise false.
      */
-    protected boolean validateContentSpec(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
+    protected boolean validateContentSpec(final RESTProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
             final ContentSpec contentSpec, final String username) {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
@@ -177,11 +179,8 @@ public class ValidateCommand extends BaseCommandImpl {
         processingOptions.setValidating(true);
         processingOptions.setStrictTitles(strictTitles);
 
-        // Attempt to download all the topic data in one request
-        ClientUtilities.downloadAllTopics(this, providerFactory, contentSpec, null);
-
         // Process the content spec to see if it's valid
-        setProcessor(new ContentSpecProcessor(providerFactory, loggerManager, processingOptions));
+        setProcessor(new ClientContentSpecProcessor(providerFactory, loggerManager, processingOptions));
         return getProcessor().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER);
     }
 

@@ -249,6 +249,8 @@ public class CreateCommandTest extends BaseUnitTest {
         given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
         // and the Content Spec contains a test title
         given(contentSpec.getTitle()).willReturn(BOOK_TITLE);
+        // and getting error messages works
+        TestUtil.setUpMessages();
 
         // When it is processed
         try {

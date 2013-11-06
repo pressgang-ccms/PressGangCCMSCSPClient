@@ -1,7 +1,12 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands.base;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.anyVararg;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +16,9 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
+import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
+import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
@@ -113,5 +120,19 @@ public class TestUtil {
         given(zanataDetailsMock.getVersion()).willReturn(version);
         given(zanataDetailsMock.getUsername()).willReturn(username);
         given(zanataDetailsMock.getToken()).willReturn(token);
+    }
+
+    public static void setUpMessages() {
+        when(ClientUtilities.getMessage(anyString(), anyVararg())).thenCallRealMethod();
+    }
+
+    public static void setUpFixFilePaths() {
+        when(ClientUtilities.fixFilePath(anyString())).thenCallRealMethod();
+        when(ClientUtilities.fixDirectoryPath(anyString())).thenCallRealMethod();
+    }
+
+    public static void setUpContentSpecHelper(final ContentSpecProvider contentSpecProvider) {
+        when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+        when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
     }
 }

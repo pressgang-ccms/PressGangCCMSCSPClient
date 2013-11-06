@@ -66,7 +66,7 @@ public class PreviewCommand extends AssembleCommand {
         // Check that the file exists
         if (!previewFile.exists() || previewFile.isDirectory()) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    getMessage("ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG", previewFile.getAbsolutePath()), false);
+                    ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_PREVIEW_FILE_MSG", previewFile.getAbsolutePath()), false);
         }
 
         // Good point to check for a shutdown
@@ -77,7 +77,7 @@ public class PreviewCommand extends AssembleCommand {
             FileUtilities.openFile(previewFile);
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    getMessage("ERROR_UNABLE_TO_OPEN_FILE_MSG", previewFile.getAbsolutePath()), false);
+                    ClientUtilities.getMessage("ERROR_UNABLE_TO_OPEN_FILE_MSG", previewFile.getAbsolutePath()), false);
         }
     }
 
@@ -97,7 +97,7 @@ public class PreviewCommand extends AssembleCommand {
 
         // Check that the format can be previewed
         if (!validateFormat(previewFormat)) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_UNSUPPORTED_FORMAT_MSG", previewFormat), false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_UNSUPPORTED_FORMAT_MSG", previewFormat), false);
         }
 
         return previewFormat;
@@ -149,12 +149,12 @@ public class PreviewCommand extends AssembleCommand {
 
             // Check that that content specification was found
             if (contentSpec == null) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
             }
 
             // Check that the content spec has a valid version
             if (contentSpec.getChildren() == null || contentSpec.getChildren().isEmpty()) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_VALID_CONTENT_SPEC_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_VALID_CONTENT_SPEC_MSG"), false);
             }
 
             // If using a content spec project directory the file names/locations are static based on the root directory

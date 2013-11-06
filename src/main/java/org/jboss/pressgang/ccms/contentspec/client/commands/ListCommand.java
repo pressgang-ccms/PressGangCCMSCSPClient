@@ -72,9 +72,10 @@ public class ListCommand extends BaseCommandImpl {
 
         // If there are too many content specs & force isn't set then send back an error message
         if (noSpecs > Constants.MAX_LIST_RESULT && getLimit() == null && !isForce()) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_LIST_TOO_MANY_MSG", noSpecs, Constants.LIMIT_LONG_PARAM), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_LIST_TOO_MANY_MSG", noSpecs,
+                    Constants.LIMIT_LONG_PARAM), false);
         } else if (noSpecs == 0) {
-            JCommander.getConsole().println(getMessage("NO_CS_FOUND_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("NO_CS_FOUND_MSG"));
         } else {
             // Get the sublist of results to display
             final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);

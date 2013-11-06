@@ -133,7 +133,8 @@ public class SnapshotCommand extends BaseCommandImpl {
      */
     protected void validate() {
         if (getRevision() != null && !getCreateNew()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("ERROR_SNAPSHOT_REVISION_MSG", Constants.NEW_LONG_PARAM), false);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("ERROR_SNAPSHOT_REVISION_MSG",
+                    Constants.NEW_LONG_PARAM), false);
         }
     }
 
@@ -157,17 +158,17 @@ public class SnapshotCommand extends BaseCommandImpl {
                 getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
+                    ClientUtilities.getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
         }
 
         // Check that the content spec isn't a failed one
         if (contentSpecEntity.getFailed() != null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
         }
 
         // Add a warning about the revisions not matching
         if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
-            printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
+            printWarn(ClientUtilities.getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
             // Print a space to highlight the warning
             JCommander.getConsole().println("");
         }
@@ -191,7 +192,7 @@ public class SnapshotCommand extends BaseCommandImpl {
         snapshotOptions.setRevision(getMaxRevision() == null ? getRevision() : getMaxRevision());
 
         // Create the snapshot
-        JCommander.getConsole().println(getMessage("CREATING_SNAPSHOT_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("CREATING_SNAPSHOT_MSG"));
         setProcessor(new SnapshotProcessor(getProviderFactory()));
         getProcessor().processContentSpec(contentSpec, snapshotOptions);
 
@@ -201,12 +202,12 @@ public class SnapshotCommand extends BaseCommandImpl {
 
         if (!success) {
             JCommander.getConsole().println(output.getErrors());
-            JCommander.getConsole().println(getMessage("SUCCESSFUL_PUSH_MSG", output.getId(), output.getRevision()));
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_PUSH_MSG", output.getId(), output.getRevision()));
             JCommander.getConsole().println("");
             shutdown(Constants.EXIT_TOPIC_INVALID);
         } else {
-            JCommander.getConsole().println(getMessage("SUCCESSFUL_PUSH_SNAPSHOT_MSG"));
-            JCommander.getConsole().println(getMessage("SUCCESSFUL_PUSH_MSG", output.getId(), output.getRevision()));
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_PUSH_SNAPSHOT_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_PUSH_MSG", output.getId(), output.getRevision()));
         }
     }
 

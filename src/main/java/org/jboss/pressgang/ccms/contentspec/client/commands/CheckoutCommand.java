@@ -94,15 +94,15 @@ public class CheckoutCommand extends BaseCommandImpl {
         final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, ids.get(0), null);
         final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
         if (contentSpecString == null || contentSpecEntity == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Check that the output directory doesn't already exist
         final String escapedTitle = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(), contentSpecEntity);
         final File directory = new File(getCspConfig().getRootOutputDirectory() + escapedTitle);
         if (directory.exists() && !force) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_CONTENT_SPEC_EXISTS_MSG", directory.getAbsolutePath(),
-                    Constants.FORCE_LONG_PARAM), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_CONTENT_SPEC_EXISTS_MSG",
+                    directory.getAbsolutePath(), Constants.FORCE_LONG_PARAM), false);
             // If it exists and force is enabled delete the directory contents
         } else if (directory.exists()) {
             // TODO Handle failing to delete the directory contents

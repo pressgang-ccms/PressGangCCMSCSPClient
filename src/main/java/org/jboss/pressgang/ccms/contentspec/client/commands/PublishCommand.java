@@ -57,7 +57,7 @@ public class PublishCommand extends AssembleCommand {
 
         // Validate that the configs passed are okay.
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, getMessage("ERROR_NO_PUBLISH_COMMAND_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_NO_PUBLISH_COMMAND_MSG"), false);
         }
 
         if (!getNoAssemble()) {
@@ -83,16 +83,16 @@ public class PublishCommand extends AssembleCommand {
         }
 
         try {
-            JCommander.getConsole().println(getMessage("PUBLISH_BUILD_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("PUBLISH_BUILD_MSG"));
             Integer exitValue = ClientUtilities.runCommand(publishCommand, new File(getOutputDirectory()), JCommander.getConsole(),
                     !getHideOutput(), true);
             if (exitValue == null || exitValue != 0) {
-                printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_RUNNING_PUBLISH_MSG"), false);
+                printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_RUNNING_PUBLISH_MSG"), false);
             }
         } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_RUNNING_PUBLISH_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_RUNNING_PUBLISH_MSG"), false);
         }
-        JCommander.getConsole().println(getMessage("SUCCESSFUL_PUBLISH_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_PUBLISH_MSG"));
     }
 
     @Override

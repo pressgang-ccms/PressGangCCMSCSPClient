@@ -99,7 +99,7 @@ public class PullCommand extends BaseCommandImpl {
 
         // Check that the additional options are valid
         if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, getMessage("INVALID_ARG_MSG"), true);
+            printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("INVALID_ARG_MSG"), true);
         }
 
         // Good point to check for a shutdown
@@ -113,11 +113,11 @@ public class PullCommand extends BaseCommandImpl {
                     getIds().get(0), getRevision());
             if (topic == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
+                        ClientUtilities.getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
             } else {
                 // Add a warning about the revisions not matching
                 if (getRevision() != null && !getRevision().equals(topic.getRevision())) {
-                    printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", topic.getRevision()));
+                    printWarn(ClientUtilities.getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", topic.getRevision()));
                     // Print a space to highlight the warning
                     JCommander.getConsole().println("");
                 }
@@ -132,11 +132,11 @@ public class PullCommand extends BaseCommandImpl {
             final String contentSpecString = ClientUtilities.getContentSpecAsString(contentSpecProvider, getIds().get(0), getRevision());
             if (contentSpecEntity == null || contentSpecString == null) {
                 printErrorAndShutdown(Constants.EXIT_FAILURE,
-                        getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
+                        ClientUtilities.getMessage(getRevision() == null ? "ERROR_NO_ID_FOUND_MSG" : "ERROR_NO_REV_ID_FOUND_MSG"), false);
             } else {
                 // Add a warning about the revisions not matching
                 if (getRevision() != null && !getRevision().equals(contentSpecEntity.getRevision())) {
-                    printWarn(getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
+                    printWarn(ClientUtilities.getMessage("WARN_REVISION_NOT_EXIST_USING_X_MSG", contentSpecEntity.getRevision()));
                     // Print a space to highlight the warning
                     JCommander.getConsole().println("");
                 }

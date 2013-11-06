@@ -48,7 +48,7 @@ public class ChecksumCommand extends BaseCommandImpl {
 
         // Check that that content specification was found
         if (contentSpecString == null) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, getMessage("ERROR_NO_ID_FOUND_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
         // Calculate and print the checksum value
