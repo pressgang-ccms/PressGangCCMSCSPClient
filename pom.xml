@@ -8,12 +8,13 @@
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <name>Content Specification Processor Client</name>
 
     <properties>
         <pressgang.ccms.version>1.2-SNAPSHOT</pressgang.ccms.version>
         <pressgang.contentspec.version>1.2.1-SNAPSHOT</pressgang.contentspec.version>
+        <pressgang.zanata.version>1.2.1-SNAPSHOT</pressgang.zanata.version>
         <zanata-sync.version>1.2-SNAPSHOT</zanata-sync.version>
         <commonsconfiguration.version>1.7</commonsconfiguration.version>
         <jcommander.version>1.24-SNAPSHOT</jcommander.version>
@@ -152,7 +153,7 @@
         <dependency>
             <groupId>org.jboss.pressgang.ccms</groupId>
             <artifactId>pressgang-ccms-zanata</artifactId>
-            <version>${pressgang.ccms.version}</version>
+            <version>${pressgang.zanata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.pressgang.ccms</groupId>
