@@ -71,6 +71,9 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.YES_LONG_PARAM, Constants.YES_SHORT_PARAM}, descriptionKey = "ANSWER_YES")
     private Boolean answerYes = false;
 
+    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
+    private Boolean disableSSLCert = false;
+
     private ContentSpecProcessor csp;
 
     public PushTranslationCommand(final JCommander parser, final ContentSpecConfiguration cspConfig,
@@ -129,6 +132,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     public void setContentSpecOnly(Boolean contentSpecOnly) {
         this.contentSpecOnly = contentSpecOnly;
+    }
+
+    public Boolean getDisableSSLCert() {
+        return disableSSLCert;
+    }
+
+    public void setDisableSSLCert(Boolean disableSSLCert) {
+        this.disableSSLCert = disableSSLCert;
     }
 
     @Override
@@ -299,7 +310,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final ContentSpecWrapper contentSpecEntity) {
         final Map<TopicWrapper, SpecTopic> topicToSpecTopic = new HashMap<TopicWrapper, SpecTopic>();
         boolean error = false;
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2);
+        final ZanataInterface zanataInterface = new ZanataInterface(0.2, getDisableSSLCert());
 
         // Convert all the topics to DOM Documents first so we know if any are invalid
         final Map<Pair<Integer, Integer>, TopicWrapper> topics = new HashMap<Pair<Integer, Integer>, TopicWrapper>();

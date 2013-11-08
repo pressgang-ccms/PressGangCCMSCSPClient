@@ -222,6 +222,8 @@ public class Constants {
 
     public static final String PUBLICAN_CONFIG_LONG_PARAM = "--publican-config";
 
+    public static final String DISABLE_SSL_CERT_CHECK = "--disable-ssl-cert";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;
