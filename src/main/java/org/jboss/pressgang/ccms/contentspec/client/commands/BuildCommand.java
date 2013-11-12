@@ -546,6 +546,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setCommonContentDirectory(getClientConfig().getPublicanCommonContentDirectory());
         buildOptions.setFlatten(getFlatten());
         buildOptions.setServerBuild(getClientConfig().getDefaults().isServer());
+        buildOptions.setMaxRevision(getRevision());
 
         return buildOptions;
     }
