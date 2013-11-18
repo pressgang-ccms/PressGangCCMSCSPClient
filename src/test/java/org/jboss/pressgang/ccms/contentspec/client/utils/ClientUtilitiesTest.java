@@ -46,10 +46,13 @@ import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.ServerSettingsProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.PropertyTagInContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -87,6 +90,9 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock RESTProviderFactory providerFactory;
     @Mock UserProvider userProvider;
+    @Mock ServerSettingsProvider serverSettingsProvider;
+    @Mock ServerEntitiesWrapper serverEntities;
+    @Mock ServerSettingsWrapper serverSettings;
 
     File rootTestDirectory;
     File bookDir;
@@ -108,6 +114,9 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Make a empty file in that directory
         emptyFile = new File(bookDir, EMPTY_FILE_NAME);
         emptyFile.createNewFile();
+
+        // Set up the server settings mock
+        TestUtil.setUpServerSettings(serverSettings, serverEntities);
     }
 
     @After
@@ -610,7 +619,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);
 
         // When building the spec list
-        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory);
+        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory, serverEntities);
 
         // Then check that the spec list contains one spec and the details are right
         assertThat(list.getCount(), is(1L));
@@ -644,7 +653,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         given(userProvider.getUsersByName(anyString())).willReturn(null);
 
         // When building the spec list
-        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory);
+        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory, serverEntities);
 
         // Then check that the spec list contains one spec and the details are right
         assertThat(list.getCount(), is(1L));
@@ -683,7 +692,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         given(user.getUsername()).willReturn(username);
 
         // When building the spec list
-        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory);
+        final SpecList list = ClientUtilities.buildSpecList(contentSpecs, providerFactory, serverEntities);
 
         // Then check that the spec list contains one spec and the details are right
         assertThat(list.getCount(), is(1L));

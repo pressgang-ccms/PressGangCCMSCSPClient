@@ -84,7 +84,7 @@ public class ListCommand extends BaseCommandImpl {
             allowShutdownToContinueIfRequested();
 
             // Generate and then print the list of content specs
-            final SpecList specList = ClientUtilities.buildSpecList(csList, getProviderFactory());
+            final SpecList specList = ClientUtilities.buildSpecList(csList, getProviderFactory(), getServerEntities());
             JCommander.getConsole().println(ClientUtilities.generateContentSpecList(specList));
         }
     }

@@ -13,7 +13,6 @@ import java.io.IOException;
 
 import com.beust.jcommander.JCommander;
 import org.apache.commons.io.FileUtils;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
@@ -25,13 +24,11 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
 @PrepareForTest(FileUtilities.class)
-public class TemplateCommandTest extends BaseUnitTest {
+public class TemplateCommandTest extends BaseCommandTest {
     private static final String OUTPUT_FILE_NAME = "Test.txt";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Mock JCommander parser;

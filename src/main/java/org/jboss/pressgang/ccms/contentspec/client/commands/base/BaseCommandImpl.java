@@ -9,6 +9,9 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.ServerSettingsProvider;
+import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 
 public abstract class BaseCommandImpl implements BaseCommand {
     protected static final boolean INCLUDE_CHECKSUMS = false;
@@ -17,7 +20,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
     private final ContentSpecConfiguration cspConfig;
     private final ClientConfiguration clientConfig;
     private RESTProviderFactory providerFactory = null;
-
+    private ServerSettingsWrapper serverSettings = null;
 
     @Parameter(names = {Constants.SERVER_LONG_PARAM, Constants.SERVER_SHORT_PARAM}, hidden = true)
     private String serverUrl;
@@ -55,6 +58,17 @@ public abstract class BaseCommandImpl implements BaseCommand {
             providerFactory = RESTProviderFactory.create(getPressGangServerUrl());
         }
         return providerFactory;
+    }
+
+    public ServerSettingsWrapper getServerSettings() {
+        if (serverSettings == null) {
+            serverSettings = getProviderFactory().getProvider(ServerSettingsProvider.class).getServerSettings();
+        }
+        return serverSettings;
+    }
+
+    public ServerEntitiesWrapper getServerEntities() {
+        return getServerSettings().getEntities();
     }
 
     protected ContentSpecConfiguration getCspConfig() {

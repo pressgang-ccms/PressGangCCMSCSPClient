@@ -15,13 +15,11 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.Lists;
-import org.jboss.pressgang.ccms.contentspec.builder.constants.BuilderConstants;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.sort.RevisionNodeSort;
 import org.jboss.pressgang.ccms.contentspec.structures.RevNumber;
 import org.jboss.pressgang.ccms.contentspec.structures.Version;
@@ -166,7 +164,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Check to make sure the lang is valid
-        if (getLocale() != null && !ClientUtilities.validateLanguage(this, getProviderFactory(), getLocale())) {
+        if (getLocale() != null && !ClientUtilities.validateLanguage(this, getServerSettings(), getLocale())) {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 
@@ -480,7 +478,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
     protected String getRevisionHistoryTemplate() {
         try {
             final StringConstantWrapper revisionHistoryConstant = getProviderFactory().getProvider(
-                    StringConstantProvider.class).getStringConstant(BuilderConstants.REVISION_HISTORY_XML_ID);
+                    StringConstantProvider.class).getStringConstant(getServerEntities().getRevisionHistoryStringConstantId());
             return revisionHistoryConstant.getValue();
         } catch (Exception e) {
             return null;
@@ -491,7 +489,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         final LogMessageWrapper logMessage = getProviderFactory().getProvider(LogMessageProvider.class).createLogMessage();
         logMessage.setFlags(RESTLogDetailsV1.MAJOR_CHANGE_FLAG_BIT & 0);
         logMessage.setMessage(ClientUtilities.createLogMessage(getUsername(), null));
-        logMessage.setUser(CSConstants.UNKNOWN_USER_ID.toString());
+        logMessage.setUser(getServerEntities().getUnknownUserId().toString());
         return logMessage;
     }
 

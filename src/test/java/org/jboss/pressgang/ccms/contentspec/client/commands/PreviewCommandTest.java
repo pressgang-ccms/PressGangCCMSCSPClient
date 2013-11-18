@@ -21,18 +21,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
@@ -46,23 +40,17 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, FileUtilities.class, ClientUtilities.class})
-public class PreviewCommandTest extends BaseUnitTest {
+@PrepareForTest({FileUtilities.class, ClientUtilities.class})
+public class PreviewCommandTest extends BaseCommandTest {
     private static final String BOOK_TITLE = "Test";
     private static final String DUMMY_BUILD_FILE_NAME = "Test.zip";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary String randomString;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock ContentSpec contentSpec;
     @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
@@ -76,9 +64,6 @@ public class PreviewCommandTest extends BaseUnitTest {
     @Before
     public void setUp() throws IOException {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         command = spy(new PreviewCommand(parser, cspConfig, clientConfig));
 
         // Only test the preview command and not the build or assemble command content.

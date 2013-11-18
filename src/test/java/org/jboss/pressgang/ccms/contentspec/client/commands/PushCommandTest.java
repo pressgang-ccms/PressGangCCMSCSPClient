@@ -27,28 +27,20 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.FutureTask;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.PropertyTagProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
@@ -71,11 +63,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class})
-public class PushCommandTest extends BaseUnitTest {
-    @Rule public PowerMockRule rule = new PowerMockRule();
+@PrepareForTest({ClientUtilities.class, FileUtilities.class, DocBookUtilities.class})
+public class PushCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
@@ -83,18 +73,11 @@ public class PushCommandTest extends BaseUnitTest {
     @ArbitraryString(type = StringType.ALPHANUMERIC) String contentSpecString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String randomAlphanumString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String filename;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TextContentSpecProvider textContentSpecProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock TextContentSpecWrapper textContentSpecWrapper;
     @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
     @Mock ContentSpec contentSpec;
-    @Mock TopicProvider topicProvider;
-    @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock Level level;
@@ -111,11 +94,6 @@ public class PushCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
-        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
 
         when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);
         when(textContentSpecProvider.newTextProcessingOptions()).thenReturn(textCSProcessingOptionsWrapper);

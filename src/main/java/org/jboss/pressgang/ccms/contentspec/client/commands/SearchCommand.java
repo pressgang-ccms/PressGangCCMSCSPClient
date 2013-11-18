@@ -11,7 +11,6 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.rest.v1.constants.CommonFilterConstants;
 import org.jboss.pressgang.ccms.rest.v1.query.RESTContentSpecQueryBuilderV1;
@@ -65,7 +64,7 @@ public class SearchCommand extends BaseCommandImpl {
         queryBuilder.setContentSpecTitle(searchText);
         queryBuilder.setContentSpecProduct(searchText);
         queryBuilder.setContentSpecVersion(searchText);
-        queryBuilder.setPropertyTag(CSConstants.ADDED_BY_PROPERTY_TAG_ID, searchText);
+        queryBuilder.setPropertyTag(getServerEntities().getAddedByPropertyTagId(), searchText);
 
         // Search the database for content specs that match the query parameters
         final CollectionWrapper<ContentSpecWrapper> contentSpecs = getProviderFactory().getProvider(
@@ -85,7 +84,7 @@ public class SearchCommand extends BaseCommandImpl {
             JCommander.getConsole().println(ClientUtilities.getMessage("NO_CS_FOUND_MSG"));
         } else {
             JCommander.getConsole().println(
-                    ClientUtilities.generateContentSpecList(ClientUtilities.buildSpecList(csList, getProviderFactory())));
+                    ClientUtilities.generateContentSpecList(ClientUtilities.buildSpecList(csList, getProviderFactory(), getServerEntities())));
         }
     }
 

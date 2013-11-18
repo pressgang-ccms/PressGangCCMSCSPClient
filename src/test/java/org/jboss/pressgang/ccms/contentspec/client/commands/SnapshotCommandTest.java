@@ -11,7 +11,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
@@ -22,26 +21,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.FutureTask;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
@@ -56,11 +46,9 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, CSTransformer.class, ClientUtilities.class})
-public class SnapshotCommandTest extends BaseUnitTest {
-    @Rule public PowerMockRule rule = new PowerMockRule();
+@PrepareForTest({CSTransformer.class, ClientUtilities.class})
+public class SnapshotCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
@@ -68,17 +56,10 @@ public class SnapshotCommandTest extends BaseUnitTest {
     @Arbitrary String randomString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String checksum;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TextContentSpecProvider textContentSpecProvider;
-    @Mock TopicProvider topicProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock TextContentSpecWrapper textContentSpecWrapper;
     @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
-    @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock ContentSpec contentSpec;
@@ -91,13 +72,6 @@ public class SnapshotCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
-        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
-
         command = spy(new SnapshotCommand(parser, cspConfig, clientConfig));
 
         when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);

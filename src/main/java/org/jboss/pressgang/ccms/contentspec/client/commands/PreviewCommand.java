@@ -14,7 +14,6 @@ import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
-import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "PREVIEW")
@@ -265,7 +264,7 @@ public class PreviewCommand extends AssembleCommand {
      * @return The locale that the publican files were created as.
      */
     protected String generateOutputLocale() {
-        return getTargetLocale() == null ? (getLocale() == null ? CommonConstants.DEFAULT_LOCALE : getLocale()) : getTargetLocale();
+        return getTargetLocale() == null ? (getLocale() == null ? getServerSettings().getDefaultLocale() : getLocale()) : getTargetLocale();
     }
 
     @Override

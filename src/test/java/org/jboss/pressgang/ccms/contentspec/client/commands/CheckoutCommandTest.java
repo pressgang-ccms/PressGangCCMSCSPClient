@@ -20,14 +20,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
@@ -44,24 +40,18 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
-public class CheckoutCommandTest extends BaseUnitTest {
+@PrepareForTest({DocBookUtilities.class, FileUtilities.class, ClientUtilities.class})
+public class CheckoutCommandTest extends BaseCommandTest {
     private static final String BOOK_TITLE = "Test";
     private static final String EMPTY_FILE_NAME = "empty.txt";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary String randomString;
     @Arbitrary Integer randomNumber;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock ContentSpec contentSpec;
 

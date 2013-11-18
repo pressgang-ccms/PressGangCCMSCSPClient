@@ -25,25 +25,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
@@ -57,27 +49,19 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, CSTransformer.class})
-public class PullSnapshotCommandTest extends BaseUnitTest {
+@PrepareForTest({ClientUtilities.class, CSTransformer.class})
+public class PullSnapshotCommandTest extends BaseCommandTest {
     private static final String CONTENTSPEC_TITLE = "ContentSpec";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary Integer revision;
     @Arbitrary String randomString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TopicProvider topicProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
-    @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock ContentSpec contentSpec;
@@ -90,11 +74,6 @@ public class PullSnapshotCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         command = spy(new PullSnapshotCommand(parser, cspConfig, clientConfig));
 
         // Authentication is tested in the base implementation so assume all users are valid

@@ -23,25 +23,17 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.util.Arrays;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.enums.LevelType;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
@@ -58,11 +50,9 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, FileUtilities.class, ClientUtilities.class, DocBookUtilities.class})
-public class ValidateCommandTest extends BaseUnitTest {
-    @Rule public PowerMockRule rule = new PowerMockRule();
+@PrepareForTest({FileUtilities.class, ClientUtilities.class, DocBookUtilities.class})
+public class ValidateCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
@@ -70,19 +60,12 @@ public class ValidateCommandTest extends BaseUnitTest {
     @ArbitraryString(type = StringType.ALPHANUMERIC) String contentSpecString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String randomAlphanumString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String filename;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock UserProvider userProvider;
+
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
-    @Mock ContentSpecProvider contentSpecProvider;
     @Mock ContentSpecWrapper contentSpecWrapper;
-    @Mock TextContentSpecProvider textContentSpecProvider;
     @Mock TextContentSpecWrapper textContentSpecWrapper;
     @Mock ContentSpec contentSpec;
-    @Mock TopicProvider topicProvider;
     @Mock Level level;
     @Mock File file;
     @Mock File file2;
@@ -93,11 +76,6 @@ public class ValidateCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
-        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         this.command = new ValidateCommand(parser, cspConfig, clientConfig);
     }
 

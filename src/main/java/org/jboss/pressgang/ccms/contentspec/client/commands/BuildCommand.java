@@ -39,7 +39,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptio
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.docbook.compiling.DocbookBuildingOptions;
+import org.jboss.pressgang.ccms.docbook.compiling.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
@@ -425,7 +425,7 @@ public class BuildCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Check to make sure the lang is valid
-        if (getLocale() != null && !ClientUtilities.validateLanguage(this, getProviderFactory(), getLocale())) {
+        if (getLocale() != null && !ClientUtilities.validateLanguage(this, getServerSettings(), getLocale())) {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 
@@ -475,9 +475,9 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Print the success messages
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(
-                ClientUtilities.getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(), getBuilder().getNumWarnings()) +
-                (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless Victory!" : ""));
+        JCommander.getConsole().println(ClientUtilities.getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(),
+                getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless " +
+                "Victory!" : ""));
         if (getExecutionTime()) {
             JCommander.getConsole().println(ClientUtilities.getMessage("EXEC_TIME_MSG", elapsedTime));
         }
@@ -519,11 +519,11 @@ public class BuildCommand extends BaseCommandImpl {
      *
      * @return The Object that holds all the options used when building.
      */
-    protected DocbookBuildingOptions getBuildOptions() {
+    protected DocBookBuildingOptions getBuildOptions() {
         // Fix up the values for overrides so file names are expanded
         fixOverrides();
 
-        final DocbookBuildingOptions buildOptions = new DocbookBuildingOptions();
+        final DocBookBuildingOptions buildOptions = new DocBookBuildingOptions();
         buildOptions.setInjection(getInlineInjection());
         buildOptions.setInjectionTypes(getInjectionTypes());
         buildOptions.setIgnoreMissingCustomInjections(getHideErrors());
@@ -643,12 +643,14 @@ public class BuildCommand extends BaseCommandImpl {
         JCommander.getConsole().println(ClientUtilities.getMessage("FETCHING_PUBSNUMBER_MSG", Constants.KOJI_NAME));
 
         try {
-            return ClientUtilities.getPubsnumberFromKoji(contentSpec, getCspConfig().getKojiHubUrl());
+            return ClientUtilities.getPubsnumberFromKoji(contentSpec, getCspConfig().getKojiHubUrl(),
+                    getServerSettings().getDefaultLocale());
         } catch (MalformedURLException e) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_INVALID_KOJIHUB_URL_MSG",
-                    Constants.KOJI_NAME), false);
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
+                    ClientUtilities.getMessage("ERROR_INVALID_KOJIHUB_URL_MSG", Constants.KOJI_NAME), false);
         } catch (KojiException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_FETCH_PUBSNUM_MSG", Constants.KOJI_NAME), false);
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_FETCH_PUBSNUM_MSG", Constants.KOJI_NAME),
+                    false);
         }
 
         return null;
@@ -726,8 +728,7 @@ public class BuildCommand extends BaseCommandImpl {
     /**
      * Gets a ContentSpec from either an ID or File path.
      *
-     *
-     * @param fileOrId The File or Id string to use to get the content spec.
+     * @param fileOrId  The File or Id string to use to get the content spec.
      * @param logOutput If any log messages should be printed to the output when getting the content spec.
      * @return The content spec object if it could be found, otherwise null.
      */
@@ -747,7 +748,8 @@ public class BuildCommand extends BaseCommandImpl {
                     if (translatedContentSpec != null) {
                         contentSpecEntity = translatedContentSpec.getContentSpec();
                     } else {
-                        printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_TRANSLATION_ID_FOUND_MSG"), false);
+                        printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_TRANSLATION_ID_FOUND_MSG"),
+                                false);
                     }
                 } else {
                     contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());

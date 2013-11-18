@@ -21,25 +21,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.FutureTask;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.Level;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
@@ -58,14 +50,12 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class})
-public class CreateCommandTest extends BaseUnitTest {
+@PrepareForTest({ClientUtilities.class, FileUtilities.class})
+public class CreateCommandTest extends BaseCommandTest {
     private static final String SYSTEM_EXIT_ERROR = "Program did not call System.exit()";
     private static final String BOOK_TITLE = "Test";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
@@ -73,15 +63,8 @@ public class CreateCommandTest extends BaseUnitTest {
     @Arbitrary String randomString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String randomAlphanumString;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TextContentSpecProvider textContentSpecProvider;
+
     @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
-    @Mock TopicProvider topicProvider;
-    @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
     @Mock File mockFile;
@@ -98,12 +81,6 @@ public class CreateCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
-        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
         command = new CreateCommand(parser, cspConfig, clientConfig);
 
         when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);

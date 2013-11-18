@@ -19,18 +19,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import org.apache.commons.io.FileUtils;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
@@ -43,25 +36,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
-public class PullCommandTest extends BaseUnitTest {
+@PrepareForTest(ClientUtilities.class)
+public class PullCommandTest extends BaseCommandTest {
     private static final String CONTENTSPEC_TITLE = "ContentSpec";
     private static final String TOPIC_TITLE = "Topic";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary Integer revision;
     @Arbitrary String randomString;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TopicProvider topicProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock TopicWrapper topicWrapper;
 
@@ -71,10 +57,6 @@ public class PullCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
         command = new PullCommand(parser, cspConfig, clientConfig);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));

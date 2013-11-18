@@ -5,25 +5,16 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.entities.RevisionList;
 import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,21 +23,14 @@ import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, EntityUtilities.class, ContentSpecUtilities.class})
-public class RevisionsCommandTest extends BaseUnitTest {
-    @Rule public PowerMockRule rule = new PowerMockRule();
+@PrepareForTest({EntityUtilities.class, ContentSpecUtilities.class})
+public class RevisionsCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary String revisions;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TopicProvider topicProvider;
+
     @Mock RevisionList revisionList;
 
     private RevisionsCommand command;
@@ -56,10 +40,6 @@ public class RevisionsCommandTest extends BaseUnitTest {
         bindStdOut();
         PowerMockito.mockStatic(EntityUtilities.class);
         PowerMockito.mockStatic(ContentSpecUtilities.class);
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
         this.command = new RevisionsCommand(parser, cspConfig, clientConfig);
     }
 

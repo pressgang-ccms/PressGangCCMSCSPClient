@@ -4,26 +4,22 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,23 +29,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
-public class SearchCommandTest extends BaseUnitTest {
-    @Rule public PowerMockRule rule = new PowerMockRule();
+@PrepareForTest(ClientUtilities.class)
+public class SearchCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @ArbitraryString(type = StringType.ALPHANUMERIC) String query1;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String query2;
     @Arbitrary String queryResult;
+
     @Mock ContentSpecWrapper result1;
     @Mock ContentSpecWrapper result2;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
     @Mock CollectionWrapper<ContentSpecWrapper> collectionWrapper;
     @Mock SpecList specList;
 
@@ -58,10 +48,7 @@ public class SearchCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         command = new SearchCommand(parser, cspConfig, clientConfig);
         // and getting error messages works
         TestUtil.setUpMessages();
@@ -104,7 +91,7 @@ public class SearchCommandTest extends BaseUnitTest {
         given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(collectionWrapper);
         List<ContentSpecWrapper> resultList = Arrays.asList(result1, result2);
         given(collectionWrapper.getItems()).willReturn(resultList);
-        given(ClientUtilities.buildSpecList(resultList, providerFactory)).willReturn(specList);
+        given(ClientUtilities.buildSpecList(eq(resultList), eq(providerFactory), any(ServerEntitiesWrapper.class))).willReturn(specList);
         given(ClientUtilities.generateContentSpecList(specList)).willReturn(queryResult);
 
         // When the SearchCommand is processed

@@ -38,12 +38,11 @@ import com.redhat.j2koji.exceptions.KojiException;
 import com.redhat.j2koji.rpc.search.KojiBuildSearch;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.SpecTopic;
-import org.jboss.pressgang.ccms.contentspec.builder.utils.DocbookBuildUtilities;
+import org.jboss.pressgang.ccms.contentspec.builder.utils.DocBookBuildUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
-import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
 import org.jboss.pressgang.ccms.contentspec.entities.Spec;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
@@ -52,7 +51,6 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
 import org.jboss.pressgang.ccms.provider.LogMessageProvider;
-import org.jboss.pressgang.ccms.provider.StringConstantProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
@@ -62,11 +60,11 @@ import org.jboss.pressgang.ccms.utils.common.CollectionUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
-import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
-import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
@@ -398,13 +396,14 @@ public class ClientUtilities {
     /**
      * Builds a Content Specification list for a list of content specifications.
      */
-    public static SpecList buildSpecList(final List<ContentSpecWrapper> specList, final DataProviderFactory providerFactory) {
+    public static SpecList buildSpecList(final List<ContentSpecWrapper> specList, final DataProviderFactory providerFactory,
+            final ServerEntitiesWrapper serverEntities) {
         final List<Spec> specs = new ArrayList<Spec>();
         for (final ContentSpecWrapper cs : specList) {
             UserWrapper creator = null;
-            if (cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID) != null) {
+            if (cs.getProperty(serverEntities.getAddedByPropertyTagId()) != null) {
                 final CollectionWrapper<UserWrapper> users = providerFactory.getProvider(UserProvider.class).getUsersByName(
-                        cs.getProperty(CSConstants.ADDED_BY_PROPERTY_TAG_ID).getValue());
+                        cs.getProperty(serverEntities.getAddedByPropertyTagId()).getValue());
                 if (users != null && users.size() == 1) {
                     creator = users.getItems().get(0);
                 }
@@ -480,14 +479,16 @@ public class ClientUtilities {
     /**
      * Get the next pubsnumber from koji for the content spec that will be built.
      *
+     *
      * @param contentSpec The contentspec to be built.
      * @param kojiHubUrl  The URL of the Koji Hub server to connect to.
+     * @param defaultLocale
      * @return The next valid pubsnumber for a build to koji.
      * @throws KojiException         Thrown if an error occurs when searching koji for the builds.
      * @throws MalformedURLException Thrown if the passed Koji Hub URL isn't a valid URL.
      */
-    public static Integer getPubsnumberFromKoji(final ContentSpec contentSpec,
-            final String kojiHubUrl) throws KojiException, MalformedURLException {
+    public static Integer getPubsnumberFromKoji(final ContentSpec contentSpec, final String kojiHubUrl,
+            final String defaultLocale) throws KojiException, MalformedURLException {
         assert contentSpec != null;
 
         if (kojiHubUrl == null) {
@@ -497,8 +498,8 @@ public class ClientUtilities {
         final String product = DocBookUtilities.escapeTitle(contentSpec.getProduct());
         final String version = contentSpec.getVersion();
         final String bookTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-        final String locale = contentSpec.getLocale() == null ? CommonConstants.DEFAULT_LOCALE : contentSpec.getLocale();
-        final String bookVersion = DocbookBuildUtilities.generateRevision(contentSpec);
+        final String locale = contentSpec.getLocale() == null ? defaultLocale : contentSpec.getLocale();
+        final String bookVersion = DocBookBuildUtilities.generateRevision(contentSpec);
 
         // Connect to the koji hub
         final KojiConnector connector = new KojiConnector();
@@ -848,12 +849,13 @@ public class ClientUtilities {
     /**
      * Validate that a Language is a valid language as defined by the server.
      *
-     * @param providerFactory
+     *
+     * @param serverSettings
      * @param lang            The language to be validated.
      * @return True if the language exists on the server otherwise false.
      */
-    public static boolean validateLanguage(final BaseCommand command, final DataProviderFactory providerFactory, final String lang) {
-        return validateLanguages(command, providerFactory, new String[]{lang});
+    public static boolean validateLanguage(final BaseCommand command, final ServerSettingsWrapper serverSettings, final String lang) {
+        return validateLanguages(command, serverSettings, new String[]{lang});
     }
 
     /**
@@ -863,17 +865,14 @@ public class ClientUtilities {
      * @param langs           The languages to be validated.
      * @return True if the language exists on the server otherwise false.
      */
-    public static boolean validateLanguages(final BaseCommand command, final DataProviderFactory providerFactory, final String[] langs) {
-        final StringConstantWrapper localesConstant = providerFactory.getProvider(StringConstantProvider.class).getStringConstant(
-                CommonConstants.LOCALES_STRING_CONSTANT_ID);
-        final List<String> locales = CollectionUtilities.replaceStrings(CollectionUtilities.sortAndReturn(
-                CollectionUtilities.toArrayList(localesConstant.getValue().split("[\\s\r\n]*,[\\s\r\n]*"))), "_", "-");
+    public static boolean validateLanguages(final BaseCommand command, final ServerSettingsWrapper serverSettings, final String[] langs) {
+        final List<String> locales = serverSettings.getLocales();
 
         boolean valid = true;
         for (final String lang : langs) {
             if (!locales.contains(lang)) {
                 command.printError(
-                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, localesConstant.getValue().replaceAll("\r\n|\n", " ")), false);
+                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, CollectionUtilities.toSeperatedString(locales, " ")), false);
                 valid = false;
             }
         }

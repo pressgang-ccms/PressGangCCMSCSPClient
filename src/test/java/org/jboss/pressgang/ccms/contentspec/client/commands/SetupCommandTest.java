@@ -12,7 +12,6 @@ import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
@@ -23,10 +22,8 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.Mock;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-public class SetupCommandTest extends BaseUnitTest {
-    @Rule public final PowerMockRule rule = new PowerMockRule();
+public class SetupCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @ArbitraryString(type = StringType.ALPHANUMERIC) String username;

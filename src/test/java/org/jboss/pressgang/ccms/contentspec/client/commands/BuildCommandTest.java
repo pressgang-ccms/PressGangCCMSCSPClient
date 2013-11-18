@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.beust.jcommander.JCommander;
 import com.redhat.j2koji.exceptions.KojiException;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -43,11 +42,8 @@ import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.entities.ConfigDefaults;
@@ -57,17 +53,12 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.docbook.compiling.DocbookBuildingOptions;
-import org.jboss.pressgang.ccms.provider.BlobConstantProvider;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
-import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
-import org.jboss.pressgang.ccms.provider.TopicProvider;
-import org.jboss.pressgang.ccms.provider.UserProvider;
+import org.jboss.pressgang.ccms.docbook.compiling.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
@@ -83,35 +74,26 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class, FileUtilities.class, DocBookUtilities.class, CSTransformer.class,
+@PrepareForTest({ClientUtilities.class, FileUtilities.class, DocBookUtilities.class, CSTransformer.class,
         EntityUtilities.class})
-public class BuildCommandTest extends BaseUnitTest {
+public class BuildCommandTest extends BaseCommandTest {
     private static final String BOOK_TITLE = "Test";
     private static final String DUMMY_SPEC_FILE = "Test.contentspec";
 
-    @Rule public PowerMockRule rule = new PowerMockRule();
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer id;
     @Arbitrary Integer randomNumber;
     @Arbitrary String randomString;
     @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
+
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock TranslatedContentSpecWrapper translatedContentSpecWrapper;
     @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
     @Mock ContentSpec contentSpec;
-    @Mock UserProvider userProvider;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
-    @Mock RESTTopicProvider topicProvider;
-    @Mock BlobConstantProvider blobConstantProvider;
     @Mock ConfigDefaults defaults;
 
     BuildCommand command;
@@ -121,13 +103,6 @@ public class BuildCommandTest extends BaseUnitTest {
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
-        when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
-        when(providerFactory.getProvider(RESTTopicProvider.class)).thenReturn(topicProvider);
-        when(providerFactory.getProvider(UserProvider.class)).thenReturn(userProvider);
-        when(providerFactory.getProvider(BlobConstantProvider.class)).thenReturn(blobConstantProvider);
         when(clientConfig.getDefaults()).thenReturn(defaults);
         command = spy(new BuildCommand(parser, cspConfig, clientConfig));
 
@@ -178,7 +153,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the validation will fail
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doReturn(false).when(ClientUtilities.class);
-        ClientUtilities.validateLanguage(eq(command), eq(providerFactory), anyString());
+        ClientUtilities.validateLanguage(eq(command), any(ServerSettingsWrapper.class), anyString());
 
         // When it is processed
         try {
@@ -385,7 +360,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the fetch pubsnumber is set
         command.setFetchPubsnum(true);
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenReturn(randomNumber);
+        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString(), anyString())).thenReturn(randomNumber);
         // and we want to inject a place to stop processing
         command.setZanataUrl("test");
         doThrow(new CheckExitCalled(-2)).when(clientConfig).getZanataServers();
@@ -428,7 +403,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the fetch pubsnumber is set
         command.setFetchPubsnum(true);
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new KojiException(""));
+        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString(), anyString())).thenThrow(new KojiException(""));
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works
@@ -468,7 +443,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the fetch pubsnumber is set
         command.setFetchPubsnum(true);
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString())).thenThrow(new MalformedURLException());
+        when(ClientUtilities.getPubsnumberFromKoji(any(ContentSpec.class), anyString(), anyString())).thenThrow(new MalformedURLException());
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works
@@ -579,7 +554,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(),
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), anyMap(),
                 any(BuildType.class))).willThrow(new BuildProcessingException(""));
         given(command.getBuilder()).willReturn(builder);
 
@@ -615,7 +590,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(),
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), anyMap(),
                 any(BuildType.class))).willThrow(new BuilderCreationException(""));
         given(command.getBuilder()).willReturn(builder);
 
@@ -653,7 +628,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
@@ -674,7 +649,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(), any(BuildType.class));
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), anyMap(), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
@@ -703,7 +678,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
@@ -725,7 +700,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), overrideFileCaptor.capture(),
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), overrideFileCaptor.capture(),
                 any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
@@ -757,7 +732,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and a locale is set
@@ -772,7 +747,7 @@ public class BuildCommandTest extends BaseUnitTest {
         // and the languages is valid
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doReturn(true).when(ClientUtilities.class);
-        ClientUtilities.validateLanguage(any(BaseCommand.class), eq(providerFactory), anyString());
+        ClientUtilities.validateLanguage(any(BaseCommand.class), any(ServerSettingsWrapper.class), anyString());
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works
@@ -788,7 +763,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check that the translated build method was called
-        verify(builder).buildTranslatedBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(),
+        verify(builder).buildTranslatedBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), anyMap(),
                 any(ZanataDetails.class), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
@@ -815,7 +790,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has an error
@@ -836,7 +811,7 @@ public class BuildCommandTest extends BaseUnitTest {
         }
 
         // Then check the build method was called
-        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), anyMap(), any(BuildType.class));
+        verify(builder).buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), anyMap(), any(BuildType.class));
         assertThat(getStdOutLogs(), containsString("Starting to build..."));
         assertThat(getStdOutLogs(),
                 containsString("Content Specification successfully built with " + randomNumber + " Errors and 0 Warnings"));
@@ -862,7 +837,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has no errors
@@ -913,7 +888,7 @@ public class BuildCommandTest extends BaseUnitTest {
                 anyString())).willReturn(true);
         given(command.getCsp()).willReturn(processor);
         // and the builder will throw a builder processing exception
-        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocbookBuildingOptions.class), any(BuildType.class))).willReturn(
+        given(builder.buildBook(any(ContentSpec.class), anyString(), any(DocBookBuildingOptions.class), any(BuildType.class))).willReturn(
                 bookData);
         given(command.getBuilder()).willReturn(builder);
         // and the builder has no errors

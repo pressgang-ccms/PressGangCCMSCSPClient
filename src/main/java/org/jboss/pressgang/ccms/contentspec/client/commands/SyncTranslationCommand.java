@@ -109,7 +109,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
         // Process the ids
         JCommander.getConsole().println("Downloading topics...");
-        final ZanataSyncService syncService = new ZanataSyncService(getProviderFactory(), zanataInterface);
+        final ZanataSyncService syncService = new ZanataSyncService(getProviderFactory(), zanataInterface, getServerSettings());
         syncService.sync(ids, null, null);
     }
 
@@ -177,7 +177,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         final String[] splitLocales = getLocales().split(",");
 
         // Check to make sure the locales are valid
-        if (!ClientUtilities.validateLanguages(this, getProviderFactory(), splitLocales)) {
+        if (!ClientUtilities.validateLanguages(this, getServerSettings(), splitLocales)) {
             shutdown(Constants.EXIT_ARGUMENT_ERROR);
         }
 

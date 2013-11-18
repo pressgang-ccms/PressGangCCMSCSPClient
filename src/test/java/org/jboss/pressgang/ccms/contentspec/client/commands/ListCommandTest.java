@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -18,16 +19,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-import com.beust.jcommander.JCommander;
 import net.sf.ipsedixit.annotation.Arbitrary;
-import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
-import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,32 +31,21 @@ import org.junit.Test;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.internal.CheckExitCalled;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.rule.PowerMockRule;
 
-@PrepareForTest({RESTProviderFactory.class, ClientUtilities.class})
-public class ListCommandTest extends BaseUnitTest {
-    @Rule public PowerMockRule rule = new PowerMockRule();
+@PrepareForTest(ClientUtilities.class)
+public class ListCommandTest extends BaseCommandTest {
     @Rule public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
     @Arbitrary Integer randomNumber;
     @Arbitrary String randomString;
-    @Mock JCommander parser;
-    @Mock ContentSpecConfiguration cspConfig;
-    @Mock ClientConfiguration clientConfig;
-    @Mock RESTProviderFactory providerFactory;
-    @Mock ContentSpecProvider contentSpecProvider;
 
     ListCommand command;
 
     @Before
     public void setUp() {
         bindStdOut();
-        PowerMockito.mockStatic(RESTProviderFactory.class);
-        when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
-        when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         command = new ListCommand(parser, cspConfig, clientConfig);
     }
 
@@ -120,7 +105,7 @@ public class ListCommandTest extends BaseUnitTest {
         given(contentSpecs.subList(anyInt(), anyInt())).willReturn(contentSpecs);
         // and we want to mock the Client Utilities methods
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.buildSpecList(anyList(), eq(providerFactory))).thenReturn(specList);
+        when(ClientUtilities.buildSpecList(anyList(), eq(providerFactory), any(ServerEntitiesWrapper.class))).thenReturn(specList);
         when(ClientUtilities.generateContentSpecList(eq(specList))).thenReturn(randomString);
 
         // When the command is processing
@@ -131,7 +116,7 @@ public class ListCommandTest extends BaseUnitTest {
         verify(contentSpecs, times(1)).subList(anyInt(), numResults.capture());
         assertThat(numResults.getValue(), is(5));
         PowerMockito.verifyStatic(times(1));
-        ClientUtilities.buildSpecList(anyList(), eq(providerFactory));
+        ClientUtilities.buildSpecList(anyList(), eq(providerFactory), any(ServerEntitiesWrapper.class));
         PowerMockito.verifyStatic(times(1));
         ClientUtilities.generateContentSpecList(eq(specList));
         assertThat(getStdOutLogs(), containsString(randomString));
@@ -153,7 +138,7 @@ public class ListCommandTest extends BaseUnitTest {
         // and the the test should stop if the build spec list method is called
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(ClientUtilities.class);
-        ClientUtilities.buildSpecList(anyList(), eq(providerFactory));
+        ClientUtilities.buildSpecList(anyList(), eq(providerFactory), any(ServerEntitiesWrapper.class));
 
         // When the command is processing
         final ArgumentCaptor<Integer> numResults = ArgumentCaptor.forClass(Integer.class);
@@ -186,7 +171,7 @@ public class ListCommandTest extends BaseUnitTest {
         // and the the test should stop if the build spec list method is called
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(ClientUtilities.class);
-        ClientUtilities.buildSpecList(anyList(), eq(providerFactory));
+        ClientUtilities.buildSpecList(anyList(), eq(providerFactory), any(ServerEntitiesWrapper.class));
 
         // When the command is processing
         final ArgumentCaptor<Integer> numResults = ArgumentCaptor.forClass(Integer.class);

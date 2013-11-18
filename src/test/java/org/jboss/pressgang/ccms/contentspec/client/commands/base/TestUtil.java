@@ -23,6 +23,8 @@ import org.jboss.pressgang.ccms.provider.UserProvider;
 import org.jboss.pressgang.ccms.utils.common.HashUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
+import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
@@ -34,6 +36,13 @@ import org.jboss.pressgang.ccms.zanata.ZanataDetails;
  * @author kamiller@redhat.com (Katie Miller)
  */
 public class TestUtil {
+    public static String DEFAULT_LOCALE = "en-US";
+    public static Integer ADDED_BY_PROPERTY_TAG_ID = 14;
+    public static Integer CSP_PROPERTY_ID = 15;
+    public static Integer READ_ONLY_PROPERTY_TAG_ID = 25;
+    public static Integer TYPE_CATEGORY_ID = 4;
+    public static Integer WRITER_CATEGORY_ID = 12;
+
     public static File createRealFile(String newFilename, String contents) throws IOException {
         File file = new File(newFilename);
         FileUtils.writeStringToFile(file, contents);
@@ -134,5 +143,14 @@ public class TestUtil {
     public static void setUpContentSpecHelper(final ContentSpecProvider contentSpecProvider) {
         when(ClientUtilities.getContentSpecEntity(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
         when(ClientUtilities.getContentSpecAsString(eq(contentSpecProvider), anyInt(), anyInt())).thenCallRealMethod();
+    }
+
+    public static void setUpServerSettings(final ServerSettingsWrapper serverSettings, final ServerEntitiesWrapper serverEntities) {
+        when(serverSettings.getDefaultLocale()).thenReturn(DEFAULT_LOCALE);
+        when(serverEntities.getCspIdPropertyTagId()).thenReturn(CSP_PROPERTY_ID);
+        when(serverEntities.getAddedByPropertyTagId()).thenReturn(ADDED_BY_PROPERTY_TAG_ID);
+        when(serverEntities.getReadOnlyPropertyTagId()).thenReturn(READ_ONLY_PROPERTY_TAG_ID);
+        when(serverEntities.getTypeCategoryId()).thenReturn(TYPE_CATEGORY_ID);
+        when(serverEntities.getWriterCategoryId()).thenReturn(WRITER_CATEGORY_ID);
     }
 }
