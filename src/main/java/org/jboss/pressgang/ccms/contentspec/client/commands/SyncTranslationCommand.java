@@ -36,6 +36,9 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "ZANATA_PROJECT_VERSION", metaVar = "<VERSION>")
     private String zanataVersion = null;
 
+    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
+    private Boolean disableSSLCert = false;
+
     public SyncTranslationCommand(JCommander parser, ContentSpecConfiguration cspConfig, ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
     }
@@ -82,6 +85,14 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
     public void setZanataVersion(final String zanataVersion) {
         this.zanataVersion = zanataVersion;
+    }
+
+    public Boolean getDisableSSLCert() {
+        return disableSSLCert;
+    }
+
+    public void setDisableSSLCert(Boolean disableSSLCert) {
+        this.disableSSLCert = disableSSLCert;
     }
 
     @Override
@@ -171,7 +182,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      * @return The initialised Zanata Interface.
      */
     protected ZanataInterface initialiseZanataInterface() {
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2);
+        final ZanataInterface zanataInterface = new ZanataInterface(0.2, getDisableSSLCert());
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
         final String[] splitLocales = getLocales().split(",");
