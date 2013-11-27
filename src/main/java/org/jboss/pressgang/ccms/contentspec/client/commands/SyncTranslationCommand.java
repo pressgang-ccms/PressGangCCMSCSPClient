@@ -213,11 +213,11 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         JCommander.getConsole().println(ClientUtilities.getMessage("ZANATA_WEBSERVICE_MSG", zanataDetails.getServer()));
 
         // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(zanataDetails.getServer())) {
+        if (!ClientUtilities.validateServerExists(zanataDetails.getServer(), getDisableSSLCert())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("UNABLE_TO_FIND_SERVER_MSG"), false);
+            printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
         }
 
         return true;

@@ -155,7 +155,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         JCommander.getConsole().println(ClientUtilities.getMessage("ZANATA_WEBSERVICE_MSG", zanataDetails.getServer()));
 
         // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(zanataDetails.getServer())) {
+        if (!ClientUtilities.validateServerExists(zanataDetails.getServer(), getDisableSSLCert())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 
