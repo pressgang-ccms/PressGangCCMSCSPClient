@@ -1,16 +1,10 @@
-# Make this rpm is compatible with older RHEL versions
-%global _source_filedigest_algorithm 1
-%global _binary_filedigest_algorithm 1
-%global _binary_payload w9.gzdio
-%global _source_payload w9.gzdio
-
 Name: cspclient
 Summary: Content Specification Processor client application
 License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 1.3
-Release: 3
+Version: 1.2.3
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,20 +38,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Nov 27 2013 lnewson - 1.3
-- BZ #997681 - Invalid injections are ignored and no warning or error is thrown.
-- BZ #978119 - RFE: Resolve entities before payload is built or strings are sent to Zanata.
-- BZ #998334 - RFE: Provide a way to disable ssl certificate checks.
-- BZ #1007118 - Conflicting PressGang and Publican conditions should produce an error/warning.
-- BZ #1012250 - RFE: Support <index>es.
-- BZ #1013882 - RFE: Support setting of additional entities from Content Specification.
-- BZ #1019013 - RFE: XML validation of fields like Abstract.
-- BZ #1019590 - csprocessor fails with invalid zanata values.
-- BZ #1020560 - RFE: Do Bug Link validation before downloading all the topics.
-- BZ #1022052 - Cannot set JIRAVersion when JIRAComponent is not specified.
-- BZ #1029261 - NPE occurs when building with a revision.
-* Wed Nov 27 2013 lnewson - 1.2.4
-- Added the Portuguese Constant translations to the builder.
 * Wed Nov 13 2013 lnewson - 1.2.3
 - BZ #1029729 - Valid Revision History dates are being marked as invalid.
 * Fri Nov 08 2013 lnewson - 1.2.2
