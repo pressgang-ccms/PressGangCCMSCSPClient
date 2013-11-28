@@ -184,6 +184,9 @@ public class SnapshotCommand extends BaseCommandImpl {
             contentSpec.setChecksum(null);
         }
 
+        // Attempt to download all the topic data in one request
+        ClientUtilities.downloadAllTopics(getProviderFactory(), contentSpec, null);
+
         // Setup the processing options
         final SnapshotOptions snapshotOptions = new SnapshotOptions();
         snapshotOptions.setAddRevisions(true);

@@ -165,6 +165,9 @@ public class PullSnapshotCommand extends BaseCommandImpl {
      * @param contentSpec The content spec to be processed
      */
     protected void setRevisionsForContentSpec(final ContentSpec contentSpec) {
+        // Attempt to download all the topic data in one request
+        ClientUtilities.downloadAllTopics(getProviderFactory(), contentSpec, null);
+
         // Setup the processing options
         final SnapshotOptions snapshotOptions = new SnapshotOptions();
         snapshotOptions.setAddRevisions(true);

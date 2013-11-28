@@ -56,6 +56,8 @@ rm -rf $RPM_BUILD_ROOT
 - BZ #1020560 - RFE: Do Bug Link validation before downloading all the topics.
 - BZ #1022052 - Cannot set JIRAVersion when JIRAComponent is not specified.
 - BZ #1029261 - NPE occurs when building with a revision.
+- Updated the push-translation command to sort the error messages.
+- Other minor bug fixes.
 * Wed Nov 27 2013 lnewson - 1.2.4
 - Added the Portuguese Constant translations to the builder.
 * Wed Nov 13 2013 lnewson - 1.2.3
