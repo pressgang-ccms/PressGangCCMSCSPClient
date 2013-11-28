@@ -11,6 +11,7 @@ import com.beust.jcommander.Parameters;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.services.zanatasync.ZanataSyncService;
@@ -154,15 +155,21 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     protected void setupZanataOptions() {
         // Set the zanata url
         if (getZanataUrl() != null) {
+            ZanataServerConfiguration zanataConfig = null;
             // Find the zanata server if the url is a reference to the zanata server name
             for (final String serverName : getClientConfig().getZanataServers().keySet()) {
                 if (serverName.equals(getZanataUrl())) {
-                    setZanataUrl(getClientConfig().getZanataServers().get(serverName).getUrl());
+                    zanataConfig = getClientConfig().getZanataServers().get(serverName);
+                    setZanataUrl(zanataConfig.getUrl());
                     break;
                 }
             }
 
             getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
+            if (zanataConfig != null) {
+                getCspConfig().getZanataDetails().setToken(zanataConfig.getToken());
+                getCspConfig().getZanataDetails().setUsername(zanataConfig.getUsername());
+            }
         }
 
         // Set the zanata project

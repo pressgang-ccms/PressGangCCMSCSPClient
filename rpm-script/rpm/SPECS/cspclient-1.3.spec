@@ -10,7 +10,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.3
-Release: 3
+Release: 5
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,7 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Nov 27 2013 lnewson - 1.3
+* Fri Nov 29 2013 lnewson - 1.3
 - BZ #997681 - Invalid injections are ignored and no warning or error is thrown.
 - BZ #978119 - RFE: Resolve entities before payload is built or strings are sent to Zanata.
 - BZ #998334 - RFE: Provide a way to disable ssl certificate checks.

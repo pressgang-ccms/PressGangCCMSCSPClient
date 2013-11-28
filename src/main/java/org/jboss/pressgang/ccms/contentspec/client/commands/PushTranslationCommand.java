@@ -17,10 +17,11 @@ import org.jboss.pressgang.ccms.contentspec.builder.constants.BuilderConstants;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
+import org.jboss.pressgang.ccms.contentspec.client.processor.ClientContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
@@ -76,7 +77,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
     private Boolean disableSSLCert = false;
 
-    private ContentSpecProcessor csp;
+    private ClientContentSpecProcessor csp;
 
     public PushTranslationCommand(final JCommander parser, final ContentSpecConfiguration cspConfig,
             final ClientConfiguration clientConfig) {
@@ -172,15 +173,21 @@ public class PushTranslationCommand extends BaseCommandImpl {
     protected void setupZanataOptions() {
         // Set the zanata url
         if (getZanataUrl() != null) {
+            ZanataServerConfiguration zanataConfig = null;
             // Find the zanata server if the url is a reference to the zanata server name
             for (final String serverName : getClientConfig().getZanataServers().keySet()) {
                 if (serverName.equals(getZanataUrl())) {
-                    setZanataUrl(getClientConfig().getZanataServers().get(serverName).getUrl());
+                    zanataConfig = getClientConfig().getZanataServers().get(serverName);
+                    setZanataUrl(zanataConfig.getUrl());
                     break;
                 }
             }
 
             getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
+            if (zanataConfig != null) {
+                getCspConfig().getZanataDetails().setToken(zanataConfig.getToken());
+                getCspConfig().getZanataDetails().setUsername(zanataConfig.getUsername());
+            }
         }
 
         // Set the zanata project
@@ -256,7 +263,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Validate and parse the Content Specification
         final ErrorLoggerManager loggerManager = new ErrorLoggerManager();
-        csp = new ContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
+        csp = new ClientContentSpecProcessor(getProviderFactory(), loggerManager, processingOptions);
         boolean success = csp.processContentSpec(contentSpec, getUsername(), ContentSpecParser.ParsingMode.EITHER);
 
         // Print the error/warning messages
@@ -310,6 +317,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
      */
     protected boolean pushToZanata(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
             final ContentSpecWrapper contentSpecEntity) {
+        final List<Entity> entities = XMLUtilities.parseEntitiesFromString(contentSpec.getEntities());
         final Map<TopicWrapper, SpecTopic> topicToSpecTopic = new HashMap<TopicWrapper, SpecTopic>();
         boolean error = false;
         final ZanataInterface zanataInterface = new ZanataInterface(0.2, getDisableSSLCert());
@@ -369,14 +377,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
             answer = JCommander.getConsole().readLine();
         }
 
-        final List<String> messages = new ArrayList<String>();
+        final Map<MessageType, List<String>> messages = new HashMap<MessageType, List<String>>();
+        messages.put(MessageType.WARNING, new ArrayList<String>());
+        messages.put(MessageType.ERROR, new ArrayList<String>());
 
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
             JCommander.getConsole().println("Starting to push topics to zanata...");
 
             // Upload the content specification to zanata first so we can reference the nodes when pushing topics
             final TranslatedContentSpecWrapper translatedContentSpec = pushContentSpecToZanata(providerFactory, contentSpecEntity,
-                    zanataInterface, messages);
+                    zanataInterface, messages, entities);
             if (translatedContentSpec == null) {
                 error = true;
             } else if (!getContentSpecOnly()) {
@@ -395,11 +405,12 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     final TranslatedCSNodeWrapper translatedCSNode = findTopicTranslatedCSNode(translatedContentSpec, specTopic);
                     if (translatedCSNode == null) {
                         final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
-                        messages.add(
+                        messages.get(MessageType.ERROR).add(
                                 "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
                         error = true;
                     } else {
-                        if (!pushTopicToZanata(providerFactory, contentSpec, specTopic, translatedCSNode, zanataInterface, messages)) {
+                        if (!pushTopicToZanata(providerFactory, contentSpec, specTopic, translatedCSNode, zanataInterface, messages,
+                                entities)) {
                             error = true;
                         }
                     }
@@ -410,7 +421,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Print the info/error messages
         if (messages.size() > 0) {
             JCommander.getConsole().println("Output:");
-            for (final String message : messages) {
+            // Print the warning messages first and then any errors
+            JCommander.getConsole().println("Warnings:");
+            for (final String message : messages.get(MessageType.WARNING)) {
+                JCommander.getConsole().println("\t" + message);
+            }
+            JCommander.getConsole().println("Errors:");
+            for (final String message : messages.get(MessageType.ERROR)) {
                 JCommander.getConsole().println("\t" + message);
             }
         }
@@ -431,15 +448,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     /**
-     *
      * @param providerFactory
      * @param contentSpec
-     *@param specTopic
+     * @param specTopic
      * @param zanataInterface
-     * @param messages    @return True if the topic was pushed successful otherwise false.
+     * @param messages        @return True if the topic was pushed successful otherwise false.
+     * @param entities
      */
     protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, ContentSpec contentSpec, final SpecTopic specTopic,
-            final TranslatedCSNodeWrapper translatedCSNode, final ZanataInterface zanataInterface, final List<String> messages) {
+            final TranslatedCSNodeWrapper translatedCSNode, final ZanataInterface zanataInterface,
+            final Map<MessageType, List<String>> messages, final List<Entity> entities) {
         final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
         final Document doc = specTopic.getXMLDocument();
         boolean error = false;
@@ -452,11 +470,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
         DocBookUtilities.processConditions(condition, doc, BuilderConstants.DEFAULT_CONDITION);
 
         // Remove any custom entities, since they cause massive translation issues.
-        final List<Entity> entities = XMLUtilities.parseEntitiesFromString(contentSpec.getEntities());
         String customEntities = null;
         if (!entities.isEmpty()) {
             try {
-                if (TranslationUtilities.resolveCustomEntities(entities, doc)) {
+                if (TranslationUtilities.resolveCustomTopicEntities(entities, doc)) {
                     customEntities = contentSpec.getEntities();
                 }
             } catch (Exception e) {
@@ -506,7 +523,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
             // Create the document in zanata and then in PressGang if the document was successfully created in Zanata.
             if (!zanataInterface.createFile(resource)) {
-                messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
+                messages.get(MessageType.ERROR).add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be " +
+                        "created in Zanata.");
                 error = true;
             } else if (!translatedTopicExists) {
                 createPressGangTranslatedTopic(providerFactory, topic, condition, customEntities, translatedCSNode, messages);
@@ -514,14 +532,15 @@ public class PushTranslationCommand extends BaseCommandImpl {
         } else if (!translatedTopicExists) {
             createPressGangTranslatedTopic(providerFactory, topic, condition, customEntities, translatedCSNode, messages);
         } else {
-            messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - Skipping.");
+            messages.get(MessageType.WARNING).add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " already exists - " +
+                    "Skipping.");
         }
 
         return !error;
     }
 
     protected boolean createPressGangTranslatedTopic(final DataProviderFactory providerFactory, final TopicWrapper topic, String condition,
-            String customEntities, final TranslatedCSNodeWrapper translatedCSNode, final List<String> messages) {
+            String customEntities, final TranslatedCSNodeWrapper translatedCSNode, final Map<MessageType, List<String>> messages) {
         final TranslatedTopicProvider translatedTopicProvider = providerFactory.getProvider(TranslatedTopicProvider.class);
 
         // Create the Translated Topic based on if it has a condition/custom entity or not.
@@ -536,13 +555,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Save the Translated Topic
         try {
             if (translatedTopicProvider.createTranslatedTopic(translatedTopic) == null) {
-                messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
-                        "PressGang.");
+                messages.get(MessageType.ERROR).add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be " +
+                        "created in PressGang.");
                 return false;
             }
         } catch (Exception e) {
-            messages.add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in " +
-                    "PressGang.");
+            messages.get(MessageType.ERROR).add(
+                    "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created " +
+                            "in PressGang.");
             return false;
         }
 
@@ -554,8 +574,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
      *
      * @param specTopic        The topic to create the Zanata ID for.
      * @param translatedCSNode
-     * @param csNodeSpecific If the Topic the Zanata ID is being created for is specific to the translated CS Node. That is that it
-     *                       either has conditions, or custom entities.
+     * @param csNodeSpecific   If the Topic the Zanata ID is being created for is specific to the translated CS Node. That is that it
+     *                         either has conditions, or custom entities.
      * @return The unique Zanata ID that can be used to create a document in Zanata.
      */
     protected String getTopicZanataId(final SpecTopic specTopic, final TranslatedCSNodeWrapper translatedCSNode, boolean csNodeSpecific) {
@@ -577,14 +597,19 @@ public class PushTranslationCommand extends BaseCommandImpl {
      * @param contentSpecEntity
      * @param zanataInterface
      * @param messages
+     * @param entities
      * @return
      */
     protected TranslatedContentSpecWrapper pushContentSpecToZanata(final DataProviderFactory providerFactory,
-            final ContentSpecWrapper contentSpecEntity, final ZanataInterface zanataInterface, final List<String> messages) {
+            final ContentSpecWrapper contentSpecEntity, final ZanataInterface zanataInterface,
+            final Map<MessageType, List<String>> messages, final List<Entity> entities) {
         final String zanataId = "CS" + contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
         final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
         TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getTranslatedContentSpecById(providerFactory,
                 contentSpecEntity.getId(), contentSpecEntity.getRevision());
+
+        // Resolve any custom entities that might exist
+        TranslationUtilities.resolveCustomContentSpecEntities(entities, contentSpecEntity);
 
         if (zanataFile == null) {
             final Resource resource = new Resource();
@@ -613,7 +638,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
             // Create the document in Zanata
             if (!zanataInterface.createFile(resource)) {
-                messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
+                messages.get(MessageType.ERROR).add("Content Spec ID " + contentSpecEntity.getId() + ", " +
+                        "Revision " + contentSpecEntity.getRevision() + " " +
                         "failed to be created in Zanata.");
                 return null;
             } else if (translatedContentSpec == null) {
@@ -622,7 +648,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
         } else if (translatedContentSpec == null) {
             return createPressGangTranslatedContentSpec(providerFactory, contentSpecEntity, messages);
         } else {
-            messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " already " +
+            messages.get(MessageType.WARNING).add("Content Spec ID " + contentSpecEntity.getId() + ", " +
+                    "Revision " + contentSpecEntity.getRevision() + " already " +
                     "exists - Skipping.");
         }
 
@@ -630,7 +657,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     protected TranslatedContentSpecWrapper createPressGangTranslatedContentSpec(final DataProviderFactory providerFactory,
-            final ContentSpecWrapper contentSpecEntity, final List<String> messages) {
+            final ContentSpecWrapper contentSpecEntity, final Map<MessageType, List<String>> messages) {
         final TranslatedContentSpecProvider translatedContentSpecProvider = providerFactory.getProvider(
                 TranslatedContentSpecProvider.class);
 
@@ -642,15 +669,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final TranslatedContentSpecWrapper translatedContentSpec = translatedContentSpecProvider.createTranslatedContentSpec(
                     newTranslatedContentSpec);
             if (translatedContentSpec == null) {
-                messages.add("Content Spec ID " + contentSpecEntity.getId() + ", " +
+                messages.get(MessageType.ERROR).add("Content Spec ID" + contentSpecEntity.getId() + ", " +
                         "Revision " + contentSpecEntity.getRevision() + " failed to be created in PressGang.");
                 return null;
             } else {
                 return translatedContentSpec;
             }
         } catch (Exception e) {
-            messages.add("Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() + " " +
-                    "failed to be created in PressGang.");
+            messages.get(MessageType.ERROR).add(
+                    "Content Spec ID " + contentSpecEntity.getId() + ", Revision " + contentSpecEntity.getRevision() +
+                            " failed to be created in PressGang.");
             return null;
         }
     }
@@ -658,5 +686,9 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Override
     public boolean requiresExternalConnection() {
         return true;
+    }
+
+    private static enum MessageType {
+        WARNING, ERROR
     }
 }
