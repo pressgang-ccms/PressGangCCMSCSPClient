@@ -48,6 +48,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfigurat
 import org.jboss.pressgang.ccms.contentspec.client.constants.ConfigConstants;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.entities.ConfigDefaults;
+import org.jboss.pressgang.ccms.contentspec.client.entities.RESTVersionDecorator;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.utils.LoggingUtilities;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
@@ -234,6 +235,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
                 // Create the Provider Factory
                 providerFactory = RESTProviderFactory.create(command.getPressGangServerUrl());
+                providerFactory.getRESTManager().getProxyFactory().getProviderFactory().registerProvider(RESTVersionDecorator.class);
 
                 // Check that the version is valid
                 if (!doVersionCheck(providerFactory.getRESTManager().getRESTClient())) {
