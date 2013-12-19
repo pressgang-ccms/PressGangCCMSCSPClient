@@ -997,20 +997,23 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Override
     public void shutdown() {
-        this.isShuttingDown.set(true);
-        if (command != null && command != this) {
+        boolean processingSubCommand = command != null && command != this && isProcessingCommand.get();
+        if (processingSubCommand) {
             command.shutdown();
+        } else {
+            isShuttingDown.set(true);
         }
     }
 
     @Override
     public void shutdown(int exitStatus) {
-        shutdown.set(true);
-        if (command != null) {
-            command.setAppShuttingDown(true);
-            command.setShutdown(true);
+        boolean processingSubCommand = command != null && command != this && isProcessingCommand.get();
+        if (processingSubCommand) {
+            command.shutdown(exitStatus);
+        } else {
+            shutdown.set(true);
+            System.exit(exitStatus);
         }
-        System.exit(exitStatus);
     }
 
     @Override
