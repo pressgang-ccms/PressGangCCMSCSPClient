@@ -10,7 +10,7 @@ License: LGPL
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.3.4
-Release: 1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -46,6 +46,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Mon Jan 06 2014 lnewson - 1.3.4
 - Fixed a bug that was merging revision histories incorrectly in some instances.
+- Fixed a bug that was adding leading zeros to revnumbers when adding revisions.
 * Thu Dec 19 2013 lnewson - 1.3.3
 - Fixed a bug that was causing entities in Topic titles to produce errors when building.
 * Mon Dec 16 2013 lnewson - 1.3.2
