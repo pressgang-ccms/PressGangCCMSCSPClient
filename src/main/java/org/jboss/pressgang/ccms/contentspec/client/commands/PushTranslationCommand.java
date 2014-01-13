@@ -422,13 +422,17 @@ public class PushTranslationCommand extends BaseCommandImpl {
         if (messages.size() > 0) {
             JCommander.getConsole().println("Output:");
             // Print the warning messages first and then any errors
-            JCommander.getConsole().println("Warnings:");
-            for (final String message : messages.get(MessageType.WARNING)) {
-                JCommander.getConsole().println("\t" + message);
+            if (messages.containsKey(MessageType.WARNING)) {
+                JCommander.getConsole().println("Warnings:");
+                for (final String message : messages.get(MessageType.WARNING)) {
+                    JCommander.getConsole().println("\t" + message);
+                }
             }
-            JCommander.getConsole().println("Errors:");
-            for (final String message : messages.get(MessageType.ERROR)) {
-                JCommander.getConsole().println("\t" + message);
+            if (messages.containsKey(MessageType.ERROR)) {
+                JCommander.getConsole().println("Errors:");
+                for (final String message : messages.get(MessageType.ERROR)) {
+                    JCommander.getConsole().println("\t" + message);
+                }
             }
         }
 
