@@ -20,7 +20,7 @@
         <jackson.version>1.9.9</jackson.version>
         <resteasy.version>2.3.5.Final</resteasy.version>
         <slf4j.version>1.6.4</slf4j.version>
-        <shadeplugin.version>2.0</shadeplugin.version>
+        <shadeplugin.version>2.1</shadeplugin.version>
         <commonsio.version>1.4</commonsio.version>
         <ipsedixit.version>1.0.2</ipsedixit.version>
         <!-- Can't move to Mockito 1.9.5 and PowerMock 1.5 yet due to bug -->
