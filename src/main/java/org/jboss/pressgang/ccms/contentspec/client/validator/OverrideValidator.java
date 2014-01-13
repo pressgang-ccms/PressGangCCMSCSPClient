@@ -27,7 +27,7 @@ public class OverrideValidator implements IParameterValidator {
                         varName.equals(CSConstants.FEEDBACK_OVERRIDE) || varName.equals(CSConstants.POM_OVERRIDE)) {
                     final File file = new File(ClientUtilities.fixFilePath(varValue));
                     if (!(file.exists() && file.isFile())) {
-                        throw new ParameterException("The \"" + varName + "\" override is not a valid file.");
+                        throw new ParameterException("The \"" + varName + "\" override references a file that could not be found.");
                     }
                 } else if (varName.equals(CSConstants.REVNUMBER_OVERRIDE)) {
                     if (!varValue.matches("^(" + ProcessorConstants.VERSION_EPOCH_VALIDATE_REGEX + ")-[0-9]+$")) {
