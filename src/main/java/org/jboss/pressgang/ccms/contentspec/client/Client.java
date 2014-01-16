@@ -789,6 +789,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                     final String url = serversNode.getString(prefix + ".url");
                     final String username = serversNode.getString(prefix + ".username");
                     final String token = serversNode.getString(prefix + ".key");
+                    final boolean cache = serversNode.getBoolean(prefix + ".cache", true);
 
                     // Check that a url was specified
                     if (url == null) {
@@ -802,6 +803,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                     serverConfig.setUrl(url);
                     serverConfig.setUsername(username);
                     serverConfig.setToken(token);
+                    serverConfig.setCache(cache);
 
                     zanataServers.put(name, serverConfig);
                 } else if (key.equals(Constants.DEFAULT_SERVER_NAME)) {
@@ -840,6 +842,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                 defaultConfig.setUsername(config.getUsername());
                 defaultConfig.setToken(config.getToken());
                 defaultConfig.setUsername(config.getUsername());
+                defaultConfig.setCache(config.useCache());
             }
         }
 

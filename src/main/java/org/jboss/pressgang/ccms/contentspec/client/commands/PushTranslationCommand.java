@@ -2,6 +2,8 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +45,9 @@ import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
-import org.jboss.pressgang.ccms.zanata.ZanataConstants;
+import org.jboss.pressgang.ccms.zanata.ETagCache;
+import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
+import org.jboss.pressgang.ccms.zanata.NotModifiedException;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.w3c.dom.Document;
@@ -78,6 +82,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
     private Boolean disableSSLCert = false;
 
     private ClientContentSpecProcessor csp;
+    private final ETagCache eTagCache = new ETagCache();
 
     public PushTranslationCommand(final JCommander parser, final ContentSpecConfiguration cspConfig,
             final ClientConfiguration clientConfig) {
@@ -215,13 +220,6 @@ public class PushTranslationCommand extends BaseCommandImpl {
             return false;
         }
 
-        // At this point the zanata details are valid, so save the details.
-        System.setProperty(ZanataConstants.ZANATA_SERVER_PROPERTY, zanataDetails.getServer());
-        System.setProperty(ZanataConstants.ZANATA_PROJECT_PROPERTY, zanataDetails.getProject());
-        System.setProperty(ZanataConstants.ZANATA_PROJECT_VERSION_PROPERTY, zanataDetails.getVersion());
-        System.setProperty(ZanataConstants.ZANATA_USERNAME_PROPERTY, zanataDetails.getUsername());
-        System.setProperty(ZanataConstants.ZANATA_TOKEN_PROPERTY, zanataDetails.getToken());
-
         return true;
     }
 
@@ -289,6 +287,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
         } else {
             JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_ZANATA_PUSH_MSG"));
         }
+
+        // Save the etag cache
+        try {
+            eTagCache.save(new File(Constants.ZANATA_CACHE_LOCATION));
+        } catch (IOException e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE,
+                    ClientUtilities.getMessage("ERROR_FAILED_TO_SAVE_ZANATA_CACHE_MSG", Constants.ZANATA_CACHE_LOCATION), false);
+        }
     }
 
     @Override
@@ -308,6 +314,36 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     /**
+     * Initialise the Zanata Interface and setup it's locales.
+     *
+     * @return The initialised Zanata Interface.
+     */
+    protected ZanataInterface initialiseZanataInterface() {
+        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
+        final ZanataInterface zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
+
+        // Configure the cache
+        ZanataServerConfiguration configuration = null;
+        for (final Map.Entry<String, ZanataServerConfiguration> entry : getClientConfig().getZanataServers().entrySet()) {
+            if (entry.getValue().getUrl().equals(zanataDetails.getServer())) {
+                configuration = entry.getValue();
+                break;
+            }
+        }
+        if (configuration != null && configuration.useCache()) {
+            try {
+                eTagCache.load(new File(Constants.ZANATA_CACHE_LOCATION));
+            } catch (IOException e) {
+                // TODO
+            }
+            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache);
+            zanataInterface.getProxyFactory().registerPrefixInterceptor(interceptor);
+        }
+
+        return zanataInterface;
+    }
+
+    /**
      * Pushes a content spec and its topics to zanata.
      *
      * @param providerFactory
@@ -320,7 +356,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final List<Entity> entities = XMLUtilities.parseEntitiesFromString(contentSpec.getEntities());
         final Map<TopicWrapper, SpecTopic> topicToSpecTopic = new HashMap<TopicWrapper, SpecTopic>();
         boolean error = false;
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2, getDisableSSLCert());
+        final ZanataInterface zanataInterface = initialiseZanataInterface();
 
         // Convert all the topics to DOM Documents first so we know if any are invalid
         final Map<Pair<Integer, Integer>, TopicWrapper> topics = new HashMap<Pair<Integer, Integer>, TopicWrapper>();
@@ -342,8 +378,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 }
 
                 if (doc == null) {
-                    JCommander.getConsole().println(
-                            "ERROR: Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " does not have valid XML");
+                    printError(ClientUtilities.getMessage("ERROR_INVALID_XML_MSG", topic.getId(), topic.getRevision()), false);
                     error = true;
                 } else {
                     specTopic.setXMLDocument(doc);
@@ -370,10 +405,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         final String answer;
         if (getAnswerYes()) {
-            JCommander.getConsole().println("Pushing " + ((int) total) + " topics to zanata.");
+            JCommander.getConsole().println(ClientUtilities.getMessage("PUSHING_TOPICS_TO_ZANATA_MSG", ((int) total)));
             answer = "yes";
         } else {
-            JCommander.getConsole().println("You are about to push " + ((int) total) + " topics to zanata. Continue? (Yes/No)");
+            JCommander.getConsole().println(ClientUtilities.getMessage("PUSH_TOPICS_TO_ZANATA_MSG", ((int) total)));
             answer = JCommander.getConsole().readLine();
         }
 
@@ -382,7 +417,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         messages.put(MessageType.ERROR, new ArrayList<String>());
 
         if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
-            JCommander.getConsole().println("Starting to push topics to zanata...");
+            JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_TO_PUSH_TO_ZANATA_MSG"));
 
             // Upload the content specification to zanata first so we can reference the nodes when pushing topics
             final TranslatedContentSpecWrapper translatedContentSpec = pushContentSpecToZanata(providerFactory, contentSpecEntity,
@@ -497,7 +532,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 topic.getRevision(), csNodeSpecificTopic ? translatedCSNode.getId() : null, topic.getLocale()) != null;
 
         // Check if the zanata document already exists, if it does than the topic can be ignored.
-        final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
+        Resource zanataFile;
+        try {
+            zanataFile = zanataInterface.getZanataResource(zanataId);
+        } catch (NotModifiedException e) {
+            // Assigned zanataFile anything since the file exists
+            zanataFile = new Resource();
+        }
         if (zanataFile == null) {
             // Create the document to be created in Zanata
             final Resource resource = new Resource();
@@ -608,7 +649,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final ContentSpecWrapper contentSpecEntity, final ZanataInterface zanataInterface,
             final Map<MessageType, List<String>> messages, final List<Entity> entities) {
         final String zanataId = "CS" + contentSpecEntity.getId() + "-" + contentSpecEntity.getRevision();
-        final Resource zanataFile = zanataInterface.getZanataResource(zanataId);
+        Resource zanataFile;
+        try {
+            zanataFile = zanataInterface.getZanataResource(zanataId);
+        } catch (NotModifiedException e) {
+            // Assigned zanataFile anything since the file exists
+            zanataFile = new Resource();
+        }
         TranslatedContentSpecWrapper translatedContentSpec = EntityUtilities.getTranslatedContentSpecById(providerFactory,
                 contentSpecEntity.getId(), contentSpecEntity.getRevision());
 

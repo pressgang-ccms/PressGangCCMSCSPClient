@@ -1,8 +1,11 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.beust.jcommander.JCommander;
@@ -15,13 +18,21 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfigurat
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.services.zanatasync.ZanataSyncService;
-import org.jboss.pressgang.ccms.zanata.ZanataConstants;
+import org.jboss.pressgang.ccms.zanata.ETagCache;
+import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.zanata.common.LocaleId;
+import org.zanata.rest.client.ISourceDocResource;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "SYNC_TRANSLATION")
 public class SyncTranslationCommand extends BaseCommandImpl {
+    private static final List<Class<?>> IGNORED_RESOURCES = new ArrayList<Class<?>>() {
+        {
+            add(ISourceDocResource.class);
+        }
+    };
+
     @Parameter(metaVar = "[IDs]")
     private Set<String> ids = new HashSet<String>();
 
@@ -39,6 +50,8 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
     @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
     private Boolean disableSSLCert = false;
+
+    private final ETagCache eTagCache = new ETagCache();
 
     public SyncTranslationCommand(JCommander parser, ContentSpecConfiguration cspConfig, ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
@@ -120,9 +133,17 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Process the ids
-        JCommander.getConsole().println("Downloading topics...");
+        JCommander.getConsole().println(ClientUtilities.getMessage("DOWNLOADING_TOPICS_MSG"));
         final ZanataSyncService syncService = new ZanataSyncService(getProviderFactory(), zanataInterface, getServerSettings());
         syncService.sync(ids, null, null);
+
+        // Save the etag cache
+        try {
+            eTagCache.save(new File(Constants.ZANATA_CACHE_LOCATION));
+        } catch (IOException e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE,
+                    ClientUtilities.getMessage("ERROR_FAILED_TO_SAVE_ZANATA_CACHE_MSG", Constants.ZANATA_CACHE_LOCATION), false);
+        }
     }
 
     protected boolean isValid() {
@@ -138,13 +159,6 @@ public class SyncTranslationCommand extends BaseCommandImpl {
                 zanataDetails.getUsername().isEmpty()) {
             return false;
         }
-
-        // At this point the zanata details are valid, so save the details.
-        System.setProperty(ZanataConstants.ZANATA_SERVER_PROPERTY, zanataDetails.getServer());
-        System.setProperty(ZanataConstants.ZANATA_PROJECT_PROPERTY, zanataDetails.getProject());
-        System.setProperty(ZanataConstants.ZANATA_PROJECT_VERSION_PROPERTY, zanataDetails.getVersion());
-        System.setProperty(ZanataConstants.ZANATA_USERNAME_PROPERTY, zanataDetails.getUsername());
-        System.setProperty(ZanataConstants.ZANATA_TOKEN_PROPERTY, zanataDetails.getToken());
 
         return true;
     }
@@ -189,7 +203,26 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      * @return The initialised Zanata Interface.
      */
     protected ZanataInterface initialiseZanataInterface() {
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2, getDisableSSLCert());
+        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
+        final ZanataInterface zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
+
+        // Configure the cache
+        ZanataServerConfiguration configuration = null;
+        for (final Map.Entry<String, ZanataServerConfiguration> entry : getClientConfig().getZanataServers().entrySet()) {
+            if (entry.getValue().getUrl().equals(zanataDetails.getServer())) {
+                configuration = entry.getValue();
+                break;
+            }
+        }
+        if (configuration != null && configuration.useCache()) {
+            try {
+                eTagCache.load(new File(Constants.ZANATA_CACHE_LOCATION));
+            } catch (IOException e) {
+                // TODO
+            }
+            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache, IGNORED_RESOURCES);
+            zanataInterface.getProxyFactory().registerPrefixInterceptor(interceptor);
+        }
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
         final String[] splitLocales = getLocales().split(",");

@@ -5,6 +5,7 @@ public class ZanataServerConfiguration {
     private String url;
     private String username;
     private String token;
+    private boolean cache;
 
     public ZanataServerConfiguration() {
 
@@ -52,5 +53,13 @@ public class ZanataServerConfiguration {
 
     public void setToken(final String token) {
         this.token = token;
+    }
+
+    public boolean useCache() {
+        return cache;
+    }
+
+    public void setCache(boolean cache) {
+        this.cache = cache;
     }
 }

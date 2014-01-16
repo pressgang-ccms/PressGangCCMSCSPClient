@@ -9,7 +9,9 @@ public class Constants {
     // Default client settings
     public static final String HOME_LOCATION = System.getProperty("user.home");
     public static final String CONFIG_FILENAME = "csprocessor.ini";
+    public static final String ZANATA_CACHE_FILENAME = ".zanata-cache";
     public static final String DEFAULT_CONFIG_LOCATION = HOME_LOCATION + File.separator + ".config" + File.separator + CONFIG_FILENAME;
+    public static final String ZANATA_CACHE_LOCATION = HOME_LOCATION + File.separator + ZANATA_CACHE_FILENAME;
     public static final String DEFAULT_SERVER_NAME = "default";
     public static final String PRODUCTION_SERVER_NAME = "production";
     public static final String TEST_SERVER_NAME = "test";
