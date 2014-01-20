@@ -39,7 +39,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptio
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.docbook.compiling.DocBookBuildingOptions;
+import org.jboss.pressgang.ccms.contentspec.builder.structures.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTTopicProvider;

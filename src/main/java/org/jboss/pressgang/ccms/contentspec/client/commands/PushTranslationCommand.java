@@ -276,6 +276,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Initialise the topic wrappers in the spec topics
+        // Note: All the data for this should have been downloaded in the validation step above
         initialiseSpecTopics(topicProvider, contentSpec);
 
         // Good point to check for a shutdown
