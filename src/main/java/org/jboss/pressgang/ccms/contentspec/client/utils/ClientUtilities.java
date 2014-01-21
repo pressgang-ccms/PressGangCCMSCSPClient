@@ -51,6 +51,7 @@ import org.jboss.pressgang.ccms.contentspec.entities.Spec;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
 import org.jboss.pressgang.ccms.contentspec.interfaces.ShutdownAbleApp;
 import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
+import org.jboss.pressgang.ccms.contentspec.processor.structures.ParserResults;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
@@ -606,8 +607,9 @@ public class ClientUtilities {
     public static ContentSpec parseContentSpecString(final DataProviderFactory providerFactory, final ErrorLoggerManager loggerManager,
             final String contentSpecString, final ContentSpecParser.ParsingMode parsingMode, boolean processProcesses) {
         final ContentSpecParser csp = new ContentSpecParser(providerFactory, loggerManager);
-        if (csp.parse(contentSpecString, parsingMode, processProcesses)) {
-            return csp.getContentSpec();
+        final ParserResults results = csp.parse(contentSpecString, parsingMode, processProcesses);
+        if (results.parsedSuccessfully()) {
+            return results.getContentSpec();
         } else {
             return null;
         }
