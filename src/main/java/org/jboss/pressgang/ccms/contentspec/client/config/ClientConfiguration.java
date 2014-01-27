@@ -20,6 +20,9 @@ public class ClientConfiguration {
     private String defaultZanataProject = null;
     private String defaultZanataVersion = null;
 
+    private String editorCommand = null;
+    private Boolean editorRequiresTerminal = false;
+
     private ConfigDefaults defaults =new ConfigDefaults();
 
     private Map<String, ServerConfiguration> servers = new HashMap<String, ServerConfiguration>();
@@ -137,5 +140,21 @@ public class ClientConfiguration {
 
     public void setjDocbookPreviewFormat(String jDocbookPreviewFormat) {
         this.jDocbookPreviewFormat = jDocbookPreviewFormat;
+    }
+
+    public String getEditorCommand() {
+        return editorCommand;
+    }
+
+    public void setEditorCommand(String editorCommand) {
+        this.editorCommand = editorCommand;
+    }
+
+    public Boolean getEditorRequiresTerminal() {
+        return editorRequiresTerminal;
+    }
+
+    public void setEditorRequiresTerminal(Boolean editorRequiresTerminal) {
+        this.editorRequiresTerminal = editorRequiresTerminal;
     }
 }

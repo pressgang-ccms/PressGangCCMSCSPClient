@@ -25,6 +25,7 @@ import org.jboss.pressgang.ccms.contentspec.client.commands.AssembleCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.BuildCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.CheckoutCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.CreateCommand;
+import org.jboss.pressgang.ccms.contentspec.client.commands.EditCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.InfoCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.ListCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.PreviewCommand;
@@ -284,6 +285,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         final CheckoutCommand checkout = new CheckoutCommand(parser, cspConfig, clientConfig);
         final CreateCommand create = new CreateCommand(parser, cspConfig, clientConfig);
 //        final ChecksumCommand checksum = new ChecksumCommand(parser, cspConfig, clientConfig);
+        final EditCommand edit = new EditCommand(parser, cspConfig, clientConfig);
         final InfoCommand info = new InfoCommand(parser, cspConfig, clientConfig);
         final ListCommand list = new ListCommand(parser, cspConfig, clientConfig);
         final PreviewCommand preview = new PreviewCommand(parser, cspConfig, clientConfig);
@@ -318,6 +320,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
 //        parser.addCommand(checksum.getCommandName(), checksum);
 //        commands.put(checksum.getCommandName(), checksum);
+
+        parser.addCommand(edit.getCommandName(), edit);
+        commands.put(edit.getCommandName(), edit);
 
         parser.addCommand(info.getCommandName(), info);
         commands.put(info.getCommandName(), info);
@@ -694,6 +699,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             }
         }
 
+        // Read in the editor settings
+        readEditorSettingsFromConfig(configReader);
+
         // Read in the defaults
         readDefaultDetailsFromConfig(configReader);
 
@@ -847,6 +855,22 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         }
 
         clientConfig.setZanataServers(zanataServers);
+        return true;
+    }
+
+    protected boolean readEditorSettingsFromConfig(final HierarchicalINIConfiguration configReader) {
+        if (!configReader.getRootNode().getChildren("editor").isEmpty()) {
+            // Load the editor command
+            if (configReader.getProperty("editor.command") != null && !configReader.getProperty("editor.command").equals("")) {
+                clientConfig.setEditorCommand(configReader.getProperty("editor.command").toString());
+            }
+
+            // Load the requiresTerminalCommand
+            if (configReader.getProperty("editor.requiresTerminal") != null && !configReader.getProperty("editor.requiresTerminal").equals("")) {
+                clientConfig.setEditorRequiresTerminal(Boolean.parseBoolean(configReader.getProperty("editor.requiresTerminal").toString()));
+            }
+        }
+
         return true;
     }
 

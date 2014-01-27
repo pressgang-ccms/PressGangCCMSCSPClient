@@ -97,6 +97,22 @@ public class SetupCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
+        JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_EDITOR_MSG") + YES_NO);
+        answer = JCommander.getConsole().readLine();
+
+        // Setup the Editor Settings if required
+        if (answer.equalsIgnoreCase("yes") || answer.equalsIgnoreCase("y")) {
+            // Good point to check for a shutdown
+            allowShutdownToContinueIfRequested();
+
+            configFile.append("\n");
+
+            setupEditor(configFile);
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
         // Get the default options
         JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_DEFAULTS_MSG") + YES_NO);
         answer = JCommander.getConsole().readLine();
@@ -499,6 +515,31 @@ public class SetupCommand extends BaseCommandImpl {
     }
 
     /**
+     * Setup the editor configuration options by asking
+     * the user specific details.
+     *
+     * @param configFile
+     */
+    protected void setupEditor(final StringBuilder configFile) {
+        // Get the command
+        JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_EDITOR_COMMAND_MSG"));
+        String command = JCommander.getConsole().readLine();
+
+        // Find out if the editor runs in a terminal
+        JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_EDITOR_REQUIRES_TERMINAL_MSG") + YES_NO);
+        String requiresTerminal = JCommander.getConsole().readLine();
+
+        // Create the Root Directory
+        configFile.append("[editor]\n");
+        configFile.append("command=" + command + "\n");
+        if (requiresTerminal.equalsIgnoreCase("yes") || requiresTerminal.equalsIgnoreCase("y")) {
+            configFile.append("requiresTerminal=true\n");
+        } else {
+            configFile.append("requiresTerminal=false\n");
+        }
+    }
+
+    /**
      * Setup the default value configuration options by asking
      * the user for specific details.
      *
@@ -509,11 +550,11 @@ public class SetupCommand extends BaseCommandImpl {
         JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_DEFAULT_FIRSTNAME_MSG"));
         String firstname = JCommander.getConsole().readLine();
 
-        // Get the default firstname
+        // Get the default surname
         JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_DEFAULT_SURNAME_MSG"));
         String surname = JCommander.getConsole().readLine();
 
-        // Get the default firstname
+        // Get the default email
         JCommander.getConsole().println(ClientUtilities.getMessage("SETUP_DEFAULT_EMAIL_MSG"));
         String email = JCommander.getConsole().readLine();
 

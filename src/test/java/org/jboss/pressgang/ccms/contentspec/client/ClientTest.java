@@ -1,7 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 import java.io.File;
 

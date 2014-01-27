@@ -366,6 +366,21 @@ public class SetupCommandTest extends BaseCommandTest {
     }
 
     @Test
+    public void shouldSetEditorOptions() {
+        // Given some input
+        String commandName = "vim";
+        String requiresTerminal = "yes";
+        setStdInput(commandName + "\n" + requiresTerminal + "\n");
+
+        // When getting the publican options from the user
+        StringBuilder builder = new StringBuilder();
+        command.setupEditor(builder);
+
+        // Then the output should have the editor header and options set
+        assertThat(builder.toString(), is("[editor]\ncommand=" + commandName + "\n" + "requiresTerminal=true\n"));
+    }
+
+    @Test
     public void shouldNotRequireAnExternalConnection() {
         // Given an already initialised command
 

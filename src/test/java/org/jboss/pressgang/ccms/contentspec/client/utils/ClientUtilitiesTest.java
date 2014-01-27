@@ -1,13 +1,13 @@
 package org.jboss.pressgang.ccms.contentspec.client.utils;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -34,7 +34,6 @@ import net.sf.ipsedixit.annotation.ArbitraryNumber;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
-import org.hamcrest.Matchers;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.BaseUnitTest;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
@@ -326,7 +325,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         assertArrayEquals(bookDir.list(), new String[]{"csprocessor.cfg", BOOK_TITLE + "-post.contentspec"});
         // and check that the file contents is correct
         assertThat(FileUtils.readFileToString(new File(bookDir, "csprocessor.cfg")), containsString("SPEC_ID=" + id));
-        assertThat(FileUtils.readFileToString(new File(bookDir, BOOK_TITLE + "-post.contentspec")), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(new File(bookDir, BOOK_TITLE + "-post.contentspec")), is(randomString));
     }
 
     @Test
@@ -370,7 +369,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         // Then check that the file exists and contains the right data
         File file = new File(bookDir, filename);
         assertTrue(file.exists());
-        assertThat(FileUtils.readFileToString(file), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(file), is(randomString));
     }
 
     @Test
@@ -388,7 +387,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         File incorrectFile = new File(bookDir, filename);
         assertTrue(file.exists());
         assertFalse(incorrectFile.exists());
-        assertThat(FileUtils.readFileToString(file), Matchers.is(randomString));
+        assertThat(FileUtils.readFileToString(file), is(randomString));
     }
 
     @Test
@@ -405,8 +404,8 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         File backupFile = new File(emptyFile.getAbsolutePath() + ".backup");
         assertTrue(emptyFile.exists());
         assertTrue(backupFile.exists());
-        assertThat(FileUtils.readFileToString(emptyFile), Matchers.is(randomString));
-        assertThat(FileUtils.readFileToString(backupFile), Matchers.is(""));
+        assertThat(FileUtils.readFileToString(emptyFile), is(randomString));
+        assertThat(FileUtils.readFileToString(backupFile), is(""));
     }
 
     @Test

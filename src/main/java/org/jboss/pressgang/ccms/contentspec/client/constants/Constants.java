@@ -8,6 +8,7 @@ public class Constants {
 
     // Default client settings
     public static final String HOME_LOCATION = System.getProperty("user.home");
+    public static final String TEMP_LOCATION = System.getProperty("java.io.tmpdir");
     public static final String CONFIG_FILENAME = "csprocessor.ini";
     public static final String ZANATA_CACHE_FILENAME = ".zanata-cache";
     public static final String DEFAULT_CONFIG_LOCATION = HOME_LOCATION + File.separator + ".config" + File.separator + CONFIG_FILENAME;
@@ -55,6 +56,7 @@ public class Constants {
     public static final String CREATE_COMMAND_NAME = "create";
     public static final String CHECKSUM_COMMAND_NAME = "checksum";
     public static final String CLONE_COMMAND_NAME = "clone";
+    public static final String EDIT_COMMAND_NAME = "edit";
     public static final String INFO_COMMAND_NAME = "info";
     public static final String INSTALL_COMMAND_NAME = "install";
     public static final String LIST_COMMAND_NAME = "list";

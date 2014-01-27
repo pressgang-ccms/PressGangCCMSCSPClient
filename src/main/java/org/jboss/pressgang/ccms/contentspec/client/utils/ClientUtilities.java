@@ -338,22 +338,8 @@ public class ClientUtilities {
      */
     public static Integer runCommand(final String command, final String[] envVariables, final File dir, final Console console,
             boolean displayOutput, boolean allowInput) throws IOException {
-        if (!dir.isDirectory()) throw new IOException();
-
         try {
-            String[] fixedEnvVariables = envVariables == null ? null : envVariables.clone();
-            final Map<String, String> env = System.getenv();
-            final List<String> envVars = new ArrayList<String>();
-            for (final Entry<String, String> entry : env.entrySet()) {
-                final String key = entry.getKey();
-                if (!key.equals("XML_CATALOG_FILES")) envVars.add(key + "=" + entry.getValue());
-            }
-            if (envVariables != null) {
-                Collections.addAll(envVars, envVariables);
-            }
-            fixedEnvVariables = envVars.toArray(new String[envVars.size()]);
-
-            final Process p = Runtime.getRuntime().exec(splitCommandArguments(command), fixedEnvVariables, dir);
+            final Process p = runCommand(command, envVariables, dir);
 
             // Create a separate thread to read the stderr stream
             final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
@@ -399,6 +385,36 @@ public class ClientUtilities {
         } catch (InterruptedException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * Runs a command.
+     *
+     * @param command       The command to be run.
+     * @param envVariables  An array of environment variables to be used.
+     * @param dir           The directory to run the command from.
+     * @return The running process.
+     * @throws IOException
+     */
+    public static Process runCommand(final String command, final String[] envVariables, final File dir) throws IOException {
+        String[] fixedEnvVariables = envVariables == null ? null : envVariables.clone();
+        final Map<String, String> env = System.getenv();
+        final List<String> envVars = new ArrayList<String>();
+        for (final Entry<String, String> entry : env.entrySet()) {
+            final String key = entry.getKey();
+            if (!key.equals("XML_CATALOG_FILES")) envVars.add(key + "=" + entry.getValue());
+        }
+        if (envVariables != null) {
+            Collections.addAll(envVars, envVariables);
+        }
+        fixedEnvVariables = envVars.toArray(new String[envVars.size()]);
+
+        if (dir != null) {
+            if (!dir.isDirectory()) throw new IOException();
+            return Runtime.getRuntime().exec(splitCommandArguments(command), fixedEnvVariables, dir);
+        } else {
+            return Runtime.getRuntime().exec(splitCommandArguments(command), fixedEnvVariables);
         }
     }
 
@@ -1097,6 +1113,38 @@ public class ClientUtilities {
                 JCommander.getConsole().println("\t" + getMessage("DOWNLOADING_REV_TOPICS_MSG", percent));
             }
         }
+    }
+
+    public static String getLinuxTerminalCommand() {
+        try {
+            // List the running processes and do a grep to find what session is currently running
+            final String[] cmd = {"/bin/sh", "-c", "ps -A | egrep \"kcmserver|gnome-session|xfce-mcs-manage|mate-session\""};
+            final Process process = Runtime.getRuntime().exec(cmd);
+            process.waitFor();
+
+            final BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            final String output = stdInput.readLine();
+            stdInput.close();
+
+            // Determine what command to use based on what session is running
+            if (output.contains("gnome-session")) {
+                return "gnome-terminal";
+            } else if (output.contains("kcmserver")) {
+                return "konsole";
+            } else if (output.contains("mate-session")) {
+                return "mate-terminal";
+            } else if (output.contains("xfce-mcs-manage")) {
+                return "xfce4-terminal";
+            } else {
+                return "xterm";
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            // Do nothing
+        }
+
+        return "xterm";
     }
 
     private static class InputStreamHandler extends Thread implements ShutdownAbleApp {

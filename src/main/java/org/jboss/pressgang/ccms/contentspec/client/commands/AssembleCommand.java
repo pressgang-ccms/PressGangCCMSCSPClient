@@ -136,7 +136,9 @@ public class AssembleCommand extends BuildCommand {
         buildOutputDirectory.mkdirs();
 
         // Ensure that the directory is empty
-        FileUtilities.deleteDirContents(buildOutputDirectory);
+        if (!FileUtilities.deleteDirContents(buildOutputDirectory)) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_FAILED_TO_CLEAN_ASSEMBLY_MSG"), false);
+        }
 
         // Unzip the file
         if (!ZipUtilities.unzipFileIntoDirectory(buildFile, getOutputDirectory())) {
