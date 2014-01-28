@@ -272,9 +272,7 @@ public class EditCommand extends BaseCommandImpl {
             } else if (SystemUtils.IS_OS_LINUX) {
                 return ClientUtilities.getLinuxTerminalCommand() + " -e \"" + getClientConfig().getEditorCommand() + " " + file + "\"";
             } else if (SystemUtils.IS_OS_MAC_OSX) {
-                // NOTE: This command is not tested and is only theoretical
-                return "osascript -e 'tell app \"Terminal\" do script \"" + getClientConfig().getEditorCommand() + " " + file + "\" end " +
-                        "tell'";
+                return "osascript -e 'tell app \"Terminal\" to do script \"" + getClientConfig().getEditorCommand() + " " + file + "; exit\"'";
             } else {
                 printErrorAndShutdown(Constants.EXIT_FAILURE, "ERROR_UNABLE_TO_OPEN_EDITOR_IN_TERMINAL_MSG", false);
                 return null;
