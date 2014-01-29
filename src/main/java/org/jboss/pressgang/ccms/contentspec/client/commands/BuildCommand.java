@@ -146,6 +146,9 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.SKIP_BUG_LINK_VALIDATION, descriptionKey = "BUILD_SKIP_BUG_LINK_VALIDATION")
     private Boolean skipBugLinkValidation = false;
 
+    @Parameter(names = Constants.SUGGEST_CHUNK_DEPTH, descriptionKey = "BUILD_SUGGEST_CHUNK_DEPTH")
+    private Boolean suggestChunkDepth = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -414,6 +417,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.skipBugLinkValidation = skipBugLinkValidation;
     }
 
+    public Boolean getSuggestChunkDepth() {
+        return suggestChunkDepth;
+    }
+
+    public void setSuggestChunkDepth(Boolean suggestChunkDepth) {
+        this.suggestChunkDepth = suggestChunkDepth;
+    }
+
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -547,6 +558,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setFlatten(getFlatten());
         buildOptions.setServerBuild(getClientConfig().getDefaults().isServer());
         buildOptions.setMaxRevision(getRevision());
+        buildOptions.setCalculateChunkDepth(getSuggestChunkDepth());
 
         return buildOptions;
     }

@@ -228,6 +228,8 @@ public class Constants {
 
     public static final String DISABLE_SSL_CERT_CHECK = "--disable-ssl-cert";
 
+    public static final String SUGGEST_CHUNK_DEPTH = "--suggest-chunk-depth";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;
