@@ -96,6 +96,8 @@ public class AssembleCommandTest extends BaseCommandTest {
         // Make a empty file in that directory
         projectEmptyFile = new File(projectBookDir, DUMMY_PROJECT_BUILD_FILE_NAME);
         projectEmptyFile.createNewFile();
+        PowerMockito.mockStatic(FileUtilities.class);
+        when(FileUtilities.deleteDirContents(any(File.class))).thenCallRealMethod();
     }
 
     @Test
@@ -143,7 +145,6 @@ public class AssembleCommandTest extends BaseCommandTest {
     @Test
     public void shouldShutdownWhenBuildFileDoesntExist() {
         PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.mockStatic(FileUtilities.class);
         // Given a command with ids
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
         // and the content spec file will be found
@@ -176,7 +177,6 @@ public class AssembleCommandTest extends BaseCommandTest {
     @Test
     public void shouldShutdownWhenUnableToUnzipBuild() {
         PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.mockStatic(ZipUtilities.class);
         // Given a command with ids
         command.setIds(Arrays.asList(rootTestDirectory.getAbsolutePath()));
@@ -213,7 +213,6 @@ public class AssembleCommandTest extends BaseCommandTest {
     @Test
     public void shouldOnlyPrintSuccessWhenUnzipBuildAndNoPublicanBuild() {
         PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.mockStatic(ZipUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with ids
@@ -247,7 +246,6 @@ public class AssembleCommandTest extends BaseCommandTest {
     @Test
     public void shouldPrintSuccessAndRunPublican() throws IOException {
         PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.mockStatic(ZipUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with ids
@@ -283,7 +281,6 @@ public class AssembleCommandTest extends BaseCommandTest {
     @Test
     public void shouldSuccessfullyRunFromCsprocessorCfg() throws IOException {
         PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.mockStatic(FileUtilities.class);
         PowerMockito.mockStatic(ZipUtilities.class);
         final String rootPath = rootTestDirectory.getAbsolutePath();
         // Given a command with no ids and a csprocessor.cfg
