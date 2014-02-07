@@ -34,6 +34,7 @@ import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.rest.v1.query.RESTCSNodeQueryBuilderV1;
 import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
+import org.jboss.pressgang.ccms.utils.structures.DocBookVersion;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
@@ -41,6 +42,7 @@ import org.jboss.pressgang.ccms.wrapper.StringConstantWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedCSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedTopicWrapper;
+import org.jboss.pressgang.ccms.wrapper.base.BaseTopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -220,7 +222,8 @@ public class AddRevisionCommand extends BaseCommandImpl {
 
             // Get the actual topic as it might be different to the latest content spec
             final CSNodeWrapper csNode = matchingTranslatedCSNode.getCSNode();
-            final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, csNode.getEntityId(), csNode.getEntityRevision());
+            final TopicWrapper revisionHistory = ClientUtilities.getTopicEntity(topicProvider, csNode.getEntityId(),
+                    csNode.getEntityRevision());
 
             // Good point to check for a shutdown
             allowShutdownToContinueIfRequested();
@@ -236,13 +239,23 @@ public class AddRevisionCommand extends BaseCommandImpl {
             allowShutdownToContinueIfRequested();
 
             // Add the revision and save the translated topic
-            addRevisionToTranslatedTopic(translatedTopic, getMessages(), firstname, surname, email, getRevnumber(),
-                    getDate());
+            addRevisionToTranslatedTopic(translatedTopic, getMessages(), firstname, surname, email, getRevnumber(), getDate());
             translatedTopicProvider.updateTranslatedTopic(translatedTopic, getLogMessage());
         }
 
         // Print a success message
         JCommander.getConsole().println(ClientUtilities.getMessage("REV_SUCCESSFULLY_ADDED_MSG"));
+    }
+
+    protected DocBookVersion getDocBookVersion(final BaseTopicWrapper<?> topic) {
+        switch (topic.getXmlFormat()) {
+            case CommonConstants.DOCBOOK_50:
+                return DocBookVersion.DOCBOOK_50;
+            case CommonConstants.DOCBOOK_45:
+                return DocBookVersion.DOCBOOK_45;
+            default:
+                return null;
+        }
     }
 
     /**
@@ -288,13 +301,13 @@ public class AddRevisionCommand extends BaseCommandImpl {
     /**
      * Adds a revision to a revision history topic.
      *
-     * @param topic The revision history to add the revision element to.
-     * @param messages The messages for the revision.
+     * @param topic     The revision history to add the revision element to.
+     * @param messages  The messages for the revision.
      * @param firstname The firstname of the author for the revision.
-     * @param surname The surname of the author for the revision.
-     * @param email The email of the author for the revision.
+     * @param surname   The surname of the author for the revision.
+     * @param email     The email of the author for the revision.
      * @param revnumber The revnumber to use for the revision, or null if one should be calculated.
-     * @param date The date to use for the revision, or null if the current date should be used.
+     * @param date      The date to use for the revision, or null if the current date should be used.
      */
     protected void addRevisionToTopic(final TopicWrapper topic, final List<String> messages, final String firstname, final String surname,
             final String email, final String revnumber, final String date) {
@@ -322,7 +335,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
             fixedRevnumber = revnumber;
         }
 
-        addRevisionToDocument(doc, messages, firstname, surname, email, fixedRevnumber, date);
+        addRevisionToDocument(getDocBookVersion(topic), doc, messages, firstname, surname, email, fixedRevnumber, date);
 
         topic.setXml(XMLUtilities.convertNodeToString(doc, true));
     }
@@ -330,13 +343,13 @@ public class AddRevisionCommand extends BaseCommandImpl {
     /**
      * Adds a translated revision to a revision history translated topics additional xml.
      *
-     * @param topic The revision history to add the revision element to.
-     * @param messages The messages for the revision.
+     * @param topic     The revision history to add the revision element to.
+     * @param messages  The messages for the revision.
      * @param firstname The firstname of the author for the revision.
-     * @param surname The surname of the author for the revision.
-     * @param email The email of the author for the revision.
+     * @param surname   The surname of the author for the revision.
+     * @param email     The email of the author for the revision.
      * @param revnumber The revnumber to use for the revision, or null if one should be calculated.
-     * @param date The date to use for the revision, or null if the current date should be used.
+     * @param date      The date to use for the revision, or null if the current date should be used.
      */
     protected void addRevisionToTranslatedTopic(final TranslatedTopicWrapper topic, final List<String> messages, final String firstname,
             final String surname, final String email, final String revnumber, final String date) {
@@ -396,7 +409,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
             fixedRevnumber = revnumber;
         }
 
-        addRevisionToDocument(translatedDoc, messages, firstname, surname, email, fixedRevnumber, date);
+        addRevisionToDocument(getDocBookVersion(topic), translatedDoc, messages, firstname, surname, email, fixedRevnumber, date);
 
         topic.setTranslatedAdditionalXML(XMLUtilities.convertNodeToString(translatedDoc, true));
     }
@@ -404,15 +417,16 @@ public class AddRevisionCommand extends BaseCommandImpl {
     /**
      * Creates a revision element and adds it to the &lt;revhistory&gt; element of a DOM document.
      *
-     * @param doc The DOM document to add the revision to.
-     * @param messages The messages for the revision.
+     * @param docBookVersion
+     * @param doc       The DOM document to add the revision to.
+     * @param messages  The messages for the revision.
      * @param firstname The firstname of the author for the revision.
-     * @param surname The surname of the author for the revision.
-     * @param email The email of the author for the revision.
+     * @param surname   The surname of the author for the revision.
+     * @param email     The email of the author for the revision.
      * @param revnumber The revnumber to use for the revision, or null if one should be calculated.
-     * @param date The date to use for the revision, or null if the current date should be used.
+     * @param date      The date to use for the revision, or null if the current date should be used.
      */
-    protected void addRevisionToDocument(final Document doc, final List<String> messages, final String firstname, final String surname,
+    protected void addRevisionToDocument(DocBookVersion docBookVersion, final Document doc, final List<String> messages, final String firstname, final String surname,
             final String email, final String revnumber, final String date) {
         final NodeList revhistories = doc.getElementsByTagName("revhistory");
         if (revhistories.getLength() > 0) {
@@ -449,11 +463,21 @@ public class AddRevisionCommand extends BaseCommandImpl {
 
             final Element firstnameEle = doc.createElement("firstname");
             firstnameEle.setTextContent(firstname);
-            author.appendChild(firstnameEle);
 
             final Element surnameEle = doc.createElement("surname");
             surnameEle.setTextContent(surname);
-            author.appendChild(surnameEle);
+
+            // Docbook 5 needs <firstname>/<surname> wrapped in <personname>
+            if (docBookVersion == DocBookVersion.DOCBOOK_50) {
+                final Element personnameEle = doc.createElement("personname");
+                author.appendChild(personnameEle);
+
+                personnameEle.appendChild(firstnameEle);
+                personnameEle.appendChild(surnameEle);
+            } else {
+                author.appendChild(firstnameEle);
+                author.appendChild(surnameEle);
+            }
 
             final Element emailEle = doc.createElement("email");
             emailEle.setTextContent(email);

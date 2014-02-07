@@ -98,7 +98,7 @@ public class TestUtil {
         given(contentSpecMock.getTitle()).willReturn(randomAlphanumString);
         given(contentSpecMock.getProduct()).willReturn(randomAlphanumString);
         given(contentSpecMock.getVersion()).willReturn("1");
-        given(contentSpecMock.getDtd()).willReturn("Docbook 4.5");
+        given(contentSpecMock.getFormat()).willReturn("Docbook 4.5");
         given(contentSpecMock.getCopyrightHolder()).willReturn(randomAlphanumString);
         given(contentSpecMock.getDefaultPublicanCfg()).willCallRealMethod();
         given(contentSpecMock.getId()).willReturn(id);
