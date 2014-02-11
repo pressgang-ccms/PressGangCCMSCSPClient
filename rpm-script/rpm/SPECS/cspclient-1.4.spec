@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.4
-Release: 1
+Release: 3
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,7 +44,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Jan 29 2014 lnewson - 1.4
+* Wed Feb 10 2014 lnewson - 1.4
+- BZ #885564 - RFE: Inline reference to Chapter/Section name.
 - BZ #986173 - RFE: Topic chunks are too small when rendered on access.redhat.com
 - BZ #1013895 - RFE: Add the ability to specify a jDocbook POM version.
 - BZ #1029285 - RFE: Add the ability to upload local revision history changes.
@@ -53,6 +54,8 @@ rm -rf $RPM_BUILD_ROOT
 - BZ #1052017 - Fixed URL's will fail once 50 Author Group or Revision History topics exist.
 - BZ #1053908 - Use ETags when communicating with Zanata.
 - BZ #1057408 - Images pointing to common content are having filerefs edited.
+- BZ #1053927 - Enable DocBook 5 as a valid DTD value.
+- BZ #1053928 - Add Build/XML Validation support for DocBook 5.
 * Thu Jan 09 2014 lnewson - 1.3.5
 - BZ #1050765 - Unable to use injections in Revision Histories.
 * Mon Jan 06 2014 lnewson - 1.3.4

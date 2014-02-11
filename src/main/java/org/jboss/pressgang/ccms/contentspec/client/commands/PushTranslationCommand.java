@@ -27,6 +27,7 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecParser;
 import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptions;
 import org.jboss.pressgang.ccms.contentspec.structures.StringToCSNodeCollection;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.contentspec.utils.ContentSpecUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.TranslationUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
@@ -354,7 +355,9 @@ public class PushTranslationCommand extends BaseCommandImpl {
      */
     protected boolean pushToZanata(final DataProviderFactory providerFactory, final ContentSpec contentSpec,
             final ContentSpecWrapper contentSpecEntity) {
-        final List<Entity> entities = XMLUtilities.parseEntitiesFromString(contentSpec.getEntities());
+        // Get the entities to be used from the content spec
+        final List<Entity> entities = ContentSpecUtilities.getContentSpecEntities(contentSpec);
+
         final Map<TopicWrapper, SpecTopic> topicToSpecTopic = new HashMap<TopicWrapper, SpecTopic>();
         boolean error = false;
         final ZanataInterface zanataInterface = initialiseZanataInterface();
