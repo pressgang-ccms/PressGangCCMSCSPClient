@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.4
-Release: 4
+Release: 6
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch

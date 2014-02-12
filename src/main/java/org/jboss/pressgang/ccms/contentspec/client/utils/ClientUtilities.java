@@ -1133,14 +1133,14 @@ public class ClientUtilities {
             // Determine what command to use based on what session is running
             if (output == null) {
                 return "xterm";
-            } else if (output.contains("gnome-session")) {
-                return "gnome-terminal";
+//            } else if (output.contains("gnome-session")) {
+//                return "gnome-terminal";
             } else if (output.contains("ksmserver")) {
-                return "konsole";
+                return "konsole --nofork";
             } else if (output.contains("mate-session")) {
-                return "mate-terminal";
+                return "mate-terminal --disable-factory";
             } else if (output.contains("xfce-mcs-manage")) {
-                return "xfce4-terminal";
+                return "xfce4-terminal --disable-server";
             } else {
                 return "xterm";
             }
