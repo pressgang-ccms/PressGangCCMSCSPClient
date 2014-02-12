@@ -431,8 +431,12 @@ public class ClientUtilities {
         StringBuilder quotesString = null;
         for (final String arg : args) {
             if (arg.startsWith("\"") && !quotes) {
-                quotes = true;
-                quotesString = new StringBuilder(arg.substring(1)).append(" ");
+                if (arg.endsWith("\"")) {
+                    commandArgs.add(arg.substring(1, arg.length() - 1));
+                } else {
+                    quotes = true;
+                    quotesString = new StringBuilder(arg.substring(1)).append(" ");
+                }
             } else if (arg.endsWith("\"") && quotes) {
                 quotes = false;
                 quotesString.append(arg.substring(0, arg.length() - 1));
@@ -1118,7 +1122,7 @@ public class ClientUtilities {
     public static String getLinuxTerminalCommand() {
         try {
             // List the running processes and do a grep to find what session is currently running
-            final String[] cmd = {"/bin/sh", "-c", "ps -A | egrep \"kcmserver|gnome-session|xfce-mcs-manage|mate-session\""};
+            final String[] cmd = {"/bin/sh", "-c", "ps -A | egrep \"ksmserver|gnome-session|xfce-mcs-manage|mate-session\""};
             final Process process = Runtime.getRuntime().exec(cmd);
             process.waitFor();
 
@@ -1127,9 +1131,11 @@ public class ClientUtilities {
             stdInput.close();
 
             // Determine what command to use based on what session is running
-            if (output.contains("gnome-session")) {
+            if (output == null) {
+                return "xterm";
+            } else if (output.contains("gnome-session")) {
                 return "gnome-terminal";
-            } else if (output.contains("kcmserver")) {
+            } else if (output.contains("ksmserver")) {
                 return "konsole";
             } else if (output.contains("mate-session")) {
                 return "mate-terminal";

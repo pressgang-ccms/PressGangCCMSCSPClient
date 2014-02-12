@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.4
-Release: 3
+Release: 4
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,7 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Feb 10 2014 lnewson - 1.4
+* Wed Feb 12 2014 lnewson - 1.4
 - BZ #885564 - RFE: Inline reference to Chapter/Section name.
 - BZ #986173 - RFE: Topic chunks are too small when rendered on access.redhat.com
 - BZ #1013895 - RFE: Add the ability to specify a jDocbook POM version.
