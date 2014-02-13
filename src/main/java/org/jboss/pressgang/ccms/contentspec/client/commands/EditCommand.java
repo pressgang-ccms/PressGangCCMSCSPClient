@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.beust.jcommander.JCommander;
@@ -48,7 +49,8 @@ import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "EDIT")
 public class EditCommand extends BaseCommandImpl {
-    private static final Long FILE_CHECK_INTERVAL = 500L;
+    private static final long FILE_CHECK_INTERVAL = 500L;
+    private static final long MIN_START_INTERVAL = 1000L;
 
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
@@ -270,7 +272,7 @@ public class EditCommand extends BaseCommandImpl {
             if (SystemUtils.IS_OS_WINDOWS) {
                 return "start \"\" \"" + getClientConfig().getEditorCommand() + "\" \"" + file + "\"";
             } else if (SystemUtils.IS_OS_LINUX) {
-                return ClientUtilities.getLinuxTerminalCommand() + " -e \"" + getClientConfig().getEditorCommand() + " " + file + "\"";
+                return ClientUtilities.getLinuxTerminalCommand().replace("<COMMAND>", getClientConfig().getEditorCommand() + " " + file);
             } else if (SystemUtils.IS_OS_MAC_OSX) {
                 return "osascript -e 'tell app \"Terminal\" to do script \"" + getClientConfig().getEditorCommand() + " " + file + "; exit\"'";
             } else {
@@ -404,10 +406,23 @@ public class EditCommand extends BaseCommandImpl {
         // Open the file in the editor
         JCommander.getConsole().println(ClientUtilities.getMessage("OPENING_FILE_MSG", file.getAbsoluteFile()));
         final Process process = ClientUtilities.runCommand(getCommand(file.getAbsolutePath()), null, null);
+        final long startTime = System.currentTimeMillis();
 
         // Wait for the editor to close
         try {
             process.waitFor();
+
+            // If the time between the start and the end is small (ie 1 second) then it means the program probably forked a child process
+            // and the parent has ended. So wait instead for the user to type "exit".
+            final long endTime = System.currentTimeMillis();
+            if (endTime - startTime < MIN_START_INTERVAL) {
+                final Scanner sc = new Scanner(System.in);
+                printWarn(ClientUtilities.getMessage("WARN_EDITOR_FORKED_MSG"));
+                String answer = sc.nextLine();
+                while (!(answer.equalsIgnoreCase("exit") || answer.equalsIgnoreCase("quit") || answer.equalsIgnoreCase("q"))) {
+                    answer = sc.nextLine();
+                }
+            }
 
             // Wait a little to allow for changes to be picked up
             Thread.sleep(FILE_CHECK_INTERVAL);

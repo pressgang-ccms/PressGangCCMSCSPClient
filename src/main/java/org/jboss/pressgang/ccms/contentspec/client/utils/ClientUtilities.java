@@ -1132,17 +1132,17 @@ public class ClientUtilities {
 
             // Determine what command to use based on what session is running
             if (output == null) {
-                return "xterm";
-//            } else if (output.contains("gnome-session")) {
-//                return "gnome-terminal";
+                return "xterm -e \"<COMMAND>\"";
+            } else if (output.contains("gnome-session")) {
+                return "gnome-terminal -e \"<COMMAND>\"";
             } else if (output.contains("ksmserver")) {
-                return "konsole --nofork";
+                return "konsole --nofork -e <COMMAND>";
             } else if (output.contains("mate-session")) {
-                return "mate-terminal --disable-factory";
+                return "mate-terminal --disable-factory -e \"<COMMAND>\"";
             } else if (output.contains("xfce-mcs-manage")) {
-                return "xfce4-terminal --disable-server";
+                return "xfce4-terminal --disable-server -e \"<COMMAND>\"";
             } else {
-                return "xterm";
+                return "xterm -e \"<COMMAND>\"";
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -1150,7 +1150,7 @@ public class ClientUtilities {
             // Do nothing
         }
 
-        return "xterm";
+        return "xterm -e \"<COMMAND>\"";
     }
 
     private static class InputStreamHandler extends Thread implements ShutdownAbleApp {
