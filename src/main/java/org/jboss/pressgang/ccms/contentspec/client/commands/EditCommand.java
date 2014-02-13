@@ -2,10 +2,12 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -184,11 +186,7 @@ public class EditCommand extends BaseCommandImpl {
             allowShutdownToContinueIfRequested();
 
             // Edit the temp file with the users editor
-            try {
-                editFile(file, id);
-            } catch (IOException e) {
-
-            }
+            editFile(file, id);
         }
     }
 
@@ -221,11 +219,7 @@ public class EditCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Edit the temp file with the users editor
-        try {
-            editFile(file, id);
-        } catch (IOException e) {
-
-        }
+        editFile(file, id);
     }
 
     protected void processTranslatedRevisionHistory(final CSNodeWrapper revisionHistoryNode, final String locale) {
@@ -260,11 +254,8 @@ public class EditCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Edit the temp file with the users editor
-        try {
-            editFile(file, translatedTopic.getId());
-        } catch (IOException e) {
+        editFile(file, translatedTopic.getId());
 
-        }
     }
 
     protected String getCommand(final String file) {
@@ -352,7 +343,7 @@ public class EditCommand extends BaseCommandImpl {
         return file;
     }
 
-    protected void editFile(final File file, final Integer id) throws IOException {
+    protected void editFile(final File file, final Integer id) {
         // Add a listener for any changes to the file content
         final FileFilter fileFilter = FileFilterUtils.and(FileFilterUtils.fileFileFilter(), FileFilterUtils.nameFileFilter(file.getName()));
         final FileAlterationObserver fileObserver = new FileAlterationObserver(file.getParentFile(), fileFilter);
@@ -405,29 +396,40 @@ public class EditCommand extends BaseCommandImpl {
 
         // Open the file in the editor
         JCommander.getConsole().println(ClientUtilities.getMessage("OPENING_FILE_MSG", file.getAbsoluteFile()));
-        final Process process = ClientUtilities.runCommand(getCommand(file.getAbsolutePath()), null, null);
-        final long startTime = System.currentTimeMillis();
-
-        // Wait for the editor to close
         try {
-            process.waitFor();
+            final Process process = ClientUtilities.runCommand(getCommand(file.getAbsolutePath()), null, null);
+            final long startTime = System.currentTimeMillis();
 
-            // If the time between the start and the end is small (ie 1 second) then it means the program probably forked a child process
-            // and the parent has ended. So wait instead for the user to type "exit".
-            final long endTime = System.currentTimeMillis();
-            if (endTime - startTime < MIN_START_INTERVAL) {
-                final Scanner sc = new Scanner(System.in);
-                printWarn(ClientUtilities.getMessage("WARN_EDITOR_FORKED_MSG"));
-                String answer = sc.nextLine();
-                while (!(answer.equalsIgnoreCase("exit") || answer.equalsIgnoreCase("quit") || answer.equalsIgnoreCase("q"))) {
-                    answer = sc.nextLine();
-                }
+            // Add a stream reader to clear anything that might stop the process from finishing
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            String errorMsg;
+            while ((errorMsg = reader.readLine()) != null) {
+                printError(errorMsg, false);
             }
 
-            // Wait a little to allow for changes to be picked up
-            Thread.sleep(FILE_CHECK_INTERVAL);
-        } catch (InterruptedException e) {
+            // Wait for the editor to close
+            try {
+                process.waitFor();
 
+                // If the time between the start and the end is small (ie 1 second) then it means the program probably forked a child process
+                // and the parent has ended. So wait instead for the user to type "exit".
+                final long endTime = System.currentTimeMillis();
+                if (endTime - startTime < MIN_START_INTERVAL) {
+                    final Scanner sc = new Scanner(System.in);
+                    printWarn(ClientUtilities.getMessage("WARN_EDITOR_FORKED_MSG"));
+                    String answer = sc.nextLine();
+                    while (!(answer.equalsIgnoreCase("exit") || answer.equalsIgnoreCase("quit") || answer.equalsIgnoreCase("q"))) {
+                        answer = sc.nextLine();
+                    }
+                }
+
+                // Wait a little to allow for changes to be picked up
+                Thread.sleep(FILE_CHECK_INTERVAL);
+            } catch (InterruptedException e) {
+
+            }
+        } catch (IOException e) {
+            printError(e.getMessage(), false);
         }
 
         // Clean up
