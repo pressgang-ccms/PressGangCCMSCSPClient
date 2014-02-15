@@ -82,6 +82,9 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.BUG_REPORTING_LONG_PARM, descriptionKey = "BUILD_HIDE_BUG_LINKS")
     private Boolean hideBugLinks = false;
 
+    @Parameter(names = Constants.OLD_BUG_REPORTING_LONG_PARM, descriptionKey = "BUILD_OLD_BUG_LINKS")
+    private Boolean oldBugLinks = false;
+
     @Parameter(names = Constants.FORCE_BUG_REPORTING_LONG_PARM, descriptionKey = "BUILD_FORCE_BUG_LINKS", hidden = true)
     private Boolean forceBugLinks = false;
 
@@ -385,6 +388,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.hideBugLinks = hideBugLinks;
     }
 
+    public Boolean getOldBugLinks() {
+        return oldBugLinks;
+    }
+
+    public void setOldBugLinks(Boolean oldBugLinks) {
+        this.oldBugLinks = oldBugLinks;
+    }
+
     public Boolean getAnswerYes() {
         return answerYes;
     }
@@ -540,6 +551,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setIgnoreMissingCustomInjections(getHideErrors());
         buildOptions.setSuppressErrorsPage(getHideErrors());
         buildOptions.setInsertBugLinks(!getHideBugLinks());
+        buildOptions.setUseOldBugLinks(getOldBugLinks());
         buildOptions.setOverrides(getOverrides());
         buildOptions.setPublicanCfgOverrides(getPublicanCfgOverrides());
         buildOptions.setSuppressContentSpecPage(!getHideContentSpecPage());

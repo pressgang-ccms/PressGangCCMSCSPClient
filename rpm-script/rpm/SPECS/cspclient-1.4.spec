@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.4
-Release: 6
+Release: 11
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,9 +44,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Feb 12 2014 lnewson - 1.4
+* Fri Feb 14 2014 lnewson - 1.4
 - BZ #885564 - RFE: Inline reference to Chapter/Section name.
+- BZ #979050 - RFE: Encode variable parts of "Report a Bug" link in an entity or entities for the assembly.
 - BZ #986173 - RFE: Topic chunks are too small when rendered on access.redhat.com
+- BZ #1013444 - Chapters or sections that contain <refentry>s do not work in Docbuilder.
 - BZ #1013895 - RFE: Add the ability to specify a jDocbook POM version.
 - BZ #1029285 - RFE: Add the ability to upload local revision history changes.
 - BZ #1017465 - PressGang requires <article>s to have <section>s.
@@ -56,6 +58,8 @@ rm -rf $RPM_BUILD_ROOT
 - BZ #1057408 - Images pointing to common content are having filerefs edited.
 - BZ #1053927 - Enable DocBook 5 as a valid DTD value.
 - BZ #1053928 - Add Build/XML Validation support for DocBook 5.
+- BZ #1064693 - Injections to revision history topic result in validation error.
+- BZ #1065073 - RFE: pressgang_website.js should include content spec metadata in callback.
 * Thu Jan 09 2014 lnewson - 1.3.5
 - BZ #1050765 - Unable to use injections in Revision Histories.
 * Mon Jan 06 2014 lnewson - 1.3.4
