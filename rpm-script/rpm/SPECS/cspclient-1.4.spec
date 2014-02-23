@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.4
-Release: 11
+Release: 15
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,7 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Fri Feb 14 2014 lnewson - 1.4
+* Mon Feb 24 2014 lnewson - 1.4
 - BZ #885564 - RFE: Inline reference to Chapter/Section name.
 - BZ #979050 - RFE: Encode variable parts of "Report a Bug" link in an entity or entities for the assembly.
 - BZ #986173 - RFE: Topic chunks are too small when rendered on access.redhat.com
@@ -60,6 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 - BZ #1053928 - Add Build/XML Validation support for DocBook 5.
 - BZ #1064693 - Injections to revision history topic result in validation error.
 - BZ #1065073 - RFE: pressgang_website.js should include content spec metadata in callback.
+- BZ #1066169 - XML Processing Instructions are corrupted when built.
 * Thu Jan 09 2014 lnewson - 1.3.5
 - BZ #1050765 - Unable to use injections in Revision Histories.
 * Mon Jan 06 2014 lnewson - 1.3.4

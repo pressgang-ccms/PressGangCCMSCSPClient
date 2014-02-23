@@ -7,3 +7,4 @@ rpm-script/rpm/tmp/*
 target/
 .idea/
 *.iml
+*.*~

@@ -4,18 +4,18 @@
     <parent>
         <groupId>org.jboss.pressgang</groupId>
         <artifactId>pressgang-parent</artifactId>
-        <version>1.6-SNAPSHOT</version>
+        <version>1.6</version>
     </parent>
 
     <artifactId>csprocessor-client</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4</version>
     <name>Content Specification Processor Client</name>
 
     <properties>
-        <pressgang.ccms.version>1.4-SNAPSHOT</pressgang.ccms.version>
-        <zanata-sync.version>1.4-SNAPSHOT</zanata-sync.version>
+        <pressgang.ccms.version>1.4</pressgang.ccms.version>
+        <zanata-sync.version>1.4</zanata-sync.version>
         <commonsconfiguration.version>1.7</commonsconfiguration.version>
-        <jcommander.version>1.24-SNAPSHOT</jcommander.version>
+        <jcommander.version>1.24</jcommander.version>
         <j2koji.version>0.0.1-SNAPSHOT</j2koji.version>
         <jackson.version>1.9.9</jackson.version>
         <resteasy.version>2.3.5.Final</resteasy.version>
