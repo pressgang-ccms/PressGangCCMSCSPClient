@@ -50,7 +50,7 @@ import org.w3c.dom.NodeList;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "ADD_REVISION")
 public class AddRevisionCommand extends BaseCommandImpl {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("EEE dd MMM yyyy", Locale.ENGLISH);
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("EEE MMM dd yyyy", Locale.ENGLISH);
 
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();

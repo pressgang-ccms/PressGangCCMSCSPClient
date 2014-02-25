@@ -9,8 +9,8 @@ Summary: Content Specification Processor client application
 License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 1.4
-Release: 16
+Version: 1.4.1
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,6 +44,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
+* Tue Feb 25 2014 lnewson - 1.4.1
+- BZ #1069014 - 'Initial Text' is appearing instead of topic title.
+- BZ #1069474 - Unable to build certain books.
 * Mon Feb 24 2014 lnewson - 1.4
 - BZ #885564 - RFE: Inline reference to Chapter/Section name.
 - BZ #979050 - RFE: Encode variable parts of "Report a Bug" link in an entity or entities for the assembly.
