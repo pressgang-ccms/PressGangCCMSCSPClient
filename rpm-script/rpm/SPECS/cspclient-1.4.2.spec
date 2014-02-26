@@ -9,8 +9,8 @@ Summary: Content Specification Processor client application
 License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 1.4.1
-Release: 2
+Version: 1.4.2
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,6 +44,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
+* Wed Feb 26 2014 lnewson - 1.4.2
+- BZ #1069984 - Books that contain examples with an xml processing instruction fail to build.
 * Tue Feb 25 2014 lnewson - 1.4.1
 - BZ #1069014 - 'Initial Text' is appearing instead of topic title.
 - BZ #1069474 - Unable to build certain books.
