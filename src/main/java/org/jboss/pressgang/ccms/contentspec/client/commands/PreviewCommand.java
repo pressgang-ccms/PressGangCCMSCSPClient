@@ -1,5 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import java.io.File;
 
 import com.beust.jcommander.JCommander;
@@ -162,34 +164,38 @@ public class PreviewCommand extends AssembleCommand {
                 final String rootDir = ClientUtilities.getOutputRootDirectory(getProviderFactory(), getCspConfig(), contentSpec);
 
                 if (getBuildType() == BuildType.JDOCBOOK) {
-                    return getJDocbookPreviewName(rootDir + Constants.DEFAULT_CONFIG_JDOCBOOK_LOCATION, escapedTitle, previewFormat);
+                    return getJDocBookPreviewName(rootDir + Constants.DEFAULT_CONFIG_JDOCBOOK_LOCATION, escapedTitle, previewFormat,
+                            contentSpec.getLocale());
                 } else {
                     return getPublicanPreviewName(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION, escapedTitle,
-                            contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
+                            contentSpec.getVersion(), contentSpec.getProduct(), previewFormat, contentSpec.getLocale());
                 }
             } else {
-                return findFileToPreview(escapedTitle, contentSpec.getVersion(), contentSpec.getProduct(), previewFormat);
+                return findFileToPreview(escapedTitle, contentSpec.getVersion(), contentSpec.getProduct(), previewFormat,
+                        contentSpec.getLocale());
             }
         } else {
             // Parse the spec from a file to get the main details
             final ContentSpec contentSpec = getContentSpecFromFile(getIds().get(0), false);
 
             return findFileToPreview(DocBookUtilities.escapeTitle(contentSpec.getTitle()), contentSpec.getVersion(),
-                    contentSpec.getProduct(), previewFormat);
+                    contentSpec.getProduct(), previewFormat, contentSpec.getLocale());
         }
     }
 
     /**
      * Find the file to preview when previewing from a file or id passed via the command line, for a content specification.
      *
+     *
      * @param escapedContentSpecTitle   The title of the content spec.
      * @param contentSpecVersion The version of the content specs product.
      * @param contentSpecProduct The product that content spec is for.
      * @param previewFormat      The file format to be previewed (html, html-single, pdf, etc...).
+     * @param contentSpecLocale
      * @return The filename and location of the file to be opened to be previewed, or null if it can't be found.
      */
     protected String findFileToPreview(final String escapedContentSpecTitle, final String contentSpecVersion, final String contentSpecProduct,
-            final String previewFormat) {
+            final String previewFormat, String contentSpecLocale) {
         // Create the fully qualified output path
         String fileDirectory = "";
         if (getOutputPath() != null && (getOutputPath().endsWith(File.separator) || new File(getOutputPath()).isDirectory())) {
@@ -206,23 +212,27 @@ public class PreviewCommand extends AssembleCommand {
 
         // Get the preview file name based on the build type
         if (getBuildType() == BuildType.JDOCBOOK) {
-            return getJDocbookPreviewName(fileDirectory, escapedContentSpecTitle, previewFormat);
+            return getJDocBookPreviewName(fileDirectory, escapedContentSpecTitle, previewFormat, contentSpecLocale);
         } else {
-            return getPublicanPreviewName(fileDirectory, escapedContentSpecTitle, contentSpecVersion, contentSpecProduct, previewFormat);
+            return getPublicanPreviewName(fileDirectory, escapedContentSpecTitle, contentSpecVersion, contentSpecProduct, previewFormat,
+                    contentSpecLocale);
         }
     }
 
     /**
      * Get the filename to open for a jDocbook build.
      *
+     *
      * @param rootDir                 The root directory of the build.
      * @param escapedContentSpecTitle The title of the content specification used for the build.
      * @param previewFormat           The format to be previewed.
+     * @param contentSpecLocale
      * @return The file name and location of the file to be previewed.
      */
-    protected String getJDocbookPreviewName(final String rootDir, final String escapedContentSpecTitle, final String previewFormat) {
+    protected String getJDocBookPreviewName(final String rootDir, final String escapedContentSpecTitle, final String previewFormat,
+            final String contentSpecLocale) {
         final String FS = File.separator;
-        final String locale = generateOutputLocale();
+        final String locale = generateOutputLocale(contentSpecLocale);
 
         // Fix the root book directory to point to the root build directory
         final String fixedRootDir = rootDir + "target" + FS + "docbook" + FS + "publish" + FS;
@@ -237,17 +247,19 @@ public class PreviewCommand extends AssembleCommand {
     /**
      * Get the filename to open for a publican build.
      *
+     *
      * @param rootDir                 The root directory of the build.
      * @param escapedContentSpecTitle The title of the content specification used for the build.
      * @param contentSpecVersion      The product version of the content specification used for the build.
      * @param contentSpecProduct      The product of the content specification used for the build.
      * @param previewFormat           The format to be previewed.
+     * @param contentSpecLocale
      * @return The file name and location of the file to be previewed.
      */
     protected String getPublicanPreviewName(final String rootDir, final String escapedContentSpecTitle, final String contentSpecVersion,
-            final String contentSpecProduct, final String previewFormat) {
+            final String contentSpecProduct, final String previewFormat, final String contentSpecLocale) {
         final String FS = File.separator;
-        final String locale = generateOutputLocale();
+        final String locale = generateOutputLocale(contentSpecLocale);
 
         if (previewFormat.equals("pdf")) {
             return rootDir + "tmp" + FS + locale + FS + previewFormat + File.separator +
@@ -262,9 +274,18 @@ public class PreviewCommand extends AssembleCommand {
      * Gets the Locale for the publican build, which can be used to find the location of files to preview.
      *
      * @return The locale that the publican files were created as.
+     * @param contentSpecLocale
      */
-    protected String generateOutputLocale() {
-        return getTargetLocale() == null ? (getLocale() == null ? getServerSettings().getDefaultLocale() : getLocale()) : getTargetLocale();
+    protected String generateOutputLocale(final String contentSpecLocale) {
+        if (getTargetLocale() == null) {
+            if (isNullOrEmpty(contentSpecLocale)) {
+                return getLocale() == null ? getServerSettings().getDefaultLocale() : getLocale();
+            } else {
+                return contentSpecLocale;
+            }
+        } else {
+            return getTargetLocale();
+        }
     }
 
     @Override

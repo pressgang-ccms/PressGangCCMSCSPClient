@@ -255,6 +255,8 @@ public class AssembleCommand extends BuildCommand {
             publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
         } else if (getLocale() != null) {
             publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
+        } else if (contentSpec.getLocale() != null) {
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + contentSpec.getLocale());
         }
 
         // Add the config filename
