@@ -51,6 +51,7 @@ import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
 import org.jboss.pressgang.ccms.zanata.NotModifiedException;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
+import org.jboss.resteasy.spi.UnauthorizedException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Entity;
 import org.zanata.common.ContentType;
@@ -570,13 +571,19 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 }
             }
 
-            // Create the document in zanata and then in PressGang if the document was successfully created in Zanata.
-            if (!zanataInterface.createFile(resource)) {
+            try {
+                // Create the document in zanata and then in PressGang if the document was successfully created in Zanata.
+                if (!zanataInterface.createFile(resource)) {
+                    messages.get(MessageType.ERROR).add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be " +
+                            "created in Zanata.");
+                    error = true;
+                } else if (!translatedTopicExists) {
+                    createPressGangTranslatedTopic(providerFactory, topic, condition, customEntities, translatedCSNode, messages);
+                }
+            } catch (UnauthorizedException e) {
                 messages.get(MessageType.ERROR).add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be " +
-                        "created in Zanata.");
+                        "created in Zanata due to having incorrect privileges.");
                 error = true;
-            } else if (!translatedTopicExists) {
-                createPressGangTranslatedTopic(providerFactory, topic, condition, customEntities, translatedCSNode, messages);
             }
         } else if (!translatedTopicExists) {
             createPressGangTranslatedTopic(providerFactory, topic, condition, customEntities, translatedCSNode, messages);
@@ -691,14 +698,19 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 }
             }
 
-            // Create the document in Zanata
-            if (!zanataInterface.createFile(resource)) {
+            try {
+                // Create the document in Zanata
+                if (!zanataInterface.createFile(resource)) {
+                    messages.get(MessageType.ERROR).add("Content Spec ID " + contentSpecEntity.getId() + ", " +
+                            "Revision " + contentSpecEntity.getRevision() + " failed to be created in Zanata.");
+                    return null;
+                } else if (translatedContentSpec == null) {
+                    return createPressGangTranslatedContentSpec(providerFactory, contentSpecEntity, messages);
+                }
+            } catch (UnauthorizedException e) {
                 messages.get(MessageType.ERROR).add("Content Spec ID " + contentSpecEntity.getId() + ", " +
-                        "Revision " + contentSpecEntity.getRevision() + " " +
-                        "failed to be created in Zanata.");
+                        "Revision " + contentSpecEntity.getRevision() + " failed to be created in Zanata due to having incorrect privileges.");
                 return null;
-            } else if (translatedContentSpec == null) {
-                return createPressGangTranslatedContentSpec(providerFactory, contentSpecEntity, messages);
             }
         } else if (translatedContentSpec == null) {
             return createPressGangTranslatedContentSpec(providerFactory, contentSpecEntity, messages);
@@ -724,7 +736,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final TranslatedContentSpecWrapper translatedContentSpec = translatedContentSpecProvider.createTranslatedContentSpec(
                     newTranslatedContentSpec);
             if (translatedContentSpec == null) {
-                messages.get(MessageType.ERROR).add("Content Spec ID" + contentSpecEntity.getId() + ", " +
+                messages.get(MessageType.ERROR).add("Content Spec ID " + contentSpecEntity.getId() + ", " +
                         "Revision " + contentSpecEntity.getRevision() + " failed to be created in PressGang.");
                 return null;
             } else {
