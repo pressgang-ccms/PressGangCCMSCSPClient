@@ -17,19 +17,25 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTBaseInterfaceV1;
 import org.jboss.pressgang.ccms.services.zanatasync.ZanataSyncService;
 import org.jboss.pressgang.ccms.zanata.ETagCache;
 import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.client.ISourceDocResource;
+import org.zanata.rest.service.SourceDocResource;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "SYNC_TRANSLATION")
 public class SyncTranslationCommand extends BaseCommandImpl {
     private static final List<Class<?>> IGNORED_RESOURCES = new ArrayList<Class<?>>() {
         {
             add(ISourceDocResource.class);
+            add(RESTBaseInterfaceV1.class);
+            add(RESTBaseInterfaceV1.class);
+            add(SourceDocResource.class);
         }
     };
 
@@ -204,7 +210,6 @@ public class SyncTranslationCommand extends BaseCommandImpl {
      */
     protected ZanataInterface initialiseZanataInterface() {
         final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
 
         // Configure the cache
         ZanataServerConfiguration configuration = null;
@@ -221,8 +226,10 @@ public class SyncTranslationCommand extends BaseCommandImpl {
                 // TODO
             }
             final ETagInterceptor interceptor = new ETagInterceptor(eTagCache, IGNORED_RESOURCES);
-            zanataInterface.getProxyFactory().registerPrefixInterceptor(interceptor);
+            ResteasyProviderFactory.getInstance().getClientExecutionInterceptorRegistry().register(interceptor);
         }
+
+        final ZanataInterface zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
         final String[] splitLocales = getLocales().split(",");
