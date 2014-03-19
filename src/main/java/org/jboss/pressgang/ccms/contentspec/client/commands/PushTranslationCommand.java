@@ -323,7 +323,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
      */
     protected ZanataInterface initialiseZanataInterface() {
         final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
+        ZanataInterface zanataInterface;
+        try {
+            zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
+        } catch (UnauthorizedException e) {
+            printErrorAndShutdown(Constants.EXIT_UNAUTHORISED, ClientUtilities.getMessage("ERROR_ZANATA_UNAUTHORISED_MSG"), false);
+            return null;
+        }
 
         // Configure the cache
         ZanataServerConfiguration configuration = null;

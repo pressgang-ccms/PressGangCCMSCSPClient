@@ -24,6 +24,7 @@ import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.UnauthorizedException;
 import org.zanata.common.LocaleId;
 import org.zanata.rest.client.ISourceDocResource;
 import org.zanata.rest.service.SourceDocResource;
@@ -229,7 +230,13 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             ResteasyProviderFactory.getInstance().getClientExecutionInterceptorRegistry().register(interceptor);
         }
 
-        final ZanataInterface zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
+        ZanataInterface zanataInterface;
+        try {
+            zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
+        } catch (UnauthorizedException e) {
+            printErrorAndShutdown(Constants.EXIT_UNAUTHORISED, ClientUtilities.getMessage("ERROR_ZANATA_UNAUTHORISED_MSG"), false);
+            return null;
+        }
 
         final List<LocaleId> localeIds = new ArrayList<LocaleId>();
         final String[] splitLocales = getLocales().split(",");
