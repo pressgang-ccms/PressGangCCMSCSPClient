@@ -3,6 +3,7 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,6 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTBaseInterfaceV1;
 import org.jboss.pressgang.ccms.services.zanatasync.ZanataSyncService;
 import org.jboss.pressgang.ccms.zanata.ETagCache;
 import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
@@ -26,19 +26,13 @@ import org.jboss.pressgang.ccms.zanata.ZanataInterface;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.UnauthorizedException;
 import org.zanata.common.LocaleId;
-import org.zanata.rest.client.ISourceDocResource;
-import org.zanata.rest.service.SourceDocResource;
+import org.zanata.rest.client.ITranslatedDocResource;
+import org.zanata.rest.service.TranslatedDocResource;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "SYNC_TRANSLATION")
 public class SyncTranslationCommand extends BaseCommandImpl {
-    private static final List<Class<?>> IGNORED_RESOURCES = new ArrayList<Class<?>>() {
-        {
-            add(ISourceDocResource.class);
-            add(RESTBaseInterfaceV1.class);
-            add(RESTBaseInterfaceV1.class);
-            add(SourceDocResource.class);
-        }
-    };
+    private static final List<Class<?>> ALLOWED_RESOURCES = Arrays.<Class<?>>asList(ITranslatedDocResource.class,
+            TranslatedDocResource.class);
 
     @Parameter(metaVar = "[IDs]")
     private Set<String> ids = new HashSet<String>();
@@ -226,7 +220,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             } catch (IOException e) {
                 // TODO
             }
-            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache, IGNORED_RESOURCES);
+            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache, ALLOWED_RESOURCES);
             ResteasyProviderFactory.getInstance().getClientExecutionInterceptorRegistry().register(interceptor);
         }
 

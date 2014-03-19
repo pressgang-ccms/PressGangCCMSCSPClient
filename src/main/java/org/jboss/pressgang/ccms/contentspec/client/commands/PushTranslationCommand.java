@@ -5,6 +5,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,17 +52,23 @@ import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
 import org.jboss.pressgang.ccms.zanata.NotModifiedException;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 import org.jboss.pressgang.ccms.zanata.ZanataInterface;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.UnauthorizedException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Entity;
 import org.zanata.common.ContentType;
 import org.zanata.common.LocaleId;
 import org.zanata.common.ResourceType;
+import org.zanata.rest.client.ISourceDocResource;
 import org.zanata.rest.dto.resource.Resource;
 import org.zanata.rest.dto.resource.TextFlow;
+import org.zanata.rest.service.SourceDocResource;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "PUSH_TRANSLATION")
 public class PushTranslationCommand extends BaseCommandImpl {
+    private static final List<Class<?>> ALLOWED_RESOURCES = Arrays.<Class<?>>asList(ISourceDocResource.class,
+            SourceDocResource.class);
+
     @Parameter(metaVar = "[ID]")
     private List<Integer> ids = new ArrayList<Integer>();
 
@@ -345,8 +352,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
             } catch (IOException e) {
                 // TODO
             }
-            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache);
-            zanataInterface.getProxyFactory().registerPrefixInterceptor(interceptor);
+            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache, ALLOWED_RESOURCES);
+            ResteasyProviderFactory.getInstance().getClientExecutionInterceptorRegistry().register(interceptor);
         }
 
         return zanataInterface;
