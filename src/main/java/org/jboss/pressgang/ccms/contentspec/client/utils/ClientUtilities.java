@@ -540,13 +540,13 @@ public class ClientUtilities {
      *
      * @param contentSpec The contentspec to be built.
      * @param kojiHubUrl  The URL of the Koji Hub server to connect to.
-     * @param defaultLocale
+     * @param locale
      * @return The next valid pubsnumber for a build to koji.
      * @throws KojiException         Thrown if an error occurs when searching koji for the builds.
      * @throws MalformedURLException Thrown if the passed Koji Hub URL isn't a valid URL.
      */
     public static Integer getPubsnumberFromKoji(final ContentSpec contentSpec, final String kojiHubUrl,
-            final String defaultLocale) throws KojiException, MalformedURLException {
+            final String locale) throws KojiException, MalformedURLException {
         assert contentSpec != null;
 
         if (kojiHubUrl == null) {
@@ -556,7 +556,6 @@ public class ClientUtilities {
         final String product = DocBookUtilities.escapeTitle(contentSpec.getProduct());
         final String version = contentSpec.getVersion();
         final String bookTitle = DocBookUtilities.escapeTitle(contentSpec.getTitle());
-        final String locale = contentSpec.getLocale() == null ? defaultLocale : contentSpec.getLocale();
         final String bookVersion = DocBookBuildUtilities.generateRevision(contentSpec);
 
         // Connect to the koji hub

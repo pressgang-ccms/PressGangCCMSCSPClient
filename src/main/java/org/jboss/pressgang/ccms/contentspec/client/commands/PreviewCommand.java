@@ -270,24 +270,6 @@ public class PreviewCommand extends AssembleCommand {
         }
     }
 
-    /**
-     * Gets the Locale for the publican build, which can be used to find the location of files to preview.
-     *
-     * @return The locale that the publican files were created as.
-     * @param contentSpecLocale
-     */
-    protected String generateOutputLocale(final String contentSpecLocale) {
-        if (getTargetLocale() == null) {
-            if (isNullOrEmpty(contentSpecLocale)) {
-                return getLocale() == null ? getServerSettings().getDefaultLocale() : getLocale();
-            } else {
-                return contentSpecLocale;
-            }
-        } else {
-            return getTargetLocale();
-        }
-    }
-
     @Override
     public boolean requiresExternalConnection() {
         return true;

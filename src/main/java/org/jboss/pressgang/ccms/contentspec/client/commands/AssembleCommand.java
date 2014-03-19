@@ -1,5 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -251,12 +253,9 @@ public class AssembleCommand extends BuildCommand {
         String publicanOptions = getClientConfig().getPublicanBuildOptions();
 
         // Replace the locale in the build options if the locale has been set
-        if (getTargetLocale() != null) {
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getTargetLocale());
-        } else if (getLocale() != null) {
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + getLocale());
-        } else if (contentSpec.getLocale() != null) {
-            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + contentSpec.getLocale());
+        final String locale = generateOutputLocale(contentSpec.getLocale());
+        if (!isNullOrEmpty(locale)) {
+            publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + locale);
         }
 
         // Add the config filename

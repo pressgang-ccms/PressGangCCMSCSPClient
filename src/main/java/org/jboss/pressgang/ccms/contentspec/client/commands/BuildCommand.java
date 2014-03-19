@@ -1,5 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -668,7 +670,7 @@ public class BuildCommand extends BaseCommandImpl {
 
         try {
             return ClientUtilities.getPubsnumberFromKoji(contentSpec, getCspConfig().getKojiHubUrl(),
-                    getServerSettings().getDefaultLocale());
+                    generateOutputLocale(contentSpec.getLocale()));
         } catch (MalformedURLException e) {
             printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
                     ClientUtilities.getMessage("ERROR_INVALID_KOJIHUB_URL_MSG", Constants.KOJI_NAME), false);
@@ -746,7 +748,7 @@ public class BuildCommand extends BaseCommandImpl {
 
         // Validate the Content Specification
         setCsp(new ClientContentSpecProcessor(providerFactory, loggerManager, processingOptions));
-        return getCsp().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER, getLocale());
+        return getCsp().processContentSpec(contentSpec, username, ContentSpecParser.ParsingMode.EITHER);
     }
 
     /**
@@ -854,6 +856,26 @@ public class BuildCommand extends BaseCommandImpl {
         }
 
         return new File(ClientUtilities.fixFilePath(output));
+    }
+
+    /**
+     * Gets the Locale for the publican build, which can be used to find the location of files to preview.
+     *
+     * @return The locale that the publican files were created as.
+     * @param contentSpecLocale
+     */
+    protected String generateOutputLocale(final String contentSpecLocale) {
+        if (getTargetLocale() != null) {
+            return getTargetLocale();
+        } else if (getLocale() != null) {
+            return getLocale();
+        } else {
+            if (isNullOrEmpty(contentSpecLocale)) {
+                return getServerSettings().getDefaultLocale();
+            } else {
+                return contentSpecLocale;
+            }
+        }
     }
 
     /**
