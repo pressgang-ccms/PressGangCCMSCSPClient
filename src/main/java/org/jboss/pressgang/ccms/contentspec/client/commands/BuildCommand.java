@@ -731,6 +731,7 @@ public class BuildCommand extends BaseCommandImpl {
         processingOptions.setStrictBugLinks(true);
         processingOptions.setMaxRevision(getRevision());
         processingOptions.setDoBugLinkLastValidateCheck(false);
+        processingOptions.setPrintChangeWarnings(false);
         if (getAllowEmptyLevels()) {
             processingOptions.setAllowEmptyLevels(true);
         }
