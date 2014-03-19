@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.5
-Release: 1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,7 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Fri Feb 28 2014 lnewson - 1.5
+* Fri Mar 17 2014 lnewson - 1.5
 - BZ #1066720 - [en-US] shouldn't be prefixed for untranslated content.
 - BZ #1067783 - RFE: Add support for other languages in Content Specs.
 - BZ #1070474 - Remove "ERROR: This topic has invalid DocBook XML. The Program Listing language is not a valid Publican language." error.
