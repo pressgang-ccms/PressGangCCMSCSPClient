@@ -51,6 +51,8 @@ public abstract class BaseCommandTest extends BaseUnitTest {
         PowerMockito.mockStatic(RESTProviderFactory.class);
         when(RESTProviderFactory.create(anyString())).thenReturn(providerFactory);
 
+        when(clientConfig.getPublicanBuildOptions()).thenReturn("");
+
         when(providerFactory.getProvider(ContentSpecProvider.class)).thenReturn(contentSpecProvider);
         when(providerFactory.getProvider(TextContentSpecProvider.class)).thenReturn(textContentSpecProvider);
         when(providerFactory.getProvider(TopicProvider.class)).thenReturn(topicProvider);
