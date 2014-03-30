@@ -15,7 +15,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
-import org.jboss.pressgang.ccms.contentspec.SpecTopic;
+import org.jboss.pressgang.ccms.contentspec.ITopicNode;
 import org.jboss.pressgang.ccms.contentspec.builder.constants.BuilderConstants;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
@@ -286,7 +286,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Initialise the topic wrappers in the spec topics
         // Note: All the data for this should have been downloaded in the validation step above
-        initialiseSpecTopics(topicProvider, contentSpec);
+        initialiseTopicNodes(topicProvider, contentSpec);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -312,13 +312,13 @@ public class PushTranslationCommand extends BaseCommandImpl {
         return ids.size() == 0;
     }
 
-    protected void initialiseSpecTopics(final TopicProvider topicProvider, final ContentSpec contentSpec) {
-        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
-        for (final SpecTopic specTopic : specTopics) {
-            if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() == null) {
-                specTopic.setTopic(topicProvider.getTopic(specTopic.getDBId()));
-            } else if (specTopic.getDBId() != null && specTopic.getDBId() > 0 && specTopic.getRevision() != null) {
-                specTopic.setTopic(topicProvider.getTopic(specTopic.getDBId(), specTopic.getRevision()));
+    protected void initialiseTopicNodes(final TopicProvider topicProvider, final ContentSpec contentSpec) {
+        final List<ITopicNode> topicNodes = contentSpec.getAllTopicNodes();
+        for (final ITopicNode topicNode : topicNodes) {
+            if (topicNode.getDBId() != null && topicNode.getDBId() > 0 && topicNode.getRevision() == null) {
+                topicNode.setTopic(topicProvider.getTopic(topicNode.getDBId()));
+            } else if (topicNode.getDBId() != null && topicNode.getDBId() > 0 && topicNode.getRevision() != null) {
+                topicNode.setTopic(topicProvider.getTopic(topicNode.getDBId(), topicNode.getRevision()));
             }
         }
     }
@@ -372,15 +372,15 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Get the entities to be used from the content spec
         final List<Entity> entities = ContentSpecUtilities.getContentSpecEntities(contentSpec);
 
-        final Map<TopicWrapper, SpecTopic> topicToSpecTopic = new HashMap<TopicWrapper, SpecTopic>();
+        final Map<TopicWrapper, ITopicNode> topicToTopicNode = new HashMap<TopicWrapper, ITopicNode>();
         boolean error = false;
         final ZanataInterface zanataInterface = initialiseZanataInterface();
 
         // Convert all the topics to DOM Documents first so we know if any are invalid
         final Map<Pair<Integer, Integer>, TopicWrapper> topics = new HashMap<Pair<Integer, Integer>, TopicWrapper>();
-        final List<SpecTopic> specTopics = contentSpec.getSpecTopics();
-        for (final SpecTopic specTopic : specTopics) {
-            final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+        final List<ITopicNode> topicNodes = contentSpec.getAllTopicNodes();
+        for (final ITopicNode topicNode : topicNodes) {
+            final TopicWrapper topic = (TopicWrapper) topicNode.getTopic();
             final Pair<Integer, Integer> topicId = new Pair<Integer, Integer>(topic.getId(), topic.getRevision());
 
             // Only process the topic if it hasn't already been added, since the same topic can exist twice
@@ -399,8 +399,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
                     printError(ClientUtilities.getMessage("ERROR_INVALID_XML_MSG", topic.getId(), topic.getRevision()), false);
                     error = true;
                 } else {
-                    specTopic.setXMLDocument(doc);
-                    topicToSpecTopic.put(topic, specTopic);
+                    topicNode.setXMLDocument(doc);
+                    topicToTopicNode.put(topic, topicNode);
                 }
             }
 
@@ -444,7 +444,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 error = true;
             } else if (!getContentSpecOnly()) {
                 // Loop through each topic and upload it to zanata
-                for (final Entry<TopicWrapper, SpecTopic> topicEntry : topicToSpecTopic.entrySet()) {
+                for (final Entry<TopicWrapper, ITopicNode> topicEntry : topicToTopicNode.entrySet()) {
                     ++current;
                     final int percent = Math.round(current / total * 100);
                     if (percent - lastPercent >= showPercent) {
@@ -452,17 +452,17 @@ public class PushTranslationCommand extends BaseCommandImpl {
                         JCommander.getConsole().println("\tPushing topics to zanata " + percent + "% Done");
                     }
 
-                    final SpecTopic specTopic = topicEntry.getValue();
+                    final ITopicNode topicNode = topicEntry.getValue();
 
                     // Find the matching translated CSNode and if one can't be found then produce an error.
-                    final TranslatedCSNodeWrapper translatedCSNode = findTopicTranslatedCSNode(translatedContentSpec, specTopic);
+                    final TranslatedCSNodeWrapper translatedCSNode = findTopicTranslatedCSNode(translatedContentSpec, topicNode);
                     if (translatedCSNode == null) {
-                        final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+                        final TopicWrapper topic = (TopicWrapper) topicNode.getTopic();
                         messages.get(MessageType.ERROR).add(
                                 "Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be created in Zanata.");
                         error = true;
                     } else {
-                        if (!pushTopicToZanata(providerFactory, contentSpec, specTopic, translatedCSNode, zanataInterface, messages,
+                        if (!pushTopicToZanata(providerFactory, contentSpec, topicNode, translatedCSNode, zanataInterface, messages,
                                 entities)) {
                             error = true;
                         }
@@ -494,10 +494,10 @@ public class PushTranslationCommand extends BaseCommandImpl {
     }
 
     protected TranslatedCSNodeWrapper findTopicTranslatedCSNode(final TranslatedContentSpecWrapper translatedContentSpec,
-            final SpecTopic specTopic) {
+            final ITopicNode topicNode) {
         final List<TranslatedCSNodeWrapper> translatedCSNodes = translatedContentSpec.getTranslatedNodes().getItems();
         for (final TranslatedCSNodeWrapper translatedCSNode : translatedCSNodes) {
-            if (specTopic.getUniqueId() != null && specTopic.getUniqueId().equals(translatedCSNode.getNodeId().toString())) {
+            if (topicNode.getUniqueId() != null && topicNode.getUniqueId().equals(translatedCSNode.getNodeId().toString())) {
                 return translatedCSNode;
             }
         }
@@ -508,21 +508,21 @@ public class PushTranslationCommand extends BaseCommandImpl {
     /**
      * @param providerFactory
      * @param contentSpec
-     * @param specTopic
+     * @param topicNode
      * @param zanataInterface
      * @param messages        @return True if the topic was pushed successful otherwise false.
      * @param entities
      */
-    protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, ContentSpec contentSpec, final SpecTopic specTopic,
+    protected boolean pushTopicToZanata(final DataProviderFactory providerFactory, ContentSpec contentSpec, final ITopicNode topicNode,
             final TranslatedCSNodeWrapper translatedCSNode, final ZanataInterface zanataInterface,
             final Map<MessageType, List<String>> messages, final List<Entity> entities) {
-        final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
-        final Document doc = specTopic.getXMLDocument();
+        final TopicWrapper topic = (TopicWrapper) topicNode.getTopic();
+        final Document doc = topicNode.getXMLDocument();
         boolean error = false;
 
         // Get the condition if the xml has any conditions
         boolean xmlHasConditions = !DocBookUtilities.getConditionNodes(doc).isEmpty();
-        final String condition = xmlHasConditions ? specTopic.getConditionStatement(true) : null;
+        final String condition = xmlHasConditions ? topicNode.getConditionStatement(true) : null;
 
         // Process the conditions, if any exist, to remove any nodes that wouldn't be seen for the content spec.
         DocBookUtilities.processConditions(condition, doc, BuilderConstants.DEFAULT_CONDITION);
@@ -544,7 +544,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Create the zanata id based on whether a condition has been specified or not
         final boolean csNodeSpecificTopic = !isNullOrEmpty(condition) || !isNullOrEmpty(customEntities);
-        final String zanataId = getTopicZanataId(specTopic, translatedCSNode, csNodeSpecificTopic);
+        final String zanataId = getTopicZanataId(topicNode, translatedCSNode, csNodeSpecificTopic);
 
         // Check if a translated topic already exists
         final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicAndNodeId(providerFactory, topic.getId(),
@@ -642,14 +642,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
     /**
      * Gets the Zanata ID for a topic based on whether or not the topic has any conditional text.
      *
-     * @param specTopic        The topic to create the Zanata ID for.
+     * @param topicNode        The topic to create the Zanata ID for.
      * @param translatedCSNode
      * @param csNodeSpecific   If the Topic the Zanata ID is being created for is specific to the translated CS Node. That is that it
      *                         either has conditions, or custom entities.
      * @return The unique Zanata ID that can be used to create a document in Zanata.
      */
-    protected String getTopicZanataId(final SpecTopic specTopic, final TranslatedCSNodeWrapper translatedCSNode, boolean csNodeSpecific) {
-        final TopicWrapper topic = (TopicWrapper) specTopic.getTopic();
+    protected String getTopicZanataId(final ITopicNode topicNode, final TranslatedCSNodeWrapper translatedCSNode, boolean csNodeSpecific) {
+        final TopicWrapper topic = (TopicWrapper) topicNode.getTopic();
 
         // Create the zanata id based on whether a condition has been specified or not
         final String zanataId;
