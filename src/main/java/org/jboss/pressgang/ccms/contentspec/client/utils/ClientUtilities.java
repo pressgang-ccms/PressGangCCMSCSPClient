@@ -208,7 +208,7 @@ public class ClientUtilities {
             HttpURLConnection.setFollowRedirects(true);
             int response = connection.getResponseCode();
             if (response == HttpURLConnection.HTTP_MOVED_PERM || response == HttpURLConnection.HTTP_MOVED_TEMP) {
-                return validateServerExists(connection.getHeaderField("Location"));
+                return validateServerExists(connection.getHeaderField("Location"), disableSSLCert);
             } else {
                 return response == HttpURLConnection.HTTP_OK || response == HttpURLConnection.HTTP_BAD_METHOD;
             }
