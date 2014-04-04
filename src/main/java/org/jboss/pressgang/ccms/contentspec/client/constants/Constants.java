@@ -232,6 +232,8 @@ public class Constants {
 
     public static final String SUGGEST_CHUNK_DEPTH = "--suggest-chunk-depth";
 
+    public static final String DISABLE_COPY_TRANS = "--disable-copytrans";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;

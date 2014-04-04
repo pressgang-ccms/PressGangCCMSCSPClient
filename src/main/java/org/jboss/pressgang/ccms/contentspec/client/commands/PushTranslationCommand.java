@@ -90,6 +90,9 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
     private Boolean disableSSLCert = false;
 
+    @Parameter(names = Constants.DISABLE_COPY_TRANS, descriptionKey = "DISABLE_COPYTRANS")
+    private Boolean disableCopyTrans = false;
+
     private ClientContentSpecProcessor csp;
     private final ETagCache eTagCache = new ETagCache();
 
@@ -157,6 +160,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     public void setDisableSSLCert(Boolean disableSSLCert) {
         this.disableSSLCert = disableSSLCert;
+    }
+
+    public Boolean getDisableCopyTrans() {
+        return disableCopyTrans;
+    }
+
+    public void setDisableCopyTrans(Boolean disableCopyTrans) {
+        this.disableCopyTrans = disableCopyTrans;
     }
 
     @Override
@@ -587,7 +598,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
             try {
                 // Create the document in zanata and then in PressGang if the document was successfully created in Zanata.
-                if (!zanataInterface.createFile(resource)) {
+                if (!zanataInterface.createFile(resource, !getDisableCopyTrans())) {
                     messages.get(MessageType.ERROR).add("Topic ID " + topic.getId() + ", Revision " + topic.getRevision() + " failed to be " +
                             "created in Zanata.");
                     error = true;
@@ -714,7 +725,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
             try {
                 // Create the document in Zanata
-                if (!zanataInterface.createFile(resource)) {
+                if (!zanataInterface.createFile(resource, !getDisableCopyTrans())) {
                     messages.get(MessageType.ERROR).add("Content Spec ID " + contentSpecEntity.getId() + ", " +
                             "Revision " + contentSpecEntity.getRevision() + " failed to be created in Zanata.");
                     return null;
