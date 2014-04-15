@@ -18,6 +18,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
+import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.services.zanatasync.ZanataSyncService;
 import org.jboss.pressgang.ccms.zanata.ETagCache;
 import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
@@ -112,6 +113,9 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
+        // Set topics to expand their translations by default
+        getProviderFactory().getProvider(RESTTopicProvider.class).setExpandTranslations(true);
+
         // Load the data from the config data if no ids were specified
         ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
 

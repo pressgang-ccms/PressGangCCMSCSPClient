@@ -34,6 +34,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.TranslationUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.DataProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedTopicProvider;
@@ -247,6 +248,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
     public void process() {
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
         final TopicProvider topicProvider = getProviderFactory().getProvider(TopicProvider.class);
+        // Set topics to expand their translations by default
+        getProviderFactory().getProvider(RESTTopicProvider.class).setExpandTranslations(true);
 
         // Load the ids and validate that one and only one exists
         ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds());
