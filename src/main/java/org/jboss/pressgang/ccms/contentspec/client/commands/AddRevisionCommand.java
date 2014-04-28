@@ -289,7 +289,7 @@ public class AddRevisionCommand extends BaseCommandImpl {
         for (final TranslatedCSNodeWrapper translatedNode : translatedNodes.getItems()) {
             if (translatedNode.getNodeRevision().equals(node.getRevision())) {
                 return translatedNode;
-            } else if ((matchingNode == null || matchingNode.getNodeRevision() > translatedNode.getNodeRevision()) && translatedNode
+            } else if ((matchingNode == null || matchingNode.getNodeRevision() < translatedNode.getNodeRevision()) && translatedNode
                     .getNodeRevision() <= node.getRevision()) {
                 matchingNode = translatedNode;
             }
