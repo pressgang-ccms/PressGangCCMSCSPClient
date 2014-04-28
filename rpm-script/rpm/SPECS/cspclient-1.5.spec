@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.5
-Release: 4
+Release: 6
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,15 +44,21 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Wed Mar 19 2014 lnewson - 1.5
+* Mon Apr 28 2014 lnewson - 1.5
 - BZ #1044809 - csprocessor doesn't warn about having invalid privileges when pushing to Zanata.
+- BZ #1065586 - csprocessor will sometimes fail to assign fixed urls when building new books.
 - BZ #1066235 - Need some way to deal with <info> elements.
 - BZ #1066720 - [en-US] shouldn't be prefixed for untranslated content.
 - BZ #1067783 - RFE: Add support for other languages in Content Specs.
 - BZ #1069085 - Docbuilder builds invalid XML content without any error messages.
+- BZ #1069935 - ID attribute assigned to section must be unique.
 - BZ #1070474 - Remove "ERROR: This topic has invalid DocBook XML. The Program Listing language is not a valid Publican language." error.
 - BZ #1074822 - Push/Create warning is printed during build validation.
 - BZ #1075864 - Abstract shows as required in DocBook 5 CS, but when added throws validation issues.
+- BZ #1091773 - Additional Files cause translated builds to fail.
+* Tue Mar 11 2014 lnewson - 1.4.3
+- Fixed a bug that was causing source docs to be cached when syncing translations.
+- BZ #1072625 - Invalid locales aren't removed from further sync requests.
 * Wed Feb 26 2014 lnewson - 1.4.2
 - BZ #1069984 - Books that contain examples with an xml processing instruction fail to build.
 * Tue Feb 25 2014 lnewson - 1.4.1
