@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.5
-Release: 6
+Release: 7
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -44,7 +44,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Mon Apr 28 2014 lnewson - 1.5
+* Mon May 01 2014 lnewson - 1.5
 - BZ #1044809 - csprocessor doesn't warn about having invalid privileges when pushing to Zanata.
 - BZ #1065586 - csprocessor will sometimes fail to assign fixed urls when building new books.
 - BZ #1066235 - Need some way to deal with <info> elements.
