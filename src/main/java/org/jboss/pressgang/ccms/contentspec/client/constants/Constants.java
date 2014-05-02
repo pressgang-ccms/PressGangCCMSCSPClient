@@ -234,6 +234,9 @@ public class Constants {
 
     public static final String DISABLE_COPY_TRANS = "--disable-copytrans";
 
+    public static final String FAIL_ON_ERROR_LONG_PARAM = "--fail-on-error";
+    public static final String FAIL_ON_WARNING_LONG_PARAM = "--fail-on-warning";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;
@@ -248,4 +251,5 @@ public class Constants {
     public static final int EXIT_OUT_OF_DATE = 9;
     public static final int EXIT_SHUTDOWN_REQUEST = 10;
     public static final int EXIT_UPGRADE_REQUIRED = 11;
+    public static final int EXIT_BOOK_HAS_ERRORS = 12;
 }

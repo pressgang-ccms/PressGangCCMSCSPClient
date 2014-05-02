@@ -154,6 +154,12 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.SUGGEST_CHUNK_DEPTH, descriptionKey = "BUILD_SUGGEST_CHUNK_DEPTH")
     private Boolean suggestChunkDepth = false;
 
+    @Parameter(names = Constants.FAIL_ON_ERROR_LONG_PARAM, descriptionKey = "BUILD_FAIL_ON_ERROR")
+    private Boolean failOnError = false;
+
+    @Parameter(names = Constants.FAIL_ON_WARNING_LONG_PARAM, descriptionKey = "BUILD_FAIL_ON_WARNING")
+    private Boolean failOnWarning = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -438,6 +444,22 @@ public class BuildCommand extends BaseCommandImpl {
         this.suggestChunkDepth = suggestChunkDepth;
     }
 
+    public Boolean getFailOnError() {
+        return failOnError;
+    }
+
+    public void setFailOnError(Boolean failOnError) {
+        this.failOnError = failOnError;
+    }
+
+    public Boolean getFailOnWarning() {
+        return failOnWarning;
+    }
+
+    public void setFailOnWarning(Boolean failOnWarning) {
+        this.failOnWarning = failOnWarning;
+    }
+
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -504,6 +526,14 @@ public class BuildCommand extends BaseCommandImpl {
                 "Victory!" : ""));
         if (getExecutionTime()) {
             JCommander.getConsole().println(ClientUtilities.getMessage("EXEC_TIME_MSG", elapsedTime));
+        }
+
+        // BZ# 1080302 - If the book has errors then fail the build if set to fail.
+        if (getFailOnWarning() && getBuilder().getNumWarnings() > 0) {
+            shutdown(Constants.EXIT_BOOK_HAS_ERRORS);
+        }
+        if (getFailOnError() && getBuilder().getNumErrors() > 0) {
+            shutdown(Constants.EXIT_BOOK_HAS_ERRORS);
         }
 
         // Get the filename for the spec, using it's title.
