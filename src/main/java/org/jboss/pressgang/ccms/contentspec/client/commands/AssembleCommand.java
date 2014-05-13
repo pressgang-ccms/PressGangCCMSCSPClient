@@ -310,7 +310,7 @@ public class AssembleCommand extends BuildCommand {
      */
     protected boolean validatePublicanCfg(final ContentSpec contentSpec, final File outputDirectory) {
         // If it's not a publican build then it doesn't matter what value is specified
-        if (getBuildType() == null || getBuildType().equals(BuildType.PUBLICAN)) {
+        if (getBuildType() == null || getBuildType().equals(BuildType.PUBLICAN) || getBuildType().equals(BuildType.PUBLICAN_PO)) {
             final String name = getPublicanCfg() == null ? contentSpec.getDefaultPublicanCfg() : getPublicanCfg();
             if (name != null && !"publican.cfg".equals(name)) {
                 final Matcher matcher = CSConstants.CUSTOM_PUBLICAN_CFG_PATTERN.matcher(name);

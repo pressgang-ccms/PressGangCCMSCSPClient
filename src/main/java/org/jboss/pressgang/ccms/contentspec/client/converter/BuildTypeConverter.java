@@ -10,6 +10,8 @@ public class BuildTypeConverter implements IStringConverter<BuildType> {
             return BuildType.JDOCBOOK;
         } else if (value.equalsIgnoreCase("publican")) {
             return BuildType.PUBLICAN;
+        } else if (value.equalsIgnoreCase("publican-po")) {
+            return BuildType.PUBLICAN_PO;
         } else {
             return null;
         }

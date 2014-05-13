@@ -7,13 +7,13 @@ import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
 
 public class BuildTypeValidator implements IParameterValidator {
-    private static final Pattern VALID_BUILD_TYPE = Pattern.compile("^(?i)(jdocbook|publican)$");
+    private static final Pattern VALID_BUILD_TYPE = Pattern.compile("^(?i)(jdocbook|publican(-po)?)?$");
 
     @Override
     public void validate(String name, String value) throws ParameterException {
         final Matcher matcher = VALID_BUILD_TYPE.matcher(value);
         if (!matcher.matches()) {
-            throw new ParameterException("Invalid Build Format! The value must be either \"jDocbook\" or \"publican\".");
+            throw new ParameterException("Invalid Build Format! The value must be either \"jDocbook\", \"publican\" or \"publican-po\".");
         }
     }
 }
