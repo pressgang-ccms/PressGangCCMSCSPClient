@@ -13,8 +13,6 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
@@ -29,13 +27,11 @@ import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.rest.RESTManager;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
@@ -64,9 +60,8 @@ public class PullSnapshotCommandTest extends BaseCommandTest {
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
-    @Mock ContentSpec contentSpec;
-    @Mock ContentSpecProcessor processor;
-    @Mock SnapshotProcessor snapshotProcessor;
+    @Mock RESTManager restManager;
+    @Mock RESTInterfaceV1 restClient;
 
     PullSnapshotCommand command;
     File rootTestDirectory;
@@ -74,10 +69,13 @@ public class PullSnapshotCommandTest extends BaseCommandTest {
     @Before
     public void setUp() {
         bindStdOut();
-        command = spy(new PullSnapshotCommand(parser, cspConfig, clientConfig));
+        command = new PullSnapshotCommand(parser, cspConfig, clientConfig);
 
         // Authentication is tested in the base implementation so assume all users are valid
         TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
+
+        when(providerFactory.getRESTManager()).thenReturn(restManager);
+        when(restManager.getRESTClient()).thenReturn(restClient);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
@@ -182,17 +180,11 @@ public class PullSnapshotCommandTest extends BaseCommandTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // and assume the processing worked
-        given(command.getProcessor()).willReturn(snapshotProcessor);
-        doNothing().when(snapshotProcessor).processContentSpec(any(ContentSpec.class), any(SnapshotOptions.class));
+        given(restClient.previewTEXTContentSpecFreeze(anyInt(), anyBoolean(), anyInt(), anyBoolean())).willReturn(randomString);
         // And we don't actually want to save anything
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
-        // and the transformer returns a content spec
-        PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
-        // and the content spec will return some string
-        given(contentSpec.toString(anyBoolean())).willReturn(randomString);
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         when(ClientUtilities.getEscapedContentSpecTitle(eq(providerFactory), any(BaseContentSpecWrapper.class))).thenCallRealMethod();
@@ -226,17 +218,12 @@ public class PullSnapshotCommandTest extends BaseCommandTest {
         // and a output file is specified
         command.setOutputPath(rootTestDirectory.getAbsolutePath());
         // and assume the processing worked
-        given(command.getProcessor()).willReturn(snapshotProcessor);
-        doNothing().when(snapshotProcessor).processContentSpec(any(ContentSpec.class), any(SnapshotOptions.class));
+        given(restClient.previewTEXTContentSpecFreeze(anyInt(), anyBoolean(), anyInt(), anyBoolean())).willReturn(randomString);
         // And we don't actually want to save anything
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doNothing().when(ClientUtilities.class);
         ClientUtilities.saveOutputFile(eq(command), anyString(), anyString(), anyString());
-        // and the transformer returns a content spec
-        PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
-        // and the content spec will return some string
-        given(contentSpec.toString(anyBoolean())).willReturn(randomString);
+
         // and the command should call some real methods in ClientUtilities
         when(ClientUtilities.prepareAndValidateIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();
         when(ClientUtilities.prepareIds(eq(command), eq(cspConfig), anyList())).thenCallRealMethod();

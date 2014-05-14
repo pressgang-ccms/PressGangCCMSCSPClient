@@ -3,7 +3,6 @@ package org.jboss.pressgang.ccms.contentspec.client.commands;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -11,8 +10,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -25,17 +24,14 @@ import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
 import net.sf.ipsedixit.core.StringType;
 import org.apache.commons.io.FileUtils;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
+import org.jboss.pressgang.ccms.rest.RESTManager;
+import org.jboss.pressgang.ccms.rest.v1.entities.contentspec.RESTTextContentSpecV1;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
-import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.TextCSProcessingOptionsWrapper;
-import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
@@ -58,13 +54,12 @@ public class SnapshotCommandTest extends BaseCommandTest {
     @ArbitraryString(type = StringType.ALPHANUMERIC) String checksum;
 
     @Mock ContentSpecWrapper contentSpecWrapper;
-    @Mock TextContentSpecWrapper textContentSpecWrapper;
+    @Mock RESTTextContentSpecV1 textContentSpec;
     @Mock TextCSProcessingOptionsWrapper textCSProcessingOptionsWrapper;
     @Mock CollectionWrapper<UserWrapper> users;
     @Mock UserWrapper user;
-    @Mock ContentSpec contentSpec;
-    @Mock ContentSpecProcessor processor;
-    @Mock SnapshotProcessor snapshotProcessor;
+    @Mock RESTManager restManager;
+    @Mock RESTInterfaceV1 restClient;
 
     SnapshotCommand command;
     File rootTestDirectory;
@@ -74,13 +69,13 @@ public class SnapshotCommandTest extends BaseCommandTest {
         bindStdOut();
         command = spy(new SnapshotCommand(parser, cspConfig, clientConfig));
 
-        when(textContentSpecProvider.newTextContentSpec()).thenReturn(textContentSpecWrapper);
-        when(textContentSpecProvider.newTextProcessingOptions()).thenReturn(textCSProcessingOptionsWrapper);
-        when(textContentSpecProvider.updateTextContentSpec(any(TextContentSpecWrapper.class), any(TextCSProcessingOptionsWrapper.class),
-                any(LogMessageWrapper.class))).thenReturn(textContentSpecWrapper);
-
         // Authentication is tested in the base implementation so assume all users are valid
         TestUtil.setUpAuthorisedUser(command, userProvider, users, user, username);
+
+        when(providerFactory.getRESTManager()).thenReturn(restManager);
+        when(restManager.getRESTClient()).thenReturn(restClient);
+        when(restClient.freezeJSONTextContentSpec(anyInt(), anyString(), anyBoolean(), anyInt(), anyBoolean(),
+                anyString(), anyInt(), anyString())).thenReturn(textContentSpec);
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
@@ -127,29 +122,6 @@ public class SnapshotCommandTest extends BaseCommandTest {
     }
 
     @Test
-    public void shouldPrintErrorAndShutdownWhenContentSpecRevisionNotFound() {
-        // Given a command with an id
-        command.setIds(Arrays.asList(id));
-        // and the revision is set and we are creating a new spec
-        command.setRevision(revision);
-        command.setCreateNew(true);
-        // And no matching content spec
-        given(contentSpecProvider.getContentSpec(id, revision)).willReturn(null);
-
-        // When it is processed
-        try {
-            command.process();
-            // Then an error is printed and the program is shut down
-            fail(SYSTEM_EXIT_ERROR);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(-1));
-        }
-
-        // Then the command should be shutdown and an error message printed
-        assertThat(getStdOutLogs(), containsString("No data was found for the specified ID and revision!"));
-    }
-
-    @Test
     public void shouldPrintErrorAndShutdownWhenContentSpecHasErrors() {
         // Given a command called with an ID
         command.setIds(Arrays.asList(id));
@@ -172,48 +144,18 @@ public class SnapshotCommandTest extends BaseCommandTest {
     }
 
     @Test
-    public void shouldPrintErrorAndShutdownWhenRevisionIsUsedWithoutNew() {
-        // Given a command with a revision
-        command.setRevision(revision);
-
-        // When processing
-        try {
-            command.process();
-            // Then an error is printed and the program is shut down
-            fail(SYSTEM_EXIT_ERROR);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(5));
-        }
-
-        // Then the command should be shutdown and an error message printed
-        assertThat(getStdOutLogs(), containsString(
-                "You cannot turn an existing Content Specification into a snapshot from a revision. Please create use the --new option to" +
-                        " create a new Content Specification instead."));
-    }
-
-    @Test
     public void shouldShutdownWhenCreateNewContentSpecFails() {
-        final ContentSpec spec = new ContentSpec();
         // Given a command with an id
         command.setIds(Arrays.asList(id));
         // and the new flag is set
         command.setCreateNew(true);
         // And a matching content spec
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
-        // and the transform works successfully
-        PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(spec);
-        // and the content spec has some data
-        spec.setId(id);
-        spec.setChecksum(checksum);
-        spec.setTitle(randomString);
-        // and we don't want to create the content spec snapshot
-        given(command.getProcessor()).willReturn(snapshotProcessor);
-        doNothing().when(snapshotProcessor).processContentSpec(eq(spec), any(SnapshotOptions.class));
         // and the processing fails
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
-        given(textContentSpecWrapper.getFailed()).willReturn("");
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
+        when(textContentSpec.getId()).thenReturn(id);
+        given(textContentSpec.getFailedContentSpec()).willReturn("");
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works
@@ -229,8 +171,6 @@ public class SnapshotCommandTest extends BaseCommandTest {
         }
 
         // Then the command should shutdown and a message should be printed
-        assertNull(spec.getId());
-        assertNull(spec.getChecksum());
         assertThat(getStdOutLogs(),
                 containsString("Content Specification ID"));
     }
@@ -243,17 +183,10 @@ public class SnapshotCommandTest extends BaseCommandTest {
         command.setCreateNew(false);
         // And a matching content spec
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
-        // and the transform works successfully
-        PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
-        // and the processing fails
-        // and we don't want to create the content spec snapshot
-        given(command.getProcessor()).willReturn(snapshotProcessor);
-        doNothing().when(snapshotProcessor).processContentSpec(eq(contentSpec), any(SnapshotOptions.class));
         // and the processing fails
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
-        given(textContentSpecWrapper.getFailed()).willReturn("");
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
+        given(textContentSpec.getFailedContentSpec()).willReturn("");
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works
@@ -283,21 +216,11 @@ public class SnapshotCommandTest extends BaseCommandTest {
         // and the wrapper will return an id and revision
         given(contentSpecWrapper.getId()).willReturn(id);
         given(contentSpecWrapper.getRevision()).willReturn(revision);
-        // and the transform works successfully
-        PowerMockito.mockStatic(CSTransformer.class);
-        when(CSTransformer.transform(any(ContentSpecWrapper.class), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
-        // and the content spec has some data
-        given(contentSpec.getId()).willReturn(id);
-        given(contentSpec.getChecksum()).willReturn(checksum);
-        given(contentSpec.getTitle()).willReturn(randomString);
-        // and we don't want to create the content spec snapshot
-        given(command.getProcessor()).willReturn(snapshotProcessor);
-        doNothing().when(snapshotProcessor).processContentSpec(eq(contentSpec), any(SnapshotOptions.class));
         // and the processing succeeds
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpecWrapper);
-        given(textContentSpecWrapper.getId()).willReturn(id);
-        given(textContentSpecWrapper.getRevision()).willReturn(revision);
+        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
+        given(textContentSpec.getId()).willReturn(id);
+        given(textContentSpec.getRevision()).willReturn(revision);
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works

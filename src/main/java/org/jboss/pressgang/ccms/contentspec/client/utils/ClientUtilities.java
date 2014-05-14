@@ -70,7 +70,6 @@ import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
-import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
@@ -945,9 +944,21 @@ public class ClientUtilities {
      * @param task    The Task to be executed that will save the content spec to the server.
      * @return The result from saving the content spec to the server.
      */
-    public static TextContentSpecWrapper saveContentSpec(final BaseCommand command, final FutureTask<TextContentSpecWrapper> task) {
+    public static <T> T saveContentSpec(final BaseCommand command, final FutureTask<T> task) {
         // Run the task in a separate thread and output a waiting message every 10 seconds
         JCommander.getConsole().println(getMessage("SAVING_MSG"));
+        return runLongRunningRequest(command, task);
+    }
+
+    /**
+     * Saves the content specification to the server using the provided task.
+     *
+     * @param command The command the save event is occurring for.
+     * @param task    The Task to be executed that will save the content spec to the server.
+     * @return The result from saving the content spec to the server.
+     */
+    public static <T> T runLongRunningRequest(final BaseCommand command, final FutureTask<T> task) {
+        // Run the task in a separate thread and output a waiting message every 10 seconds
         final Thread thread = new Thread(task);
         thread.start();
         int count = 0;
@@ -966,7 +977,7 @@ public class ClientUtilities {
         }
 
         // Get the response from the task
-        TextContentSpecWrapper retValue = null;
+        T retValue = null;
         try {
             retValue = task.get();
         } catch (InterruptedException e) {

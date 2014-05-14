@@ -5,20 +5,20 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.contentspec.processor.SnapshotProcessor;
-import org.jboss.pressgang.ccms.contentspec.processor.structures.SnapshotOptions;
-import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "PULL_SNAPSHOT")
@@ -38,18 +38,8 @@ public class PullSnapshotCommand extends BaseCommandImpl {
     @Parameter(names = {Constants.UPDATE_LONG_PARAM}, descriptionKey = "SNAPSHOT_UPDATE")
     private Boolean update = false;
 
-    private SnapshotProcessor processor = null;
-
     public PullSnapshotCommand(final JCommander parser, final ContentSpecConfiguration cspConfig, final ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
-    }
-
-    protected SnapshotProcessor getProcessor() {
-        return processor;
-    }
-
-    protected void setProcessor(final SnapshotProcessor processor) {
-        this.processor = processor;
     }
 
     @Override
@@ -106,8 +96,9 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         allowShutdownToContinueIfRequested();
 
         // Get the topic from the rest interface
+        final Integer contentSpecId = getIds().get(0);
         final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
-        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, getIds().get(0),
+        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, contentSpecId,
                 getRevision());
         if (contentSpecEntity == null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE,
@@ -129,14 +120,8 @@ public class PullSnapshotCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Transform the content spec
-        final ContentSpec contentSpec = CSTransformer.transform(contentSpecEntity, getProviderFactory(), INCLUDE_CHECKSUMS);
-
-        // Good point to check for a shutdown
-        allowShutdownToContinueIfRequested();
-
         // Process the content spec to set the snapshot revisions
-        setRevisionsForContentSpec(contentSpec);
+        final String snapshot = getContentSpecSnapshot(getProviderFactory(), contentSpecId);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -148,44 +133,35 @@ public class PullSnapshotCommand extends BaseCommandImpl {
 
         // Save or print the data
         final DateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy");
-        final String contentSpecString = contentSpec.toString(INCLUDE_CHECKSUMS);
         final String fileName = ClientUtilities.getEscapedContentSpecTitle(getProviderFactory(),
                 contentSpecEntity) + "-snapshot-" + dateFormatter.format(
                 contentSpecEntity.getLastModified()) + "." + Constants.FILENAME_EXTENSION;
         if (getOutputPath() == null) {
-            JCommander.getConsole().println(contentSpecString);
+            JCommander.getConsole().println("");
+            JCommander.getConsole().println(snapshot);
         } else {
-            ClientUtilities.saveOutputFile(this, fileName, getOutputPath(), contentSpecString);
+            ClientUtilities.saveOutputFile(this, fileName, getOutputPath(), snapshot);
         }
     }
 
-    /**
-     * Processes a content spec object and adds the revision information for topics to the spec.
-     *
-     * @param contentSpec The content spec to be processed
-     */
-    protected void setRevisionsForContentSpec(final ContentSpec contentSpec) {
-        // Attempt to download all the topic data in one request
-        ClientUtilities.downloadAllTopics(getProviderFactory(), contentSpec, null);
+    protected String getContentSpecSnapshot(final RESTProviderFactory providerFactory, final Integer contentSpecId) {
+        final RESTInterfaceV1 restInterface = providerFactory.getRESTManager().getRESTClient();
 
-        // Setup the processing options
-        final SnapshotOptions snapshotOptions = new SnapshotOptions();
-        snapshotOptions.setAddRevisions(true);
-        snapshotOptions.setUpdateRevisions(getUpdate());
-        snapshotOptions.setRevision(getMaxRevision() == null ? getRevision() : getMaxRevision());
+        // Create the task to get the response from the server
+        final FutureTask<String> task = new FutureTask<String>(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                if (getRevision() == null) {
+                    return restInterface.previewTEXTContentSpecFreeze(contentSpecId, getUpdate(), getMaxRevision(), false);
+                } else {
+                    return restInterface.previewTEXTContentSpecRevisionFreeze(contentSpecId, getRevision(), getUpdate(),
+                            getMaxRevision(), false);
+                }
+            }
+        });
 
-        // Process the content spec to make sure the spec is valid,
-        JCommander.getConsole().println("Creating the snapshot...");
-        setProcessor(new SnapshotProcessor(getProviderFactory()));
-        getProcessor().processContentSpec(contentSpec, snapshotOptions);
-    }
-
-    @Override
-    public void shutdown() {
-        if (getProcessor() != null) {
-            getProcessor().shutdown();
-        }
-        super.shutdown();
+        JCommander.getConsole().println(ClientUtilities.getMessage("GENERATING_SNAPSHOT_MSG"));
+        return ClientUtilities.runLongRunningRequest(this, task);
     }
 
     @Override
