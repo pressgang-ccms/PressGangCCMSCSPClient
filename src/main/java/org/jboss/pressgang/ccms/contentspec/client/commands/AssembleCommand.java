@@ -4,11 +4,11 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.regex.Matcher;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.code.regexp.Matcher;
 import org.jboss.pressgang.ccms.contentspec.ContentSpec;
 import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;

@@ -234,8 +234,8 @@ public class Constants {
 
     public static final String DISABLE_COPY_TRANS = "--disable-copytrans";
 
-    public static final String FAIL_ON_ERROR_LONG_PARAM = "--fail-on-error";
-    public static final String FAIL_ON_WARNING_LONG_PARAM = "--fail-on-warning";
+    public static final String FAIL_ON_ERROR_LONG_PARAM = "--fail-on-build-error";
+    public static final String FAIL_ON_WARNING_LONG_PARAM = "--fail-on-build-warning";
 
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;

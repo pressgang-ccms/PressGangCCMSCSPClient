@@ -519,11 +519,18 @@ public class BuildCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Print the success messages
+        // Print the success/failure messages
         long elapsedTime = System.currentTimeMillis() - startTime;
-        JCommander.getConsole().println(ClientUtilities.getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(),
-                getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless " +
-                "Victory!" : ""));
+        final String resultMsg;
+        if (getFailOnError() && getBuilder().getNumErrors() > 0 || getFailOnWarning() && getBuilder().getNumWarnings() > 0) {
+            resultMsg = ClientUtilities.getMessage("ZIP_SAVED_FAIL_ERRORS_MSG", getBuilder().getNumErrors(), getBuilder().getNumWarnings());
+        } else {
+            resultMsg = ClientUtilities.getMessage("ZIP_SAVED_ERRORS_MSG", getBuilder().getNumErrors(),
+                    getBuilder().getNumWarnings()) + (getBuilder().getNumErrors() == 0 && getBuilder().getNumWarnings() == 0 ? " - Flawless " +
+                    "Victory!" : "");
+        }
+        JCommander.getConsole().println(resultMsg);
+
         if (getExecutionTime()) {
             JCommander.getConsole().println(ClientUtilities.getMessage("EXEC_TIME_MSG", elapsedTime));
         }
