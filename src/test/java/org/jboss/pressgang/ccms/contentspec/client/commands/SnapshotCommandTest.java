@@ -153,7 +153,7 @@ public class SnapshotCommandTest extends BaseCommandTest {
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the processing fails
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
+        given(ClientUtilities.runLongRunningRequest(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
         when(textContentSpec.getId()).thenReturn(id);
         given(textContentSpec.getFailedContentSpec()).willReturn("");
         // and the helper method to get the content spec works
@@ -185,7 +185,7 @@ public class SnapshotCommandTest extends BaseCommandTest {
         given(contentSpecProvider.getContentSpec(eq(id), anyInt())).willReturn(contentSpecWrapper);
         // and the processing fails
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
+        given(ClientUtilities.runLongRunningRequest(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
         given(textContentSpec.getFailedContentSpec()).willReturn("");
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
@@ -218,7 +218,7 @@ public class SnapshotCommandTest extends BaseCommandTest {
         given(contentSpecWrapper.getRevision()).willReturn(revision);
         // and the processing succeeds
         PowerMockito.mockStatic(ClientUtilities.class);
-        given(ClientUtilities.saveContentSpec(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
+        given(ClientUtilities.runLongRunningRequest(eq(command), any(FutureTask.class))).willReturn(textContentSpec);
         given(textContentSpec.getId()).willReturn(id);
         given(textContentSpec.getRevision()).willReturn(revision);
         // and the helper method to get the content spec works
