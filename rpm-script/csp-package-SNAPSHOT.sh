@@ -31,7 +31,7 @@ echo ""
 PREV_FILE_NAME=cspclient-${PREV_VERSION}
 echo "Previous File: ${PREV_FILE_NAME}.spec"
 
-FILE_NAME=cspclient-${VERSION}
+FILE_NAME=csprocessor-${VERSION}
 echo "New File: ${FILE_NAME}.spec"
 
 echo ""
@@ -83,10 +83,9 @@ rm -r ${FILE_NAME}
 
 echo "Finished making the RPM package"
 
-scp ${DIR}/rpm/RPMS/noarch/${FILE_NAME}-${RELEASE}.noarch.rpm root@csprocessor.cloud.lab.eng.bne.redhat.com:/root/
+scp ${DIR}/rpm/RPMS/noarch/${FILE_NAME}-${RELEASE}.noarch.rpm root@skynet-dev.usersys.redhat.com:/var/www/html/yum/updates/noarch/
 
 popd
 
 echo Run the following commands on the YUM server
-echo "cp ~/${FILE_NAME}-${RELEASE}.noarch.rpm /var/www/html/dev/yum/updates/noarch/" 
 echo createrepo --update --no-database /var/www/html/dev/yum/updates/
