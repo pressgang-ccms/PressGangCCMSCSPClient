@@ -4,20 +4,19 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
-Name: csprocessor
+Name: cspclient
 Summary: Content Specification Processor client application
 License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 1.6
-Release: 7
+Version: 1.5.2
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
 URL: https://github.com/pressgang-ccms/PressGangCCMSCSPClient/
 Requires: java >= 1:1.6.0, publican
 Source: %{name}-%{version}.tar.gz
-Obsoletes: cspclient
 
 %description
 A basic java application that allows a user to connect and work with the Content Specification Processor.
@@ -26,13 +25,13 @@ A basic java application that allows a user to connect and work with the Content
 %setup -q
 
 %build
-(echo \#\!/bin/bash; echo ""; echo "java -Xmx1024m -Xms128m -jar %{_libdir}/csprocessor/csprocessor.jar \"\$@\"") > csprocessor.sh
+(echo \#\!/bin/bash; echo ""; echo "java -Xmx1024m -Xms128m -jar %{_libdir}/CSPClient/csprocessor.jar \"\$@\"") > csprocessor.sh
 
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{_bindir}
-install -m 0755 -d $RPM_BUILD_ROOT%{_libdir}/csprocessor
-install -m 0755 csprocessor.jar $RPM_BUILD_ROOT%{_libdir}/csprocessor/csprocessor.jar
+install -m 0755 -d $RPM_BUILD_ROOT%{_libdir}/CSPClient
+install -m 0755 csprocessor.jar $RPM_BUILD_ROOT%{_libdir}/CSPClient/csprocessor.jar
 install -m 0755 csprocessor.sh $RPM_BUILD_ROOT%{_bindir}/csprocessor
 
 %clean
@@ -40,24 +39,17 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%dir %{_libdir}/csprocessor
-%{_libdir}/csprocessor/csprocessor.jar
+%dir %{_libdir}/CSPClient
+%{_libdir}/CSPClient/csprocessor.jar
 %{_bindir}/csprocessor
 
 %changelog
-* Wed May 28 2014 lnewson - 1.6
-- Renamed the package from "cspclient" to "csprocessor".
-- BZ #1080302 - Pressgang can't "fail" books with invalid XML.
-- BZ #1091776 - MainFile attribute in publican.cfg causes issues.
-- BZ #1092188 - Standardise the freeze/snapshot functionality.
-- BZ #1094578 - Comments in abstracts not handled properly.
-- BZ #1095022 - Entities in fields like Copyright Holder are not processed correctly.
-- BZ #1095978 - Verbatim elements aren't being broken down correctly for translation.
-- BZ #1100139 - Non existent entities in content spec metadata causes builds to fail.
+* Thu May 22 2014 lnewson - 1.5.2
+- Fixed an issue where log messages weren't being printed for the sync-translation command.
 * Tue May 06 2014 lnewson - 1.5.1
 - BZ #1093860 - Builder throws java.lang.ArrayIndexOutOfBoundsException: -1.
 - BZ #1093861 - DocBuilder throws java.lang.NullPointerException when a non existent JIRA version is used.
-* Thu May 01 2014 lnewson - 1.5
+* Mon May 01 2014 lnewson - 1.5
 - BZ #1044809 - csprocessor doesn't warn about having invalid privileges when pushing to Zanata.
 - BZ #1065586 - csprocessor will sometimes fail to assign fixed urls when building new books.
 - BZ #1066235 - Need some way to deal with <info> elements.
