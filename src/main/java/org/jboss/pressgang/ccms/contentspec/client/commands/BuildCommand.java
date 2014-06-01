@@ -27,6 +27,7 @@ import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationExc
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.converter.BuildTypeConverter;
 import org.jboss.pressgang.ccms.contentspec.client.processor.ClientContentSpecProcessor;
@@ -52,6 +53,7 @@ import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
+import org.zanata.rest.RestConstant;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "BUILD")
 public class BuildCommand extends BaseCommandImpl {
@@ -159,6 +161,9 @@ public class BuildCommand extends BaseCommandImpl {
 
     @Parameter(names = Constants.FAIL_ON_WARNING_LONG_PARAM, descriptionKey = "BUILD_FAIL_ON_WARNING")
     private Boolean failOnWarning = false;
+
+    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
+    private Boolean disableSSLCert = false;
 
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
@@ -460,6 +465,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.failOnWarning = failOnWarning;
     }
 
+    public Boolean getDisableSSLCert() {
+        return disableSSLCert;
+    }
+
+    public void setDisableSSLCert(Boolean disableSSLCert) {
+        this.disableSSLCert = disableSSLCert;
+    }
+
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -673,15 +686,21 @@ public class BuildCommand extends BaseCommandImpl {
     protected void setupZanataOptions() {
         // Set the zanata url
         if (getZanataUrl() != null) {
+            ZanataServerConfiguration zanataConfig = null;
             // Find the zanata server if the url is a reference to the zanata server name
             for (final String serverName : getClientConfig().getZanataServers().keySet()) {
                 if (serverName.equals(getZanataUrl())) {
-                    setZanataUrl(getClientConfig().getZanataServers().get(serverName).getUrl());
+                    zanataConfig = getClientConfig().getZanataServers().get(serverName);
+                    setZanataUrl(zanataConfig.getUrl());
                     break;
                 }
             }
 
             getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
+            if (zanataConfig != null) {
+                getCspConfig().getZanataDetails().setToken(zanataConfig.getToken());
+                getCspConfig().getZanataDetails().setUsername(zanataConfig.getUsername());
+            }
         }
 
         // Set the zanata project
@@ -1014,7 +1033,7 @@ public class BuildCommand extends BaseCommandImpl {
                     ClientUtilities.getMessage("KOJI_WEBSERVICE_MSG", Constants.KOJI_HUB_NAME, getCspConfig().getKojiHubUrl()));
 
             // Test that the server address is valid
-            if (!ClientUtilities.validateServerExists(getCspConfig().getKojiHubUrl())) {
+            if (!ClientUtilities.validateServerExists(getCspConfig().getKojiHubUrl(), getDisableSSLCert())) {
                 // Print a line to separate content
                 JCommander.getConsole().println("");
 
@@ -1030,7 +1049,11 @@ public class BuildCommand extends BaseCommandImpl {
             setupZanataOptions();
 
             final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
-            if (!ClientUtilities.validateServerExists(zanataDetails.returnUrl())) {
+            final Map<String, String> headers = new HashMap<String, String>();
+            headers.put(RestConstant.HEADER_USERNAME, zanataDetails.getUsername());
+            headers.put(RestConstant.HEADER_API_KEY, zanataDetails.getToken());
+
+            if (!ClientUtilities.validateServerExists(zanataDetails.returnUrl(), getDisableSSLCert(), headers)) {
                 // Print a line to separate content
                 JCommander.getConsole().println("");
 

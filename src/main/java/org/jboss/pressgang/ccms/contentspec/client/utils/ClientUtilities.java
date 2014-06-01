@@ -178,6 +178,17 @@ public class ClientUtilities {
      * @return True if the server exists and got a successful response otherwise false.
      */
     public static boolean validateServerExists(final String serverUrl, final boolean disableSSLCert) {
+        return validateServerExists(serverUrl, disableSSLCert, null);
+    }
+
+    /**
+     * Checks that a server exists at the specified URL by sending a request to get the headers from the URL.
+     *
+     * @param serverUrl The URL of the server.
+     * @param disableSSLCert
+     * @return True if the server exists and got a successful response otherwise false.
+     */
+    public static boolean validateServerExists(final String serverUrl, final boolean disableSSLCert, final Map<String, String> headers) {
         try {
             if (disableSSLCert) {
                 // See http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
@@ -204,10 +215,18 @@ public class ClientUtilities {
             URL url = new URL(serverUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
+
+            // Add an custom headers
+            if (headers != null) {
+                for (final Entry<String, String> header : headers.entrySet()) {
+                    connection.setRequestProperty(header.getKey(), header.getValue());
+                }
+            }
+
             HttpURLConnection.setFollowRedirects(true);
             int response = connection.getResponseCode();
             if (response == HttpURLConnection.HTTP_MOVED_PERM || response == HttpURLConnection.HTTP_MOVED_TEMP) {
-                return validateServerExists(connection.getHeaderField("Location"), disableSSLCert);
+                return validateServerExists(connection.getHeaderField("Location"), disableSSLCert, headers);
             } else {
                 return response == HttpURLConnection.HTTP_OK || response == HttpURLConnection.HTTP_BAD_METHOD;
             }
