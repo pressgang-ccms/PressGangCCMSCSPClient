@@ -1089,7 +1089,7 @@ public class BuildCommandTest extends BaseCommandTest {
         command.setServerUrl(url);
         // And that the URL will not be valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(anyString())).thenReturn(false);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(false);
         // and getting error messages works
         TestUtil.setUpMessages();
 
@@ -1117,6 +1117,7 @@ public class BuildCommandTest extends BaseCommandTest {
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(true);
         // and getting error messages works
         TestUtil.setUpMessages();
 
@@ -1143,7 +1144,7 @@ public class BuildCommandTest extends BaseCommandTest {
         String kojiUrl = "http://koji.example.com";
         given(cspConfig.getKojiHubUrl()).willReturn(kojiUrl);
         // And that the URL will be invalid
-        when(ClientUtilities.validateServerExists(refEq(kojiUrl))).thenReturn(false);
+        when(ClientUtilities.validateServerExists(refEq(kojiUrl), anyBoolean())).thenReturn(false);
         // and getting error messages works
         TestUtil.setUpMessages();
 
@@ -1175,6 +1176,7 @@ public class BuildCommandTest extends BaseCommandTest {
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean(), anyMap())).thenReturn(true);
         // and getting error messages works
         TestUtil.setUpMessages();
 
@@ -1207,7 +1209,7 @@ public class BuildCommandTest extends BaseCommandTest {
         given(zanataDetails.getServer()).willReturn(zanataUrl);
         given(zanataDetails.getVersion()).willReturn(randomNumber.toString());
         // And that the URL will be invalid
-        when(ClientUtilities.validateServerExists(refEq(zanataUrl))).thenReturn(false);
+        when(ClientUtilities.validateServerExists(refEq(zanataUrl), anyBoolean(), anyMap())).thenReturn(false);
         // and getting error messages works
         TestUtil.setUpMessages();
 
