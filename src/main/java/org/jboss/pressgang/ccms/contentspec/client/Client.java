@@ -110,7 +110,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
             client.setup();
             client.processArgs(args);
         } catch (Throwable ex) {
-            JCommander.getConsole().println(ExceptionUtilities.getStackTrace((Exception) ex));
+            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(ex));
             JCommander.getConsole().println(ClientUtilities.getMessage("ERROR_INTERNAL_ERROR"));
             client.shutdown(Constants.EXIT_FAILURE);
         }
