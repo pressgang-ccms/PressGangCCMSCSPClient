@@ -94,6 +94,9 @@ public class PushTranslationCommand extends BaseCommandImpl {
     @Parameter(names = Constants.DISABLE_COPY_TRANS, descriptionKey = "DISABLE_COPYTRANS")
     private Boolean disableCopyTrans = false;
 
+    @Parameter(names = Constants.ALLOW_UNFROZEN_PUSH_LONG_PARAM, descriptionKey = "ALLOW_UNFROZEN_PUSH")
+    private Boolean allowUnfrozenPush = false;
+
     private ClientContentSpecProcessor csp;
     private final ETagCache eTagCache = new ETagCache();
 
@@ -169,6 +172,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
     public void setDisableCopyTrans(Boolean disableCopyTrans) {
         this.disableCopyTrans = disableCopyTrans;
+    }
+
+    public Boolean getAllowUnfrozenPush() {
+        return allowUnfrozenPush;
+    }
+
+    public void setAllowUnfrozenPush(Boolean allowUnfrozenPush) {
+        this.allowUnfrozenPush = allowUnfrozenPush;
     }
 
     @Override
@@ -271,6 +282,11 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Check that the content spec isn't a failed one
         if (contentSpecEntity.getFailed() != null) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_CONTENT_SPEC_MSG"), false);
+        }
+
+        // Check that the content spec is frozen
+        if (!allowUnfrozenPush && !contentSpecEntity.hasTag(getServerEntities().getFrozenTagId())) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_PUSH_TRANSLATION_UNFROZEN_MSG"), false);
         }
 
         // Transform the content spec

@@ -28,7 +28,7 @@ echo "Release: ${RELEASE}"
 
 echo ""
 
-PREV_FILE_NAME=cspclient-${PREV_VERSION}
+PREV_FILE_NAME=csprocessor-${PREV_VERSION}
 echo "Previous File: ${PREV_FILE_NAME}.spec"
 
 FILE_NAME=csprocessor-${VERSION}

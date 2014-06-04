@@ -237,6 +237,8 @@ public class Constants {
     public static final String FAIL_ON_ERROR_LONG_PARAM = "--fail-on-build-error";
     public static final String FAIL_ON_WARNING_LONG_PARAM = "--fail-on-build-warning";
 
+    public static final String ALLOW_UNFROZEN_PUSH_LONG_PARAM = "--unfrozen-push";
+
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = -1;
