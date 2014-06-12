@@ -176,7 +176,7 @@ public class ValidateCommand extends BaseCommandImpl {
         // Setup the processing options
         final ProcessingOptions processingOptions = new ProcessingOptions();
         processingOptions.setIgnoreChecksum(true);
-        processingOptions.setValidating(true);
+        processingOptions.setValidateOnly(true);
         processingOptions.setStrictTitles(strictTitles);
 
         // Process the content spec to see if it's valid
