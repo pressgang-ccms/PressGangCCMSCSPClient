@@ -18,8 +18,8 @@ import net.sf.ipsedixit.core.StringType;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
-import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,9 +38,9 @@ public class SearchCommandTest extends BaseCommandTest {
     @ArbitraryString(type = StringType.ALPHANUMERIC) String query2;
     @Arbitrary String queryResult;
 
-    @Mock ContentSpecWrapper result1;
-    @Mock ContentSpecWrapper result2;
-    @Mock CollectionWrapper<ContentSpecWrapper> collectionWrapper;
+    @Mock TextContentSpecWrapper result1;
+    @Mock TextContentSpecWrapper result2;
+    @Mock CollectionWrapper<TextContentSpecWrapper> collectionWrapper;
     @Mock SpecList specList;
 
     private SearchCommand command;
@@ -69,7 +69,7 @@ public class SearchCommandTest extends BaseCommandTest {
 
         // Then the expected search query should be sent to the database
         ArgumentCaptor<String> query = ArgumentCaptor.forClass(String.class);
-        verify(contentSpecProvider).getContentSpecsWithQuery(query.capture());
+        verify(textContentSpecProvider).getTextContentSpecsWithQuery(query.capture());
         assertThat(query.getValue(), is(expectedQuery));
     }
 
@@ -88,8 +88,8 @@ public class SearchCommandTest extends BaseCommandTest {
     @Test
     public void shouldReturnQueryResults() {
         // Given a query that has results
-        given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(collectionWrapper);
-        List<ContentSpecWrapper> resultList = Arrays.asList(result1, result2);
+        given(textContentSpecProvider.getTextContentSpecsWithQuery(anyString())).willReturn(collectionWrapper);
+        List<TextContentSpecWrapper> resultList = Arrays.asList(result1, result2);
         given(collectionWrapper.getItems()).willReturn(resultList);
         given(ClientUtilities.buildSpecList(eq(resultList), eq(providerFactory), any(ServerEntitiesWrapper.class))).willReturn(specList);
         given(ClientUtilities.generateContentSpecList(specList)).willReturn(queryResult);

@@ -22,8 +22,8 @@ import java.util.List;
 import net.sf.ipsedixit.annotation.Arbitrary;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
-import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,9 +51,9 @@ public class ListCommandTest extends BaseCommandTest {
 
     @Test
     public void shouldShutdownWhenNumSpecsOverLimit() {
-        final CollectionWrapper<ContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
         // Given a command that will return a collection of content specs
-        given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
+        given(textContentSpecProvider.getTextContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
         // and there are too many content specs
         given(contentSpecCollection.size()).willReturn(51);
         // and we aren't forcing the list
@@ -76,9 +76,9 @@ public class ListCommandTest extends BaseCommandTest {
 
     @Test
     public void shouldPrintNoSpecsWhenListIsEmpty() {
-        final CollectionWrapper<ContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
         // Given a command that will return a collection of content specs
-        given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
+        given(textContentSpecProvider.getTextContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
         // and there are no content specs
         given(contentSpecCollection.size()).willReturn(0);
         // and we aren't forcing the list
@@ -93,11 +93,11 @@ public class ListCommandTest extends BaseCommandTest {
 
     @Test
     public void shouldPrintSpecListWhenListExists() {
-        final CollectionWrapper<ContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
-        final List<ContentSpecWrapper> contentSpecs = mock(List.class);
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
+        final List<TextContentSpecWrapper> contentSpecs = mock(List.class);
         final SpecList specList = mock(SpecList.class);
         // Given a command that will return a collection of content specs
-        given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
+        given(textContentSpecProvider.getTextContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
         // and there are some content specs
         given(contentSpecCollection.size()).willReturn(5);
         // and the collection contains items
@@ -124,10 +124,10 @@ public class ListCommandTest extends BaseCommandTest {
 
     @Test
     public void shouldPrintSpecListWhenSizeIsGreaterThanLimitAndForce() {
-        final CollectionWrapper<ContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
-        final List<ContentSpecWrapper> contentSpecs = mock(List.class);
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
+        final List<TextContentSpecWrapper> contentSpecs = mock(List.class);
         // Given a command that will return a collection of content specs
-        given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
+        given(textContentSpecProvider.getTextContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
         // and there are too many content spec
         given(contentSpecCollection.size()).willReturn(51);
         // and force is on
@@ -157,10 +157,10 @@ public class ListCommandTest extends BaseCommandTest {
 
     @Test
     public void shouldPrintSpecListWhenSizeIsGreaterThanLimitAndLimitSpecified() {
-        final CollectionWrapper<ContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
-        final List<ContentSpecWrapper> contentSpecs = mock(List.class);
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecCollection = mock(CollectionWrapper.class);
+        final List<TextContentSpecWrapper> contentSpecs = mock(List.class);
         // Given a command that will return a collection of content specs
-        given(contentSpecProvider.getContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
+        given(textContentSpecProvider.getTextContentSpecsWithQuery(anyString())).willReturn(contentSpecCollection);
         // and the limit is specified
         command.setLimit(randomNumber);
         // and there are more content specs than the limit

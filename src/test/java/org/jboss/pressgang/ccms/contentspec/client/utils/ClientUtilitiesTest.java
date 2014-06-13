@@ -52,6 +52,7 @@ import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.PropertyTagInContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
@@ -87,6 +88,7 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     @Mock UserWrapper user;
     @Mock CSTransformer csTransformer;
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock TextContentSpecWrapper textContentSpecWrapper;
     @Mock RESTProviderFactory providerFactory;
     @Mock UserProvider userProvider;
     @Mock ServerSettingsProvider serverSettingsProvider;
@@ -605,15 +607,15 @@ public class ClientUtilitiesTest extends BaseUnitTest {
     public void shouldBuildSpecListObjectFromListOfContentSpecsWithNoCreator() {
         Date now = new Date();
         // Given a list of content specs
-        List<ContentSpecWrapper> contentSpecs = Arrays.asList(contentSpecWrapper);
+        List<TextContentSpecWrapper> contentSpecs = Arrays.asList(textContentSpecWrapper);
         // and the content spec has some basic properties
-        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
-        given(contentSpecWrapper.getId()).willReturn(id);
-        given(contentSpecWrapper.getProduct()).willReturn(randomString);
-        given(contentSpecWrapper.getVersion()).willReturn(secondId.toString());
-        given(contentSpecWrapper.getLastModified()).willReturn(now);
+        given(textContentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(textContentSpecWrapper.getId()).willReturn(id);
+        given(textContentSpecWrapper.getProduct()).willReturn(randomString);
+        given(textContentSpecWrapper.getVersion()).willReturn(secondId.toString());
+        given(textContentSpecWrapper.getLastModified()).willReturn(now);
         // and no creator
-        given(contentSpecWrapper.getProperty(anyInt())).willReturn(null);
+        given(textContentSpecWrapper.getProperty(anyInt())).willReturn(null);
         // and the provider factory will return a user provider
         given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);
 
@@ -636,15 +638,15 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         final PropertyTagInContentSpecWrapper propTag = mock(PropertyTagInContentSpecWrapper.class);
         Date now = new Date();
         // Given a list of content specs
-        List<ContentSpecWrapper> contentSpecs = Arrays.asList(contentSpecWrapper);
+        List<TextContentSpecWrapper> contentSpecs = Arrays.asList(textContentSpecWrapper);
         // and the content spec has some basic properties
-        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
-        given(contentSpecWrapper.getId()).willReturn(id);
-        given(contentSpecWrapper.getProduct()).willReturn(randomString);
-        given(contentSpecWrapper.getVersion()).willReturn(secondId.toString());
-        given(contentSpecWrapper.getLastModified()).willReturn(now);
+        given(textContentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(textContentSpecWrapper.getId()).willReturn(id);
+        given(textContentSpecWrapper.getProduct()).willReturn(randomString);
+        given(textContentSpecWrapper.getVersion()).willReturn(secondId.toString());
+        given(textContentSpecWrapper.getLastModified()).willReturn(now);
         // and a creator
-        given(contentSpecWrapper.getProperty(anyInt())).willReturn(propTag);
+        given(textContentSpecWrapper.getProperty(anyInt())).willReturn(propTag);
         given(propTag.getValue()).willReturn(username);
         // and the provider factory will return a user provider
         given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);
@@ -672,15 +674,15 @@ public class ClientUtilitiesTest extends BaseUnitTest {
         final CollectionWrapper<UserWrapper> users = mock(CollectionWrapper.class);
         Date now = new Date();
         // Given a list of content specs
-        List<ContentSpecWrapper> contentSpecs = Arrays.asList(contentSpecWrapper);
+        List<TextContentSpecWrapper> contentSpecs = Arrays.asList(textContentSpecWrapper);
         // and the content spec has some basic properties
-        given(contentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
-        given(contentSpecWrapper.getId()).willReturn(id);
-        given(contentSpecWrapper.getProduct()).willReturn(randomString);
-        given(contentSpecWrapper.getVersion()).willReturn(secondId.toString());
-        given(contentSpecWrapper.getLastModified()).willReturn(now);
+        given(textContentSpecWrapper.getTitle()).willReturn(randomAlphanumString);
+        given(textContentSpecWrapper.getId()).willReturn(id);
+        given(textContentSpecWrapper.getProduct()).willReturn(randomString);
+        given(textContentSpecWrapper.getVersion()).willReturn(secondId.toString());
+        given(textContentSpecWrapper.getLastModified()).willReturn(now);
         // and a creator
-        given(contentSpecWrapper.getProperty(anyInt())).willReturn(propTag);
+        given(textContentSpecWrapper.getProperty(anyInt())).willReturn(propTag);
         given(propTag.getValue()).willReturn(username);
         // and the provider factory will return a user provider
         given(providerFactory.getProvider(UserProvider.class)).willReturn(userProvider);

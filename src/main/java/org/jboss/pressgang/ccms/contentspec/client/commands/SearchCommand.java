@@ -1,6 +1,7 @@
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
@@ -11,11 +12,13 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.contentspec.sort.EntityWrapperIDComparator;
+import org.jboss.pressgang.ccms.provider.RESTTextContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
 import org.jboss.pressgang.ccms.rest.v1.constants.CommonFilterConstants;
 import org.jboss.pressgang.ccms.rest.v1.query.RESTContentSpecQueryBuilderV1;
 import org.jboss.pressgang.ccms.utils.common.StringUtilities;
-import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "SEARCH")
@@ -53,6 +56,8 @@ public class SearchCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
+        final TextContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(TextContentSpecProvider.class);
+        ((RESTTextContentSpecProvider) contentSpecProvider).setExpandProperties(true);
         final String searchText = StringUtilities.buildString(queries.toArray(new String[queries.size()]), " ");
 
         // Good point to check for a shutdown
@@ -67,14 +72,15 @@ public class SearchCommand extends BaseCommandImpl {
         queryBuilder.setPropertyTag(getServerEntities().getAddedByPropertyTagId(), searchText);
 
         // Search the database for content specs that match the query parameters
-        final CollectionWrapper<ContentSpecWrapper> contentSpecs = getProviderFactory().getProvider(
-                ContentSpecProvider.class).getContentSpecsWithQuery(queryBuilder.getQuery());
-        final List<ContentSpecWrapper> csList;
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecs = contentSpecProvider.getTextContentSpecsWithQuery(queryBuilder.getQuery());
+        final List<TextContentSpecWrapper> csList;
         if (contentSpecs != null) {
             csList = contentSpecs.getItems();
         } else {
-            csList = new ArrayList<ContentSpecWrapper>();
+            csList = new ArrayList<TextContentSpecWrapper>();
         }
+
+        Collections.sort(csList, new EntityWrapperIDComparator());
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();

@@ -11,8 +11,9 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
-import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
-import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.provider.RESTTextContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "LIST")
@@ -50,10 +51,11 @@ public class ListCommand extends BaseCommandImpl {
 
     @Override
     public void process() {
-        final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
+        final TextContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(TextContentSpecProvider.class);
+        ((RESTTextContentSpecProvider) contentSpecProvider).setExpandProperties(true);
 
         // Get the content specs from the database
-        final CollectionWrapper<ContentSpecWrapper> contentSpecs = contentSpecProvider.getContentSpecsWithQuery("query;");
+        final CollectionWrapper<TextContentSpecWrapper> contentSpecs = contentSpecProvider.getTextContentSpecsWithQuery("query;");
         int noSpecs = contentSpecs.size();
 
         // Get the number of results to display
@@ -78,7 +80,7 @@ public class ListCommand extends BaseCommandImpl {
             JCommander.getConsole().println(ClientUtilities.getMessage("NO_CS_FOUND_MSG"));
         } else {
             // Get the sublist of results to display
-            final List<ContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);
+            final List<TextContentSpecWrapper> csList = contentSpecs.getItems().subList(0, numResults);
 
             // Good point to check for a shutdown
             allowShutdownToContinueIfRequested();

@@ -11,6 +11,7 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.provider.BlobConstantProvider;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.RESTTextContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
 import org.jboss.pressgang.ccms.provider.ServerSettingsProvider;
 import org.jboss.pressgang.ccms.provider.TextContentSpecProvider;
@@ -41,7 +42,7 @@ public abstract class BaseCommandTest extends BaseUnitTest {
     @Mock ServerEntitiesWrapper serverEntities;
 
     @Mock ContentSpecProvider contentSpecProvider;
-    @Mock TextContentSpecProvider textContentSpecProvider;
+    @Mock RESTTextContentSpecProvider textContentSpecProvider;
     @Mock RESTTopicProvider topicProvider;
     @Mock BlobConstantProvider blobConstantProvider;
     @Mock UserProvider userProvider;

@@ -70,6 +70,7 @@ import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
+import org.jboss.pressgang.ccms.wrapper.TextContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.TopicWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.base.BaseContentSpecWrapper;
@@ -476,10 +477,10 @@ public class ClientUtilities {
     /**
      * Builds a Content Specification list for a list of content specifications.
      */
-    public static SpecList buildSpecList(final List<ContentSpecWrapper> specList, final DataProviderFactory providerFactory,
+    public static SpecList buildSpecList(final List<TextContentSpecWrapper> specList, final DataProviderFactory providerFactory,
             final ServerEntitiesWrapper serverEntities) {
         final List<Spec> specs = new ArrayList<Spec>();
-        for (final ContentSpecWrapper cs : specList) {
+        for (final TextContentSpecWrapper cs : specList) {
             UserWrapper creator = null;
             if (cs.getProperty(serverEntities.getAddedByPropertyTagId()) != null) {
                 final CollectionWrapper<UserWrapper> users = providerFactory.getProvider(UserProvider.class).getUsersByName(
