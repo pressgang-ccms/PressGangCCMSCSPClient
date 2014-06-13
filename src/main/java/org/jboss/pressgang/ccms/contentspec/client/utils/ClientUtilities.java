@@ -315,7 +315,11 @@ public class ClientUtilities {
     public static String generateCsprocessorCfg(final ContentSpecWrapper contentSpec, final String serverUrl,
             final ZanataDetails zanataDetails) {
         final StringBuilder output = new StringBuilder();
-        output.append("# SPEC_TITLE=").append(DocBookUtilities.escapeTitle(contentSpec.getTitle())).append("\n");
+        output.append("# SPEC_TITLE=");
+        if (contentSpec.getTitle() != null) {
+            output.append(DocBookUtilities.escapeTitle(contentSpec.getTitle()));
+        }
+        output.append("\n");
         output.append("SPEC_ID=").append(contentSpec.getId()).append("\n");
         output.append("SERVER_URL=").append(serverUrl).append("\n");
         output.append("ZANATA_URL=").append(zanataDetails.getServer() == null ? "" : zanataDetails.getServer()).append("\n");
@@ -1048,7 +1052,7 @@ public class ClientUtilities {
         } else if (contentSpecEntity.getFailed() != null) {
             final ContentSpec contentSpec = parseContentSpecString(providerFactory, new ErrorLoggerManager(),
                     contentSpecEntity.getFailed());
-            if (contentSpec != null && contentSpec.getTitle() != null) {
+            if (contentSpec != null && !isNullOrEmpty(contentSpec.getTitle())) {
                 title = contentSpec.getTitle();
             } else {
                 title = contentSpecEntity.getId().toString();
