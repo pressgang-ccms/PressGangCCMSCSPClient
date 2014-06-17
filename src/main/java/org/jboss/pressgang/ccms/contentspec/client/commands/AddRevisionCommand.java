@@ -32,6 +32,7 @@ import org.jboss.pressgang.ccms.provider.TopicProvider;
 import org.jboss.pressgang.ccms.provider.TranslatedTopicProvider;
 import org.jboss.pressgang.ccms.rest.v1.entities.base.RESTLogDetailsV1;
 import org.jboss.pressgang.ccms.rest.v1.query.RESTCSNodeQueryBuilderV1;
+import org.jboss.pressgang.ccms.utils.common.TopicUtilities;
 import org.jboss.pressgang.ccms.utils.common.XMLUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
 import org.jboss.pressgang.ccms.utils.structures.DocBookVersion;
@@ -315,9 +316,9 @@ public class AddRevisionCommand extends BaseCommandImpl {
         try {
             if (isNullOrEmpty(topic.getXml())) {
                 final String template = getRevisionHistoryTemplate();
-                doc = XMLUtilities.convertStringToDocument(template);
+                doc = TopicUtilities.convertXMLStringToDocument(template, topic.getXmlFormat());
             } else {
-                doc = XMLUtilities.convertStringToDocument(topic.getXml());
+                doc = TopicUtilities.convertXMLStringToDocument(topic.getXml(), topic.getXmlFormat());
             }
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_REV_HISTORY_MSG"), false);
@@ -358,9 +359,9 @@ public class AddRevisionCommand extends BaseCommandImpl {
         try {
             if (isNullOrEmpty(topic.getXml())) {
                 final String template = getRevisionHistoryTemplate();
-                doc = XMLUtilities.convertStringToDocument(template);
+                doc = TopicUtilities.convertXMLStringToDocument(template, topic.getXmlFormat());
             } else {
-                doc = XMLUtilities.convertStringToDocument(topic.getXml());
+                doc = TopicUtilities.convertXMLStringToDocument(topic.getXml(), topic.getXmlFormat());
             }
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_REV_HISTORY_MSG"), false);
@@ -371,9 +372,9 @@ public class AddRevisionCommand extends BaseCommandImpl {
         try {
             if (isNullOrEmpty(topic.getTranslatedAdditionalXML())) {
                 final String template = getRevisionHistoryTemplate();
-                translatedDoc = XMLUtilities.convertStringToDocument(template);
+                translatedDoc = TopicUtilities.convertXMLStringToDocument(template, topic.getXmlFormat());
             } else {
-                translatedDoc = XMLUtilities.convertStringToDocument(topic.getTranslatedAdditionalXML());
+                translatedDoc = TopicUtilities.convertXMLStringToDocument(topic.getTranslatedAdditionalXML(), topic.getXmlFormat());
             }
         } catch (Exception e) {
             printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_INVALID_TRANS_REV_HISTORY_MSG"), false);
