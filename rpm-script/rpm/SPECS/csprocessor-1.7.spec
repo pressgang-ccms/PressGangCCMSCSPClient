@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.7
-Release: 7
+Release: 10
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -45,11 +45,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Tue Jun 17 2014 lnewson - 1.7
+* Fri Jun 20 2014 lnewson - 1.7
+- BZ #1008784 - Bug: Creating new topic needs a writer.
 - BZ #1016354 - RFE: disable inclusion of preface.
 - BZ #1065609 - RFE: Need a way to specify the location of common content.
 - BZ #1078594 - Warn users about using images that aren't pressgang specific.
 - BZ #1098823 - Restrict the ability to push for translation to frozen content specs.
+- BZ #1110539 - Unable to push some DocBook 5.0 topics for translation.
 * Wed Jun 04 2014 lnewson - 1.6.3
 - Fixed an issue that was causing translated strings to appear as untranslated.
 * Mon Jun 02 2014 lnewson - 1.6.2
