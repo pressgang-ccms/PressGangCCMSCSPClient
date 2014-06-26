@@ -1219,18 +1219,20 @@ public class ClientUtilities {
 
         @Override
         public void run() {
-            int nextChar;
+            String line;
             try {
-                while ((nextChar = stream.read()) != -1 && !isShuttingDown.get()) {
-                    final char c = (char) nextChar;
+                final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+
+                while ((line = br.readLine()) != null && !isShuttingDown.get()) {
                     if (buffer != null) {
-                        buffer.append(c);
+                        buffer.append(line).append("\n");
                     } else if (outStream != null) {
-                        outStream.write(c);
+                        outStream.write(line.getBytes());
+                        outStream.write("\n".getBytes());
                         outStream.flush();
                     } else {
                         synchronized (console) {
-                            console.print(c + "");
+                            console.println(line);
                         }
                     }
                 }
