@@ -34,7 +34,6 @@ mkdir -p $RPM_BUILD_ROOT%{_bindir}
 install -m 0755 -d $RPM_BUILD_ROOT%{_libdir}/csprocessor
 install -m 0755 csprocessor.jar $RPM_BUILD_ROOT%{_libdir}/csprocessor/csprocessor.jar
 install -m 0755 csprocessor.sh $RPM_BUILD_ROOT%{_bindir}/csprocessor
-install -m 0755 csprocessor.bash %{_sysconfdir}/bash_completion.d/csprocessor.bash
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -44,11 +43,14 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/csprocessor
 %{_libdir}/csprocessor/csprocessor.jar
 %{_bindir}/csprocessor
-%config %{_sysconfdir}/bash_completion.d/csprocessor.bash
 
 %changelog
-* Fri Jul 11 2014 lnewson - 1.9
-- Added bash autocompletion.
+* Tue Jul 22 2014 lnewson - 1.9
+- BZ #1070040 - Move fixed url to dedicated field.
+* Tue Jul 15 2014 lnewson - 1.8.1
+- Added a temporary way to disable nested section validation for builds.
+- Altered the initial text nested section validation rule.
+- BZ #1117065 - csprocessor - java.lang.IllegalArgumentException: The source parameter can not be null.
 * Thu Jul 10 2014 lnewson - 1.8
 - BZ #987252 - INVALID_CHARACTER_ER is not shown when XML editing but only provided in docbuilder error.
 - BZ #1097064 - Nested sections aren't caught.
