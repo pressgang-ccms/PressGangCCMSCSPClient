@@ -365,7 +365,7 @@ public class ClientUtilities {
             final Process p = runCommand(command, envVariables, dir);
 
             // Create a separate thread to read the stderr stream
-            final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
+            final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console, true);
             final InputStreamHandler stdInPipe = new InputStreamHandler(System.in, p.getOutputStream());
 
             // Pipe stdin to the process
@@ -1192,33 +1192,57 @@ public class ClientUtilities {
         private final StringBuffer buffer;
         private final Console console;
         private final OutputStream outStream;
+        private final boolean readEntireLine;
 
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
         private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 
         public InputStreamHandler(final InputStream stream, final StringBuffer buffer) {
+            this(stream, buffer, false);
+        }
+
+        public InputStreamHandler(final InputStream stream, final StringBuffer buffer, final boolean readLine) {
             this.stream = stream;
             this.buffer = buffer;
             console = null;
             outStream = null;
+            readEntireLine = readLine;
         }
 
         public InputStreamHandler(final InputStream stream, final Console console) {
+            this(stream, console, false);
+        }
+
+        public InputStreamHandler(final InputStream stream, final Console console, final boolean readLine) {
             this.stream = stream;
             buffer = null;
             this.console = console;
             outStream = null;
+            readEntireLine = readLine;
         }
 
         public InputStreamHandler(final InputStream stream, final OutputStream outStream) {
+            this(stream, outStream, false);
+        }
+
+        public InputStreamHandler(final InputStream stream, final OutputStream outStream, final boolean readLine) {
             this.stream = stream;
             buffer = null;
             console = null;
             this.outStream = outStream;
+            readEntireLine = readLine;
         }
 
         @Override
         public void run() {
+            if (readEntireLine) {
+                runReadLine();
+            } else {
+                runRead();
+            }
+        }
+
+        protected void runReadLine() {
             String line;
             try {
                 final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
@@ -1234,6 +1258,33 @@ public class ClientUtilities {
                         synchronized (console) {
                             console.println(line);
                         }
+                    }
+                }
+            } catch (Exception e) {
+                // Do nothing
+                JCommander.getConsole().println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        protected void runRead() {
+            try {
+                while (!isShuttingDown.get()) {
+                    if (stream.available() > 0) {
+                        final char c = (char) stream.read();
+                        if (buffer != null) {
+                            buffer.append(c);
+                        } else if (outStream != null) {
+                            outStream.write(c);
+                            outStream.flush();
+                        } else {
+                            synchronized (console) {
+                                console.print(c + "");
+                            }
+                        }
+                    } else {
+                        // Add a small sleep to stop excess resource consumption
+                        Thread.sleep(100);
                     }
                 }
             } catch (Exception e) {
