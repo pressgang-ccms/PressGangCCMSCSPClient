@@ -19,8 +19,6 @@
 
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import java.io.File;
 
 import com.beust.jcommander.JCommander;
@@ -184,14 +182,14 @@ public class PreviewCommand extends AssembleCommand {
 
                 if (getBuildType() == BuildType.JDOCBOOK) {
                     return getJDocBookPreviewName(rootDir + Constants.DEFAULT_CONFIG_JDOCBOOK_LOCATION, escapedTitle, previewFormat,
-                            contentSpec.getLocale());
+                            contentSpec.getLocale().getBuildValue());
                 } else {
                     return getPublicanPreviewName(rootDir + Constants.DEFAULT_CONFIG_PUBLICAN_LOCATION, escapedTitle,
-                            contentSpec.getVersion(), contentSpec.getProduct(), previewFormat, contentSpec.getLocale());
+                            contentSpec.getVersion(), contentSpec.getProduct(), previewFormat, contentSpec.getLocale().getBuildValue());
                 }
             } else {
                 return findFileToPreview(escapedTitle, contentSpec.getVersion(), contentSpec.getProduct(), previewFormat,
-                        contentSpec.getLocale());
+                        contentSpec.getLocale().getBuildValue());
             }
         } else {
             // Parse the spec from a file to get the main details

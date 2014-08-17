@@ -86,6 +86,7 @@ import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
@@ -966,13 +967,18 @@ public class ClientUtilities {
      * @return True if the language exists on the server otherwise false.
      */
     public static boolean validateLanguages(final BaseCommand command, final ServerSettingsWrapper serverSettings, final String[] langs) {
-        final List<String> locales = serverSettings.getLocales();
+        final CollectionWrapper<LocaleWrapper> locales = serverSettings.getLocales();
+
+        final List<String> localeValues = new ArrayList<String>();
+        for (final LocaleWrapper locale : locales.getItems()) {
+            localeValues.add(locale.getValue());
+        }
 
         boolean valid = true;
         for (final String lang : langs) {
-            if (!locales.contains(lang)) {
+            if (!localeValues.contains(lang)) {
                 command.printError(
-                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, CollectionUtilities.toSeperatedString(locales, " ")), false);
+                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, CollectionUtilities.toSeperatedString(localeValues, " ")), false);
                 valid = false;
             }
         }

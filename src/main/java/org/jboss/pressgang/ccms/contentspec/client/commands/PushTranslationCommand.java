@@ -598,7 +598,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
 
         // Check if a translated topic already exists
         final boolean translatedTopicExists = EntityUtilities.getTranslatedTopicByTopicAndNodeId(providerFactory, topic.getId(),
-                topic.getRevision(), csNodeSpecificTopic ? translatedCSNode.getId() : null, topic.getLocale()) != null;
+                topic.getRevision(), csNodeSpecificTopic ? translatedCSNode.getId() : null, topic.getLocale().getValue()) != null;
 
         // Check if the zanata document already exists, if it does than the topic can be ignored.
         Resource zanataFile;
@@ -613,7 +613,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final Resource resource = new Resource();
 
             resource.setContentType(ContentType.TextPlain);
-            resource.setLang(LocaleId.fromJavaName(topic.getLocale()));
+            resource.setLang(LocaleId.fromJavaName(topic.getLocale().getTranslationValue()));
             resource.setName(zanataId);
             resource.setRevision(1);
             resource.setType(ResourceType.FILE);
@@ -627,7 +627,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 if (!translatableString.trim().isEmpty()) {
                     final TextFlow textFlow = new TextFlow();
                     textFlow.setContents(translatableString);
-                    textFlow.setLang(LocaleId.fromJavaName(topic.getLocale()));
+                    textFlow.setLang(LocaleId.fromJavaName(topic.getLocale().getTranslationValue()));
                     textFlow.setId(HashUtilities.generateMD5(translatableString));
                     textFlow.setRevision(1);
 
@@ -741,7 +741,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
             final Resource resource = new Resource();
 
             resource.setContentType(ContentType.TextPlain);
-            resource.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
+            resource.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale().getTranslationValue()));
             resource.setName(zanataId);
             resource.setRevision(1);
             resource.setType(ResourceType.FILE);
@@ -754,7 +754,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 if (!translatableString.trim().isEmpty()) {
                     final TextFlow textFlow = new TextFlow();
                     textFlow.setContents(translatableString);
-                    textFlow.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale()));
+                    textFlow.setLang(LocaleId.fromJavaName(contentSpecEntity.getLocale().getTranslationValue()));
                     textFlow.setId(HashUtilities.generateMD5(translatableString));
                     textFlow.setRevision(1);
 

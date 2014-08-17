@@ -947,7 +947,7 @@ public class BuildCommand extends BaseCommandImpl {
             return getLocale();
         } else {
             if (isNullOrEmpty(contentSpecLocale)) {
-                return getServerSettings().getDefaultLocale();
+                return getServerSettings().getDefaultLocale().getBuildValue();
             } else {
                 return contentSpecLocale;
             }
