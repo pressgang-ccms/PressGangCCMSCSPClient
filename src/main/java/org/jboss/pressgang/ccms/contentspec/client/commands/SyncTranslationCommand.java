@@ -158,7 +158,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
 
         // Process the ids
         JCommander.getConsole().println(ClientUtilities.getMessage("DOWNLOADING_TOPICS_MSG"));
-        final ZanataSyncService syncService = new ZanataSyncService(getProviderFactory(), zanataInterface, getServerSettings());
+        final ZanataSyncService syncService = new ZanataSyncService(getProviderFactory(), getServerSettings(), );
         syncService.sync(ids, null, null);
 
         // Save the etag cache

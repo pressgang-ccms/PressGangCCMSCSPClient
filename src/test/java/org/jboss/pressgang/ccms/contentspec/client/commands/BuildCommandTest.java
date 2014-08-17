@@ -543,7 +543,7 @@ public class BuildCommandTest extends BaseCommandTest {
 
 
         // When setting up the zanata options
-        command.setupZanataOptions();
+        command.setupZanataOptions(null);
 
         // Then the command should have the url set
         assertThat(command.getZanataUrl(), is(url));
