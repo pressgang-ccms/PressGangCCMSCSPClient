@@ -181,9 +181,6 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.FAIL_ON_WARNING_LONG_PARAM, descriptionKey = "BUILD_FAIL_ON_WARNING")
     private Boolean failOnWarning = false;
 
-    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
-    private Boolean disableSSLCert = false;
-
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -484,14 +481,6 @@ public class BuildCommand extends BaseCommandImpl {
         this.failOnWarning = failOnWarning;
     }
 
-    public Boolean getDisableSSLCert() {
-        return disableSSLCert;
-    }
-
-    public void setDisableSSLCert(Boolean disableSSLCert) {
-        this.disableSSLCert = disableSSLCert;
-    }
-
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -700,18 +689,10 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     /**
-     * Sets the zanata options applied by the command line
-     * to the options that were set via configuration files.
+     * Sets the zanata options applied by the command line to the options that were set via configuration files.
      */
-    protected ZanataDetails setupZanataOptions(final CSTranslationDetailWrapper translationDetailsWrapper) {
-        final ZanataDetails zanataDetails = new ZanataDetails(getCspConfig().getZanataDetails());
-
-        // Copy the details from the content spec translation details
-        if (translationDetailsWrapper != null && translationDetailsWrapper.getTranslationServer() != null) {
-            zanataDetails.setServer(translationDetailsWrapper.getTranslationServer().getUrl());
-            zanataDetails.setProject(translationDetailsWrapper.getProject());
-            zanataDetails.setVersion(translationDetailsWrapper.getProjectVersion());
-        }
+    protected ZanataDetails setupZanataOptions(final CSTranslationDetailWrapper translationDetails) {
+        final ZanataDetails zanataDetails = ClientUtilities.generateZanataDetails(translationDetails, getClientConfig());
 
         // Set the zanata url
         if (getZanataUrl() != null) {

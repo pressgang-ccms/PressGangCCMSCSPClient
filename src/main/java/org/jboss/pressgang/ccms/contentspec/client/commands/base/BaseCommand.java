@@ -44,6 +44,10 @@ public interface BaseCommand extends ShutdownAbleApp {
 
     void setShowVersion(Boolean showVersion);
 
+    Boolean getDisableSSLCert();
+
+    void setDisableSSLCert(Boolean disableSSLCert);
+
     boolean isAppShuttingDown();
 
     void setAppShuttingDown(boolean shuttingDown);

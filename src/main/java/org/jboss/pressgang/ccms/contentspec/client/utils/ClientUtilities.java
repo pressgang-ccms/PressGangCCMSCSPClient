@@ -35,6 +35,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,7 +66,9 @@ import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.builder.utils.DocBookBuildUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
+import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.entities.Spec;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
@@ -85,6 +89,7 @@ import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
+import org.jboss.pressgang.ccms.wrapper.CSTranslationDetailWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
@@ -319,9 +324,6 @@ public class ClientUtilities {
         final String specId = prop.getProperty("SPEC_ID");
         cspConfig.setContentSpecId(Integer.parseInt(specId == null ? null : specId));
         cspConfig.setServerUrl(fixHostURL(prop.getProperty("SERVER_URL")));
-        cspConfig.getZanataDetails().setServer(fixHostURL(prop.getProperty("ZANATA_URL")));
-        cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
-        cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
         cspConfig.setKojiHubUrl(fixHostURL(prop.getProperty("KOJI_HUB_URL")));
         cspConfig.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
     }
@@ -329,12 +331,12 @@ public class ClientUtilities {
     /**
      * Generates the contents of a csprocessor.cfg file from the passed arguments.
      *
+     *
      * @param contentSpec The content specification object the csprocessor.cfg will be used for.
      * @param serverUrl   The server URL that the content specification exists on.
      * @return The generated contents of the csprocessor.cfg file.
      */
-    public static String generateCsprocessorCfg(final ContentSpecWrapper contentSpec, final String serverUrl,
-            final ZanataDetails zanataDetails) {
+    public static String generateCsprocessorCfg(final ContentSpecWrapper contentSpec, final String serverUrl) {
         final StringBuilder output = new StringBuilder();
         output.append("# SPEC_TITLE=");
         if (contentSpec.getTitle() != null) {
@@ -343,9 +345,6 @@ public class ClientUtilities {
         output.append("\n");
         output.append("SPEC_ID=").append(contentSpec.getId()).append("\n");
         output.append("SERVER_URL=").append(serverUrl).append("\n");
-        output.append("ZANATA_URL=").append(zanataDetails.getServer() == null ? "" : zanataDetails.getServer()).append("\n");
-        output.append("ZANATA_PROJECT_NAME=").append(zanataDetails.getProject() == null ? "" : zanataDetails.getProject()).append("\n");
-        output.append("ZANATA_PROJECT_VERSION=").append(zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()).append("\n");
         output.append("KOJI_HUB_URL=\n");
         output.append("PUBLISH_COMMAND=\n");
         return output.toString();
@@ -852,7 +851,7 @@ public class ClientUtilities {
                 cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                         .FILENAME_EXTENSION);
         final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-        final String config = generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl(), zanataDetails);
+        final String config = generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());
 
         // Create the directory
         if (outputConfig.getParentFile() != null && !outputConfig.getParentFile().exists()) {
@@ -1210,6 +1209,47 @@ public class ClientUtilities {
         }
 
         return "xterm -e \"<COMMAND>\"";
+    }
+
+    /**
+     * Sets the zanata options applied by the command line
+     * to the options that were set via configuration files.
+     */
+    public static ZanataDetails generateZanataDetails(final CSTranslationDetailWrapper translationDetails,
+            final ClientConfiguration clientConfig) {
+        final ZanataDetails zanataDetails = new ZanataDetails();
+        zanataDetails.setProject(Constants.DEFAULT_ZANATA_PROJECT);
+        zanataDetails.setVersion(Constants.DEFAULT_ZANATA_VERSION);
+
+        if (translationDetails != null && translationDetails.getTranslationServer() != null) {
+            zanataDetails.setServer(translationDetails.getTranslationServer().getUrl());
+            zanataDetails.setProject(translationDetails.getProject());
+            zanataDetails.setVersion(translationDetails.getProjectVersion());
+
+            ZanataServerConfiguration zanataConfig = null;
+            // Find the zanata server
+            for (final Map.Entry<String, ZanataServerConfiguration> entry : clientConfig.getZanataServers().entrySet()) {
+                final ZanataServerConfiguration serverConfig = entry.getValue();
+
+                // Compare the urls
+                try {
+                    URI serverUrl = new URI(ClientUtilities.fixHostURL(serverConfig.getUrl()));
+                    if (serverUrl.equals(new URI(translationDetails.getTranslationServer().getUrl()))) {
+                        zanataConfig = serverConfig;
+                        break;
+                    }
+                } catch (URISyntaxException e) {
+                    break;
+                }
+            }
+
+            if (zanataConfig != null) {
+                zanataDetails.setToken(zanataConfig.getToken());
+                zanataDetails.setUsername(zanataConfig.getUsername());
+            }
+        }
+
+        return zanataDetails;
     }
 
     private static class InputStreamHandler extends Thread implements ShutdownAbleApp {

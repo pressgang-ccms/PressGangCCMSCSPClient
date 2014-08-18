@@ -61,6 +61,7 @@ import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
+import org.jboss.pressgang.ccms.contentspec.builder.structures.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.TestUtil;
 import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
@@ -72,10 +73,10 @@ import org.jboss.pressgang.ccms.contentspec.processor.ContentSpecProcessor;
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.builder.structures.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
+import org.jboss.pressgang.ccms.wrapper.CSTranslationDetailWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
@@ -108,6 +109,7 @@ public class BuildCommandTest extends BaseCommandTest {
     @ArbitraryString(type = StringType.ALPHANUMERIC) String username;
 
     @Mock ContentSpecWrapper contentSpecWrapper;
+    @Mock CSTranslationDetailWrapper translationDetailWrapper;
     @Mock TranslatedContentSpecWrapper translatedContentSpecWrapper;
     @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
     @Mock ContentSpec contentSpec;
@@ -130,6 +132,8 @@ public class BuildCommandTest extends BaseCommandTest {
 
         rootTestDirectory = FileUtils.toFile(ClassLoader.getSystemResource(""));
         when(cspConfig.getRootOutputDirectory()).thenReturn(rootTestDirectory.getAbsolutePath() + File.separator);
+
+        when(contentSpecWrapper.getTranslationDetails()).thenReturn(translationDetailWrapper);
 
         // Make the book title directory
         bookDir = new File(rootTestDirectory, BOOK_TITLE);
@@ -481,23 +485,6 @@ public class BuildCommandTest extends BaseCommandTest {
 
     @Test
     public void shouldSetupZanataOptions() {
-        final ContentSpecProcessor processor = mock(ContentSpecProcessor.class);
-        final ZanataDetails details = new ZanataDetails();
-        // Given a command with an id
-        command.setIds(Arrays.asList(id.toString()));
-        // and the content spec exists
-        given(contentSpecProvider.getContentSpec(anyInt(), anyInt())).willReturn(contentSpecWrapper);
-        // and the transform works
-        PowerMockito.mockStatic(CSTransformer.class);
-        final ContentSpec contentSpec = new ContentSpec();
-        when(CSTransformer.transform(eq(contentSpecWrapper), eq(providerFactory), anyBoolean())).thenReturn(contentSpec);
-        given(contentSpecWrapper.getChildren()).willReturn(contentSpecChildren);
-        given(contentSpecChildren.isEmpty()).willReturn(false);
-        // and a valid content spec
-        given(processor.processContentSpec(any(ContentSpec.class), anyString(), any(ContentSpecParser.ParsingMode.class))).willReturn(true);
-        given(command.getCsp()).willReturn(processor);
-        // and the cspconfig has some zanata details
-        given(cspConfig.getZanataDetails()).willReturn(details);
         // and some zanata options are set via the command line
         command.setZanataUrl(randomString);
         command.setZanataProject(randomString);
@@ -505,32 +492,20 @@ public class BuildCommandTest extends BaseCommandTest {
         // and the fixHostURL will return the input string
         PowerMockito.mockStatic(ClientUtilities.class);
         when(ClientUtilities.fixHostURL(anyString())).thenReturn(randomString);
-        // and we make a way to kill the processing after the setup
-        doThrow(new CheckExitCalled(-2)).when(command).getBuilder();
-        // and the helper method to get the content spec works
-        TestUtil.setUpContentSpecHelper(contentSpecProvider);
+        when(ClientUtilities.generateZanataDetails(eq(translationDetailWrapper), eq(clientConfig))).thenReturn(new ZanataDetails());
 
         // When the command is processing
-        try {
-            command.process();
-            // Then an error is printed and the program is shut down
-            fail(SYSTEM_EXIT_ERROR);
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(-2));
-        }
+        ZanataDetails zanataDetails = command.setupZanataOptions(translationDetailWrapper);
 
         // Then the details should have been set for the zanata options
-        assertThat(details.getServer(), is(randomString));
-        assertThat(details.getProject(), is(randomString));
-        assertThat(details.getVersion(), is(randomNumber.toString()));
+        assertThat(zanataDetails.getServer(), is(randomString));
+        assertThat(zanataDetails.getProject(), is(randomString));
+        assertThat(zanataDetails.getVersion(), is(randomNumber.toString()));
     }
 
     @Test
     public void shouldSetZanataUrlWhenCommandLineOptionIsZanataServerName() {
-        final ZanataDetails details = new ZanataDetails();
         final ZanataServerConfiguration zanataConfig = mock(ZanataServerConfiguration.class);
-        // Given the cspconfig has some zanata details
-        given(cspConfig.getZanataDetails()).willReturn(details);
         // and the client config has some servers
         HashMap<String, ZanataServerConfiguration> zanataServers = new HashMap<String, ZanataServerConfiguration>();
         zanataServers.put(randomString, zanataConfig);
@@ -753,10 +728,11 @@ public class BuildCommandTest extends BaseCommandTest {
         PowerMockito.mockStatic(DocBookUtilities.class);
         PowerMockito.doThrow(new CheckExitCalled(-2)).when(DocBookUtilities.class);
         DocBookUtilities.escapeTitle(anyString());
-        // and the languages is valid
+        // and the content spec exists
+        when(command.getTranslationDetails(anyString())).thenReturn(translationDetailWrapper);
+        // and the languages are valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        PowerMockito.doReturn(true).when(ClientUtilities.class);
-        ClientUtilities.validateLanguage(any(BaseCommand.class), any(ServerSettingsWrapper.class), anyString());
+        when(ClientUtilities.validateLanguage(any(BaseCommand.class), any(ServerSettingsWrapper.class), anyString())).thenReturn(Boolean.TRUE);
         // and the helper method to get the content spec works
         TestUtil.setUpContentSpecHelper(contentSpecProvider);
         // and getting error messages works
@@ -1089,7 +1065,7 @@ public class BuildCommandTest extends BaseCommandTest {
         command.setServerUrl(url);
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(true);
         // and getting error messages works
         TestUtil.setUpMessages();
 
@@ -1135,7 +1111,7 @@ public class BuildCommandTest extends BaseCommandTest {
         given(cspConfig.getKojiHubUrl()).willReturn(url);
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(true);
         when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(true);
         // and getting error messages works
         TestUtil.setUpMessages();
@@ -1156,7 +1132,7 @@ public class BuildCommandTest extends BaseCommandTest {
         command.setServerUrl(url);
         // And that the URL will not be valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(refEq(url))).thenReturn(true);
+        when(ClientUtilities.validateServerExists(refEq(url), anyBoolean())).thenReturn(true);
         // and we are fetching from koji
         command.setFetchPubsnum(true);
         // and the koji url is set
@@ -1178,71 +1154,6 @@ public class BuildCommandTest extends BaseCommandTest {
         assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
         assertThat(getStdOutLogs(), containsString("Connecting to " + Constants.KOJI_NAME + "hub server: " + kojiUrl));
         assertThat(getStdOutLogs(), containsString("Cannot connect to the server, as the server address can't be resolved."));
-    }
-
-    @Test
-    public void shouldValidateZanataUrlWithValidURL() {
-        final ZanataDetails zanataDetails = mock(ZanataDetails.class);
-        // Given a URL
-        String url = "http://www.example.com";
-        command.setServerUrl(url);
-        // and we are inserting links and have a locale
-        command.setInsertEditorLinks(true);
-        command.setLocale("ja");
-        // and the zanata details are set
-        given(cspConfig.getZanataDetails()).willReturn(zanataDetails);
-        given(zanataDetails.returnUrl()).willReturn(url);
-        // And that the URL will be valid
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
-        when(ClientUtilities.validateServerExists(anyString(), anyBoolean(), anyMap())).thenReturn(true);
-        // and getting error messages works
-        TestUtil.setUpMessages();
-
-        // When validating the server url
-        boolean result = command.validateServerUrl();
-
-        // Then the result from the method should be true
-        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
-        assertTrue(result);
-    }
-
-    @Test
-    public void shouldNotValidateZanataUrlWithInvalidURL() {
-        final ZanataDetails zanataDetails = mock(ZanataDetails.class);
-        // Given a URL
-        String url = "http://www.example.com";
-        command.setServerUrl(url);
-        // And that the URL will not be valid
-        PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(refEq(url))).thenReturn(true);
-        // and the zanata url is set
-        String zanataUrl = "http://translate.zanata.org";
-        // and we are inserting links and have a locale
-        command.setInsertEditorLinks(true);
-        command.setLocale("ja");
-        // and the zanata details are set
-        given(cspConfig.getZanataDetails()).willReturn(zanataDetails);
-        given(zanataDetails.returnUrl()).willReturn(zanataUrl);
-        given(zanataDetails.getProject()).willReturn(randomString);
-        given(zanataDetails.getServer()).willReturn(zanataUrl);
-        given(zanataDetails.getVersion()).willReturn(randomNumber.toString());
-        // And that the URL will be invalid
-        when(ClientUtilities.validateServerExists(refEq(zanataUrl), anyBoolean(), anyMap())).thenReturn(false);
-        // and getting error messages works
-        TestUtil.setUpMessages();
-
-        // When validating the server url
-        try {
-            command.validateServerUrl();
-        } catch (CheckExitCalled e) {
-            assertThat(e.getStatus(), is(1));
-        }
-
-        // Then an error message should have been printed and a System.exit() called
-        assertThat(getStdOutLogs(), containsString("Connecting to PressGang server: " + url));
-        assertThat(getStdOutLogs(), containsString("No Zanata Project exists for the \"" + randomString + "\" project at version \"" +
-                randomNumber + "\" from: " + zanataUrl));
     }
 
     @Test

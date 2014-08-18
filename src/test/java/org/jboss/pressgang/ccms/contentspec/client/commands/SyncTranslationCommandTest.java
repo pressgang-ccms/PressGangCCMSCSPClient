@@ -27,7 +27,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 
 import java.lang.reflect.Constructor;
-import java.util.HashSet;
+import java.util.ArrayList;
 
 import net.sf.ipsedixit.annotation.Arbitrary;
 import net.sf.ipsedixit.annotation.ArbitraryString;
@@ -76,7 +76,7 @@ public class SyncTranslationCommandTest extends BaseCommandTest {
     @Test
     public void shouldFailWithInvalidLanguage() throws Exception {
         // Given a command with no ids
-        command.setIds(new HashSet<String>());
+        command.setIds(new ArrayList<Integer>());
         // and no csprocessor.cfg data
         given(cspConfig.getContentSpecId()).willReturn(id);
         // and a language is set
@@ -85,8 +85,6 @@ public class SyncTranslationCommandTest extends BaseCommandTest {
         PowerMockito.mockStatic(ClientUtilities.class);
         PowerMockito.doReturn(false).when(ClientUtilities.class);
         ClientUtilities.validateLanguages(eq(command), any(ServerSettingsWrapper.class), any(String[].class));
-        // and the zanata details are valid
-        given(cspConfig.getZanataDetails()).willReturn(zanataDetails);
         // and the ZanataInterface constructor shouldn't be run
         Constructor<ZanataInterface> zanataInterfaceConstructor =  PowerMockito.constructor(ZanataInterface.class, double.class,
                 String.class);

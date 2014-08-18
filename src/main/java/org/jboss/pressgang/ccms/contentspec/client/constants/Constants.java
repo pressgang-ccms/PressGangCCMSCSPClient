@@ -61,7 +61,7 @@ public class Constants {
     public static final String DEFAULT_ZANATA_SERVER_NAME = "";
     public static final String DEFAULT_ZANATA_PROJECT = "";
     public static final String DEFAULT_ZANATA_VERSION = "";
-    public static final String KOJI_NAME = "";
+    public static final String KOJI_NAME = "koji";
     public static final String KOJI_HUB_NAME = KOJI_NAME + "hub";
 
     // Server based settings
@@ -257,6 +257,8 @@ public class Constants {
     public static final String FAIL_ON_WARNING_LONG_PARAM = "--fail-on-build-warning";
 
     public static final String ALLOW_UNFROZEN_PUSH_LONG_PARAM = "--unfrozen-push";
+
+    public static final String NO_WAIT_LONG_PARAM = "--no-wait";
 
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;

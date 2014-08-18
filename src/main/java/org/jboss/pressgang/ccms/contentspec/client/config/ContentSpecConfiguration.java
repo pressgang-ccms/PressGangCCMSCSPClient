@@ -19,13 +19,10 @@
 
 package org.jboss.pressgang.ccms.contentspec.client.config;
 
-import org.jboss.pressgang.ccms.zanata.ZanataDetails;
-
 public class ContentSpecConfiguration {
     private String serverUrl = null;
     private Integer contentSpecId = null;
     private String rootOutputDir = null;
-    private ZanataDetails zanataDetails = new ZanataDetails();
     private String kojiHubUrl = null;
     private String publishCommand = null;
 
@@ -51,14 +48,6 @@ public class ContentSpecConfiguration {
 
     public void setRootOutputDirectory(final String rootOutputDir) {
         this.rootOutputDir = rootOutputDir;
-    }
-
-    public ZanataDetails getZanataDetails() {
-        return zanataDetails;
-    }
-
-    public void setZanataDetails(final ZanataDetails zanataDetails) {
-        this.zanataDetails = zanataDetails;
     }
 
     public String getKojiHubUrl() {

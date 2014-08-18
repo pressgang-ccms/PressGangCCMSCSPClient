@@ -256,7 +256,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         command.setServerUrl(url);
         // And that the URL will be valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(anyString())).thenReturn(true);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(true);
         // and getting error messages works
         TestUtil.setUpMessages();
 
@@ -275,7 +275,7 @@ public class BaseCommandImplUnitTest extends BaseUnitTest {
         command.setServerUrl(url);
         // And that the URL will not be valid
         PowerMockito.mockStatic(ClientUtilities.class);
-        when(ClientUtilities.validateServerExists(anyString())).thenReturn(false);
+        when(ClientUtilities.validateServerExists(anyString(), anyBoolean())).thenReturn(false);
         // and getting error messages works
         TestUtil.setUpMessages();
 

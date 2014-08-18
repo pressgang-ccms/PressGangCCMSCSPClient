@@ -191,18 +191,14 @@ public class SetupCommandTest extends BaseCommandTest {
         String zanataUrl = "http://translate.zanata.org/";
         String zanataUsername = username;
         String zanataKey = apikey;
-        String zanataProjectName = "project";
-        String zanataVersionName = "version";
-        setStdInput("No\n" + zanataProjectName + "\n" + zanataVersionName + "\n" + "1" + "\n" + zanataServerName + "\n" + zanataUrl +
-                "\n" + zanataUsername + "\n" + zanataKey + "\n");
+        setStdInput("No\n" + "1" + "\n" + zanataServerName + "\n" + zanataUrl + "\n" + zanataUsername + "\n" + zanataKey + "\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
         command.setupZanata(builder);
 
         // Then the output should have the zanata details set
-        assertThat(builder.toString(), is("[zanata]\ndefault=" + zanataServerName + "\ndefault.project=" + zanataProjectName +
-                "\ndefault.project-version=" + zanataVersionName + "\n\npublic.url=" + zanataUrl + "\npublic.username=" + username +
+        assertThat(builder.toString(), is("[zanata]\npublic.url=" + zanataUrl + "\npublic.username=" + username +
                 "\npublic.key=" + apikey + "\n"));
     }
 
@@ -213,58 +209,22 @@ public class SetupCommandTest extends BaseCommandTest {
         String zanataUrl = "http://translate.zanata.org/";
         String zanataUsername = username;
         String zanataKey = apikey;
-        String zanataProjectName = "project";
-        String zanataVersionName = "version";
         setStdInput(
-                "No\n" + zanataProjectName + "\n" + zanataVersionName + "\n" + "one\n0\n1" + "\n" + zanataServerName + "\n" + zanataUrl +
-                        "\n" +
-                        zanataUsername + "\n" + zanataKey + "\n");
+                "No\none\n0\n1" + "\n" + zanataServerName + "\n" + zanataUrl + "\n" + zanataUsername + "\n" + zanataKey + "\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
         command.setupZanata(builder);
 
         // Then the output should have the zanata details set
-        assertThat(builder.toString(), is("[zanata]\ndefault=" + zanataServerName + "\ndefault.project=" + zanataProjectName +
-                "\ndefault.project-version=" + zanataVersionName + "\n\npublic.url=" + zanataUrl + "\npublic.username=" + username +
+        assertThat(builder.toString(), is("[zanata]\npublic.url=" + zanataUrl + "\npublic.username=" + username +
                 "\npublic.key=" + apikey + "\n"));
-    }
-
-    @Test
-    public void shouldAskForDefaultServerWhenSetZanataOptionsWithTwoServers() {
-        // Given some input
-        String zanataServerName1 = "public";
-        String zanataUrl1 = "http://translate.zanata.org/";
-        String zanataUsername1 = username;
-        String zanataKey1 = apikey;
-
-        String zanataServerName2 = "test";
-        String zanataUrl2 = "http://test.zanata.org/";
-        String zanataUsername2 = username;
-        String zanataKey2 = apikey;
-
-        String zanataProjectName = "project";
-        String zanataVersionName = "version";
-        setStdInput(
-                "n\n" + zanataProjectName + "\n" + zanataVersionName + "\n" + "2" + "\n" + zanataServerName2 + "\n" + zanataUrl2 + "\n" +
-                        zanataUsername2 + "\n" + zanataKey2 + "\n" + zanataServerName1 + "\n" + zanataUrl1 + "\n" +
-                        zanataUsername1 + "\n" + zanataKey1 + "\n" + zanataServerName1 + "\n");
-
-        // When getting the zanata options from the user
-        StringBuilder builder = new StringBuilder();
-        command.setupZanata(builder);
-
-        // Then the output should have the zanata details set
-        assertThat(builder.toString(), is("[zanata]\ndefault=" + zanataServerName1 + "\ndefault.project=" + zanataProjectName +
-                "\ndefault.project-version=" + zanataVersionName + "\n\npublic.url=" + zanataUrl1 + "\npublic.username=" + zanataUsername1 +
-                "\npublic.key=" + zanataKey1 + "\n\ntest.url=" + zanataUrl2 + "\ntest.username=" + zanataUsername2 + "\ntest.key=" +
-                zanataKey2 + "\n"));
     }
 
     @Test
     public void shouldSetEmptyValuesForSetZanataOptions() {
         // Given some input
-        setStdInput("No\n\n\n1\npublic\n\n\n\n");
+        setStdInput("No\n1\npublic\n\n\n\n");
 
         // When getting the zanata options from the user
         StringBuilder builder = new StringBuilder();
@@ -272,8 +232,7 @@ public class SetupCommandTest extends BaseCommandTest {
 
         // Then the output should have the empty zanata details set
         assertThat(builder.toString(),
-                is("[zanata]\ndefault=public\ndefault.project=\ndefault.project-version=\n\npublic.url=\npublic.username=\npublic" + "" +
-                        ".key=\n"));
+                is("[zanata]\npublic.url=\npublic.username=\npublic.key=\n"));
     }
 
     @Test
@@ -287,8 +246,7 @@ public class SetupCommandTest extends BaseCommandTest {
 
         // Then the output should have the empty zanata details set
         assertThat(builder.toString(),
-                is("[zanata]\ndefault=" + Constants.DEFAULT_ZANATA_SERVER_NAME + "\ndefault.project=" + Constants.DEFAULT_ZANATA_PROJECT +
-                        "\ndefault.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n\n" + Constants.DEFAULT_ZANATA_SERVER_NAME +
+                is("[zanata]\n" + Constants.DEFAULT_ZANATA_SERVER_NAME +
                         ".url=" + Constants.DEFAULT_ZANATA_SERVER + "\n" + Constants.DEFAULT_ZANATA_SERVER_NAME + ".username=" + username
                         + "\n" + Constants.DEFAULT_ZANATA_SERVER_NAME + ".key=" + apikey + "\n"));
     }

@@ -36,9 +36,6 @@ public class ClientConfiguration {
     private String kojiHubUrl = null;
     private String publishCommand = null;
 
-    private String defaultZanataProject = null;
-    private String defaultZanataVersion = null;
-
     private String editorCommand = null;
     private Boolean editorRequiresTerminal = false;
 
@@ -103,22 +100,6 @@ public class ClientConfiguration {
 
     public void setPublishCommand(final String publishCommand) {
         this.publishCommand = publishCommand;
-    }
-
-    public String getDefaultZanataVersion() {
-        return defaultZanataVersion;
-    }
-
-    public void setDefaultZanataVersion(final String defaultZanataVersion) {
-        this.defaultZanataVersion = defaultZanataVersion;
-    }
-
-    public String getDefaultZanataProject() {
-        return defaultZanataProject;
-    }
-
-    public void setDefaultZanataProject(final String defaultZanataProject) {
-        this.defaultZanataProject = defaultZanataProject;
     }
 
     public String getPublicanCommonContentDirectory() {
