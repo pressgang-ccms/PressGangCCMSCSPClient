@@ -49,6 +49,7 @@ import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSNodeWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
 import org.junit.After;
 import org.junit.Before;
@@ -72,6 +73,7 @@ public class PreviewCommandTest extends BaseCommandTest {
 
     @Mock ContentSpecWrapper contentSpecWrapper;
     @Mock ContentSpec contentSpec;
+    @Mock LocaleWrapper localeWrapper;
     @Mock UpdateableCollectionWrapper<CSNodeWrapper> contentSpecChildren;
 
     PreviewCommand command;
@@ -101,6 +103,8 @@ public class PreviewCommandTest extends BaseCommandTest {
         htmlSingleDir.mkdirs();
         previewFile = new File(htmlSingleDir, "index.html");
         previewFile.createNewFile();
+
+        when(contentSpecWrapper.getLocale()).thenReturn(localeWrapper);
     }
 
     @After
