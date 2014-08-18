@@ -10,7 +10,7 @@ License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
 Version: 1.9
-Release: 1
+Release: 2
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -47,6 +47,8 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Tue Jul 22 2014 lnewson - 1.9
 - BZ #1070040 - Move fixed url to dedicated field.
+- BZ #1092189 - Update the csprocessor push/sync translation commands.
+- Added the core work for BZ #1083348 - Locales in entity config should be list both Zanata and Publican versions.
 * Tue Jul 15 2014 lnewson - 1.8.1
 - Added a temporary way to disable nested section validation for builds.
 - Altered the initial text nested section validation rule.

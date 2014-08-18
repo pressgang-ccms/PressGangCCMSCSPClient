@@ -35,10 +35,12 @@ import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfigurati
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.contentspec.constants.CSConstants;
+import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.common.ZipUtilities;
 import org.jboss.pressgang.ccms.utils.constants.CommonConstants;
+import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "ASSEMBLE")
 public class AssembleCommand extends BuildCommand {
@@ -271,8 +273,18 @@ public class AssembleCommand extends BuildCommand {
     protected void runPublican(final ContentSpec contentSpec, final File publicanFilesDirectory) {
         String publicanOptions = getClientConfig().getPublicanBuildOptions();
 
+        // Get the content spec locales build value
+        final String contentSpecLocale;
+        if (!isNullOrEmpty(contentSpec.getLocale())) {
+            final LocaleWrapper localeWrapper = EntityUtilities.findLocaleFromString(getServerSettings().getLocales(),
+                    contentSpec.getLocale());
+            contentSpecLocale = localeWrapper.getBuildValue();
+        } else {
+            contentSpecLocale = null;
+        }
+
         // Replace the locale in the build options if the locale has been set
-        final String locale = generateOutputLocale(contentSpec.getLocale());
+        final String locale = generateOutputLocale(contentSpecLocale);
         if (!isNullOrEmpty(locale)) {
             publicanOptions = publicanOptions.replaceAll("--lang(s)?(=| )[A-Za-z\\-,]+", "--langs=" + locale);
         }

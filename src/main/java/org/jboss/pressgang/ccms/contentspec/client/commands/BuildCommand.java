@@ -71,6 +71,7 @@ import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.wrapper.CSTranslationDetailWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
@@ -951,7 +952,8 @@ public class BuildCommand extends BaseCommandImpl {
         if (getTargetLocale() != null) {
             return getTargetLocale();
         } else if (getLocale() != null) {
-            return getLocale();
+            final LocaleWrapper localeWrapper = EntityUtilities.findLocaleFromString(getServerSettings().getLocales(), getLocale());
+            return localeWrapper.getBuildValue();
         } else {
             if (isNullOrEmpty(contentSpecLocale)) {
                 return getServerSettings().getDefaultLocale().getBuildValue();
