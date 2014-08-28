@@ -167,6 +167,14 @@ public class PushTranslationCommand extends BaseCommandImpl {
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
+        // Check that the content spec is frozen
+        if (!getAllowUnfrozenPush() && !contentSpecEntity.hasTag(getServerEntities().getFrozenTagId())) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_PUSH_TRANSLATION_UNFROZEN_MSG"), false);
+        }
+
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
         // Start the push operation
         pushToZanata(getProviderFactory(), contentSpecEntity, zanataDetails.getUsername(), zanataDetails.getToken());
     }
