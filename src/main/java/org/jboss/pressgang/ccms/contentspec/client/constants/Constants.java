@@ -46,6 +46,7 @@ public class Constants {
     public static final String FILENAME_EXTENSION = "contentspec";
     public static final String DEFAULT_CONFIG_PUBLICAN_BUILD_POSTFIX = "-publican";
     public static final String DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX = "-jDocbook";
+    public static final int ASYNC_STATUS_INTERVAL = 15000;
 
     // Version Constants
     public static final String VERSION_PROPERTIES_FILENAME = "version.properties";

@@ -224,8 +224,8 @@ public class PushTranslationCommand extends BaseCommandImpl {
                 .FAILED || processInformation.getStatus() == RESTProcessStatusV1.CANCELLED)) {
             JCommander.getConsole().println(ClientUtilities.getMessage("WAITING_FOR_TRANSLATION_PUSH_TO_COMPLETE"));
             try {
-                // Wait for 10 secs before checking the status again
-                Thread.sleep(10000);
+                // Wait for a few secs before checking the status again
+                Thread.sleep(Constants.ASYNC_STATUS_INTERVAL);
             } catch (Exception e) {
                 JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
                 shutdown(Constants.EXIT_FAILURE);

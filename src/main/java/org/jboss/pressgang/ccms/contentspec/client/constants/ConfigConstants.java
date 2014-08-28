@@ -51,9 +51,9 @@ public class ConfigConstants {
 
             // Create the default translation options
             "[zanata]\n" +
-            "default=\n" +
-            "default.project=" + Constants.DEFAULT_ZANATA_PROJECT + "\n" +
-            "default.project-version=" + Constants.DEFAULT_ZANATA_VERSION + "\n\n" +
+            Constants.DEFAULT_ZANATA_SERVER_NAME + ".url=" + Constants.DEFAULT_ZANATA_SERVER + "\n" +
+            Constants.DEFAULT_ZANATA_SERVER_NAME + ".username=\n" +
+            Constants.DEFAULT_ZANATA_SERVER_NAME + ".key=\n\n" +
 
             // Create the default translation options
             "[publish]\n" +

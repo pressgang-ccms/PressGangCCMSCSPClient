@@ -193,7 +193,7 @@ public class SyncTranslationCommand extends BaseCommandImpl {
             JCommander.getConsole().println(ClientUtilities.getMessage("WAITING_FOR_TRANSLATION_SYNC_TO_COMPLETE"));
             try {
                 // Wait for 10 secs before checking the status again
-                Thread.sleep(10000);
+                Thread.sleep(Constants.ASYNC_STATUS_INTERVAL);
             } catch (Exception e) {
                 JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
                 shutdown(Constants.EXIT_FAILURE);
