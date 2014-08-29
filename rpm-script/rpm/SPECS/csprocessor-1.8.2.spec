@@ -9,8 +9,8 @@ Summary: Content Specification Processor client application
 License: LGPLv2+
 Vendor: Red Hat, Inc.
 Group: Development/Tools
-Version: 1.9
-Release: 5
+Version: 1.8.2
+Release: 1
 BuildRoot: %{_builddir}/%{name}-buildroot
 Packager: Lee Newson
 BuildArch: noarch
@@ -45,13 +45,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/csprocessor
 
 %changelog
-* Fri Aug 29 2014 lnewson - 1.9
-- BZ #1070040 - Move fixed url to dedicated field.
-- BZ #1092189 - Update the csprocessor push/sync translation commands.
-- Added the core work for BZ #1083348 - Locales in entity config should be list both Zanata and Publican versions.
-- Added translations for "Preface" and "Revision History" to the builder for de-DE, it-IT, ko-KR, ru-RU and zh-TW.
-* Mon Aug 18 2014 lnewson - 1.8.3
-- Fixed an issue that was causing the builder to report that topics hadn't been pushed for translation.
 * Mon Jul 28 2014 lnewson - 1.8.2
 - Workaround for BZ #1123683 - Builds in base locales other than english can fail.
 - Added the ability to use --target-lang for regular builds.
