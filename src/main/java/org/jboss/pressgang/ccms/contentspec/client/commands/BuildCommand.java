@@ -182,6 +182,9 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = Constants.FAIL_ON_WARNING_LONG_PARAM, descriptionKey = "BUILD_FAIL_ON_WARNING")
     private Boolean failOnWarning = false;
 
+    @Parameter(names = "--skip-nested-section-validation", hidden = true)
+    private Boolean skipNestedSectionValidation = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -482,6 +485,14 @@ public class BuildCommand extends BaseCommandImpl {
         this.failOnWarning = failOnWarning;
     }
 
+    public Boolean getSkipNestedSectionValidation() {
+        return skipNestedSectionValidation;
+    }
+
+    public void setSkipNestedSectionValidation(Boolean skipNestedSectionValidation) {
+        this.skipNestedSectionValidation = skipNestedSectionValidation;
+    }
+
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -633,6 +644,7 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setServerBuild(getClientConfig().getDefaults().isServer());
         buildOptions.setMaxRevision(getRevision());
         buildOptions.setCalculateChunkDepth(getSuggestChunkDepth());
+        buildOptions.setSkipNestedSectionValidation(getSkipNestedSectionValidation());
 
         return buildOptions;
     }
