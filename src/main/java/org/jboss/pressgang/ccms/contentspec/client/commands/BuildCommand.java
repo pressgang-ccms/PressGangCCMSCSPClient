@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -24,6 +43,7 @@ import org.jboss.pressgang.ccms.contentspec.builder.BuildType;
 import org.jboss.pressgang.ccms.contentspec.builder.ContentSpecBuilder;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuildProcessingException;
 import org.jboss.pressgang.ccms.contentspec.builder.exception.BuilderCreationException;
+import org.jboss.pressgang.ccms.contentspec.builder.structures.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
@@ -42,7 +62,6 @@ import org.jboss.pressgang.ccms.contentspec.processor.structures.ProcessingOptio
 import org.jboss.pressgang.ccms.contentspec.utils.CSTransformer;
 import org.jboss.pressgang.ccms.contentspec.utils.EntityUtilities;
 import org.jboss.pressgang.ccms.contentspec.utils.logging.ErrorLoggerManager;
-import org.jboss.pressgang.ccms.contentspec.builder.structures.DocBookBuildingOptions;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
 import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
@@ -50,10 +69,11 @@ import org.jboss.pressgang.ccms.provider.exception.NotFoundException;
 import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
+import org.jboss.pressgang.ccms.wrapper.CSTranslationDetailWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 import org.jboss.pressgang.ccms.wrapper.TranslatedContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
-import org.zanata.rest.RestConstant;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "BUILD")
 public class BuildCommand extends BaseCommandImpl {
@@ -161,9 +181,6 @@ public class BuildCommand extends BaseCommandImpl {
 
     @Parameter(names = Constants.FAIL_ON_WARNING_LONG_PARAM, descriptionKey = "BUILD_FAIL_ON_WARNING")
     private Boolean failOnWarning = false;
-
-    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
-    private Boolean disableSSLCert = false;
 
     @Parameter(names = "--skip-nested-section-validation", hidden = true)
     private Boolean skipNestedSectionValidation = false;
@@ -468,14 +485,6 @@ public class BuildCommand extends BaseCommandImpl {
         this.failOnWarning = failOnWarning;
     }
 
-    public Boolean getDisableSSLCert() {
-        return disableSSLCert;
-    }
-
-    public void setDisableSSLCert(Boolean disableSSLCert) {
-        this.disableSSLCert = disableSSLCert;
-    }
-
     public Boolean getSkipNestedSectionValidation() {
         return skipNestedSectionValidation;
     }
@@ -535,10 +544,11 @@ public class BuildCommand extends BaseCommandImpl {
         JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_BUILD_MSG"));
 
         // Setup the zanata details incase some were overridden via the command line
-        setupZanataOptions();
+        final CSTranslationDetailWrapper translationDetails = getTranslationDetails(getIds().get(0));
+        final ZanataDetails zanataDetails = setupZanataOptions(translationDetails);
 
         // Build the Content Specification
-        byte[] builderOutput = buildContentSpec(contentSpec, getUsername());
+        byte[] builderOutput = buildContentSpec(contentSpec, getUsername(), zanataDetails);
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
@@ -692,10 +702,11 @@ public class BuildCommand extends BaseCommandImpl {
     }
 
     /**
-     * Sets the zanata options applied by the command line
-     * to the options that were set via configuration files.
+     * Sets the zanata options applied by the command line to the options that were set via configuration files.
      */
-    protected void setupZanataOptions() {
+    protected ZanataDetails setupZanataOptions(final CSTranslationDetailWrapper translationDetails) {
+        final ZanataDetails zanataDetails = ClientUtilities.generateZanataDetails(translationDetails, getClientConfig());
+
         // Set the zanata url
         if (getZanataUrl() != null) {
             ZanataServerConfiguration zanataConfig = null;
@@ -708,21 +719,36 @@ public class BuildCommand extends BaseCommandImpl {
                 }
             }
 
-            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
+            zanataDetails.setServer(ClientUtilities.fixHostURL(getZanataUrl()));
             if (zanataConfig != null) {
-                getCspConfig().getZanataDetails().setToken(zanataConfig.getToken());
-                getCspConfig().getZanataDetails().setUsername(zanataConfig.getUsername());
+                zanataDetails.setToken(zanataConfig.getToken());
+                zanataDetails.setUsername(zanataConfig.getUsername());
             }
         }
 
         // Set the zanata project
         if (getZanataProject() != null) {
-            getCspConfig().getZanataDetails().setProject(getZanataProject());
+            zanataDetails.setProject(getZanataProject());
         }
 
         // Set the zanata version
         if (getZanataVersion() != null) {
-            getCspConfig().getZanataDetails().setVersion(getZanataVersion());
+            zanataDetails.setVersion(getZanataVersion());
+        }
+
+        return zanataDetails;
+    }
+
+    protected CSTranslationDetailWrapper getTranslationDetails(final String fileOrId) {
+        if (fileOrId.matches("^\\d+$")) {
+            final Integer id = Integer.parseInt(fileOrId);
+            final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
+
+            // Get the content spec and it's details
+            final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, id, getRevision());
+            return contentSpecEntity.getTranslationDetails();
+        } else {
+            return null;
         }
     }
 
@@ -753,11 +779,12 @@ public class BuildCommand extends BaseCommandImpl {
     /**
      * Builds a ContentSpec object into a ZIP archive that can be later built by Publican.
      *
+     *
      * @param contentSpec The content spec to build from.
-     * @param user        The user who requested the build.
+     * @param zanataDetails
      * @return A ZIP archive as a byte array that is ready to be saved as a file.
      */
-    protected byte[] buildContentSpec(final ContentSpec contentSpec, final String username) {
+    protected byte[] buildContentSpec(final ContentSpec contentSpec, final String username, ZanataDetails zanataDetails) {
         final String fixedUsername = username == null ? "Unknown" : username;
         byte[] builderOutput = null;
         try {
@@ -767,7 +794,7 @@ public class BuildCommand extends BaseCommandImpl {
                 builderOutput = getBuilder().buildBook(contentSpec, fixedUsername, getBuildOptions(), getOverrideFiles(), buildType);
             } else {
                 builderOutput = getBuilder().buildTranslatedBook(contentSpec, fixedUsername, getBuildOptions(), getOverrideFiles(),
-                        getCspConfig().getZanataDetails(), buildType);
+                        zanataDetails, buildType);
             }
         } catch (BuildProcessingException e) {
             printErrorAndShutdown(Constants.EXIT_INTERNAL_SERVER_ERROR, ExceptionUtilities.getRootCause(e).getMessage(), false);
@@ -937,10 +964,11 @@ public class BuildCommand extends BaseCommandImpl {
         if (getTargetLocale() != null) {
             return getTargetLocale();
         } else if (getLocale() != null) {
-            return getLocale();
+            final LocaleWrapper localeWrapper = EntityUtilities.findLocaleFromString(getServerSettings().getLocales(), getLocale());
+            return localeWrapper.getBuildValue();
         } else {
             if (isNullOrEmpty(contentSpecLocale)) {
-                return getServerSettings().getDefaultLocale();
+                return getServerSettings().getDefaultLocale().getBuildValue();
             } else {
                 return contentSpecLocale;
             }
@@ -1050,28 +1078,6 @@ public class BuildCommand extends BaseCommandImpl {
                 JCommander.getConsole().println("");
 
                 printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
-            }
-        }
-
-        /*
-         * Check the Zanata server url and Project/Version to ensure that it
-         * exists if the user wants to insert editor links for translations.
-         */
-        if (getInsertEditorLinks() && getLocale() != null) {
-            setupZanataOptions();
-
-            final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
-            final Map<String, String> headers = new HashMap<String, String>();
-            headers.put(RestConstant.HEADER_USERNAME, zanataDetails.getUsername());
-            headers.put(RestConstant.HEADER_API_KEY, zanataDetails.getToken());
-
-            if (!ClientUtilities.validateServerExists(zanataDetails.returnUrl(), getDisableSSLCert(), headers)) {
-                // Print a line to separate content
-                JCommander.getConsole().println("");
-
-                printErrorAndShutdown(Constants.EXIT_NO_SERVER,
-                        ClientUtilities.getMessage("ERROR_INVALID_ZANATA_CONFIG_MSG", zanataDetails.getProject(),
-                                zanataDetails.getVersion(), zanataDetails.getServer()), false);
             }
         }
 

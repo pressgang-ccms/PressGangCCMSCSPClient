@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client;
 
 import java.io.File;
@@ -98,6 +117,9 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
     @Parameter(names = Constants.CONFIG_LONG_PARAM, metaVar = "<FILE>")
     private String configLocation = Constants.DEFAULT_CONFIG_LOCATION;
+
+    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
+    private Boolean disableSSLCert = false;
 
     private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
     protected final AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -390,8 +412,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         // Set the root directory in the csprocessor configuration
         cspConfig.setRootOutputDirectory(clientConfig.getRootDirectory());
 
-        applyZanataSettings();
-
         // Set the publish options
         if ((cspConfig.getKojiHubUrl() == null || cspConfig.getKojiHubUrl().isEmpty()) && clientConfig.getKojiHubUrl() != null) {
             cspConfig.setKojiHubUrl(ClientUtilities.fixHostURL(clientConfig.getKojiHubUrl()));
@@ -511,64 +531,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
 
         if (cspConfig.getServerUrl() == null) {
             cspConfig.setServerUrl(url);
-        }
-    }
-
-    /**
-     * Apply the zanata settings from the client configuration
-     * file to the command and/or Content Spec Configuration.
-     */
-    protected void applyZanataSettings() {
-        if (cspConfig == null) return;
-
-        // Setup the zanata details
-        final Map<String, ZanataServerConfiguration> zanataServers = clientConfig.getZanataServers();
-
-        // Set the zanata details
-        if (cspConfig.getZanataDetails() != null && cspConfig.getZanataDetails().getServer() != null && !cspConfig.getZanataDetails()
-                .getServer().isEmpty() && command.loadFromCSProcessorCfg()) {
-            ZanataServerConfiguration zanataServerConfig = null;
-            for (final Entry<String, ZanataServerConfiguration> serverEntry : zanataServers.entrySet()) {
-                final String serverName = serverEntry.getKey();
-                final ZanataServerConfiguration serverConfig = serverEntry.getValue();
-
-                // Ignore the default server for csprocessor.cfg configuration files
-                if (serverName.equals(Constants.DEFAULT_SERVER_NAME)) continue;
-
-                // Compare the urls
-                try {
-                    URI serverUrl = new URI(ClientUtilities.fixHostURL(serverConfig.getUrl()));
-                    if (serverUrl.equals(new URI(cspConfig.getZanataDetails().getServer()))) {
-                        zanataServerConfig = serverConfig;
-                        break;
-                    }
-                } catch (URISyntaxException e) {
-                    break;
-                }
-            }
-
-            // If no URL matched between the csprocessor.ini and csprocessor.cfg then print an error
-            if (zanataServerConfig == null) {
-                JCommander.getConsole().println("");
-                printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR,
-                        ClientUtilities.getMessage("ERROR_NO_ZANATA_SERVER_SETUP_MSG", cspConfig.getZanataDetails().getServer()), false);
-            } else {
-                cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
-                cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
-            }
-        } else if (clientConfig.getZanataServers().containsKey(Constants.DEFAULT_SERVER_NAME)) {
-            final ZanataServerConfiguration zanataServerConfig = clientConfig.getZanataServers().get(Constants.DEFAULT_SERVER_NAME);
-            cspConfig.getZanataDetails().setServer(ClientUtilities.fixHostURL(zanataServerConfig.getUrl()));
-            cspConfig.getZanataDetails().setUsername(zanataServerConfig.getUsername());
-            cspConfig.getZanataDetails().setToken(zanataServerConfig.getToken());
-        }
-
-        // Setup the default zanata project and version
-        if (cspConfig.getZanataDetails().getProject() == null || cspConfig.getZanataDetails().getProject().isEmpty()) {
-            cspConfig.getZanataDetails().setProject(clientConfig.getDefaultZanataProject());
-        }
-        if (cspConfig.getZanataDetails().getVersion() == null || cspConfig.getZanataDetails().getVersion().isEmpty()) {
-            cspConfig.getZanataDetails().setVersion(clientConfig.getDefaultZanataVersion());
         }
     }
 
@@ -814,25 +776,6 @@ public class Client implements BaseCommand, ShutdownAbleApp {
                     serverConfig.setCache(cache);
 
                     zanataServers.put(name, serverConfig);
-                } else if (key.equals(Constants.DEFAULT_SERVER_NAME)) {
-                    final String url = serversNode.getString(key);
-
-                    // Only load the default server if one is specified
-                    if (url != null && !url.isEmpty()) {
-                        // Create the Server Configuration
-                        final ZanataServerConfiguration serverConfig = new ZanataServerConfiguration();
-                        serverConfig.setName(key);
-                        serverConfig.setUrl(url);
-
-                        zanataServers.put(Constants.DEFAULT_SERVER_NAME, serverConfig);
-                    }
-
-                    // Find the default project and version values
-                    final String project = serversNode.getString(key + "..project");
-                    final String version = serversNode.getString(key + "..project-version");
-
-                    if (project != null && !project.isEmpty()) clientConfig.setDefaultZanataProject(project);
-                    if (version != null && !version.isEmpty()) clientConfig.setDefaultZanataVersion(version);
                 }
             }
         }
@@ -994,6 +937,16 @@ public class Client implements BaseCommand, ShutdownAbleApp {
     }
 
     @Override
+    public Boolean getDisableSSLCert() {
+        return disableSSLCert;
+    }
+
+    @Override
+    public void setDisableSSLCert(Boolean disableSSLCert) {
+        this.disableSSLCert = disableSSLCert;
+    }
+
+    @Override
     public void printHelp() {
         parser.usage(false);
     }
@@ -1100,7 +1053,7 @@ public class Client implements BaseCommand, ShutdownAbleApp {
         JCommander.getConsole().println(String.format(ClientUtilities.getMessage("WEBSERVICE_MSG"), getServerUrl()));
 
         // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(getServerUrl())) {
+        if (!ClientUtilities.validateServerExists(getServerUrl(), getDisableSSLCert())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 

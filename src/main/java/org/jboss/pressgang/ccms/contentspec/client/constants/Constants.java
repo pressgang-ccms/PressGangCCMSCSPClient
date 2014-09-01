@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client.constants;
 
 import java.io.File;
@@ -27,6 +46,7 @@ public class Constants {
     public static final String FILENAME_EXTENSION = "contentspec";
     public static final String DEFAULT_CONFIG_PUBLICAN_BUILD_POSTFIX = "-publican";
     public static final String DEFAULT_CONFIG_JDOCBOOK_BUILD_POSTFIX = "-jDocbook";
+    public static final int ASYNC_STATUS_INTERVAL = 15000;
 
     // Version Constants
     public static final String VERSION_PROPERTIES_FILENAME = "version.properties";
@@ -42,7 +62,7 @@ public class Constants {
     public static final String DEFAULT_ZANATA_SERVER_NAME = "";
     public static final String DEFAULT_ZANATA_PROJECT = "";
     public static final String DEFAULT_ZANATA_VERSION = "";
-    public static final String KOJI_NAME = "";
+    public static final String KOJI_NAME = "koji";
     public static final String KOJI_HUB_NAME = KOJI_NAME + "hub";
 
     // Server based settings
@@ -238,6 +258,8 @@ public class Constants {
     public static final String FAIL_ON_WARNING_LONG_PARAM = "--fail-on-build-warning";
 
     public static final String ALLOW_UNFROZEN_PUSH_LONG_PARAM = "--unfrozen-push";
+
+    public static final String NO_WAIT_LONG_PARAM = "--no-wait";
 
     // Exit statuses
     public static final int EXIT_SUCCESS = 0;

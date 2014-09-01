@@ -1,59 +1,63 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client.commands;
 
-import java.io.File;
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
 import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
-import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
-import org.jboss.pressgang.ccms.provider.RESTTopicProvider;
-import org.jboss.pressgang.ccms.services.zanatasync.ZanataSyncService;
-import org.jboss.pressgang.ccms.zanata.ETagCache;
-import org.jboss.pressgang.ccms.zanata.ETagInterceptor;
+import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
+import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.rest.v1.elements.RESTProcessInformationV1;
+import org.jboss.pressgang.ccms.rest.v1.elements.enums.RESTProcessStatusV1;
+import org.jboss.pressgang.ccms.rest.v1.expansion.ExpandDataDetails;
+import org.jboss.pressgang.ccms.rest.v1.expansion.ExpandDataTrunk;
+import org.jboss.pressgang.ccms.rest.v1.jaxrsinterfaces.RESTInterfaceV1;
+import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
+import org.jboss.pressgang.ccms.wrapper.CSTranslationDetailWrapper;
+import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
-import org.jboss.pressgang.ccms.zanata.ZanataInterface;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.UnauthorizedException;
-import org.zanata.common.LocaleId;
-import org.zanata.rest.client.ITranslatedDocResource;
-import org.zanata.rest.service.TranslatedDocResource;
 
 @Parameters(resourceBundle = "commands", commandDescriptionKey = "SYNC_TRANSLATION")
 public class SyncTranslationCommand extends BaseCommandImpl {
-    private static final List<Class<?>> ALLOWED_RESOURCES = Arrays.<Class<?>>asList(ITranslatedDocResource.class,
-            TranslatedDocResource.class);
 
-    @Parameter(metaVar = "[IDs]")
-    private Set<String> ids = new HashSet<String>();
+    @Parameter(metaVar = "[ID]")
+    private List<Integer> ids = new ArrayList<Integer>();
 
     @Parameter(names = Constants.LOCALES_LONG_PARAM, metaVar = "[LOCALES]", descriptionKey = "SYNC_TRANSLATION_LOCALES")
     private String locales = "";
 
-    @Parameter(names = Constants.ZANATA_SERVER_LONG_PARAM, descriptionKey = "ZANATA_SERVER", metaVar = "<URL>")
-    private String zanataUrl = null;
-
-    @Parameter(names = Constants.ZANATA_PROJECT_LONG_PARAM, descriptionKey = "ZANATA_PROJECT", metaVar = "<PROJECT>")
-    private String zanataProject = null;
-
-    @Parameter(names = Constants.ZANATA_PROJECT_VERSION_LONG_PARAM, description = "ZANATA_PROJECT_VERSION", metaVar = "<VERSION>")
-    private String zanataVersion = null;
-
-    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
-    private Boolean disableSSLCert = false;
-
-    private final ETagCache eTagCache = new ETagCache();
+    @Parameter(names = Constants.NO_WAIT_LONG_PARAM, descriptionKey = "PUSH_NO_WAIT")
+    private Boolean noWait = false;
 
     public SyncTranslationCommand(JCommander parser, ContentSpecConfiguration cspConfig, ClientConfiguration clientConfig) {
         super(parser, cspConfig, clientConfig);
@@ -63,11 +67,11 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         return Constants.SYNC_TRANSLATION_COMMAND_NAME;
     }
 
-    public Set<String> getIds() {
+    public List<Integer> getIds() {
         return ids;
     }
 
-    public void setIds(Set<String> ids) {
+    public void setIds(List<Integer> ids) {
         this.ids = ids;
     }
 
@@ -79,88 +83,70 @@ public class SyncTranslationCommand extends BaseCommandImpl {
         this.locales = locales;
     }
 
-    public String getZanataUrl() {
-        return zanataUrl;
+    public Boolean getNoWait() {
+        return noWait;
     }
 
-    public void setZanataUrl(final String zanataUrl) {
-        this.zanataUrl = zanataUrl;
-    }
-
-    public String getZanataProject() {
-        return zanataProject;
-    }
-
-    public void setZanataProject(final String zanataProject) {
-        this.zanataProject = zanataProject;
-    }
-
-    public String getZanataVersion() {
-        return zanataVersion;
-    }
-
-    public void setZanataVersion(final String zanataVersion) {
-        this.zanataVersion = zanataVersion;
-    }
-
-    public Boolean getDisableSSLCert() {
-        return disableSSLCert;
-    }
-
-    public void setDisableSSLCert(Boolean disableSSLCert) {
-        this.disableSSLCert = disableSSLCert;
+    public void setNoWait(Boolean noWait) {
+        this.noWait = noWait;
     }
 
     @Override
     public void process() {
-        // Set topics to expand their translations by default
-        getProviderFactory().getProvider(RESTTopicProvider.class).setExpandTranslations(true);
+        final ContentSpecProvider contentSpecProvider = getProviderFactory().getProvider(ContentSpecProvider.class);
 
-        // Load the data from the config data if no ids were specified
-        ClientUtilities.prepareAndValidateStringIds(this, getCspConfig(), getIds());
+        // Load the ids and validate that one and only one exists
+        ClientUtilities.prepareAndValidateIds(this, getCspConfig(), getIds());
 
         // Check that at least one locale has been specified
         if (getLocales().trim().length() == 0) {
             printErrorAndShutdown(Constants.EXIT_ARGUMENT_ERROR, ClientUtilities.getMessage("ERROR_NO_LOCALES_MSG"), false);
         }
 
+        // Check to make sure the locales are valid
+        final String[] splitLocales = getLocales().split(",");
+        if (!ClientUtilities.validateLanguages(this, getServerSettings(), splitLocales)) {
+            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+        }
+
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
-        // Check that the zanata details are valid
-        if (!isValid()) {
-            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_PUSH_NO_ZANATA_DETAILS_MSG"), false);
+        // Load the spec and make sure it exists
+        final ContentSpecWrapper contentSpecEntity = ClientUtilities.getContentSpecEntity(contentSpecProvider, ids.get(0), null);
+        if (contentSpecEntity == null) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_NO_ID_FOUND_MSG"), false);
         }
 
-        final ZanataInterface zanataInterface = initialiseZanataInterface();
+        // Good point to check for a shutdown
+        allowShutdownToContinueIfRequested();
+
+        // Get the translation details for the content spec
+        final CSTranslationDetailWrapper translationDetails = contentSpecEntity.getTranslationDetails();
+        if (translationDetails == null || translationDetails.getTranslationServer() == null) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_TRANSLATION_DETAILS_NOT_CONFIGURED_MSG"), false);
+        }
+
+        // Get the Zanata Details and check that they are valid
+        final ZanataDetails zanataDetails = ClientUtilities.generateZanataDetails(translationDetails, getClientConfig());
+        if (!isValid(zanataDetails)) {
+            printErrorAndShutdown(Constants.EXIT_CONFIG_ERROR, ClientUtilities.getMessage("ERROR_NO_ZANATA_SERVER_SETUP_MSG",
+                    zanataDetails.getServer()), false);
+        }
 
         // Good point to check for a shutdown
         allowShutdownToContinueIfRequested();
 
         // Process the ids
-        JCommander.getConsole().println(ClientUtilities.getMessage("DOWNLOADING_TOPICS_MSG"));
-        final ZanataSyncService syncService = new ZanataSyncService(getProviderFactory(), zanataInterface, getServerSettings());
-        syncService.sync(ids, null, null);
-
-        // Save the etag cache
-        try {
-            eTagCache.save(new File(Constants.ZANATA_CACHE_LOCATION));
-        } catch (IOException e) {
-            printErrorAndShutdown(Constants.EXIT_FAILURE,
-                    ClientUtilities.getMessage("ERROR_FAILED_TO_SAVE_ZANATA_CACHE_MSG", Constants.ZANATA_CACHE_LOCATION), false);
-        }
+        syncTranslations(getProviderFactory(), contentSpecEntity, zanataDetails.getUsername(), zanataDetails.getToken());
     }
 
-    protected boolean isValid() {
-        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
-
+    protected boolean isValid(final ZanataDetails zanataDetails) {
         // Check that we even have some zanata details.
         if (zanataDetails == null) return false;
 
-        // Check that none of the fields are invalid.
-        if (zanataDetails.getServer() == null || zanataDetails.getServer().isEmpty() || zanataDetails.getProject() == null ||
-                zanataDetails.getProject().isEmpty() || zanataDetails.getVersion() == null || zanataDetails.getVersion().isEmpty() ||
-                zanataDetails.getToken() == null || zanataDetails.getToken().isEmpty() || zanataDetails.getUsername() == null ||
+        // Check that we have a username and token
+        if (zanataDetails.getToken() == null || zanataDetails.getToken().isEmpty() || zanataDetails.getUsername() == null ||
                 zanataDetails.getUsername().isEmpty()) {
             return false;
         }
@@ -169,110 +155,70 @@ public class SyncTranslationCommand extends BaseCommandImpl {
     }
 
     /**
-     * Sets the zanata options applied by the command line to the options that were set via configuration files.
-     */
-    protected void setupZanataOptions() {
-        // Set the zanata url
-        if (getZanataUrl() != null) {
-            ZanataServerConfiguration zanataConfig = null;
-            // Find the zanata server if the url is a reference to the zanata server name
-            for (final String serverName : getClientConfig().getZanataServers().keySet()) {
-                if (serverName.equals(getZanataUrl())) {
-                    zanataConfig = getClientConfig().getZanataServers().get(serverName);
-                    setZanataUrl(zanataConfig.getUrl());
-                    break;
-                }
-            }
-
-            getCspConfig().getZanataDetails().setServer(ClientUtilities.fixHostURL(getZanataUrl()));
-            if (zanataConfig != null) {
-                getCspConfig().getZanataDetails().setToken(zanataConfig.getToken());
-                getCspConfig().getZanataDetails().setUsername(zanataConfig.getUsername());
-            }
-        }
-
-        // Set the zanata project
-        if (getZanataProject() != null) {
-            getCspConfig().getZanataDetails().setProject(getZanataProject());
-        }
-
-        // Set the zanata version
-        if (getZanataVersion() != null) {
-            getCspConfig().getZanataDetails().setVersion(getZanataVersion());
-        }
-    }
-
-    /**
-     * Initialise the Zanata Interface and setup it's locales.
      *
-     * @return The initialised Zanata Interface.
+     *
+     * @param providerFactory
+     * @param contentSpecEntity
      */
-    protected ZanataInterface initialiseZanataInterface() {
-        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
+    protected void syncTranslations(final RESTProviderFactory providerFactory, final ContentSpecWrapper contentSpecEntity,
+            final String username, final String apikey) {
+        final RESTInterfaceV1 restClient = providerFactory.getRESTManager().getRESTClient();
 
-        // Configure the cache
-        ZanataServerConfiguration configuration = null;
-        for (final Map.Entry<String, ZanataServerConfiguration> entry : getClientConfig().getZanataServers().entrySet()) {
-            if (entry.getValue().getUrl().equals(zanataDetails.getServer())) {
-                configuration = entry.getValue();
-                break;
-            }
-        }
-        if (configuration != null && configuration.useCache()) {
-            try {
-                eTagCache.load(new File(Constants.ZANATA_CACHE_LOCATION));
-            } catch (IOException e) {
-                // TODO
-            }
-            final ETagInterceptor interceptor = new ETagInterceptor(eTagCache, ALLOWED_RESOURCES);
-            ResteasyProviderFactory.getInstance().getClientExecutionInterceptorRegistry().register(interceptor);
+        // Start the process on the server
+        RESTProcessInformationV1 processInformation = restClient.syncContentSpecTranslations(contentSpecEntity.getId(), "", "",
+                getLocales(), username, apikey);
+        JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_TO_SYNC_TRANSLATIONS_MSG"));
+        JCommander.getConsole().println(ClientUtilities.getMessage("PROCESS_UUID_MSG", processInformation.getId()));
+
+        // If the user doesn't want to wait just return
+        if (noWait) {
+            return;
         }
 
-        ZanataInterface zanataInterface;
+        // Get the expansion for the logs
+        String expand = "";
         try {
-            zanataInterface = new ZanataInterface(0.2, zanataDetails, getDisableSSLCert());
-        } catch (UnauthorizedException e) {
-            printErrorAndShutdown(Constants.EXIT_UNAUTHORISED, ClientUtilities.getMessage("ERROR_ZANATA_UNAUTHORISED_MSG"), false);
-            return null;
+            final ObjectMapper mapper = new ObjectMapper();
+            final ExpandDataTrunk expandDataTrunk = new ExpandDataTrunk();
+            expandDataTrunk.setBranches(Arrays.asList(new ExpandDataTrunk(new ExpandDataDetails(RESTProcessInformationV1.LOGS_NAME))));
+            expand = mapper.writeValueAsString(expandDataTrunk);
+        } catch (IOException e) {
+            JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
+            shutdown(Constants.EXIT_FAILURE);
         }
 
-        final List<LocaleId> localeIds = new ArrayList<LocaleId>();
-        final String[] splitLocales = getLocales().split(",");
+        // Wait until the process has finished executing on the server
+        while (!(processInformation.getStatus() == RESTProcessStatusV1.COMPLETED || processInformation.getStatus() == RESTProcessStatusV1
+                .FAILED || processInformation.getStatus() == RESTProcessStatusV1.CANCELLED)) {
+            JCommander.getConsole().println(ClientUtilities.getMessage("WAITING_FOR_TRANSLATION_SYNC_TO_COMPLETE"));
+            try {
+                // Wait for 10 secs before checking the status again
+                Thread.sleep(Constants.ASYNC_STATUS_INTERVAL);
+            } catch (Exception e) {
+                JCommander.getConsole().println(ExceptionUtilities.getStackTrace(e));
+                shutdown(Constants.EXIT_FAILURE);
+            }
 
-        // Check to make sure the locales are valid
-        if (!ClientUtilities.validateLanguages(this, getServerSettings(), splitLocales)) {
-            shutdown(Constants.EXIT_ARGUMENT_ERROR);
+            // Get the latest process information
+            processInformation = restClient.getJSONProcess(processInformation.getId(), expand);
         }
 
-        for (final String locale : splitLocales) {
-            // Covert the language into a LocaleId
-            localeIds.add(LocaleId.fromJavaName(locale));
-        }
-
-        zanataInterface.getLocaleManager().setLocales(localeIds);
-
-        return zanataInterface;
-    }
-
-    @Override
-    public boolean validateServerUrl() {
-        if (!super.validateServerUrl()) return false;
-
-        setupZanataOptions();
-        final ZanataDetails zanataDetails = getCspConfig().getZanataDetails();
-
-        // Print the zanata server url
-        JCommander.getConsole().println(ClientUtilities.getMessage("ZANATA_WEBSERVICE_MSG", zanataDetails.getServer()));
-
-        // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(zanataDetails.getServer(), getDisableSSLCert())) {
-            // Print a line to separate content
+        if (!isNullOrEmpty(processInformation.getLogs())) {
+            // Print the log information
             JCommander.getConsole().println("");
-
-            printErrorAndShutdown(Constants.EXIT_NO_SERVER, ClientUtilities.getMessage("ERROR_UNABLE_TO_FIND_SERVER_MSG"), false);
+            JCommander.getConsole().println(processInformation.getLogs());
         }
 
-        return true;
+        // Print the success/failue messages
+        if (processInformation.getStatus() == RESTProcessStatusV1.FAILED) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_ZANATA_SYNC_FAILED_MSG"), false);
+            shutdown(Constants.EXIT_FAILURE);
+        } else if (processInformation.getStatus() == RESTProcessStatusV1.CANCELLED) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, ClientUtilities.getMessage("ERROR_ZANATA_SYNC_CANCELLED_MSG"), false);
+            shutdown(Constants.EXIT_FAILURE);
+        } else {
+            JCommander.getConsole().println(ClientUtilities.getMessage("SUCCESSFUL_ZANATA_SYNC_MSG"));
+        }
     }
 
     @Override

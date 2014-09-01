@@ -1,12 +1,28 @@
-package org.jboss.pressgang.ccms.contentspec.client.config;
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-import org.jboss.pressgang.ccms.zanata.ZanataDetails;
+package org.jboss.pressgang.ccms.contentspec.client.config;
 
 public class ContentSpecConfiguration {
     private String serverUrl = null;
     private Integer contentSpecId = null;
     private String rootOutputDir = null;
-    private ZanataDetails zanataDetails = new ZanataDetails();
     private String kojiHubUrl = null;
     private String publishCommand = null;
 
@@ -32,14 +48,6 @@ public class ContentSpecConfiguration {
 
     public void setRootOutputDirectory(final String rootOutputDir) {
         this.rootOutputDir = rootOutputDir;
-    }
-
-    public ZanataDetails getZanataDetails() {
-        return zanataDetails;
-    }
-
-    public void setZanataDetails(final ZanataDetails zanataDetails) {
-        this.zanataDetails = zanataDetails;
     }
 
     public String getKojiHubUrl() {

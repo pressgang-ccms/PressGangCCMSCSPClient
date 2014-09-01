@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client.commands.base;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,6 +58,9 @@ public abstract class BaseCommandImpl implements BaseCommand {
 
     @Parameter(names = Constants.VERSION_LONG_PARAM, hidden = true)
     private Boolean showVersion = false;
+
+    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
+    private Boolean disableSSLCert = false;
 
     protected final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
     protected final AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -152,6 +174,16 @@ public abstract class BaseCommandImpl implements BaseCommand {
     }
 
     @Override
+    public Boolean getDisableSSLCert() {
+        return disableSSLCert;
+    }
+
+    @Override
+    public void setDisableSSLCert(Boolean disableSSLCert) {
+        this.disableSSLCert = disableSSLCert;
+    }
+
+    @Override
     public boolean isAppShuttingDown() {
         return isShuttingDown.get();
     }
@@ -247,7 +279,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
         JCommander.getConsole().println(ClientUtilities.getMessage("WEBSERVICE_MSG", getServerUrl()));
 
         // Test that the server address is valid
-        if (!ClientUtilities.validateServerExists(getServerUrl())) {
+        if (!ClientUtilities.validateServerExists(getServerUrl(), getDisableSSLCert())) {
             // Print a line to separate content
             JCommander.getConsole().println("");
 

@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client.utils;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -16,6 +35,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -45,7 +66,9 @@ import org.jboss.pressgang.ccms.contentspec.SpecTopic;
 import org.jboss.pressgang.ccms.contentspec.builder.utils.DocBookBuildUtilities;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommand;
 import org.jboss.pressgang.ccms.contentspec.client.commands.base.BaseCommandImpl;
+import org.jboss.pressgang.ccms.contentspec.client.config.ClientConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.config.ContentSpecConfiguration;
+import org.jboss.pressgang.ccms.contentspec.client.config.ZanataServerConfiguration;
 import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.entities.Spec;
 import org.jboss.pressgang.ccms.contentspec.entities.SpecList;
@@ -66,7 +89,9 @@ import org.jboss.pressgang.ccms.utils.common.DocBookUtilities;
 import org.jboss.pressgang.ccms.utils.common.ExceptionUtilities;
 import org.jboss.pressgang.ccms.utils.common.FileUtilities;
 import org.jboss.pressgang.ccms.utils.structures.Pair;
+import org.jboss.pressgang.ccms.wrapper.CSTranslationDetailWrapper;
 import org.jboss.pressgang.ccms.wrapper.ContentSpecWrapper;
+import org.jboss.pressgang.ccms.wrapper.LocaleWrapper;
 import org.jboss.pressgang.ccms.wrapper.LogMessageWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerEntitiesWrapper;
 import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
@@ -299,9 +324,6 @@ public class ClientUtilities {
         final String specId = prop.getProperty("SPEC_ID");
         cspConfig.setContentSpecId(Integer.parseInt(specId == null ? null : specId));
         cspConfig.setServerUrl(fixHostURL(prop.getProperty("SERVER_URL")));
-        cspConfig.getZanataDetails().setServer(fixHostURL(prop.getProperty("ZANATA_URL")));
-        cspConfig.getZanataDetails().setProject(prop.getProperty("ZANATA_PROJECT_NAME"));
-        cspConfig.getZanataDetails().setVersion(prop.getProperty("ZANATA_PROJECT_VERSION"));
         cspConfig.setKojiHubUrl(fixHostURL(prop.getProperty("KOJI_HUB_URL")));
         cspConfig.setPublishCommand(prop.getProperty("PUBLISH_COMMAND"));
     }
@@ -309,12 +331,12 @@ public class ClientUtilities {
     /**
      * Generates the contents of a csprocessor.cfg file from the passed arguments.
      *
+     *
      * @param contentSpec The content specification object the csprocessor.cfg will be used for.
      * @param serverUrl   The server URL that the content specification exists on.
      * @return The generated contents of the csprocessor.cfg file.
      */
-    public static String generateCsprocessorCfg(final ContentSpecWrapper contentSpec, final String serverUrl,
-            final ZanataDetails zanataDetails) {
+    public static String generateCsprocessorCfg(final ContentSpecWrapper contentSpec, final String serverUrl) {
         final StringBuilder output = new StringBuilder();
         output.append("# SPEC_TITLE=");
         if (contentSpec.getTitle() != null) {
@@ -323,9 +345,6 @@ public class ClientUtilities {
         output.append("\n");
         output.append("SPEC_ID=").append(contentSpec.getId()).append("\n");
         output.append("SERVER_URL=").append(serverUrl).append("\n");
-        output.append("ZANATA_URL=").append(zanataDetails.getServer() == null ? "" : zanataDetails.getServer()).append("\n");
-        output.append("ZANATA_PROJECT_NAME=").append(zanataDetails.getProject() == null ? "" : zanataDetails.getProject()).append("\n");
-        output.append("ZANATA_PROJECT_VERSION=").append(zanataDetails.getVersion() == null ? "" : zanataDetails.getVersion()).append("\n");
         output.append("KOJI_HUB_URL=\n");
         output.append("PUBLISH_COMMAND=\n");
         return output.toString();
@@ -365,7 +384,7 @@ public class ClientUtilities {
             final Process p = runCommand(command, envVariables, dir);
 
             // Create a separate thread to read the stderr stream
-            final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console);
+            final InputStreamHandler stdErr = new InputStreamHandler(p.getErrorStream(), console, true);
             final InputStreamHandler stdInPipe = new InputStreamHandler(System.in, p.getOutputStream());
 
             // Pipe stdin to the process
@@ -832,7 +851,7 @@ public class ClientUtilities {
                 cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + escapedTitle + "-post." + Constants
                         .FILENAME_EXTENSION);
         final File outputConfig = new File(cspConfig.getRootOutputDirectory() + escapedTitle + File.separator + "csprocessor.cfg");
-        final String config = generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl(), zanataDetails);
+        final String config = generateCsprocessorCfg(contentSpec, cspConfig.getServerUrl());
 
         // Create the directory
         if (outputConfig.getParentFile() != null && !outputConfig.getParentFile().exists()) {
@@ -947,13 +966,18 @@ public class ClientUtilities {
      * @return True if the language exists on the server otherwise false.
      */
     public static boolean validateLanguages(final BaseCommand command, final ServerSettingsWrapper serverSettings, final String[] langs) {
-        final List<String> locales = serverSettings.getLocales();
+        final CollectionWrapper<LocaleWrapper> locales = serverSettings.getLocales();
+
+        final List<String> localeValues = new ArrayList<String>();
+        for (final LocaleWrapper locale : locales.getItems()) {
+            localeValues.add(locale.getValue());
+        }
 
         boolean valid = true;
         for (final String lang : langs) {
-            if (!locales.contains(lang)) {
+            if (!localeValues.contains(lang)) {
                 command.printError(
-                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, CollectionUtilities.toSeperatedString(locales, " ")), false);
+                        getMessage("ERROR_INVALID_LOCALE_MSG", lang, CollectionUtilities.toSeperatedString(localeValues, " ")), false);
                 valid = false;
             }
         }
@@ -1187,38 +1211,103 @@ public class ClientUtilities {
         return "xterm -e \"<COMMAND>\"";
     }
 
+    /**
+     * Sets the zanata options applied by the command line
+     * to the options that were set via configuration files.
+     */
+    public static ZanataDetails generateZanataDetails(final CSTranslationDetailWrapper translationDetails,
+            final ClientConfiguration clientConfig) {
+        final ZanataDetails zanataDetails = new ZanataDetails();
+        zanataDetails.setProject(Constants.DEFAULT_ZANATA_PROJECT);
+        zanataDetails.setVersion(Constants.DEFAULT_ZANATA_VERSION);
+
+        if (translationDetails != null && translationDetails.getTranslationServer() != null) {
+            zanataDetails.setServer(translationDetails.getTranslationServer().getUrl());
+            zanataDetails.setProject(translationDetails.getProject());
+            zanataDetails.setVersion(translationDetails.getProjectVersion());
+
+            ZanataServerConfiguration zanataConfig = null;
+            // Find the zanata server
+            for (final Map.Entry<String, ZanataServerConfiguration> entry : clientConfig.getZanataServers().entrySet()) {
+                final ZanataServerConfiguration serverConfig = entry.getValue();
+
+                // Compare the urls
+                try {
+                    URI serverUrl = new URI(ClientUtilities.fixHostURL(serverConfig.getUrl()));
+                    if (serverUrl.equals(new URI(translationDetails.getTranslationServer().getUrl()))) {
+                        zanataConfig = serverConfig;
+                        break;
+                    }
+                } catch (URISyntaxException e) {
+                    break;
+                }
+            }
+
+            if (zanataConfig != null) {
+                zanataDetails.setToken(zanataConfig.getToken());
+                zanataDetails.setUsername(zanataConfig.getUsername());
+            }
+        }
+
+        return zanataDetails;
+    }
+
     private static class InputStreamHandler extends Thread implements ShutdownAbleApp {
         private final InputStream stream;
         private final StringBuffer buffer;
         private final Console console;
         private final OutputStream outStream;
+        private final boolean readEntireLine;
 
         private final AtomicBoolean shutdown = new AtomicBoolean(false);
         private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 
         public InputStreamHandler(final InputStream stream, final StringBuffer buffer) {
+            this(stream, buffer, false);
+        }
+
+        public InputStreamHandler(final InputStream stream, final StringBuffer buffer, final boolean readLine) {
             this.stream = stream;
             this.buffer = buffer;
             console = null;
             outStream = null;
+            readEntireLine = readLine;
         }
 
         public InputStreamHandler(final InputStream stream, final Console console) {
+            this(stream, console, false);
+        }
+
+        public InputStreamHandler(final InputStream stream, final Console console, final boolean readLine) {
             this.stream = stream;
             buffer = null;
             this.console = console;
             outStream = null;
+            readEntireLine = readLine;
         }
 
         public InputStreamHandler(final InputStream stream, final OutputStream outStream) {
+            this(stream, outStream, false);
+        }
+
+        public InputStreamHandler(final InputStream stream, final OutputStream outStream, final boolean readLine) {
             this.stream = stream;
             buffer = null;
             console = null;
             this.outStream = outStream;
+            readEntireLine = readLine;
         }
 
         @Override
         public void run() {
+            if (readEntireLine) {
+                runReadLine();
+            } else {
+                runRead();
+            }
+        }
+
+        protected void runReadLine() {
             String line;
             try {
                 final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
@@ -1234,6 +1323,33 @@ public class ClientUtilities {
                         synchronized (console) {
                             console.println(line);
                         }
+                    }
+                }
+            } catch (Exception e) {
+                // Do nothing
+                JCommander.getConsole().println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        protected void runRead() {
+            try {
+                while (!isShuttingDown.get()) {
+                    if (stream.available() > 0) {
+                        final char c = (char) stream.read();
+                        if (buffer != null) {
+                            buffer.append(c);
+                        } else if (outStream != null) {
+                            outStream.write(c);
+                            outStream.flush();
+                        } else {
+                            synchronized (console) {
+                                console.print(c + "");
+                            }
+                        }
+                    } else {
+                        // Add a small sleep to stop excess resource consumption
+                        Thread.sleep(100);
                     }
                 }
             } catch (Exception e) {

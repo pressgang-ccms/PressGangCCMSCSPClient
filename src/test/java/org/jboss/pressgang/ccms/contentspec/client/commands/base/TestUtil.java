@@ -1,3 +1,22 @@
+/*
+ * Copyright 2011-2014 Red Hat, Inc.
+ *
+ * This file is part of PressGang CCMS.
+ *
+ * PressGang CCMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PressGang CCMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with PressGang CCMS. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.jboss.pressgang.ccms.contentspec.client.commands.base;
 
 import static org.mockito.BDDMockito.given;
@@ -28,6 +47,7 @@ import org.jboss.pressgang.ccms.wrapper.ServerSettingsWrapper;
 import org.jboss.pressgang.ccms.wrapper.UserWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.CollectionWrapper;
 import org.jboss.pressgang.ccms.wrapper.collection.UpdateableCollectionWrapper;
+import org.jboss.pressgang.ccms.wrapper.mock.LocaleWrapperMock;
 import org.jboss.pressgang.ccms.zanata.ZanataDetails;
 
 /**
@@ -146,7 +166,7 @@ public class TestUtil {
     }
 
     public static void setUpServerSettings(final ServerSettingsWrapper serverSettings, final ServerEntitiesWrapper serverEntities) {
-        when(serverSettings.getDefaultLocale()).thenReturn(DEFAULT_LOCALE);
+        when(serverSettings.getDefaultLocale()).thenReturn(new LocaleWrapperMock(DEFAULT_LOCALE, DEFAULT_LOCALE, DEFAULT_LOCALE));
         when(serverEntities.getCspIdPropertyTagId()).thenReturn(CSP_PROPERTY_ID);
         when(serverEntities.getAddedByPropertyTagId()).thenReturn(ADDED_BY_PROPERTY_TAG_ID);
         when(serverEntities.getReadOnlyPropertyTagId()).thenReturn(READ_ONLY_PROPERTY_TAG_ID);
