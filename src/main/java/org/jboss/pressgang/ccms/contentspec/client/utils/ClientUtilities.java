@@ -1101,6 +1101,20 @@ public class ClientUtilities {
     }
 
     /**
+     * Removes and replaces certain characters so that the output looks better in a terminal.
+     *
+     * @param logs
+     * @return
+     */
+    public static String cleanAsyncProcessLogs(final String logs) {
+        if (isNullOrEmpty(logs)) {
+            return logs;
+        } else {
+            return logs.replace("\t", "    ");
+        }
+    }
+
+    /**
      * Download all the topics that are to be used during processing from the
      * parsed Content Specification.
      */

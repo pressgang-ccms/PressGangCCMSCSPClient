@@ -238,7 +238,7 @@ public class PushTranslationCommand extends BaseCommandImpl {
         if (!isNullOrEmpty(processInformation.getLogs())) {
             // Print the log information
             JCommander.getConsole().println("");
-            JCommander.getConsole().println(processInformation.getLogs());
+            JCommander.getConsole().println(ClientUtilities.cleanAsyncProcessLogs(processInformation.getLogs()));
         }
 
         // Print the success/failue messages
