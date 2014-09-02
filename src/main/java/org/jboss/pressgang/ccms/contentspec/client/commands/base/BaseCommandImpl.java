@@ -59,7 +59,7 @@ public abstract class BaseCommandImpl implements BaseCommand {
     @Parameter(names = Constants.VERSION_LONG_PARAM, hidden = true)
     private Boolean showVersion = false;
 
-    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK")
+    @Parameter(names = Constants.DISABLE_SSL_CERT_CHECK, descriptionKey = "DISABLE_SSL_CERT_CHECK", hidden = true)
     private Boolean disableSSLCert = false;
 
     protected final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
