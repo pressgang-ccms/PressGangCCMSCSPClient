@@ -37,6 +37,7 @@ import org.jboss.pressgang.ccms.contentspec.client.constants.Constants;
 import org.jboss.pressgang.ccms.contentspec.client.utils.ClientUtilities;
 import org.jboss.pressgang.ccms.provider.ContentSpecProvider;
 import org.jboss.pressgang.ccms.provider.RESTProviderFactory;
+import org.jboss.pressgang.ccms.provider.exception.BadRequestException;
 import org.jboss.pressgang.ccms.rest.v1.elements.RESTProcessInformationV1;
 import org.jboss.pressgang.ccms.rest.v1.elements.enums.RESTProcessStatusV1;
 import org.jboss.pressgang.ccms.rest.v1.expansion.ExpandDataDetails;
@@ -197,10 +198,16 @@ public class PushTranslationCommand extends BaseCommandImpl {
         final RESTInterfaceV1 restClient = providerFactory.getRESTManager().getRESTClient();
 
         // Start the process on the server
-        RESTProcessInformationV1 processInformation = restClient.pushContentSpecForTranslation(contentSpecEntity.getId(), "",
-                "" ,contentSpecOnly, disableCopyTrans, allowUnfrozenPush, username, apikey);
-        JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_TO_PUSH_TO_ZANATA_MSG"));
-        JCommander.getConsole().println(ClientUtilities.getMessage("PROCESS_UUID_MSG", processInformation.getId()));
+        RESTProcessInformationV1 processInformation = null;
+        try {
+            processInformation = restClient
+                    .pushContentSpecForTranslation(contentSpecEntity.getId(), "", "", contentSpecOnly, disableCopyTrans, allowUnfrozenPush,
+                            username, apikey);
+            JCommander.getConsole().println(ClientUtilities.getMessage("STARTING_TO_PUSH_TO_ZANATA_MSG"));
+            JCommander.getConsole().println(ClientUtilities.getMessage("PROCESS_UUID_MSG", processInformation.getId()));
+        } catch (BadRequestException e) {
+            printErrorAndShutdown(Constants.EXIT_FAILURE, e.getMessage(), false);
+        }
 
         // If the user doesn't want to wait just return
         if (noWait) {
