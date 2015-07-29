@@ -185,6 +185,12 @@ public class BuildCommand extends BaseCommandImpl {
     @Parameter(names = "--skip-nested-section-validation", hidden = true)
     private Boolean skipNestedSectionValidation = false;
 
+    @Parameter(names = "--keep-conditions", hidden = true)
+    private Boolean keepConditions = false;
+
+    @Parameter(names = "--skip-validation", hidden = true)
+    private Boolean skipValidation = false;
+
     private ContentSpecProcessor csp = null;
     private ContentSpecBuilder builder = null;
 
@@ -493,6 +499,23 @@ public class BuildCommand extends BaseCommandImpl {
         this.skipNestedSectionValidation = skipNestedSectionValidation;
     }
 
+    public Boolean getKeepConditions() {
+        return keepConditions;
+    }
+
+    public void setKeepConditions(Boolean keepConditions) {
+        this.keepConditions = keepConditions;
+    }
+
+    public Boolean getSkipValidation() {
+        return skipValidation;
+    }
+
+    public void setSkipValidation(Boolean skipValidation) {
+        this.skipValidation = skipValidation;
+    }
+
+
     @Override
     public void process() {
         final long startTime = System.currentTimeMillis();
@@ -645,6 +668,8 @@ public class BuildCommand extends BaseCommandImpl {
         buildOptions.setMaxRevision(getRevision());
         buildOptions.setCalculateChunkDepth(getSuggestChunkDepth());
         buildOptions.setSkipNestedSectionValidation(getSkipNestedSectionValidation());
+        buildOptions.setKeepConditions(getKeepConditions());
+        buildOptions.setSkipValidation(getSkipValidation());
 
         return buildOptions;
     }
